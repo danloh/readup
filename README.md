@@ -1,43 +1,3 @@
-<div align="center">
-  <a href="https://readest.com?utm_source=github&utm_medium=referral&utm_campaign=readme" target="_blank">
-    <img src="https://github.com/readest/readest/blob/main/apps/readest-app/src-tauri/icons/icon.png?raw=true" alt="Readest Logo" width="20%" />
-  </a>
-  <h1>Readest</h1>
-  <br>
-
-[Readest][link-website] is an open-source ebook reader designed for immersive and deep reading experiences. Built as a modern rewrite of [Foliate](https://github.com/johnfactotum/foliate), it leverages [Next.js 15](https://github.com/vercel/next.js) and [Tauri v2](https://github.com/tauri-apps/tauri) to deliver a smooth, cross-platform experience across macOS, Windows, Linux, Android, iOS, and the Web.
-
-[![Website][badge-website]][link-website]
-[![Web App][badge-web-app]][link-web-readest]
-[![OS][badge-platforms]][link-website]
-<br>
-[![][badge-hellogithub]][link-hellogithub]
-[![][badge-discord]][link-discord]
-[![AGPL Licence][badge-license]](LICENSE)
-[![Latest release][badge-release]][link-gh-releases]
-[![Donate][badge-donate]][link-donate]
-<br>
-[![Last commit][badge-last-commit]][link-gh-commits]
-[![Commits][badge-commit-activity]][link-gh-pulse]
-
-</div>
-
-<p align="center">
-  <a href="#features">Features</a> •
-  <a href="#planned-features">Planned Features</a> •
-  <a href="#screenshots">Screenshots</a> •
-  <a href="#downloads">Downloads</a> •
-  <a href="#getting-started">Getting Started</a> •
-  <a href="#troubleshooting">Troubleshooting</a> •
-  <a href="#support">Support</a> •
-  <a href="#license">License</a>
-</p>
-
-<div align="center">
-  <a href="https://readest.com" target="_blank">
-    <img src="./data/screenshots/landing_all_platforms.png" alt="Readest Banner" width="100%" />
-  </a>
-</div>
 
 ## Features
 
@@ -245,29 +205,11 @@ Please check the [wiki][link-gh-wiki] of this project for more information on de
 
 - See Issue [readest/readest#358](https://github.com/readest/readest/issues/358) for further details, or head over to our [Discord][link-discord] server and open a support discussion with detailed logs of your environment and the steps you’ve taken.
 
-## Contributors
-
-Readest is open-source, and contributions are welcome! Feel free to open issues, suggest features, or submit pull requests. Please **review our [contributing guidelines](CONTRIBUTING.md) before you start**. We also welcome you to join our [Discord][link-discord] community for either support or contributing guidance.
-
-<a href="https://github.com/readest/readest/graphs/contributors">
-  <p align="left">
-    <img width="500" src="https://contrib.rocks/image?repo=readest/readest" alt="A table of avatars from the project's contributors" />
-  </p>
-</a>
 
 ## Support
 
 If Readest has been useful to you, consider supporting its development. Your contribution helps us squash bugs faster, improve performance, and keep building great features.
 
-### How to Donate
-
-1. **GitHub Sponsors**  
-   Back the project directly on GitHub:  
-   👉 [https://github.com/sponsors/readest](https://github.com/sponsors/readest)
-
-2. **Crypto Donations**  
-   Prefer crypto? You can donate here:  
-   👉 [https://donate.readest.com/](https://donate.readest.com/)
 
 ## License
 
@@ -289,30 +231,3 @@ The following libraries and frameworks are used in this software:
 The following fonts are utilized in this software, either bundled within the application or provided through web fonts:
 
 [Bitter](https://fonts.google.com/?query=Bitter), [Fira Code](https://fonts.google.com/?query=Fira+Code), [Literata](https://fonts.google.com/?query=Literata), [Merriweather](https://fonts.google.com/?query=Merriweather), [Noto Sans](https://fonts.google.com/?query=Noto+Sans), [Roboto](https://fonts.google.com/?query=Roboto), [LXGW WenKai](https://github.com/lxgw/LxgwWenKai), [MiSans](https://hyperos.mi.com/font/en/), [Source Han](https://github.com/adobe-fonts/source-han-sans/), [WenQuanYi Micro Hei](http://wenq.org/wqy2/)
-
----
-
-<div align="center" style="color: gray;">Happy reading with Readest!</div>
-
-[badge-website]: https://img.shields.io/badge/website-readest.com-orange
-[badge-web-app]: https://img.shields.io/badge/read%20online-web.readest.com-orange
-[badge-license]: https://img.shields.io/github/license/readest/readest?color=teal
-[badge-release]: https://img.shields.io/github/release/readest/readest?color=green
-[badge-platforms]: https://img.shields.io/badge/platforms-macOS%2C%20Windows%2C%20Linux%2C%20Android%2C%20iOS%2C%20Web%2C%20PWA-green
-[badge-last-commit]: https://img.shields.io/github/last-commit/readest/readest?color=green
-[badge-commit-activity]: https://img.shields.io/github/commit-activity/m/readest/readest
-[badge-discord]: https://img.shields.io/discord/1314226120886976544?color=5865F2&label=discord&labelColor=black&logo=discord&logoColor=white&style=flat-square
-[badge-hellogithub]: https://abroad.hellogithub.com/v1/widgets/recommend.svg?rid=8a5b6ade2aee461a8bd94e59200682a7&claim_uid=eRLUbPOy2qZtDgw&theme=small
-[badge-donate]: https://donate.readest.com/badge.svg
-[link-donate]: https://donate.readest.com/?tickers=btc%2Ceth%2Csol%2Cusdc
-[link-appstore]: https://apps.apple.com/app/apple-store/id6738622779?pt=127463130&ct=github&mt=8
-[link-website]: https://readest.com?utm_source=github&utm_medium=referral&utm_campaign=readme
-[link-web-readest]: https://web.readest.com
-[link-gh-releases]: https://github.com/readest/readest/releases
-[link-gh-commits]: https://github.com/readest/readest/commits/main
-[link-gh-pulse]: https://github.com/readest/readest/pulse
-[link-gh-wiki]: https://github.com/readest/readest/wiki
-[link-discord]: https://discord.gg/gntyVNk3BJ
-[link-parallel-read]: https://readest.com/#parallel-read
-[link-koreader]: https://github.com/koreader/koreader
-[link-hellogithub]: https://hellogithub.com/repository/8a5b6ade2aee461a8bd94e59200682a7
