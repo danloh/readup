@@ -36,7 +36,7 @@ importers:
         specifier: ^5
         version: 5.7.2
 
-  apps/readest-app:
+  apps/readup-app:
     dependencies:
       '@aws-sdk/client-s3':
         specifier: ^3.735.0

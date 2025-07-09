@@ -1,10 +1,10 @@
 {
-  "name": "@readest/monorepo",
+  "name": "@readup/monorepo",
   "private": true,
-  "repository": "readest/readest",
+  "repository": "readup/readup",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "tauri": "pnpm --filter @readest/readest-app tauri"
+    "tauri": "pnpm --filter @readup/readup-app tauri"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",

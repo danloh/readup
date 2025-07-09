@@ -13,30 +13,14 @@
 | **Dictionary/Wikipedia Lookup**         | Instantly look up words and terms when reading.                                                | ✅         |
 | **[Parallel Read][link-parallel-read]** | Read two books or documents simultaneously in a split-screen view.                             | ✅         |
 | **Customize Font and Layout**           | Adjust font, layout, theme mode, and theme colors for a personalized experience.               | ✅         |
-| **File Association and Open With**      | Quickly open files in Readest in your file browser with one-click.                             | ✅         |
+| **File Association and Open With**      | Quickly open files in Readup in your file browser with one-click.                             | ✅         |
 | **Sync across Platforms**               | Synchronize book files, reading progress, notes, and bookmarks across all supported platforms. | ✅         |
 | **Translate with DeepL**                | From a single sentence to the entire book—translate instantly with DeepL.                      | ✅         |
 | **Text-to-Speech (TTS) Support**        | Enjoy smooth, multilingual narration—even within a single book.                                | ✅         |
 | **Library Management**                  | Organize, sort, and manage your entire ebook library.                                          | ✅         |
 | **Code Syntax Highlighting**            | Read software manuals with rich coloring of code examples.                                     | ✅         |
 
-## Planned Features
 
-<div align="left">🛠 Building</div>
-<div align="left">🔄 Planned</div>
-
-| **Feature**                     | **Description**                                                                            | **Priority** |
-| ------------------------------- | ------------------------------------------------------------------------------------------ | ------------ |
-| **Sync with Koreader**          | Synchronize reading progress, notes, and bookmarks with [Koreader][link-koreader] devices. | 🛠           |
-| **AI-Powered Summarization**    | Generate summaries of books or chapters using AI for quick insights.                       | 🛠           |
-| **Keyboard Navigation**         | Implement vimium-style keybindings for book navigation.                                    | 🔄           |
-| **Support OPDS/Calibre**        | Integrate OPDS/Calibre to access online libraries and catalogs.                            | 🔄           |
-| **Audiobook Support**           | Extend functionality to play and manage audiobooks.                                        | 🔄           |
-| **Handwriting Annotations**     | Add support for handwriting annotations using a pen on compatible devices.                 | 🔄           |
-| **Advanced Reading Stats**      | Track reading time, pages read, and more for detailed insights.                            | 🔄           |
-| **In-Library Full-Text Search** | Search across your entire ebook library to find topics and quotes.                         | 🔄           |
-
-Stay tuned for continuous improvements and updates! Contributions and suggestions are always welcome—let's build the ultimate reading experience together. 😊
 
 ## Screenshots
 
@@ -54,29 +38,13 @@ Stay tuned for continuous improvements and updates! Contributions and suggestion
 
 ---
 
-## Downloads
-
-### Mobile Apps
-
-<div align="center">
-  <a href="https://apps.apple.com/app/id6738622779">
-    <img alt="Download on the App Store" src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" style="height: 50px;" /></a>&nbsp;&nbsp;&nbsp;&nbsp;
-  <a href="https://play.google.com/store/apps/details?id=com.bilingify.readest">
-    <img alt="Get it on Google Play" src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" style="height: 50px;" /></a>
-</div>
-
-### Platform-Specific Downloads
-
-- macOS / iOS / iPadOS : Search for "Readest" on the [App Store][link-appstore], also available on TestFlight for beta test (send your Apple ID to <readestapp@gmail.com> to request access).
-- Windows / Linux / Android: Visit [https://readest.com][link-website] or the [Releases on GitHub][link-gh-releases].
-- Web: Visit [https://web.readest.com][link-web-readest].
 
 ## Requirements
 
 - **Node.js** and **pnpm** for Next.js development
 - **Rust** and **Cargo** for Tauri development
 
-For the best experience to build Readest for yourself, use a recent version of Node.js and Rust. Refer to the [Tauri documentation](https://v2.tauri.app/start/prerequisites/) for details on setting up the development environment prerequisites on different platforms.
+For the best experience to build Readup for yourself, use a recent version of Node.js and Rust. Refer to the [Tauri documentation](https://v2.tauri.app/start/prerequisites/) for details on setting up the development environment prerequisites on different platforms.
 
 ```bash
 nvm install v22
@@ -87,13 +55,11 @@ rustup update
 
 ## Getting Started
 
-To get started with Readest, follow these steps to clone and build the project.
-
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/readest/readest.git
-cd readest
+git clone 
+cd 
 git submodule update --init --recursive
 ```
 
@@ -103,7 +69,7 @@ git submodule update --init --recursive
 # might need to rerun this when code is updated
 pnpm install
 # copy pdfjs-dist to Next.js public directory
-pnpm --filter @readest/readest-app setup-pdfjs
+pnpm --filter @readup/readup-app setup-pdfjs
 ```
 
 ### 3. Verify Dependencies Installation
@@ -174,16 +140,16 @@ Please check the [wiki][link-gh-wiki] of this project for more information on de
 
 ## Troubleshooting
 
-### 1. Readest Won’t Launch on Windows (Missing Edge WebView2 Runtime)
+### 1. Won’t Launch on Windows (Missing Edge WebView2 Runtime)
 
 **Symptom**
 
-- When you double-click readest.exe, nothing happens. No window appears, and Task Manager does not show the process.
+- When you double-click readup.exe, nothing happens. No window appears, and Task Manager does not show the process.
 - This can affect both the standard installer and the portable version.
 
 **Cause**
 
-- Microsoft Edge WebView2 Runtime is either missing, outdated, or improperly installed on your system. Readest depends on WebView2 to render the interface on Windows.
+- Microsoft Edge WebView2 Runtime is either missing, outdated, or improperly installed on your system. Readup depends on WebView2 to render the interface on Windows.
 
 **How to Fix**
 
@@ -192,8 +158,8 @@ Please check the [wiki][link-gh-wiki] of this project for more information on de
 2. Install or Update WebView2
    - Download the WebView2 Runtime directly from Microsoft: [link](https://developer.microsoft.com/en-us/microsoft-edge/webview2?form=MA13LH).
    - If you prefer an offline installer, download the offline package and run it as an Administrator.
-3. Re-run Readest
-   - After installing/updating WebView2, launch readest.exe again.
+3. Re-run 
+   - After installing/updating WebView2, launch readup.exe again.
    - If you still encounter problems, reboot your PC and try again.
 
 **Additional Tips**
@@ -203,17 +169,11 @@ Please check the [wiki][link-gh-wiki] of this project for more information on de
 
 **Still Stuck?**
 
-- See Issue [readest/readest#358](https://github.com/readest/readest/issues/358) for further details, or head over to our [Discord][link-discord] server and open a support discussion with detailed logs of your environment and the steps you’ve taken.
-
-
-## Support
-
-If Readest has been useful to you, consider supporting its development. Your contribution helps us squash bugs faster, improve performance, and keep building great features.
 
 
 ## License
 
-Readest is free software: you can redistribute it and/or modify it under the terms of the [GNU Affero General Public License](https://www.gnu.org/licenses/agpl-3.0.html) as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. See the [LICENSE](LICENSE) file for details.
+Readup is free software: you can redistribute it and/or modify it under the terms of the [GNU Affero General Public License](https://www.gnu.org/licenses/agpl-3.0.html) as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. See the [LICENSE](LICENSE) file for details.
 
 The following libraries and frameworks are used in this software:
 

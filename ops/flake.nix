@@ -1,5 +1,5 @@
 {
-  description = "Readest development environment";
+  description = "Readup development environment";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -66,16 +66,16 @@
 
           devShells = {
             web = mkCommonSHell {
-              name = "readest-dev";
+              name = "readup-dev";
             };
 
             ios = mkCommonSHell {
-              name = "readest-ios";
+              name = "readup-ios";
               extraPackages = [ pkgs.cocoapods ];
             };
 
             android = mkCommonSHell {
-              name = "readest-android";
+              name = "readup-android";
               extraPackages = [
                 pkgs.android-sdk
                 pkgs.gradle
