@@ -4,7 +4,7 @@ import clsx from 'clsx';
 import * as React from 'react';
 import { useState, useRef, useEffect, Suspense } from 'react';
 import { ReadonlyURLSearchParams, useRouter, useSearchParams } from 'next/navigation';
-import { OverlayScrollbarsComponent } from 'overlayscrollbars-react';
+import { OverlayScrollbarsComponent, OverlayScrollbarsComponentRef } from 'overlayscrollbars-react';
 import 'overlayscrollbars/overlayscrollbars.css';
 
 import { Book } from '@/types/book';
@@ -16,7 +16,7 @@ import { ProgressPayload } from '@/utils/transfer';
 import { throttle } from '@/utils/throttle';
 import { parseOpenWithFiles } from '@/helpers/openWith';
 import { isTauriAppPlatform } from '@/services/environment';
-import { checkForAppUpdates } from '@/helpers/updater';
+import { checkForAppUpdates, checkAppReleaseNotes } from '@/helpers/updater';
 import { FILE_ACCEPT_FORMATS, SUPPORTED_FILE_EXTS } from '@/services/constants';
 import { impactFeedback } from '@tauri-apps/plugin-haptics';
 import { getCurrentWebview } from '@tauri-apps/api/webview';
@@ -35,7 +35,6 @@ import { useSafeAreaInsets } from '@/hooks/useSafeAreaInsets';
 import { useScreenWakeLock } from '@/hooks/useScreenWakeLock';
 import { useOpenWithBooks } from '@/hooks/useOpenWithBooks';
 import { lockScreenOrientation } from '@/utils/bridge';
-import { mountAdditionalFonts } from '@/utils/font';
 import {
   tauriHandleSetAlwaysOnTop,
   tauriHandleToggleFullScreen,
@@ -86,7 +85,8 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
   const [pendingNavigationBookIds, setPendingNavigationBookIds] = useState<string[] | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const demoBooks = useDemoBooks();
-  const containerRef = useRef<HTMLDivElement>(null);
+  const osRef = useRef<OverlayScrollbarsComponentRef>(null);
+  const containerRef: React.MutableRefObject<HTMLDivElement | null> = useRef(null);
   const pageRef = useRef<HTMLDivElement>(null);
 
   useTheme({ systemUIVisible: true, appThemeColor: 'base-200' });
@@ -116,13 +116,11 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
   });
 
   useEffect(() => {
-    mountAdditionalFonts(document);
-  }, []);
-
-  useEffect(() => {
     const doCheckAppUpdates = async () => {
       if (appService?.hasUpdater && settings.autoCheckUpdates) {
         await checkForAppUpdates(_);
+      } else if (appService?.hasUpdater === false) {
+        checkAppReleaseNotes();
       }
     };
     if (settings.alwaysOnTop) {
@@ -130,7 +128,7 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
     }
     doCheckAppUpdates();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [settings]);
+  }, [appService?.hasUpdater, settings]);
 
   useEffect(() => {
     if (appService?.isMobileApp) {
@@ -508,7 +506,7 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
 
   const handleBookDelete = async (book: Book) => {
     try {
-      await appService?.deleteBook(book, !!book.uploadedAt);
+      await appService?.deleteBook(book, !!book.uploadedAt, true);
       await updateBook(envConfig, book);
       pushLibrary();
       eventDispatcher.dispatch('toast', {
@@ -525,6 +523,31 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
           title: book.title,
         }),
         type: 'error',
+      });
+      return false;
+    }
+  };
+
+  const handleBookDeleteCloudBackup = async (book: Book) => {
+    try {
+      await appService?.deleteBook(book, !!book.uploadedAt, false);
+      await updateBook(envConfig, book);
+      pushLibrary();
+      eventDispatcher.dispatch('toast', {
+        type: 'info',
+        timeout: 2000,
+        message: _('Deleted cloud backup of the book: {{title}}', {
+          title: book.title,
+        }),
+      });
+      return true;
+    } catch (e) {
+      console.error(e);
+      eventDispatcher.dispatch('toast', {
+        type: 'error',
+        message: _('Failed to delete cloud backup of the book', {
+          title: book.title,
+        }),
       });
       return false;
     }
@@ -606,9 +629,20 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
       )}
       {libraryLoaded &&
         (libraryBooks.some((book) => !book.deletedAt) ? (
-          <OverlayScrollbarsComponent options={{ scrollbars: { autoHide: 'scroll' } }} defer>
+          <OverlayScrollbarsComponent
+            defer
+            ref={osRef}
+            options={{ scrollbars: { autoHide: 'scroll' } }}
+            events={{
+              initialized: (instance) => {
+                const { content } = instance.elements();
+                if (content) {
+                  containerRef.current = content as HTMLDivElement;
+                }
+              },
+            }}
+          >
             <div
-              ref={containerRef}
               className={clsx('scroll-container drop-zone flex-grow', isDragging && 'drag-over')}
               style={{
                 paddingTop: '0px',
@@ -659,10 +693,11 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
           handleBookUpload={handleBookUpload}
           handleBookDownload={handleBookDownload}
           handleBookDelete={handleBookDelete}
+          handleBookDeleteCloudBackup={handleBookDeleteCloudBackup}
         />
       )}
       <AboutWindow />
-      {appService?.isAndroidApp && <UpdaterWindow />}
+      <UpdaterWindow />
       <Toast />
     </div>
   );

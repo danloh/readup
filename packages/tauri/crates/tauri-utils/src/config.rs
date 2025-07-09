@@ -25,6 +25,8 @@
 
 use http::response::Builder;
 #[cfg(feature = "schema")]
+use schemars::schema::Schema;
+#[cfg(feature = "schema")]
 use schemars::JsonSchema;
 use semver::Version;
 use serde::{
@@ -43,6 +45,18 @@ use std::{
   path::PathBuf,
   str::FromStr,
 };
+
+#[cfg(feature = "schema")]
+fn add_description(schema: Schema, description: impl Into<String>) -> Schema {
+  let value = description.into();
+  if value.is_empty() {
+    schema
+  } else {
+    let mut schema_obj = schema.into_object();
+    schema_obj.metadata().description = value.into();
+    Schema::Object(schema_obj)
+  }
+}
 
 /// Items to help with parsing content into a [`Config`].
 pub mod parse;
@@ -221,14 +235,11 @@ impl schemars::JsonSchema for BundleTarget {
         ..Default::default()
       }
       .into(),
-      schemars::_private::metadata::add_description(
+      add_description(
         gen.subschema_for::<Vec<BundleType>>(),
         "A list of bundle targets.",
       ),
-      schemars::_private::metadata::add_description(
-        gen.subschema_for::<BundleType>(),
-        "A single bundle target.",
-      ),
+      add_description(gen.subschema_for::<BundleType>(), "A single bundle target."),
     ];
 
     schemars::schema::SchemaObject {
@@ -617,6 +628,13 @@ pub struct MacConfig {
   /// Translates to the bundle's CFBundleVersion property.
   #[serde(alias = "bundle-version")]
   pub bundle_version: Option<String>,
+  /// The name of the builder that built the bundle.
+  ///
+  /// Translates to the bundle's CFBundleName property.
+  ///
+  /// If not set, defaults to the package's product name.
+  #[serde(alias = "bundle-name")]
+  pub bundle_name: Option<String>,
   /// A version string indicating the minimum macOS X version that the bundled application supports. Defaults to `10.13`.
   ///
   /// Setting it to `null` completely removes the `LSMinimumSystemVersion` field on the bundle's `Info.plist`
@@ -636,9 +654,7 @@ pub struct MacConfig {
   /// Identity to use for code signing.
   #[serde(alias = "signing-identity")]
   pub signing_identity: Option<String>,
-  /// Whether the codesign should enable [hardened runtime] (for executables) or not.
-  ///
-  /// [hardened runtime]: <https://developer.apple.com/documentation/security/hardened_runtime>
+  /// Whether the codesign should enable [hardened runtime](https://developer.apple.com/documentation/security/hardened_runtime) (for executables) or not.
   #[serde(alias = "hardened-runtime", default = "default_true")]
   pub hardened_runtime: bool,
   /// Provider short name for notarization.
@@ -657,6 +673,7 @@ impl Default for MacConfig {
       frameworks: None,
       files: HashMap::new(),
       bundle_version: None,
+      bundle_name: None,
       minimum_system_version: macos_minimum_system_version(),
       exception_domain: None,
       signing_identity: None,
@@ -1208,7 +1225,7 @@ impl BundleResources {
 #[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields, untagged)]
 pub enum Updater {
-  /// Generates lagacy zipped v1 compatible updaters
+  /// Generates legacy zipped v1 compatible updaters
   String(V1Compatible),
   /// Produce updaters and their signatures or not
   // Can't use untagged on enum field here: https://github.com/GREsau/schemars/issues/222
@@ -1221,12 +1238,12 @@ impl Default for Updater {
   }
 }
 
-/// Generates lagacy zipped v1 compatible updaters
+/// Generates legacy zipped v1 compatible updaters
 #[derive(Debug, PartialEq, Eq, Clone, Deserialize, Serialize)]
 #[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub enum V1Compatible {
-  /// Generates lagacy zipped v1 compatible updaters
+  /// Generates legacy zipped v1 compatible updaters
   V1Compatible,
 }
 
@@ -2800,7 +2817,7 @@ pub struct BuildConfig {
   /// and they'll try to get all the allowed commands and remove the rest
   ///
   /// Note:
-  ///   - This won't be accounting for dynamically added ACLs so make sure to check it when using this
+  ///   - This won't be accounting for dynamically added ACLs when you use features from the `dynamic-acl` (currently enabled by default) feature flag, so make sure to check it when using this
   ///   - This feature requires tauri-plugin 2.1 and tauri 2.4
   #[serde(alias = "remove-unused-commands", default)]
   pub remove_unused_commands: bool,
@@ -2946,7 +2963,19 @@ pub struct Config {
   #[serde(alias = "product-name")]
   #[cfg_attr(feature = "schema", validate(regex(pattern = "^[^/\\:*?\"<>|]+$")))]
   pub product_name: Option<String>,
-  /// App main binary filename. Defaults to the name of your cargo crate.
+  /// Overrides app's main binary filename.
+  ///
+  /// By default, Tauri uses the output binary from `cargo`, by setting this, we will rename that binary in `tauri-cli`'s
+  /// `tauri build` command, and target `tauri bundle` to it
+  ///
+  /// If possible, change the [`package name`] or set the [`name field`] instead,
+  /// and if that's not enough and you're using nightly, consider using the [`different-binary-name`] feature instead
+  ///
+  /// Note: this config should not include the binary extension (e.g. `.exe`), we'll add that for you
+  ///
+  /// [`package name`]: https://doc.rust-lang.org/cargo/reference/manifest.html#the-name-field
+  /// [`name field`]: https://doc.rust-lang.org/cargo/reference/cargo-targets.html#the-name-field
+  /// [`different-binary-name`]: https://doc.rust-lang.org/nightly/cargo/reference/unstable.html#different-binary-name
   #[serde(alias = "main-binary-name")]
   pub main_binary_name: Option<String>,
   /// App version. It is a semver version number or a path to a `package.json` file containing the `version` field.

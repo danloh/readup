@@ -38,7 +38,7 @@ use tao::platform::unix::{WindowBuilderExtUnix, WindowExtUnix};
 #[cfg(windows)]
 use tao::platform::windows::{WindowBuilderExtWindows, WindowExtWindows};
 #[cfg(windows)]
-use webview2_com::FocusChangedEventHandler;
+use webview2_com::{ContainsFullScreenElementChangedEventHandler, FocusChangedEventHandler};
 #[cfg(windows)]
 use windows::Win32::Foundation::HWND;
 #[cfg(target_os = "ios")]
@@ -972,7 +972,6 @@ impl WindowBuilder for WindowBuilderWrapper {
   /// ## Platform-specific
   ///
   /// - **iOS / Android:** Unsupported.
-  #[must_use]
   fn prevent_overflow(mut self) -> Self {
     self
       .prevent_overflow
@@ -986,7 +985,6 @@ impl WindowBuilder for WindowBuilderWrapper {
   /// ## Platform-specific
   ///
   /// - **iOS / Android:** Unsupported.
-  #[must_use]
   fn prevent_overflow_with_margin(mut self, margin: Size) -> Self {
     self.prevent_overflow.replace(margin);
     self
@@ -1429,6 +1427,7 @@ pub enum WebviewMessage {
 
 pub enum EventLoopWindowTargetMessage {
   CursorPosition(Sender<Result<PhysicalPosition<f64>>>),
+  SetTheme(Option<Theme>),
 }
 
 pub type CreateWindowClosure<T> =
@@ -2598,15 +2597,10 @@ impl<T: UserEvent> RuntimeHandle<T> for WryHandle<T> {
   }
 
   fn set_theme(&self, theme: Option<Theme>) {
-    self
-      .context
-      .main_thread
-      .window_target
-      .set_theme(match theme {
-        Some(Theme::Light) => Some(TaoTheme::Light),
-        Some(Theme::Dark) => Some(TaoTheme::Dark),
-        _ => None,
-      });
+    let _ = send_user_message(
+      &self.context,
+      Message::EventLoopWindowTarget(EventLoopWindowTargetMessage::SetTheme(theme)),
+    );
   }
 
   #[cfg(target_os = "macos")]
@@ -2915,18 +2909,18 @@ impl<T: UserEvent> Runtime<T> for Wry<T> {
   }
 
   fn cursor_position(&self) -> Result<PhysicalPosition<f64>> {
-    event_loop_window_getter!(self, EventLoopWindowTargetMessage::CursorPosition)?
+    self
+      .context
+      .main_thread
+      .window_target
+      .cursor_position()
       .map(PhysicalPositionWrapper)
       .map(Into::into)
       .map_err(|_| Error::FailedToGetCursorPosition)
   }
 
   fn set_theme(&self, theme: Option<Theme>) {
-    self.event_loop.set_theme(match theme {
-      Some(Theme::Light) => Some(TaoTheme::Light),
-      Some(Theme::Dark) => Some(TaoTheme::Dark),
-      _ => None,
-    });
+    self.event_loop.set_theme(to_tao_theme(theme));
   }
 
   #[cfg(target_os = "macos")]
@@ -3422,11 +3416,7 @@ fn handle_user_message<T: UserEvent>(
             window.set_traffic_light_inset(_position);
           }
           WindowMessage::SetTheme(theme) => {
-            window.set_theme(match theme {
-              Some(Theme::Light) => Some(TaoTheme::Light),
-              Some(Theme::Dark) => Some(TaoTheme::Dark),
-              _ => None,
-            });
+            window.set_theme(to_tao_theme(theme));
           }
           WindowMessage::SetBackgroundColor(color) => {
             window.set_background_color(color.map(Into::into))
@@ -3874,6 +3864,9 @@ fn handle_user_message<T: UserEvent>(
           .cursor_position()
           .map_err(|_| Error::FailedToSendMessage);
         sender.send(pos).unwrap();
+      }
+      EventLoopWindowTargetMessage::SetTheme(theme) => {
+        event_loop.set_theme(to_tao_theme(theme));
       }
     },
   }
@@ -4483,7 +4476,7 @@ You may have it installed on another user account, but it is not available for t
     }
   };
 
-  let mut webview_builder = WebViewBuilder::with_web_context(&mut web_context.inner)
+  let mut webview_builder = WebViewBuilder::new_with_web_context(&mut web_context.inner)
     .with_id(&label)
     .with_focused(webview_attributes.focus)
     .with_url(&url)
@@ -4831,8 +4824,7 @@ You may have it installed on another user account, but it is not available for t
   #[cfg(windows)]
   {
     let controller = webview.controller();
-    let proxy = context.proxy.clone();
-    let proxy_ = proxy.clone();
+    let proxy_clone = context.proxy.clone();
     let window_id_ = window_id.clone();
     let mut token = 0;
     unsafe {
@@ -4847,7 +4839,7 @@ You may have it installed on another user account, but it is not available for t
           focused_webview.replace(label_.clone());
 
           if !already_focused {
-            let _ = proxy.send_event(Message::Webview(
+            let _ = proxy_clone.send_event(Message::Webview(
               *window_id_.lock().unwrap(),
               id,
               WebviewMessage::SynthesizedWindowEvent(SynthesizedWindowEvent::Focused(true)),
@@ -4861,6 +4853,8 @@ You may have it installed on another user account, but it is not available for t
     .unwrap();
     unsafe {
       let label_ = label.clone();
+      let window_id_ = window_id.clone();
+      let proxy_clone = context.proxy.clone();
       controller.add_LostFocus(
         &FocusChangedEventHandler::create(Box::new(move |_, _| {
           let mut focused_webview = focused_webview.lock().unwrap();
@@ -4876,8 +4870,8 @@ You may have it installed on another user account, but it is not available for t
           if lost_window_focus {
             // only reset when we lost window focus - otherwise some other webview is focused
             *focused_webview = None;
-            let _ = proxy_.send_event(Message::Webview(
-              *window_id.lock().unwrap(),
+            let _ = proxy_clone.send_event(Message::Webview(
+              *window_id_.lock().unwrap(),
               id,
               WebviewMessage::SynthesizedWindowEvent(SynthesizedWindowEvent::Focused(false)),
             ));
@@ -4888,6 +4882,26 @@ You may have it installed on another user account, but it is not available for t
       )
     }
     .unwrap();
+
+    if let Ok(webview) = unsafe { controller.CoreWebView2() } {
+      let proxy_clone = context.proxy.clone();
+      unsafe {
+        let _ = webview.add_ContainsFullScreenElementChanged(
+          &ContainsFullScreenElementChangedEventHandler::create(Box::new(move |sender, _| {
+            let mut contains_fullscreen_element = windows::core::BOOL::default();
+            sender
+              .ok_or_else(windows::core::Error::empty)?
+              .ContainsFullScreenElement(&mut contains_fullscreen_element)?;
+            let _ = proxy_clone.send_event(Message::Window(
+              *window_id.lock().unwrap(),
+              WindowMessage::SetFullscreen(contains_fullscreen_element.as_bool()),
+            ));
+            Ok(())
+          })),
+          &mut token,
+        );
+      }
+    }
   }
 
   Ok(WebviewWrapper {
@@ -4957,4 +4971,12 @@ fn inner_size(
   has_children: bool,
 ) -> TaoPhysicalSize<u32> {
   window.inner_size()
+}
+
+fn to_tao_theme(theme: Option<Theme>) -> Option<TaoTheme> {
+  match theme {
+    Some(Theme::Light) => Some(TaoTheme::Light),
+    Some(Theme::Dark) => Some(TaoTheme::Dark),
+    _ => None,
+  }
 }

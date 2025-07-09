@@ -157,7 +157,7 @@
   "Create a Password": "创建密码",
   "Sign up": "注册",
   "Signing up...": "正在注册...",
-  "Don’t have an account? Sign up": "没有账号？注册",
+  "Don't have an account? Sign up": "没有账号？注册",
   "Check your email for the confirmation link": "检查您的电子邮件以获取确认链接",
   "Signing in ...": "正在登录...",
   "Send a magic link email": "发送魔法链接邮件",
@@ -355,8 +355,6 @@
   "Upgrade to Plus or Pro": "升级到 Plus 或 Pro",
   "Current Plan": "当前套餐",
   "Plan Limits": "套餐限制",
-  "Available Plans": "可用套餐",
-  "{{current}} of {{all}}": "{{current}} / {{all}}",
   "Failed to manage subscription. Please try again later.": "无法管理订阅，请稍后再试。",
   "Processing your payment...": "正在处理付款...",
   "Please wait while we confirm your subscription.": "请稍候，我们正在确认您的订阅。",
@@ -412,5 +410,9 @@
   "Translate up to 500,000 characters daily with the most accurate translation engine available.": "使用最精准的翻译引擎每天可翻译50万字。",
   "10 GB Cloud Sync Storage": "10GB 云同步存储",
   "Securely store and access your entire reading collection with up to 2 GB of cloud storage.": "使用多达 2GB 的安全云存储保存和访问您的整个阅读收藏。",
-  "Securely store and access your entire reading collection with up to 10 GB of cloud storage.": "使用多达 10GB 的安全云存储保存和访问您的整个阅读收藏。"
+  "Securely store and access your entire reading collection with up to 10 GB of cloud storage.": "使用多达 10GB 的安全云存储保存和访问您的整个阅读收藏。",
+  "Deleted cloud backup of the book: {{title}}": "已删除书籍云备份：{{title}}",
+  "Failed to delete cloud backup of the book": "无法删除书籍云备份。",
+  "Are you sure to delete the cloud backup of the selected book?": "您确定要删除所选书籍的云备份吗？",
+  "What's New in Readest": "Readest 更新功能"
 }

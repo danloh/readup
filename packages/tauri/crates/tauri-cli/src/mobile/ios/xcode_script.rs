@@ -87,7 +87,7 @@ pub fn command(options: Options) -> Result<()> {
   let (config, metadata, cli_options) = {
     let tauri_config_guard = tauri_config.lock().unwrap();
     let tauri_config_ = tauri_config_guard.as_ref().unwrap();
-    let cli_options = read_options(&tauri_config_.identifier);
+    let cli_options = read_options(tauri_config_);
     let (config, metadata) = get_config(
       &get_app(
         MobileTarget::Ios,
@@ -175,7 +175,8 @@ pub fn command(options: Options) -> Result<()> {
 
   let isysroot = format!("-isysroot {}", options.sdk_root.display());
 
-  let simulator = options.arches.contains(&"Simulator".to_string());
+  let simulator =
+    options.platform == "iOS Simulator" || options.arches.contains(&"Simulator".to_string());
   let arches = if simulator {
     // when compiling for the simulator, we don't need to build other targets
     vec![if cfg!(target_arch = "aarch64") {

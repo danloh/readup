@@ -62,6 +62,7 @@ const BookItem: React.FC<BookItemProps> = ({
       <div
         className={clsx(
           'relative flex aspect-[28/41] items-center justify-center',
+          coverFit === 'crop' && 'overflow-hidden shadow-md',
           mode === 'list' && 'min-w-20',
         )}
       >
@@ -121,7 +122,7 @@ const BookItem: React.FC<BookItemProps> = ({
                 onPointerLeave={(e) => stopEvent(e)}
                 onClick={() => showBookDetailsModal(book)}
               >
-                <div className='pt-[1px]'>
+                <div className='pt-[2px] sm:pt-[1px]'>
                   <LiaInfoCircleSolid size={iconSize15} />
                 </div>
               </button>
