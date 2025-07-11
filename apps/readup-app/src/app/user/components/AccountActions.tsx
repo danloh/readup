@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
-import { UserPlan } from '@/types/user';
 
 interface DeleteConfirmationModalProps {
   show: boolean;
@@ -45,17 +44,13 @@ const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
 };
 
 interface AccountActionsProps {
-  userPlan: UserPlan;
   onLogout: () => void;
   onConfirmDelete: () => void;
-  onManageSubscription: () => void;
 }
 
 const AccountActions: React.FC<AccountActionsProps> = ({
-  userPlan,
   onLogout,
   onConfirmDelete,
-  onManageSubscription,
 }) => {
   const _ = useTranslation();
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
@@ -79,14 +74,6 @@ const AccountActions: React.FC<AccountActionsProps> = ({
         }}
       />
       <div className='flex flex-col gap-4 md:flex-row'>
-        {userPlan !== 'free' && (
-          <button
-            onClick={onManageSubscription}
-            className='w-full rounded-lg bg-blue-100 px-6 py-3 font-medium text-blue-600 transition-colors hover:bg-blue-200 md:w-auto'
-          >
-            {_('Manage Subscription')}
-          </button>
-        )}
         <button
           onClick={onLogout}
           className='w-full rounded-lg bg-gray-200 px-6 py-3 font-medium text-gray-800 transition-colors hover:bg-gray-300 md:w-auto'
