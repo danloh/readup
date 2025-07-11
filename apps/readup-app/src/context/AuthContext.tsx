@@ -1,9 +1,9 @@
 'use client';
 
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
-import { User } from '@supabase/supabase-js';
-import { supabase } from '@/utils/supabase';
 import posthog from 'posthog-js';
+
+type User = any; // TODO
 
 interface AuthContextType {
   token: string | null;
@@ -53,20 +53,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
     const refreshSession = async () => {
       try {
-        await supabase.auth.refreshSession();
+        // TODO: refresh session
       } catch {
         syncSession(null);
       }
     };
 
-    const { data: subscription } = supabase.auth.onAuthStateChange((_, session) => {
-      syncSession(session);
-    });
-
     refreshSession();
-    return () => {
-      subscription?.subscription.unsubscribe();
-    };
+    
   }, []);
 
   const login = (newToken: string, newUser: User) => {
@@ -80,10 +74,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = async () => {
     console.log('Logging out');
     try {
-      await supabase.auth.refreshSession();
+      // TODO: await refreshSession();
     } catch {
     } finally {
-      await supabase.auth.signOut();
+      // TODO: await signOut();
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       setToken(null);
@@ -92,7 +86,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ token, user, login, logout }}>{children}</AuthContext.Provider>
+    <AuthContext.Provider value={{ token, user, login, logout }}>
+      {children}
+    </AuthContext.Provider>
   );
 };
 

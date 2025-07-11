@@ -1,5 +1,4 @@
 import { jwtDecode } from 'jwt-decode';
-import { supabase } from '@/utils/supabase';
 import { UserPlan } from '@/types/user';
 import { DEFAULT_DAILY_TRANSLATION_QUOTA, DEFAULT_STORAGE_QUOTA } from '@/services/constants';
 import { isWebAppPlatform } from '@/services/environment';
@@ -63,8 +62,8 @@ export const getAccessToken = async (): Promise<string | null> => {
   if (isWebAppPlatform()) {
     return localStorage.getItem('token') ?? null;
   }
-  const { data } = await supabase.auth.getSession();
-  return data?.session?.access_token ?? null;
+
+  return null;
 };
 
 export const getUserID = async (): Promise<string | null> => {
@@ -72,19 +71,12 @@ export const getUserID = async (): Promise<string | null> => {
     const user = localStorage.getItem('user') ?? '{}';
     return JSON.parse(user).id ?? null;
   }
-  const { data } = await supabase.auth.getSession();
-  return data?.session?.user?.id ?? null;
+  
+  return null;
 };
 
 export const validateUserAndToken = async (authHeader: string | null | undefined) => {
   if (!authHeader) return {};
 
-  const token = authHeader.replace('Bearer ', '');
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser(token);
-
-  if (error || !user) return {};
-  return { user, token };
+  return {};
 };

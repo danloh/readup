@@ -1,5 +1,5 @@
-import { User } from '@supabase/supabase-js';
-import { supabase } from '@/utils/supabase';
+
+type User = any; // TODO
 
 interface UseAuthCallbackOptions {
   accessToken?: string | null;
@@ -33,31 +33,31 @@ export function handleAuthCallback({
       return;
     }
 
-    const { error: err } = await supabase.auth.setSession({
-      access_token: accessToken,
-      refresh_token: refreshToken,
-    });
+    // TODO
+    // const { error: err } = await auth.setSession({
+    //   access_token: accessToken,
+    //   refresh_token: refreshToken,
+    // });
 
-    if (err) {
-      console.error('Error setting session:', err);
-      navigate('/auth/error');
-      return;
-    }
+    // if (err) {
+    //   console.error('Error setting session:', err);
+    //   navigate('/auth/error');
+    //   return;
+    // }
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (user) {
-      login(accessToken, user);
-      if (type === 'recovery') {
-        navigate('/auth/recovery');
-        return;
-      }
-      navigate(next);
-    } else {
-      console.error('Error fetching user data');
-      navigate('/auth/error');
-    }
+    // todo
+    // const {data: { user }} = await auth.getUser();
+    // if (user) {
+    //   login(accessToken, user);
+    //   if (type === 'recovery') {
+    //     navigate('/auth/recovery');
+    //     return;
+    //   }
+    //   navigate(next);
+    // } else {
+    //   console.error('Error fetching user data');
+    //   navigate('/auth/error');
+    // }
   }
 
   finalizeSession();

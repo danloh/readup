@@ -2,7 +2,7 @@ import crypto from 'crypto';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { corsAllMethods, runMiddleware } from '@/utils/cors';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
-import { getDailyTranslationPlanData, getUserPlan, validateUserAndToken } from '@/utils/access';
+import { getDailyTranslationPlanData } from '@/utils/access';
 import { ErrorCodes } from '@/services/translators';
 
 const DEFAULT_DEEPL_FREE_API = 'https://api-free.deepl.com/v2/translate';
@@ -44,17 +44,13 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   const env = (getCloudflareContext().env || {}) as CloudflareEnv;
   const hasKVCache = !!env['TRANSLATIONS_KV'];
 
-  const { user, token } = await validateUserAndToken(req.headers['authorization']);
   const { DEEPL_PRO_API, DEEPL_FREE_API } = process.env;
   const deepFreeApiUrl = DEEPL_FREE_API || DEFAULT_DEEPL_FREE_API;
   const deeplProApiUrl = DEEPL_PRO_API || DEFAULT_DEEPL_PRO_API;
 
   let deeplApiUrl = deepFreeApiUrl;
   let userPlan = 'free';
-  if (user && token) {
-    userPlan = getUserPlan(token);
-    if (userPlan === 'pro') deeplApiUrl = deeplProApiUrl;
-  }
+ 
   const deeplAuthKey =
     deeplApiUrl === deeplProApiUrl
       ? getDeepLAPIKey(process.env['DEEPL_PRO_API_KEYS'])
@@ -89,11 +85,11 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
           }
         }
 
-        if (!user || !token) return res.status(401).json({ error: ErrorCodes.UNAUTHORIZED });
+        // if (!user || !token) return res.status(401).json({ error: ErrorCodes.UNAUTHORIZED });
 
         return await callDeepLAPI(
-          user?.id,
-          token,
+          undefined,
+          undefined,
           singleText,
           sourceLang,
           targetLang,
