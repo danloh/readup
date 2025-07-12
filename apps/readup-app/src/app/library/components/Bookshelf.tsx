@@ -4,7 +4,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { MdDelete, MdOpenInNew, MdOutlineCancel, MdInfoOutline } from 'react-icons/md';
 import { LuFolderPlus } from 'react-icons/lu';
-import { PiPlus } from 'react-icons/pi';
 import { Book, BooksGroup } from '@/types/book';
 import { LibraryCoverFitType, LibraryViewModeType } from '@/types/settings';
 import { useEnv } from '@/context/EnvContext';
@@ -26,7 +25,6 @@ interface BookshelfProps {
   isSelectMode: boolean;
   isSelectAll: boolean;
   isSelectNone: boolean;
-  handleImportBooks: () => void;
   handleBookUpload: (book: Book) => Promise<boolean>;
   handleBookDownload: (book: Book) => Promise<boolean>;
   handleBookDelete: (book: Book) => Promise<boolean>;
@@ -40,7 +38,6 @@ const Bookshelf: React.FC<BookshelfProps> = ({
   isSelectMode,
   isSelectAll,
   isSelectNone,
-  handleImportBooks,
   handleBookUpload,
   handleBookDownload,
   handleBookDelete,
@@ -311,18 +308,6 @@ const Bookshelf: React.FC<BookshelfProps> = ({
             }
           />
         ))}
-        {viewMode === 'grid' && !navBooksGroup && allBookshelfItems.length > 0 && (
-          <div
-            className={clsx(
-              'border-1 bg-base-100 hover:bg-base-300/50 flex items-center justify-center',
-              'mx-0 my-4 aspect-[28/41] sm:mx-4',
-            )}
-            role='button'
-            onClick={handleImportBooks}
-          >
-            <PiPlus className='size-10' color='gray' />
-          </div>
-        )}
       </div>
       {loading && (
         <div className='fixed inset-0 z-50 flex items-center justify-center'>

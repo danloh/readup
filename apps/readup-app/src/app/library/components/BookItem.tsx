@@ -113,7 +113,7 @@ const BookItem: React.FC<BookItemProps> = ({
           <div className='flex items-center justify-center gap-x-2'>
             {!appService?.isMobile && (
               <button
-                className='show-detail-button -m-2 p-2 sm:opacity-0 sm:group-hover:opacity-100'
+                className='show-detail-button -m-2 p-2'
                 onPointerDown={(e) => stopEvent(e)}
                 onPointerUp={(e) => stopEvent(e)}
                 onPointerMove={(e) => stopEvent(e)}
