@@ -53,10 +53,9 @@ const BookItem: React.FC<BookItemProps> = ({
   return (
     <div
       className={clsx(
-        'book-item flex',
+        'book-item flex cursor-pointer',
         mode === 'grid' && 'h-full flex-col justify-end',
         mode === 'list' && 'h-28 flex-row gap-4 overflow-hidden',
-        appService?.hasContextMenu ? 'cursor-pointer' : '',
       )}
     >
       <div
