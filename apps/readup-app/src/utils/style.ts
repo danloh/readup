@@ -232,12 +232,13 @@ const getLayoutStyles = (
     widows: 2;
   }
   p:has(> img:only-child), p:has(> span:only-child > img:only-child),
+  p:has(> img:not(.has-text-siblings)),
   p:has(> a:first-child + img:last-child) {
-    text-indent: unset !important;
+    text-indent: initial !important;
   }
   blockquote[align="center"], div[align="center"],
   p[align="center"], dd[align="center"] {
-    text-indent: unset !important;
+    text-indent: initial !important;
   }
   p {
     ${vertical ? `margin-left: ${paragraphMargin}em ${overrideLayout ? '!important' : ''};` : ''}
