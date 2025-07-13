@@ -1,27 +1,17 @@
 import clsx from 'clsx';
-import { MdCheckCircle, MdCheckCircleOutline } from 'react-icons/md';
-import { useEnv } from '@/context/EnvContext';
 import { useResponsiveSize } from '@/hooks/useResponsiveSize';
 import { BooksGroup } from '@/types/book';
 import BookCover from '@/components/BookCover';
 
 interface GroupItemProps {
   group: BooksGroup;
-  isSelectMode: boolean;
-  selectedBooks: string[];
 }
 
-const GroupItem: React.FC<GroupItemProps> = ({ group, isSelectMode, selectedBooks }) => {
-  const { appService } = useEnv();
+const GroupItem: React.FC<GroupItemProps> = ({ group }) => {
   const iconSize15 = useResponsiveSize(15);
 
   return (
-    <div
-      className={clsx(
-        'group-item flex h-full flex-col justify-end',
-        appService?.hasContextMenu ? 'cursor-pointer' : '',
-      )}
-    >
+    <div className='group-item flex h-full flex-col justify-end cursor-pointer'>
       <div className='bg-base-100 relative flex aspect-[28/41] items-center justify-center overflow-hidden p-2 shadow-md'>
         <div className='grid w-full grid-cols-2 grid-rows-2 gap-1 overflow-hidden'>
           {group.books.slice(0, 4).map((book) => (
@@ -30,18 +20,6 @@ const GroupItem: React.FC<GroupItemProps> = ({ group, isSelectMode, selectedBook
             </div>
           ))}
         </div>
-        {selectedBooks.includes(group.id) && (
-          <div className='absolute inset-0 bg-black opacity-30 transition-opacity duration-300'></div>
-        )}
-        {isSelectMode && (
-          <div className='absolute bottom-1 right-1'>
-            {selectedBooks.includes(group.id) ? (
-              <MdCheckCircle className='fill-blue-500' />
-            ) : (
-              <MdCheckCircleOutline className='fill-gray-300 drop-shadow-sm' />
-            )}
-          </div>
-        )}
       </div>
       <div className={clsx('flex w-full flex-col pt-2')}>
         <div className='min-w-0 flex-1'>

@@ -1,5 +1,4 @@
 import clsx from 'clsx';
-import { MdCheckCircle, MdCheckCircleOutline } from 'react-icons/md';
 import {
   LiaCloudUploadAltSolid,
   LiaCloudDownloadAltSolid,
@@ -21,8 +20,6 @@ interface BookItemProps {
   book: Book;
   mode: LibraryViewModeType;
   coverFit: LibraryCoverFitType;
-  isSelectMode: boolean;
-  selectedBooks: string[];
   transferProgress: number | null;
   handleBookUpload: (book: Book) => void;
   handleBookDownload: (book: Book) => void;
@@ -33,8 +30,6 @@ const BookItem: React.FC<BookItemProps> = ({
   book,
   mode,
   coverFit,
-  isSelectMode,
-  selectedBooks,
   transferProgress,
   handleBookUpload,
   handleBookDownload,
@@ -66,18 +61,6 @@ const BookItem: React.FC<BookItemProps> = ({
         )}
       >
         <BookCover mode={mode} book={book} coverFit={coverFit} />
-        {selectedBooks.includes(book.hash) && (
-          <div className='absolute inset-0 bg-black opacity-30 transition-opacity duration-300'></div>
-        )}
-        {isSelectMode && (
-          <div className='absolute bottom-1 right-1'>
-            {selectedBooks.includes(book.hash) ? (
-              <MdCheckCircle className='fill-blue-500' />
-            ) : (
-              <MdCheckCircleOutline className='fill-gray-300 drop-shadow-sm' />
-            )}
-          </div>
-        )}
       </div>
       <div
         className={clsx(

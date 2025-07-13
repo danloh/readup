@@ -2,10 +2,8 @@ import clsx from 'clsx';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FaSearch } from 'react-icons/fa';
-import { PiPlus } from 'react-icons/pi';
-import { PiSelectionAllDuotone } from 'react-icons/pi';
-import { PiDotsThreeCircle } from 'react-icons/pi';
-import { MdOutlineMenu, MdArrowBackIosNew } from 'react-icons/md';
+import { PiPlus, PiDotsThreeCircle } from 'react-icons/pi';
+import { MdOutlineSettings, MdArrowBackIosNew } from 'react-icons/md';
 import { IoMdCloseCircle } from 'react-icons/io';
 
 import { useEnv } from '@/context/EnvContext';
@@ -17,7 +15,6 @@ import { useSafeAreaInsets } from '@/hooks/useSafeAreaInsets';
 import { useTrafficLightStore } from '@/store/trafficLightStore';
 import { navigateToLibrary } from '@/utils/nav';
 import { debounce } from '@/utils/debounce';
-import useShortcuts from '@/hooks/useShortcuts';
 import WindowButtons from '@/components/WindowButtons';
 import Dropdown from '@/components/Dropdown';
 import SettingsMenu from './SettingsMenu';
@@ -25,22 +22,10 @@ import ImportMenu from './ImportMenu';
 import ViewMenu from './ViewMenu';
 
 interface LibraryHeaderProps {
-  isSelectMode: boolean;
-  isSelectAll: boolean;
   onImportBooks: () => void;
-  onToggleSelectMode: () => void;
-  onSelectAll: () => void;
-  onDeselectAll: () => void;
 }
 
-const LibraryHeader: React.FC<LibraryHeaderProps> = ({
-  isSelectMode,
-  isSelectAll,
-  onImportBooks,
-  onToggleSelectMode,
-  onSelectAll,
-  onDeselectAll,
-}) => {
+const LibraryHeader: React.FC<LibraryHeaderProps> = ({onImportBooks}) => {
   const _ = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -60,10 +45,6 @@ const LibraryHeader: React.FC<LibraryHeaderProps> = ({
   const iconSize18 = useResponsiveSize(18);
   const iconSize20 = useResponsiveSize(20);
   const insets = useSafeAreaInsets();
-
-  useShortcuts({
-    onToggleSelectMode,
-  });
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const debouncedUpdateQueryParam = useCallback(
@@ -185,68 +166,32 @@ const LibraryHeader: React.FC<LibraryHeaderProps> = ({
             >
               <ImportMenu onImportBooks={onImportBooks} />
             </Dropdown>
-            {appService?.isMobile ? null : (
-              <button
-                onClick={onToggleSelectMode}
-                aria-label={_('Select Multiple Books')}
-                className='h-6'
-              >
-                <div
-                  className='lg:tooltip lg:tooltip-bottom cursor-pointer'
-                  data-tip={_('Select Books')}
-                >
-                  <PiSelectionAllDuotone
-                    role='button'
-                    className={`h-6 w-6 ${isSelectMode ? 'fill-gray-400' : 'fill-gray-500'}`}
-                  />
-                </div>
-              </button>
-            )}
           </div>
         </div>
-        {isSelectMode ? (
-          <div
-            className={clsx(
-              'flex h-full items-center',
-              'w-max-[72px] w-min-[72px] sm:w-max-[80px] sm:w-min-[80px]',
-            )}
+        <div className='flex h-full items-center gap-x-2 sm:gap-x-4'>
+          <Dropdown
+            className='exclude-title-bar-mousedown dropdown-bottom dropdown-end'
+            buttonClassName='btn btn-ghost h-8 min-h-8 w-8 p-0'
+            toggleButton={<PiDotsThreeCircle size={iconSize18} />}
           >
-            <button
-              onClick={isSelectAll ? onDeselectAll : onSelectAll}
-              className='btn btn-ghost text-base-content/85 h-8 min-h-8 w-[72px] p-0 sm:w-[80px]'
-              aria-label={isSelectAll ? _('Deselect') : _('Select All')}
-            >
-              <span className='font-sans text-base font-normal sm:text-sm'>
-                {isSelectAll ? _('Deselect') : _('Select All')}
-              </span>
-            </button>
-          </div>
-        ) : (
-          <div className='flex h-full items-center gap-x-2 sm:gap-x-4'>
-            <Dropdown
-              className='exclude-title-bar-mousedown dropdown-bottom dropdown-end'
-              buttonClassName='btn btn-ghost h-8 min-h-8 w-8 p-0'
-              toggleButton={<PiDotsThreeCircle size={iconSize18} />}
-            >
-              <ViewMenu />
-            </Dropdown>
-            <Dropdown
-              className='exclude-title-bar-mousedown dropdown-bottom dropdown-end'
-              buttonClassName='btn btn-ghost h-8 min-h-8 w-8 p-0'
-              toggleButton={<MdOutlineMenu size={iconSize18} />}
-            >
-              <SettingsMenu />
-            </Dropdown>
-            {appService?.hasWindowBar && (
-              <WindowButtons
-                headerRef={headerRef}
-                showMinimize={windowButtonVisible}
-                showMaximize={windowButtonVisible}
-                showClose={windowButtonVisible}
-              />
-            )}
-          </div>
-        )}
+            <ViewMenu />
+          </Dropdown>
+          <Dropdown
+            className='exclude-title-bar-mousedown dropdown-bottom dropdown-end'
+            buttonClassName='btn btn-ghost h-8 min-h-8 w-8 p-0'
+            toggleButton={<MdOutlineSettings size={iconSize18} />}
+          >
+            <SettingsMenu />
+          </Dropdown>
+          {appService?.hasWindowBar && (
+            <WindowButtons
+              headerRef={headerRef}
+              showMinimize={windowButtonVisible}
+              showMaximize={windowButtonVisible}
+              showClose={windowButtonVisible}
+            />
+          )}
+        </div>
       </div>
     </div>
   );

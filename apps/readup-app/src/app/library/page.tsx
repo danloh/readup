@@ -75,9 +75,6 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
   const [loading, setLoading] = useState(false);
   const isInitiating = useRef(false);
   const [libraryLoaded, setLibraryLoaded] = useState(false);
-  const [isSelectMode, setIsSelectMode] = useState(false);
-  const [isSelectAll, setIsSelectAll] = useState(false);
-  const [isSelectNone, setIsSelectNone] = useState(false);
   const [showDetailsBook, setShowDetailsBook] = useState<Book | null>(null);
   const [booksTransferProgress, setBooksTransferProgress] = useState<{
     [key: string]: number | null;
@@ -220,13 +217,6 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pageRef.current]);
-
-  useEffect(() => {
-    if (!libraryBooks.some((book) => !book.deletedAt)) {
-      handleSetSelectMode(false);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [libraryBooks]);
 
   const processOpenWithFiles = React.useCallback(
     async (appService: AppService, openWithFiles: string[], libraryBooks: Book[]) => {
@@ -554,7 +544,6 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
   };
 
   const handleImportBooks = async () => {
-    setIsSelectMode(false);
     console.log('Importing books...');
     let files;
 
@@ -564,25 +553,6 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
       files = (await selectFilesWeb()) as [File];
     }
     importBooks(files);
-  };
-
-  const handleSetSelectMode = (selectMode: boolean) => {
-    if (selectMode && appService?.hasHaptics) {
-      impactFeedback('medium');
-    }
-    setIsSelectMode(selectMode);
-    setIsSelectAll(false);
-    setIsSelectNone(false);
-  };
-
-  const handleSelectAll = () => {
-    setIsSelectAll(true);
-    setIsSelectNone(false);
-  };
-
-  const handleDeselectAll = () => {
-    setIsSelectNone(true);
-    setIsSelectAll(false);
   };
 
   const handleShowDetailsBook = (book: Book) => {
@@ -613,14 +583,7 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
       )}
     >
       <div className='top-0 z-40 w-full'>
-        <LibraryHeader
-          isSelectMode={isSelectMode}
-          isSelectAll={isSelectAll}
-          onImportBooks={handleImportBooks}
-          onToggleSelectMode={() => handleSetSelectMode(!isSelectMode)}
-          onSelectAll={handleSelectAll}
-          onDeselectAll={handleDeselectAll}
-        />
+        <LibraryHeader onImportBooks={handleImportBooks} />
       </div>
       {loading && (
         <div className='fixed inset-0 z-50 flex items-center justify-center'>
@@ -654,13 +617,9 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
               <DropIndicator />
               <Bookshelf
                 libraryBooks={libraryBooks}
-                isSelectMode={isSelectMode}
-                isSelectAll={isSelectAll}
-                isSelectNone={isSelectNone}
                 handleBookUpload={handleBookUpload}
                 handleBookDownload={handleBookDownload}
                 handleBookDelete={handleBookDelete}
-                handleSetSelectMode={handleSetSelectMode}
                 handleShowDetailsBook={handleShowDetailsBook}
                 booksTransferProgress={booksTransferProgress}
               />

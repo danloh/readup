@@ -74,15 +74,11 @@ interface BookshelfItemProps {
   mode: LibraryViewModeType;
   item: BookshelfItem;
   coverFit: LibraryCoverFitType;
-  isSelectMode: boolean;
-  selectedBooks: string[];
   transferProgress: number | null;
   setLoading: React.Dispatch<React.SetStateAction<boolean>>;
-  toggleSelection: (hash: string) => void;
   handleBookUpload: (book: Book) => Promise<boolean>;
   handleBookDownload: (book: Book) => Promise<boolean>;
   handleBookDelete: (book: Book) => Promise<boolean>;
-  handleSetSelectMode: (selectMode: boolean) => void;
   handleShowDetailsBook: (book: Book) => void;
 }
 
@@ -90,15 +86,11 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
   mode,
   item,
   coverFit,
-  isSelectMode,
-  selectedBooks,
   transferProgress,
   setLoading,
-  toggleSelection,
   handleBookUpload,
   handleBookDownload,
   handleBookDelete,
-  handleSetSelectMode,
   handleShowDetailsBook,
 }) => {
   const _ = useTranslation();
@@ -138,22 +130,14 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
   };
 
   const handleBookClick = async (book: Book) => {
-    if (isSelectMode) {
-      toggleSelection(book.hash);
-    } else {
-      if (!(await makeBookAvailable(book))) return;
-      navigateToReader(router, [book.hash]);
-    }
+    if (!(await makeBookAvailable(book))) return;
+    navigateToReader(router, [book.hash]);
   };
 
   const handleGroupClick = (group: BooksGroup) => {
-    if (isSelectMode) {
-      toggleSelection(group.id);
-    } else {
-      const params = new URLSearchParams(searchParams?.toString());
-      params.set('group', group.id);
-      navigateToLibrary(router, `${params.toString()}`);
-    }
+    const params = new URLSearchParams(searchParams?.toString());
+    params.set('group', group.id);
+    navigateToLibrary(router, `${params.toString()}`);
   };
 
   const bookContextMenuHandler = async (book: Book) => {
@@ -161,13 +145,7 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
     const osPlatform = getOSPlatform();
     const fileRevealLabel =
       FILE_REVEAL_LABELS[osPlatform as FILE_REVEAL_PLATFORMS] || FILE_REVEAL_LABELS.default;
-    const selectBookMenuItem = await MenuItem.new({
-      text: selectedBooks.includes(book.hash) ? _('Deselect Book') : _('Select Book'),
-      action: async () => {
-        if (!isSelectMode) handleSetSelectMode(true);
-        toggleSelection(book.hash);
-      },
-    });
+
     const showBookInFinderMenuItem = await MenuItem.new({
       text: _(fileRevealLabel),
       action: async () => {
@@ -200,7 +178,6 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
       },
     });
     const menu = await Menu.new();
-    menu.append(selectBookMenuItem);
     menu.append(showBookDetailsMenuItem);
     menu.append(showBookInFinderMenuItem);
     if (book.uploadedAt && !book.downloadedAt) {
@@ -215,13 +192,7 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
 
   const groupContextMenuHandler = async (group: BooksGroup) => {
     if (!appService?.hasContextMenu) return;
-    const selectGroupMenuItem = await MenuItem.new({
-      text: selectedBooks.includes(group.id) ? _('Deselect Group') : _('Select Group'),
-      action: async () => {
-        if (!isSelectMode) handleSetSelectMode(true);
-        toggleSelection(group.id);
-      },
-    });
+    
     const deleteGroupMenuItem = await MenuItem.new({
       text: _('Delete'),
       action: async () => {
@@ -231,22 +202,11 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
       },
     });
     const menu = await Menu.new();
-    menu.append(selectGroupMenuItem);
     menu.append(deleteGroupMenuItem);
     menu.popup();
   };
 
   const { pressing, handlers } = useLongPress({
-    onLongPress: async () => {
-      if (!isSelectMode) {
-        handleSetSelectMode(true);
-      }
-      if ('format' in item) {
-        toggleSelection((item as Book).hash);
-      } else {
-        toggleSelection((item as BooksGroup).id);
-      }
-    },
     onTap: () => {
       if ('format' in item) {
         handleBookClick(item as Book);
@@ -283,15 +243,13 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
               mode={mode}
               book={item}
               coverFit={coverFit}
-              isSelectMode={isSelectMode}
-              selectedBooks={selectedBooks}
               transferProgress={transferProgress}
               handleBookUpload={handleBookUpload}
               handleBookDownload={handleBookDownload}
               showBookDetailsModal={showBookDetailsModal}
             />
           ) : (
-            <GroupItem group={item} isSelectMode={isSelectMode} selectedBooks={selectedBooks} />
+            <GroupItem group={item} />
           )}
         </div>
       </div>
