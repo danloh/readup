@@ -151,32 +151,9 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
         revealItemInDir(folder);
       },
     });
-    const showBookDetailsMenuItem = await MenuItem.new({
-      text: _('Show Book Details'),
-      action: async () => {
-        showBookDetailsModal(book);
-      },
-    });
-    const downloadBookMenuItem = await MenuItem.new({
-      text: _('Download Book'),
-      action: async () => {
-        handleBookDownload(book);
-      },
-    });
-
-    const deleteBookMenuItem = await MenuItem.new({
-      text: _('Delete'),
-      action: async () => {
-        await handleBookDelete(book);
-      },
-    });
+    
     const menu = await Menu.new();
-    menu.append(showBookDetailsMenuItem);
     menu.append(showBookInFinderMenuItem);
-    if (book.uploadedAt && !book.downloadedAt) {
-      menu.append(downloadBookMenuItem);
-    }
-    menu.append(deleteBookMenuItem);
     menu.popup();
   };
 
