@@ -1,17 +1,9 @@
 import clsx from 'clsx';
-import {
-  LiaCloudUploadAltSolid,
-  LiaCloudDownloadAltSolid,
-  LiaInfoCircleSolid,
-} from 'react-icons/lia';
+import { LiaInfoCircleSolid } from 'react-icons/lia';
 
 import { Book } from '@/types/book';
-import { useEnv } from '@/context/EnvContext';
-import { useAuth } from '@/context/AuthContext';
-import { useRouter } from 'next/navigation';
 import { useResponsiveSize } from '@/hooks/useResponsiveSize';
 import { LibraryCoverFitType, LibraryViewModeType } from '@/types/settings';
-import { navigateToLogin } from '@/utils/nav';
 import { formatAuthors } from '@/utils/book';
 import ReadingProgress from './ReadingProgress';
 import BookCover from '@/components/BookCover';
@@ -21,8 +13,6 @@ interface BookItemProps {
   mode: LibraryViewModeType;
   coverFit: LibraryCoverFitType;
   transferProgress: number | null;
-  handleBookUpload: (book: Book) => void;
-  handleBookDownload: (book: Book) => void;
   showBookDetailsModal: (book: Book) => void;
 }
 
@@ -31,13 +21,8 @@ const BookItem: React.FC<BookItemProps> = ({
   mode,
   coverFit,
   transferProgress,
-  handleBookUpload,
-  handleBookDownload,
   showBookDetailsModal,
 }) => {
-  const router = useRouter();
-  const { user } = useAuth();
-  const { appService } = useEnv();
   const iconSize15 = useResponsiveSize(15);
 
   const stopEvent = (e: React.MouseEvent | React.TouchEvent) => {
@@ -94,22 +79,20 @@ const BookItem: React.FC<BookItemProps> = ({
         >
           {book.progress && <ReadingProgress book={book} />}
           <div className='flex items-center justify-center gap-x-2'>
-            {!appService?.isMobile && (
-              <button
-                className='show-detail-button -m-2 p-2'
-                onPointerDown={(e) => stopEvent(e)}
-                onPointerUp={(e) => stopEvent(e)}
-                onPointerMove={(e) => stopEvent(e)}
-                onPointerCancel={(e) => stopEvent(e)}
-                onPointerLeave={(e) => stopEvent(e)}
-                onClick={() => showBookDetailsModal(book)}
-              >
-                <div className='pt-[2px] sm:pt-[1px]'>
-                  <LiaInfoCircleSolid size={iconSize15} />
-                </div>
-              </button>
-            )}
-            {transferProgress !== null ? (
+            <button
+              className='show-detail-button -m-2 p-2'
+              onPointerDown={(e) => stopEvent(e)}
+              onPointerUp={(e) => stopEvent(e)}
+              onPointerMove={(e) => stopEvent(e)}
+              onPointerCancel={(e) => stopEvent(e)}
+              onPointerLeave={(e) => stopEvent(e)}
+              onClick={() => showBookDetailsModal(book)}
+            >
+              <div className='pt-[1px]'>
+                <LiaInfoCircleSolid size={iconSize15} />
+              </div>
+            </button>
+            {transferProgress == null ? null : (
               transferProgress === 100 ? null : (
                 <div
                   className='radial-progress'
@@ -122,33 +105,6 @@ const BookItem: React.FC<BookItemProps> = ({
                   }
                   role='progressbar'
                 ></div>
-              )
-            ) : (
-              (!book.uploadedAt || (book.uploadedAt && !book.downloadedAt)) && (
-                <button
-                  className='show-cloud-button -m-2 p-2'
-                  onPointerDown={(e) => stopEvent(e)}
-                  onPointerUp={(e) => stopEvent(e)}
-                  onPointerMove={(e) => stopEvent(e)}
-                  onPointerCancel={(e) => stopEvent(e)}
-                  onPointerLeave={(e) => stopEvent(e)}
-                  onClick={() => {
-                    if (!user) {
-                      navigateToLogin(router);
-                      return;
-                    }
-                    if (!book.uploadedAt) {
-                      handleBookUpload(book);
-                    } else if (!book.downloadedAt) {
-                      handleBookDownload(book);
-                    }
-                  }}
-                >
-                  {!book.uploadedAt && <LiaCloudUploadAltSolid size={iconSize15} />}
-                  {book.uploadedAt && !book.downloadedAt && (
-                    <LiaCloudDownloadAltSolid size={iconSize15} />
-                  )}
-                </button>
               )
             )}
           </div>

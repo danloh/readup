@@ -76,7 +76,6 @@ interface BookshelfItemProps {
   coverFit: LibraryCoverFitType;
   transferProgress: number | null;
   setLoading: React.Dispatch<React.SetStateAction<boolean>>;
-  handleBookUpload: (book: Book) => Promise<boolean>;
   handleBookDownload: (book: Book) => Promise<boolean>;
   handleBookDelete: (book: Book) => Promise<boolean>;
   handleShowDetailsBook: (book: Book) => void;
@@ -88,7 +87,6 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
   coverFit,
   transferProgress,
   setLoading,
-  handleBookUpload,
   handleBookDownload,
   handleBookDelete,
   handleShowDetailsBook,
@@ -165,12 +163,7 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
         handleBookDownload(book);
       },
     });
-    const uploadBookMenuItem = await MenuItem.new({
-      text: _('Upload Book'),
-      action: async () => {
-        handleBookUpload(book);
-      },
-    });
+
     const deleteBookMenuItem = await MenuItem.new({
       text: _('Delete'),
       action: async () => {
@@ -182,9 +175,6 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
     menu.append(showBookInFinderMenuItem);
     if (book.uploadedAt && !book.downloadedAt) {
       menu.append(downloadBookMenuItem);
-    }
-    if (!book.uploadedAt && book.downloadedAt) {
-      menu.append(uploadBookMenuItem);
     }
     menu.append(deleteBookMenuItem);
     menu.popup();
@@ -244,8 +234,6 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
               book={item}
               coverFit={coverFit}
               transferProgress={transferProgress}
-              handleBookUpload={handleBookUpload}
-              handleBookDownload={handleBookDownload}
               showBookDetailsModal={showBookDetailsModal}
             />
           ) : (

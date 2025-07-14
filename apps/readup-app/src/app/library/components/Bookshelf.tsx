@@ -15,7 +15,6 @@ import BookshelfItem, { generateGridItems, generateListItems } from './Bookshelf
 
 interface BookshelfProps {
   libraryBooks: Book[];
-  handleBookUpload: (book: Book) => Promise<boolean>;
   handleBookDownload: (book: Book) => Promise<boolean>;
   handleBookDelete: (book: Book) => Promise<boolean>;
   handleShowDetailsBook: (book: Book) => void;
@@ -24,7 +23,6 @@ interface BookshelfProps {
 
 const Bookshelf: React.FC<BookshelfProps> = ({
   libraryBooks,
-  handleBookUpload,
   handleBookDownload,
   handleBookDelete,
   handleShowDetailsBook,
@@ -210,7 +208,6 @@ const Bookshelf: React.FC<BookshelfProps> = ({
             mode={viewMode as LibraryViewModeType}
             coverFit={coverFit as LibraryCoverFitType}
             setLoading={setLoading}
-            handleBookUpload={handleBookUpload}
             handleBookDownload={handleBookDownload}
             handleBookDelete={handleBookDelete}
             handleShowDetailsBook={handleShowDetailsBook}

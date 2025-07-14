@@ -2,7 +2,8 @@ import clsx from 'clsx';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FaSearch } from 'react-icons/fa';
-import { PiPlus, PiDotsThreeCircle } from 'react-icons/pi';
+import { PiDotsThreeCircle } from 'react-icons/pi';
+import { LiaFileImportSolid } from 'react-icons/lia';
 import { MdOutlineSettings, MdArrowBackIosNew } from 'react-icons/md';
 import { IoMdCloseCircle } from 'react-icons/io';
 
@@ -151,24 +152,23 @@ const LibraryHeader: React.FC<LibraryHeaderProps> = ({onImportBooks}) => {
                 <IoMdCloseCircle className='h-4 w-4' />
               </button>
             )}
-            <span className='bg-base-content/50 mx-2 h-4 w-[0.5px]'></span>
-            <Dropdown
-              className={clsx(
-                'exclude-title-bar-mousedown dropdown-bottom flex h-6 cursor-pointer justify-center',
-                appService?.isMobile ? 'dropdown-end' : 'dropdown-center',
-              )}
-              buttonClassName='p-0 h-6 min-h-6 w-6 flex items-center justify-center'
-              toggleButton={
-                <div className='lg:tooltip lg:tooltip-bottom' data-tip={_('Import Books')}>
-                  <PiPlus className='m-0.5 h-5 w-5' />
-                </div>
-              }
-            >
-              <ImportMenu onImportBooks={onImportBooks} />
-            </Dropdown>
           </div>
         </div>
-        <div className='flex h-full items-center gap-x-2 sm:gap-x-4'>
+        <div className='flex h-full items-center gap-x-2'>
+          <Dropdown
+            className={clsx(
+              'exclude-title-bar-mousedown dropdown-bottom flex h-6 cursor-pointer justify-center',
+              appService?.isMobile ? 'dropdown-end' : 'dropdown-center',
+            )}
+            buttonClassName='p-0 h-6 min-h-6 w-6 flex items-center justify-center'
+            toggleButton={
+              <div className='lg:tooltip lg:tooltip-bottom' data-tip={_('Import Books')}>
+                <LiaFileImportSolid className='m-0.5 h-5 w-5' />
+              </div>
+            }
+          >
+            <ImportMenu onImportBooks={onImportBooks} />
+          </Dropdown>
           <Dropdown
             className='exclude-title-bar-mousedown dropdown-bottom dropdown-end'
             buttonClassName='btn btn-ghost h-8 min-h-8 w-8 p-0'
