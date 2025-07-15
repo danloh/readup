@@ -1,13 +1,12 @@
 import clsx from 'clsx';
 import Image from 'next/image';
 import { Book } from '@/types/book';
-import { LibraryCoverFitType, LibraryViewModeType } from '@/types/settings';
+import { LibraryViewModeType } from '@/types/settings';
 import { formatAuthors, formatTitle } from '@/utils/book';
 
 interface BookCoverProps {
   book: Book;
   mode?: LibraryViewModeType;
-  coverFit?: LibraryCoverFitType;
   className?: string;
   imageClassName?: string;
   isPreview?: boolean;
@@ -16,7 +15,6 @@ interface BookCoverProps {
 const BookCover: React.FC<BookCoverProps> = ({
   book,
   mode = 'grid',
-  coverFit = 'crop',
   className,
   imageClassName,
   isPreview,
@@ -35,35 +33,26 @@ const BookCover: React.FC<BookCoverProps> = ({
 
   return (
     <div className={clsx('book-cover-container relative flex h-full w-full', className)}>
-      {coverFit === 'crop' ? (
+      <div
+        className={clsx(
+          'flex h-full w-full justify-center',
+          mode === 'grid' ? 'items-end' : 'items-center',
+        )}
+      >
         <Image
           src={book.coverImageUrl!}
           alt={book.title}
           fill={true}
-          className={clsx('crop-cover-img object-cover', imageClassName)}
+          width={0}
+          height={0}
+          sizes='100vw'
+          className={clsx(
+            'fit-cover-img h-auto max-h-full w-auto max-w-full object-fit shadow-md',
+            imageClassName,
+          )}
           onError={handleImageError}
         />
-      ) : (
-        <div
-          className={clsx(
-            'flex h-full w-full justify-center',
-            mode === 'grid' ? 'items-end' : 'items-center',
-          )}
-        >
-          <Image
-            src={book.coverImageUrl!}
-            alt={book.title}
-            width={0}
-            height={0}
-            sizes='100vw'
-            className={clsx(
-              'fit-cover-img h-auto max-h-full w-auto max-w-full shadow-md',
-              imageClassName,
-            )}
-            onError={handleImageError}
-          />
-        </div>
-      )}
+      </div>
       <div
         className={clsx(
           'fallback-cover invisible absolute inset-0 rounded-none p-2',

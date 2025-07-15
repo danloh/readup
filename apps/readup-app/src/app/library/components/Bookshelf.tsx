@@ -3,7 +3,7 @@ import * as React from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { Book, BooksGroup } from '@/types/book';
-import { LibraryCoverFitType, LibraryViewModeType } from '@/types/settings';
+import { LibraryViewModeType } from '@/types/settings';
 import { useEnv } from '@/context/EnvContext';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useLibraryStore } from '@/store/libraryStore';
@@ -42,7 +42,7 @@ const Bookshelf: React.FC<BookshelfProps> = ({
   const [sortOrder, setSortOrder] = useState(
     searchParams?.get('order') || (settings.librarySortAscending ? 'asc' : 'desc'),
   );
-  const [coverFit, setCoverFit] = useState(searchParams?.get('cover') || settings.libraryCoverFit);
+  
   const isImportingBook = useRef(false);
 
   const { setCurrentBookshelf, setLibrary } = useLibraryStore();
@@ -83,7 +83,7 @@ const Bookshelf: React.FC<BookshelfProps> = ({
     const view = searchParams?.get('view') || settings.libraryViewMode;
     const sort = searchParams?.get('sort') || settings.librarySortBy;
     const order = searchParams?.get('order') || (settings.librarySortAscending ? 'asc' : 'desc');
-    const cover = searchParams?.get('cover') || settings.libraryCoverFit;
+
     const params = new URLSearchParams(searchParams?.toString());
     if (query) {
       params.set('q', query);
@@ -109,10 +109,6 @@ const Bookshelf: React.FC<BookshelfProps> = ({
       setViewMode(view);
     } else {
       params.delete('view');
-    }
-    setCoverFit(cover);
-    if (cover === 'crop') {
-      params.delete('cover');
     }
     if (sort === 'updated' && order === 'desc' && view === 'grid') {
       params.delete('sort');
@@ -206,7 +202,6 @@ const Bookshelf: React.FC<BookshelfProps> = ({
             key={`library-item-${'hash' in item ? item.hash : item.id}`}
             item={item}
             mode={viewMode as LibraryViewModeType}
-            coverFit={coverFit as LibraryCoverFitType}
             setLoading={setLoading}
             handleBookDownload={handleBookDownload}
             handleBookDelete={handleBookDelete}

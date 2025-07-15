@@ -4,7 +4,7 @@ import { MdCheck } from 'react-icons/md';
 import { useEnv } from '@/context/EnvContext';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useTranslation } from '@/hooks/useTranslation';
-import { LibraryCoverFitType, LibrarySortByType, LibraryViewModeType } from '@/types/settings';
+import { LibrarySortByType, LibraryViewModeType } from '@/types/settings';
 import { navigateToLibrary } from '@/utils/nav';
 import MenuItem from '@/components/MenuItem';
 
@@ -22,16 +22,10 @@ const ViewMenu: React.FC<ViewMenuProps> = ({ setIsDropdownOpen }) => {
   const viewMode = settings.libraryViewMode;
   const sortBy = settings.librarySortBy;
   const isAscending = settings.librarySortAscending;
-  const coverFit = settings.libraryCoverFit;
 
   const viewOptions = [
     { label: _('List'), value: 'list' },
     { label: _('Grid'), value: 'grid' },
-  ];
-
-  const coverFitOptions = [
-    { label: _('Crop'), value: 'crop' },
-    { label: _('Fit'), value: 'fit' },
   ];
 
   const sortByOptions = [
@@ -55,17 +49,6 @@ const ViewMenu: React.FC<ViewMenuProps> = ({ setIsDropdownOpen }) => {
 
     const params = new URLSearchParams(searchParams?.toString());
     params.set('view', value);
-    navigateToLibrary(router, `${params.toString()}`);
-  };
-
-  const handleToggleCropCovers = (value: LibraryCoverFitType) => {
-    settings.libraryCoverFit = value;
-    setSettings(settings);
-    saveSettings(envConfig, settings);
-    setIsDropdownOpen?.(false);
-
-    const params = new URLSearchParams(searchParams?.toString());
-    params.set('cover', value);
     navigateToLibrary(router, `${params.toString()}`);
   };
 
@@ -103,22 +86,6 @@ const ViewMenu: React.FC<ViewMenuProps> = ({ setIsDropdownOpen }) => {
           buttonClass='h-8'
           Icon={viewMode === option.value ? MdCheck : undefined}
           onClick={() => handleSetViewMode(option.value as LibraryViewModeType)}
-        />
-      ))}
-      <hr className='border-base-200 my-1' />
-      <MenuItem
-        label={_('Book Covers')}
-        buttonClass='h-8'
-        labelClass='text-sm sm:text-xs'
-        disabled
-      />
-      {coverFitOptions.map((option) => (
-        <MenuItem
-          key={option.value}
-          label={option.label}
-          buttonClass='h-8'
-          Icon={coverFit === option.value ? MdCheck : undefined}
-          onClick={() => handleToggleCropCovers(option.value as LibraryCoverFitType)}
         />
       ))}
       <hr className='border-base-200 my-1' />

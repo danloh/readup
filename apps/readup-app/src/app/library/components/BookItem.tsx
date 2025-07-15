@@ -3,7 +3,7 @@ import { LiaInfoCircleSolid } from 'react-icons/lia';
 
 import { Book } from '@/types/book';
 import { useResponsiveSize } from '@/hooks/useResponsiveSize';
-import { LibraryCoverFitType, LibraryViewModeType } from '@/types/settings';
+import { LibraryViewModeType } from '@/types/settings';
 import { formatAuthors } from '@/utils/book';
 import ReadingProgress from './ReadingProgress';
 import BookCover from '@/components/BookCover';
@@ -11,7 +11,6 @@ import BookCover from '@/components/BookCover';
 interface BookItemProps {
   book: Book;
   mode: LibraryViewModeType;
-  coverFit: LibraryCoverFitType;
   transferProgress: number | null;
   showBookDetailsModal: (book: Book) => void;
 }
@@ -19,7 +18,6 @@ interface BookItemProps {
 const BookItem: React.FC<BookItemProps> = ({
   book,
   mode,
-  coverFit,
   transferProgress,
   showBookDetailsModal,
 }) => {
@@ -33,19 +31,18 @@ const BookItem: React.FC<BookItemProps> = ({
   return (
     <div
       className={clsx(
-        'book-item flex cursor-pointer',
+        'book-item flex',
         mode === 'grid' && 'h-full flex-col justify-end',
         mode === 'list' && 'h-28 flex-row gap-4 overflow-hidden',
       )}
     >
       <div
         className={clsx(
-          'relative flex aspect-[28/41] items-center justify-center',
-          coverFit === 'crop' && 'overflow-hidden shadow-md',
+          'relative flex aspect-[28/41] items-center justify-center cursor-pointer',
           mode === 'list' && 'min-w-20',
         )}
       >
-        <BookCover mode={mode} book={book} coverFit={coverFit} />
+        <BookCover mode={mode} book={book} />
       </div>
       <div
         className={clsx(
