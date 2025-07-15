@@ -20,11 +20,11 @@ import { throttle } from '@/utils/throttle';
 import { eventDispatcher } from '@/utils/event';
 import { navigateToLibrary } from '@/utils/nav';
 import { BOOK_IDS_SEPARATOR } from '@/services/constants';
+import BookDetailModal from '@/components/BookDetailModal';
+import Spinner from '@/components/Spinner';
 
 import useBooksManager from '../hooks/useBooksManager';
 import useBookShortcuts from '../hooks/useBookShortcuts';
-import BookDetailModal from '@/components/BookDetailModal';
-import Spinner from '@/components/Spinner';
 import SideBar from './sidebar/SideBar';
 import Notebook from './notebook/Notebook';
 import BooksGrid from './BooksGrid';

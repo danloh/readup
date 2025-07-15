@@ -54,7 +54,7 @@ const TranslationToggler = ({ bookKey }: { bookKey: string }) => {
             : _('Enable Translation')
           : _('Translation Not Available')
       }
-      tooltipDirection='bottom'
+      tooltipDirection='top'
     ></Button>
   );
 };

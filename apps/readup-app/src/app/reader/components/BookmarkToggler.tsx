@@ -104,7 +104,7 @@ const BookmarkToggler: React.FC<BookmarkTogglerProps> = ({ bookKey }) => {
       }
       onClick={toggleBookmark}
       tooltip={_('Bookmark')}
-      tooltipDirection='bottom'
+      tooltipDirection='top'
     ></Button>
   );
 };
