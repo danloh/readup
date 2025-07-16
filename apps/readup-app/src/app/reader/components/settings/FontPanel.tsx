@@ -1,5 +1,7 @@
 import clsx from 'clsx';
 import React, { useEffect, useState } from 'react';
+import { RiFontSize2, RiFontSize } from "react-icons/ri";
+import { RxFontBold } from "react-icons/rx";
 
 import {
   ANDROID_FONTS,
@@ -250,7 +252,7 @@ const FontPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
   return (
     <div className='my-4 w-full space-y-6'>
       <div className='flex items-center justify-between'>
-        <h2 className=''>{_('Override Book Font')}</h2>
+        <b className=''>{_('Override Book Font')}</b>
         <input
           type='checkbox'
           className='toggle toggle-success h-5'
@@ -260,10 +262,10 @@ const FontPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
       </div>
 
       <div className='w-full'>
-        <h2 className='mb-2 font-medium'>{_('Font Size')}</h2>
         <div className='card border-base-200 border shadow'>
           <div className='divide-base-200 divide-y'>
             <NumberInput
+              Icon={RiFontSize2}
               label={_('Default Font Size')}
               value={defaultFontSize}
               onChange={setDefaultFontSize}
@@ -271,21 +273,15 @@ const FontPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
               max={120}
             />
             <NumberInput
+              Icon={RiFontSize}
               label={_('Minimum Font Size')}
               value={minFontSize}
               onChange={setMinFontSize}
               min={1}
               max={120}
             />
-          </div>
-        </div>
-      </div>
-
-      <div className='w-full'>
-        <h2 className='mb-2 font-medium'>{_('Font Weight')}</h2>
-        <div className='card border-base-200 border shadow'>
-          <div className='divide-base-200 divide-y'>
             <NumberInput
+              Icon={RxFontBold}
               label={_('Font Weight')}
               value={fontWeight}
               onChange={setFontWeight}
@@ -298,7 +294,6 @@ const FontPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
       </div>
 
       <div className='w-full'>
-        <h2 className='mb-2 font-medium'>{_('Font Family')}</h2>
         <div className='card border-base-200 border shadow'>
           <div className='divide-base-200 divide-y'>
             <div className='config-item'>
@@ -326,7 +321,6 @@ const FontPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
       </div>
 
       <div className='w-full'>
-        <h2 className='mb-2 font-medium'>{_('Font Face')}</h2>
         <div className='card border-base-200 border shadow'>
           <div className='divide-base-200 divide-y'>
             <FontFace

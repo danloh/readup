@@ -2,7 +2,7 @@ import clsx from 'clsx';
 import React, { useEffect } from 'react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { TbSunMoon } from 'react-icons/tb';
+import { GrSystem } from "react-icons/gr";
 import { MdZoomOut, MdZoomIn, MdSync, MdSyncProblem } from 'react-icons/md';
 import { PiScrollLight, PiBookOpenLight } from "react-icons/pi";
 import { BiCheckboxChecked, BiCheckbox, BiMoon, BiSun } from "react-icons/bi";
@@ -153,7 +153,7 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
               ? _('Light Mode')
               : _('Auto Mode')
         }
-        Icon={themeMode === 'dark' ? BiMoon : themeMode === 'light' ? BiSun : TbSunMoon}
+        Icon={themeMode === 'dark' ? BiMoon : themeMode === 'light' ? BiSun : GrSystem}
         onClick={cycleThemeMode}
       />
       <MenuItem

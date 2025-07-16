@@ -1,9 +1,11 @@
 import clsx from 'clsx';
 import React, { useEffect, useState } from 'react';
+import { IconType } from 'react-icons';
 import { FiMinus, FiPlus } from 'react-icons/fi';
 
 interface NumberInputProps {
   className?: string;
+  Icon?: IconType,
   label: string;
   value: number;
   min: number;
@@ -15,6 +17,7 @@ interface NumberInputProps {
 
 const NumberInput: React.FC<NumberInputProps> = ({
   className,
+  Icon,
   label,
   value,
   onChange,
@@ -67,7 +70,10 @@ const NumberInput: React.FC<NumberInputProps> = ({
 
   return (
     <div className={clsx('config-item', className)}>
-      <span className='text-base-content line-clamp-2'>{label}</span>
+      <div className='flex min-w-0 items-center'>
+        {Icon && (<Icon className='text-base-content mr-1' />)}
+        <span className='text-base-content line-clamp-2'>{label}</span>
+      </div>
       <div className='text-base-content flex items-center gap-2'>
         <input
           type='text'

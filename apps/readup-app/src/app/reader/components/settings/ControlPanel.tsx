@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { MdJoinLeft } from 'react-icons/md';
 import { useEnv } from '@/context/EnvContext';
 import { useReaderStore } from '@/store/readerStore';
 import { useDeviceControlStore } from '@/store/deviceStore';
@@ -114,98 +115,75 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
 
   return (
     <div className='my-4 w-full space-y-6'>
-      <div className='w-full'>
-        <h2 className='mb-2 font-medium'>{_('Scroll')}</h2>
-        <div className='card border-base-200 bg-base-100 border shadow'>
-          <div className='divide-base-200 divide-y'>
-            <div className='config-item'>
-              <span className=''>{_('Scrolled Mode')}</span>
-              <input
-                type='checkbox'
-                className='toggle toggle-success h-5'
-                checked={isScrolledMode}
-                onChange={() => setScrolledMode(!isScrolledMode)}
-              />
-            </div>
-            <div className='config-item'>
-              <span className=''>{_('Continuous Scroll')}</span>
-              <input
-                type='checkbox'
-                className='toggle toggle-success h-5'
-                checked={isContinuousScroll}
-                onChange={() => setIsContinuousScroll(!isContinuousScroll)}
-              />
-            </div>
-            <NumberInput
-              label={_('Overlap Pixels')}
-              value={scrollingOverlap}
-              onChange={setScrollingOverlap}
-              disabled={!viewSettings.scrolled}
-              min={0}
-              max={200}
-              step={10}
-            />
-          </div>
-        </div>
+      <div className='flex items-center justify-between'>
+        <b className=''>{_('Clicks for Page Flip')}</b>
+        <input
+          type='checkbox'
+          className='toggle toggle-success h-5'
+          checked={!isDisableClick}
+          onChange={() => setIsDisableClick(!isDisableClick)}
+        />
       </div>
+      <div className='flex items-center justify-between'>
+        <b className=''>{_('Paging Animation')}</b>
+        <input
+          type='checkbox'
+          className='toggle toggle-success h-5'
+          checked={animated}
+          onChange={() => setAnimated(!animated)}
+        />
+      </div>
+      <div className='flex items-center justify-between'>
+        <b className=''>{_('Swap Clicks Area')}</b>
+        <input
+          type='checkbox'
+          className='toggle toggle-success h-5'
+          checked={swapClickArea}
+          disabled={isDisableClick}
+          onChange={() => setSwapClickArea(!swapClickArea)}
+        />
+      </div>
+      {appService?.isMobileApp && (
+        <div className='flex items-center justify-between'>
+          <b className=''>{_('Volume Keys for Page Flip')}</b>
+          <input
+            type='checkbox'
+            className='toggle toggle-success h-5'
+            checked={volumeKeysToFlip}
+            onChange={() => setVolumeKeysToFlip(!volumeKeysToFlip)}
+          />
+        </div>
+      )}
+      <div className='flex items-center justify-between'>
+        <b className=''>{_('Scrolled Mode')}</b>
+        <input
+          type='checkbox'
+          className='toggle toggle-success h-5'
+          checked={isScrolledMode}
+          onChange={() => setScrolledMode(!isScrolledMode)}
+        />
+      </div>
+      <div className='flex items-center justify-between'>
+        <b className=''>{_('Continuous Scroll')}</b>
+        <input
+          type='checkbox'
+          className='toggle toggle-success h-5'
+          checked={isContinuousScroll}
+          onChange={() => setIsContinuousScroll(!isContinuousScroll)}
+        />
+      </div>
+      <NumberInput
+        Icon={MdJoinLeft}
+        label={_('Overlap Pixels')}
+        value={scrollingOverlap}
+        onChange={setScrollingOverlap}
+        disabled={!viewSettings.scrolled}
+        min={0}
+        max={200}
+        step={10}
+      />
 
       <div className='w-full'>
-        <h2 className='mb-2 font-medium'>{_('Click')}</h2>
-        <div className='card border-base-200 bg-base-100 border shadow'>
-          <div className='divide-base-200'>
-            <div className='config-item'>
-              <span className=''>{_('Clicks for Page Flip')}</span>
-              <input
-                type='checkbox'
-                className='toggle toggle-success h-5'
-                checked={!isDisableClick}
-                onChange={() => setIsDisableClick(!isDisableClick)}
-              />
-            </div>
-            <div className='config-item'>
-              <span className=''>{_('Swap Clicks Area')}</span>
-              <input
-                type='checkbox'
-                className='toggle toggle-success h-5'
-                checked={swapClickArea}
-                disabled={isDisableClick}
-                onChange={() => setSwapClickArea(!swapClickArea)}
-              />
-            </div>
-            {appService?.isMobileApp && (
-              <div className='config-item'>
-                <span className=''>{_('Volume Keys for Page Flip')}</span>
-                <input
-                  type='checkbox'
-                  className='toggle toggle-success h-5'
-                  checked={volumeKeysToFlip}
-                  onChange={() => setVolumeKeysToFlip(!volumeKeysToFlip)}
-                />
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div className='w-full'>
-        <h2 className='mb-2 font-medium'>{_('Animation')}</h2>
-        <div className='card border-base-200 bg-base-100 border shadow'>
-          <div className='divide-base-200 divide-y'>
-            <div className='config-item'>
-              <span className=''>{_('Paging Animation')}</span>
-              <input
-                type='checkbox'
-                className='toggle toggle-success h-5'
-                checked={animated}
-                onChange={() => setAnimated(!animated)}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className='w-full'>
-        <h2 className='mb-2 font-medium'>{_('Security')}</h2>
         <div className='card border-base-200 bg-base-100 border shadow'>
           <div className='divide-base-200 divide-y'>
             <div className='config-item !h-16'>

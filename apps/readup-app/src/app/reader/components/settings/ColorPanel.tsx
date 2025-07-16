@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { MdOutlineLightMode, MdOutlineDarkMode } from 'react-icons/md';
 import { MdRadioButtonUnchecked, MdRadioButtonChecked } from 'react-icons/md';
 import { CgColorPicker } from 'react-icons/cg';
-import { TbSunMoon } from 'react-icons/tb';
+import { GrSystem } from "react-icons/gr";
 import { PiPlus } from 'react-icons/pi';
 import {
   applyCustomTheme,
@@ -146,16 +146,8 @@ const ColorPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset
       ) : (
         <>
           <div className='flex items-center justify-between'>
-            <h2 className='font-medium'>{_('Theme Mode')}</h2>
+            <b className='font-medium'>{_('Theme Mode')}</b>
             <div className='flex gap-4'>
-              <div className='lg:tooltip lg:tooltip-bottom' data-tip={_('Auto Mode')}>
-                <button
-                  className={`btn btn-ghost btn-circle btn-sm ${themeMode === 'auto' ? 'btn-active bg-base-300' : ''}`}
-                  onClick={() => setThemeMode('auto')}
-                >
-                  <TbSunMoon />
-                </button>
-              </div>
               <div className='lg:tooltip lg:tooltip-bottom' data-tip={_('Light Mode')}>
                 <button
                   className={`btn btn-ghost btn-circle btn-sm ${themeMode === 'light' ? 'btn-active bg-base-300' : ''}`}
@@ -172,11 +164,19 @@ const ColorPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset
                   <MdOutlineDarkMode />
                 </button>
               </div>
+              <div className='lg:tooltip lg:tooltip-bottom' data-tip={_('Auto Mode')}>
+                <button
+                  className={`btn btn-ghost btn-circle btn-sm ${themeMode === 'auto' ? 'btn-active bg-base-300' : ''}`}
+                  onClick={() => setThemeMode('auto')}
+                >
+                  <GrSystem />
+                </button>
+              </div>
             </div>
           </div>
 
           <div className='flex items-center justify-between'>
-            <h2 className='font-medium'>{_('Invert Image In Dark Mode')}</h2>
+            <b className=''>{_('Invert Image In Dark')}</b>
             <input
               type='checkbox'
               className='toggle toggle-success h-5'
@@ -187,12 +187,34 @@ const ColorPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset
           </div>
 
           <div className='flex items-center justify-between'>
-            <h2 className=''>{_('Override Book Color')}</h2>
+            <b className=''>{_('Override Book Color')}</b>
             <input
               type='checkbox'
               className='toggle toggle-success h-5'
               checked={overrideColor}
               onChange={() => setOverrideColor(!overrideColor)}
+            />
+          </div>
+
+          <div className='flex items-center justify-between'>
+            <b className=''>{_('Enable Code Highlighting')}</b>
+            <input
+              type='checkbox'
+              className='toggle toggle-success h-5'
+              checked={codeHighlighting}
+              onChange={() => setcodeHighlighting(!codeHighlighting)}
+            />
+          </div>
+          <div className='flex items-center justify-between'>
+            <b className=''>{_('Code Language')}</b>
+            <Select
+              value={codeLanguage}
+              onChange={(event) => setCodeLanguage(event.target.value as CodeLanguage)}
+              options={CODE_LANGUAGES.map((lang) => ({
+                value: lang,
+                label: lang,
+              }))}
+              disabled={!codeHighlighting}
             />
           </div>
 
@@ -240,36 +262,6 @@ const ColorPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset
                 <PiPlus size={iconSize24} />
                 <span>{_('Custom')}</span>
               </label>
-            </div>
-          </div>
-
-          <div className='w-full'>
-            <h2 className='mb-2 font-medium'>{_('Code Highlighting')}</h2>
-            <div className='card border-base-200 bg-base-100 border shadow'>
-              <div className='divide-base-200'>
-                <div className='config-item'>
-                  <span className=''>{_('Enable Highlighting')}</span>
-                  <input
-                    type='checkbox'
-                    className='toggle toggle-success h-5'
-                    checked={codeHighlighting}
-                    onChange={() => setcodeHighlighting(!codeHighlighting)}
-                  />
-                </div>
-
-                <div className='config-item'>
-                  <span className=''>{_('Code Language')}</span>
-                  <Select
-                    value={codeLanguage}
-                    onChange={(event) => setCodeLanguage(event.target.value as CodeLanguage)}
-                    options={CODE_LANGUAGES.map((lang) => ({
-                      value: lang,
-                      label: lang,
-                    }))}
-                    disabled={!codeHighlighting}
-                  />
-                </div>
-              </div>
             </div>
           </div>
         </>

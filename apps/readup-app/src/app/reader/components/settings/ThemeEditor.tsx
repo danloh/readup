@@ -38,7 +38,7 @@ const ThemeEditor: React.FC<ThemeEditorProps> = ({ customTheme, onSave, onDelete
     customTheme?.colors.dark.primary || template.dark.primary,
   );
 
-  const [themeName, setThemeName] = useState(customTheme?.label || _('Custom'));
+  const [themeName, setThemeName] = useState(customTheme?.label || _('Custom Theme'));
 
   const ThemePreview: React.FC<{
     textColor: string;
@@ -95,44 +95,38 @@ const ThemeEditor: React.FC<ThemeEditorProps> = ({ customTheme, onSave, onDelete
   return (
     <div className='mt-6 rounded-lg'>
       <div className='mb-4'>
-        <div className='mb-4 flex items-center justify-between'>
-          <label className='font-medium'>{_('Custom Theme')}</label>
-          <div className='flex w-[calc(50%-12px)] justify-between'>
+        <div className='w-full mb-4 flex flex-wrap items-center justify-center gap-2'>
+          <button
+            className='btn btn-sm text-success px-2'
+            onClick={() => onSave(getCustomTheme())}
+          >
+            {_('Save')}
+          </button>
+          {settings.globalReadSettings.customThemes.find(
+            (theme) => theme.name === md5Fingerprint(themeName),
+          ) && (
             <button
-              className='btn btn-ghost btn-sm text-base-content px-2'
-              onClick={() => onSave(getCustomTheme())}
+              className={clsx('btn btn-warning btn-xs px-2')}
+              onClick={() => onDelete(getCustomTheme())}
             >
-              {_('Save')}
+              {_('Delete')}
             </button>
-
-            {settings.globalReadSettings.customThemes.find(
-              (theme) => theme.name === md5Fingerprint(themeName),
-            ) && (
-              <button
-                className={clsx('btn btn-ghost btn-sm px-2')}
-                onClick={() => onDelete(getCustomTheme())}
-              >
-                {_('Delete')}
-              </button>
-            )}
-
-            <button className='btn btn-ghost btn-sm px-2' onClick={onCancel}>
-              {_('Cancel')}
-            </button>
-          </div>
+          )}
+          <button className='btn btn-sm text-warning px-2' onClick={onCancel}>
+            {_('Cancel')}
+          </button>
         </div>
-        <div className='mb-4 flex items-center justify-between'>
-          <label className='font-medium'>{_('Theme Name')}</label>
+        <div className='w-full mb-4 flex items-center justify-between'>
           <input
             type='text'
             value={themeName}
             onChange={(e) => setThemeName(e.target.value)}
-            className='bg-base-100 text-base-content border-base-200 w-[calc(50%-12px)] rounded border p-2 text-sm'
+            className='bg-base-100 text-base-content border-base-200 w-full rounded border p-2 text-sm'
           />
         </div>
       </div>
 
-      <div className='grid grid-cols-2 gap-6'>
+      <div className='grid grid-cols-2 gap-4'>
         <div className='bg-base-200 rounded-lg p-3'>
           <h3 className='mb-3 text-center font-medium'>{_('Light Mode')}</h3>
 

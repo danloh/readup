@@ -1,8 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { MdOutlineAutoMode, MdOutlineScreenRotation } from 'react-icons/md';
+import { MdOutlineScreenRotation } from 'react-icons/md';
 import { MdOutlineTextRotationNone, MdTextRotateVertical } from 'react-icons/md';
 import { IoPhoneLandscapeOutline, IoPhonePortraitOutline } from 'react-icons/io5';
-import { TbTextDirectionRtl } from 'react-icons/tb';
+import { TfiLayoutWidthDefault } from "react-icons/tfi";
+import { TbNumber, TbTextDirectionRtl } from 'react-icons/tb';
+import { CgBorderBottom, CgBorderLeft, CgBorderRight, CgBorderTop } from "react-icons/cg";
+import { MdFormatLineSpacing } from "react-icons/md";
+import { LuWholeWord } from 'react-icons/lu';
+import { RiLetterSpacing2, RiPageSeparator } from 'react-icons/ri';
+import { PiSplitHorizontalBold } from "react-icons/pi";
+import { FaIndent } from 'react-icons/fa';
+import { AiOutlineColumnWidth, AiOutlineColumnHeight } from "react-icons/ai";
 
 import { useEnv } from '@/context/EnvContext';
 import { useReaderStore } from '@/store/readerStore';
@@ -363,28 +371,18 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
 
   return (
     <div className='my-4 w-full space-y-6'>
-      <div className='flex items-center justify-between'>
-        <h2 className=''>{_('Override Book Layout')}</h2>
-        <input
-          type='checkbox'
-          className='toggle toggle-success h-5'
-          checked={overrideLayout}
-          onChange={() => setOverrideLayout(!overrideLayout)}
-        />
-      </div>
       {mightBeRTLBook && (
         <div className='flex items-center justify-between'>
-          <h2 className='font-medium'>{_('Writing Mode')}</h2>
+          <b className=''>{_('Writing Mode')}</b>
           <div className='flex gap-4'>
             <div className='lg:tooltip lg:tooltip-bottom' data-tip={_('Default')}>
               <button
                 className={`btn btn-ghost btn-circle btn-sm ${writingMode === 'auto' ? 'btn-active bg-base-300' : ''}`}
                 onClick={() => setWritingMode('auto')}
               >
-                <MdOutlineAutoMode />
+                <TfiLayoutWidthDefault />
               </button>
             </div>
-
             <div className='lg:tooltip lg:tooltip-bottom' data-tip={_('Horizontal Direction')}>
               <button
                 className={`btn btn-ghost btn-circle btn-sm ${writingMode === 'horizontal-tb' ? 'btn-active bg-base-300' : ''}`}
@@ -393,7 +391,6 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
                 <MdOutlineTextRotationNone />
               </button>
             </div>
-
             <div className='lg:tooltip lg:tooltip-bottom' data-tip={_('Vertical Direction')}>
               <button
                 className={`btn btn-ghost btn-circle btn-sm ${writingMode === 'vertical-rl' ? 'btn-active bg-base-300' : ''}`}
@@ -402,7 +399,6 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
                 <MdTextRotateVertical />
               </button>
             </div>
-
             <div className='lg:tooltip lg:tooltip-bottom' data-tip={_('RTL Direction')}>
               <button
                 className={`btn btn-ghost btn-circle btn-sm ${writingMode === 'horizontal-rl' ? 'btn-active bg-base-300' : ''}`}
@@ -415,45 +411,43 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
         </div>
       )}
 
-      {viewSettings.vertical && (
-        <div className='w-full'>
-          <h2 className='mb-2 font-medium'>{_('Border Frame')}</h2>
-          <div className='card bg-base-100 border-base-200 border shadow'>
-            <div className='divide-base-200 divide-y'>
-              <div className='config-item'>
-                <span className=''>{_('Double Border')}</span>
-                <input
-                  type='checkbox'
-                  className='toggle toggle-success h-5'
-                  checked={doubleBorder}
-                  onChange={() => setDoubleBorder(!doubleBorder)}
-                />
-              </div>
-
-              <div className='config-item'>
-                <span className=''>{_('Border Color')}</span>
-                <div className='flex gap-4'>
-                  <button
-                    className={`btn btn-circle btn-sm bg-red-300 hover:bg-red-500 ${borderColor === 'red' ? 'btn-active !bg-red-500' : ''}`}
-                    onClick={() => setBorderColor('red')}
-                  ></button>
-
-                  <button
-                    className={`btn btn-circle btn-sm bg-black/50 hover:bg-black ${borderColor === 'black' ? 'btn-active !bg-black' : ''}`}
-                    onClick={() => setBorderColor('black')}
-                  ></button>
-                </div>
-              </div>
+      {appService?.hasOrientationLock && (
+        <div className='flex items-center justify-between'>
+          <b className=''>{_('Orientation')}</b>
+          <div className='flex gap-4'>
+            <div className='lg:tooltip lg:tooltip-bottom' data-tip={_('Auto')}>
+              <button
+                className={`btn btn-ghost btn-circle btn-sm ${screenOrientation === 'auto' ? 'btn-active bg-base-300' : ''}`}
+                onClick={() => setScreenOrientation('auto')}
+              >
+                <MdOutlineScreenRotation />
+              </button>
+            </div>
+            <div className='lg:tooltip lg:tooltip-bottom' data-tip={_('Portrait')}>
+              <button
+                className={`btn btn-ghost btn-circle btn-sm ${screenOrientation === 'portrait' ? 'btn-active bg-base-300' : ''}`}
+                onClick={() => setScreenOrientation('portrait')}
+              >
+                <IoPhonePortraitOutline />
+              </button>
+            </div>
+            <div className='lg:tooltip lg:tooltip-bottom' data-tip={_('Landscape')}>
+              <button
+                className={`btn btn-ghost btn-circle btn-sm ${screenOrientation === 'landscape' ? 'btn-active bg-base-300' : ''}`}
+                onClick={() => setScreenOrientation('landscape')}
+              >
+                <IoPhoneLandscapeOutline />
+              </button>
             </div>
           </div>
         </div>
       )}
 
       <div className='w-full'>
-        <h2 className='mb-2 font-medium'>{_('Paragraph')}</h2>
         <div className='card bg-base-100 border-base-200 border shadow'>
           <div className='divide-base-200 divide-y'>
             <NumberInput
+              Icon={RiPageSeparator}
               label={_('Paragraph Margin')}
               value={paragraphMargin}
               onChange={setParagraphMargin}
@@ -462,6 +456,7 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
               step={0.2}
             />
             <NumberInput
+              Icon={MdFormatLineSpacing}
               label={_('Line Spacing')}
               value={lineHeight}
               onChange={setLineHeight}
@@ -471,6 +466,7 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
             />
             {langCode !== 'zh' && (
               <NumberInput
+                Icon={LuWholeWord}
                 label={_('Word Spacing')}
                 value={wordSpacing}
                 onChange={setWordSpacing}
@@ -480,6 +476,7 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
               />
             )}
             <NumberInput
+              Icon={RiLetterSpacing2}
               label={_('Letter Spacing')}
               value={letterSpacing}
               onChange={setLetterSpacing}
@@ -488,6 +485,7 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
               step={0.5}
             />
             <NumberInput
+              Icon={FaIndent}
               label={_('Text Indent')}
               value={textIndent}
               onChange={setTextIndent}
@@ -495,33 +493,8 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
               max={4}
               step={1}
             />
-            <div className='config-item'>
-              <span className=''>{_('Full Justification')}</span>
-              <input
-                type='checkbox'
-                className='toggle toggle-success h-5'
-                checked={fullJustification}
-                onChange={() => setFullJustification(!fullJustification)}
-              />
-            </div>
-            <div className='config-item'>
-              <span className=''>{_('Hyphenation')}</span>
-              <input
-                type='checkbox'
-                className='toggle toggle-success h-5'
-                checked={hyphenation}
-                onChange={() => setHyphenation(!hyphenation)}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className='w-full'>
-        <h2 className='mb-2 font-medium'>{_('Page')}</h2>
-        <div className='card bg-base-100 border-base-200 border shadow'>
-          <div className='divide-base-200 divide-y'>
             <NumberInput
+              Icon={CgBorderTop}
               label={_('Top Margin (px)')}
               value={showHeader && !isVertical ? marginTopPx : compactMarginTopPx}
               onChange={showHeader && !isVertical ? setMarginTopPx : setCompactMarginTopPx}
@@ -534,6 +507,7 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
               step={4}
             />
             <NumberInput
+              Icon={CgBorderBottom}
               label={_('Bottom Margin (px)')}
               value={showFooter && !isVertical ? marginBottomPx : compactMarginBottomPx}
               onChange={showFooter && !isVertical ? setMarginBottomPx : setCompactMarginBottomPx}
@@ -546,6 +520,7 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
               step={4}
             />
             <NumberInput
+              Icon={CgBorderLeft}
               label={_('Left Margin (px)')}
               value={showFooter && isVertical ? marginLeftPx : compactMarginLeftPx}
               onChange={showFooter && isVertical ? setMarginLeftPx : setCompactMarginLeftPx}
@@ -554,6 +529,7 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
               step={4}
             />
             <NumberInput
+              Icon={CgBorderRight}
               label={_('Right Margin (px)')}
               value={showHeader && isVertical ? marginRightPx : compactMarginRightPx}
               onChange={showHeader && isVertical ? setMarginRightPx : setCompactMarginRightPx}
@@ -562,6 +538,7 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
               step={4}
             />
             <NumberInput
+              Icon={PiSplitHorizontalBold}
               label={_('Column Gap (%)')}
               value={gapPercent}
               onChange={setGapPercent}
@@ -569,6 +546,7 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
               max={30}
             />
             <NumberInput
+              Icon={TbNumber}
               label={_('Maximum Number of Columns')}
               value={maxColumnCount}
               onChange={setMaxColumnCount}
@@ -576,6 +554,7 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
               max={4}
             />
             <NumberInput
+              Icon={viewSettings.vertical ? AiOutlineColumnHeight : AiOutlineColumnWidth}
               label={viewSettings.vertical ? _('Maximum Column Height') : _('Maximum Column Width')}
               value={maxInlineSize}
               onChange={setMaxInlineSize}
@@ -585,6 +564,7 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
               step={100}
             />
             <NumberInput
+              Icon={viewSettings.vertical ? AiOutlineColumnWidth : AiOutlineColumnHeight}
               label={viewSettings.vertical ? _('Maximum Column Width') : _('Maximum Column Height')}
               value={maxBlockSize}
               onChange={setMaxBlockSize}
@@ -597,125 +577,117 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
         </div>
       </div>
 
-      <div className='w-full'>
-        <h2 className='mb-2 font-medium'>{_('Header & Footer')}</h2>
-        <div className='card bg-base-100 border-base-200 border shadow'>
-          <div className='divide-base-200 divide-y'>
-            <div className='config-item'>
-              <span className=''>{_('Show Header')}</span>
-              <input
-                type='checkbox'
-                className='toggle toggle-success h-5'
-                checked={showHeader}
-                onChange={() => setShowHeader(!showHeader)}
-              />
-            </div>
-            <div className='config-item'>
-              <span className=''>{_('Show Footer')}</span>
-              <input
-                type='checkbox'
-                className='toggle toggle-success h-5'
-                checked={showFooter}
-                onChange={() => setShowFooter(!showFooter)}
-              />
-            </div>
-            <div className='config-item'>
-              <span className=''>{_('Show Remaining Time')}</span>
-              <input
-                type='checkbox'
-                className='toggle toggle-success h-5'
-                checked={showRemainingTime}
-                disabled={!showFooter}
-                onChange={() => {
-                  if (!showRemainingTime) {
-                    setShowRemainingTime(true);
-                    setShowRemainingPages(false);
-                  } else {
-                    setShowRemainingTime(false);
-                  }
-                }}
-              />
-            </div>
-            <div className='config-item'>
-              <span className=''>{_('Show Remaining Pages')}</span>
-              <input
-                type='checkbox'
-                className='toggle toggle-success h-5'
-                checked={showRemainingPages}
-                disabled={!showFooter}
-                onChange={() => {
-                  if (!showRemainingPages) {
-                    setShowRemainingPages(true);
-                    setShowRemainingTime(false);
-                  } else {
-                    setShowRemainingPages(false);
-                  }
-                }}
-              />
-            </div>
-            <div className='config-item'>
-              <span className=''>{_('Show Page Number')}</span>
-              <input
-                type='checkbox'
-                className='toggle toggle-success h-5'
-                checked={showPageNumber}
-                disabled={!showFooter}
-                onChange={() => setShowPageNumber(!showPageNumber)}
-              />
-            </div>
-            <div className='config-item'>
-              <span className=''>{_('Apply also in Scrolled Mode')}</span>
-              <input
-                type='checkbox'
-                className='toggle toggle-success h-5'
-                checked={showBarsOnScroll}
-                onChange={() => setShowBarsOnScroll(!showBarsOnScroll)}
-              />
-            </div>
-          </div>
-        </div>
+      <div className='flex items-center justify-between'>
+        <b className=''>{_('Override Book Layout')}</b>
+        <input
+          type='checkbox'
+          className='toggle toggle-success h-5'
+          checked={overrideLayout}
+          onChange={() => setOverrideLayout(!overrideLayout)}
+        />
+      </div>
+      <div className='flex items-center justify-between'>
+        <b className=''>{_('Full Justification')}</b>
+        <input
+          type='checkbox'
+          className='toggle toggle-success h-5'
+          checked={fullJustification}
+          onChange={() => setFullJustification(!fullJustification)}
+        />
+      </div>
+      <div className='flex items-center justify-between'>
+        <b className=''>{_('Hyphenation')}</b>
+        <input
+          type='checkbox'
+          className='toggle toggle-success h-5'
+          checked={hyphenation}
+          onChange={() => setHyphenation(!hyphenation)}
+        />
       </div>
 
-      {appService?.hasOrientationLock && (
-        <div className='w-full'>
-          <h2 className='mb-2 font-medium'>{_('Screen')}</h2>
-          <div className='card border-base-200 bg-base-100 border shadow'>
-            <div className='divide-base-200 divide-y'>
-              <div className='config-item'>
-                <span className=''>{_('Orientation')}</span>
-                <div className='flex gap-4'>
-                  <div className='lg:tooltip lg:tooltip-bottom' data-tip={_('Auto')}>
-                    <button
-                      className={`btn btn-ghost btn-circle btn-sm ${screenOrientation === 'auto' ? 'btn-active bg-base-300' : ''}`}
-                      onClick={() => setScreenOrientation('auto')}
-                    >
-                      <MdOutlineScreenRotation />
-                    </button>
-                  </div>
-
-                  <div className='lg:tooltip lg:tooltip-bottom' data-tip={_('Portrait')}>
-                    <button
-                      className={`btn btn-ghost btn-circle btn-sm ${screenOrientation === 'portrait' ? 'btn-active bg-base-300' : ''}`}
-                      onClick={() => setScreenOrientation('portrait')}
-                    >
-                      <IoPhonePortraitOutline />
-                    </button>
-                  </div>
-
-                  <div className='lg:tooltip lg:tooltip-bottom' data-tip={_('Landscape')}>
-                    <button
-                      className={`btn btn-ghost btn-circle btn-sm ${screenOrientation === 'landscape' ? 'btn-active bg-base-300' : ''}`}
-                      onClick={() => setScreenOrientation('landscape')}
-                    >
-                      <IoPhoneLandscapeOutline />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+      {viewSettings.vertical && (
+        <div className='flex items-center justify-between'>
+          <b className=''>{_('Double Border')}</b>
+          <input
+            type='checkbox'
+            className='toggle toggle-success h-5'
+            checked={doubleBorder}
+            onChange={() => setDoubleBorder(!doubleBorder)}
+          />
         </div>
       )}
+
+      <div className='flex items-center justify-between'>
+        <b className=''>{_('Show Header')}</b>
+        <input
+          type='checkbox'
+          className='toggle toggle-success h-5'
+          checked={showHeader}
+          onChange={() => setShowHeader(!showHeader)}
+        />
+      </div>
+      <div className='flex items-center justify-between'>
+        <b className=''>{_('Show Footer')}</b>
+        <input
+          type='checkbox'
+          className='toggle toggle-success h-5'
+          checked={showFooter}
+          onChange={() => setShowFooter(!showFooter)}
+        />
+      </div>
+      <div className='flex items-center justify-between'>
+        <b className=''>{_('Show Remaining Time')}</b>
+        <input
+          type='checkbox'
+          className='toggle toggle-success h-5'
+          checked={showRemainingTime}
+          disabled={!showFooter}
+          onChange={() => {
+            if (!showRemainingTime) {
+              setShowRemainingTime(true);
+              setShowRemainingPages(false);
+            } else {
+              setShowRemainingTime(false);
+            }
+          }}
+        />
+      </div>
+      <div className='flex items-center justify-between'>
+        <b className=''>{_('Show Remaining Pages')}</b>
+        <input
+          type='checkbox'
+          className='toggle toggle-success h-5'
+          checked={showRemainingPages}
+          disabled={!showFooter}
+          onChange={() => {
+            if (!showRemainingPages) {
+              setShowRemainingPages(true);
+              setShowRemainingTime(false);
+            } else {
+              setShowRemainingPages(false);
+            }
+          }}
+        />
+      </div>
+      <div className='flex items-center justify-between'>
+        <b className=''>{_('Show Page Number')}</b>
+        <input
+          type='checkbox'
+          className='toggle toggle-success h-5'
+          checked={showPageNumber}
+          disabled={!showFooter}
+          onChange={() => setShowPageNumber(!showPageNumber)}
+        />
+      </div>
+      <div className='flex items-center justify-between'>
+        <b className=''>{_('Apply also in Scrolled Mode')}</b>
+        <input
+          type='checkbox'
+          className='toggle toggle-success h-5'
+          checked={showBarsOnScroll}
+          onChange={() => setShowBarsOnScroll(!showBarsOnScroll)}
+        />
+      </div>
     </div>
   );
 };

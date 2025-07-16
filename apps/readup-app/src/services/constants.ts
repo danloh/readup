@@ -162,7 +162,7 @@ export const DEFAULT_VIEW_CONFIG: ViewConfig = {
 };
 
 export const DEFAULT_TTS_CONFIG: TTSConfig = {
-  ttsRate: 1.3,
+  ttsRate: 1.0,
   ttsVoice: '',
   ttsLocation: '',
 };

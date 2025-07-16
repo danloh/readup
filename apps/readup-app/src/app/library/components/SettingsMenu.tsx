@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { PiUserCircle } from 'react-icons/pi';
 import { PiUserCircleCheck } from 'react-icons/pi';
 import { MdCheck } from 'react-icons/md';
-import { TbSunMoon } from 'react-icons/tb';
+import { GrSystem } from "react-icons/gr";
 import { BiMoon, BiSun } from 'react-icons/bi';
 
 import { setAboutDialogVisible } from '@/components/AboutWindow';
@@ -248,7 +248,7 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
               ? _('Light Mode')
               : _('Auto Mode')
         }
-        Icon={themeMode === 'dark' ? BiMoon : themeMode === 'light' ? BiSun : TbSunMoon}
+        Icon={themeMode === 'dark' ? BiMoon : themeMode === 'light' ? BiSun : GrSystem}
         onClick={cycleThemeMode}
       />
       <hr className='border-base-200 my-1' />

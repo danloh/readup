@@ -79,22 +79,6 @@ export const themes = [
     },
   },
   {
-    name: 'gray',
-    label: _('Gray'),
-    colors: {
-      light: generateLightPalette({ fg: '#222222', bg: '#e0e0e0', primary: '#4488cc' }),
-      dark: generateDarkPalette({ fg: '#c6c6c6', bg: '#444444', primary: '#88ccee' }),
-    },
-  },
-  {
-    name: 'sepia',
-    label: _('Sepia'),
-    colors: {
-      light: generateLightPalette({ fg: '#5b4636', bg: '#f1e8d0', primary: '#008b8b' }),
-      dark: generateDarkPalette({ fg: '#ffd595', bg: '#342e25', primary: '#48d1cc' }),
-    },
-  },
-  {
     name: 'grass',
     label: _('Grass'),
     colors: {
@@ -103,35 +87,11 @@ export const themes = [
     },
   },
   {
-    name: 'cherry',
-    label: _('Cherry'),
+    name: 'gray',
+    label: _('Gray'),
     colors: {
-      light: generateLightPalette({ fg: '#4e1609', bg: '#f0d1d5', primary: '#de3838' }),
-      dark: generateDarkPalette({ fg: '#e5c4c8', bg: '#462f32', primary: '#ff646e' }),
-    },
-  },
-  {
-    name: 'sky',
-    label: _('Sky'),
-    colors: {
-      light: generateLightPalette({ fg: '#262d48', bg: '#cedef5', primary: '#2d53e5' }),
-      dark: generateDarkPalette({ fg: '#babee1', bg: '#282e47', primary: '#ff646e' }),
-    },
-  },
-  {
-    name: 'solarized',
-    label: _('Solarized'),
-    colors: {
-      light: generateLightPalette({ fg: '#586e75', bg: '#fdf6e3', primary: '#268bd2' }),
-      dark: generateDarkPalette({ fg: '#93a1a1', bg: '#002b36', primary: '#268bd2' }),
-    },
-  },
-  {
-    name: 'gruvbox',
-    label: _('Gruvbox'),
-    colors: {
-      light: generateLightPalette({ fg: '#3c3836', bg: '#fbf1c7', primary: '#076678' }),
-      dark: generateDarkPalette({ fg: '#ebdbb2', bg: '#282828', primary: '#83a598' }),
+      light: generateLightPalette({ fg: '#222222', bg: '#e0e0e0', primary: '#4488cc' }),
+      dark: generateDarkPalette({ fg: '#c6c6c6', bg: '#444444', primary: '#88ccee' }),
     },
   },
   {
@@ -143,19 +103,11 @@ export const themes = [
     },
   },
   {
-    name: 'contrast',
-    label: _('Contrast'),
+    name: 'sky',
+    label: _('Sky'),
     colors: {
-      light: generateLightPalette({ fg: '#000000', bg: '#ffffff', primary: '#4488cc' }),
-      dark: generateDarkPalette({ fg: '#ffffff', bg: '#000000', primary: '#88ccee' }),
-    },
-  },
-  {
-    name: 'sunset',
-    label: _('Sunset'),
-    colors: {
-      light: generateLightPalette({ fg: '#423126', bg: '#fff7f0', primary: '#fe6b64' }),
-      dark: generateDarkPalette({ fg: '#f6e1d7', bg: '#3c2b25', primary: '#ff9c94' }),
+      light: generateLightPalette({ fg: '#262d48', bg: '#cedef5', primary: '#2d53e5' }),
+      dark: generateDarkPalette({ fg: '#babee1', bg: '#282e47', primary: '#ff646e' }),
     },
   },
 ] as Theme[];
@@ -166,19 +118,19 @@ const generateCustomThemeVariables = (palette: Palette): string => {
     --b2: ${hexToOklch(palette['base-200'])};
     --b3: ${hexToOklch(palette['base-300'])};
     --bc: ${hexToOklch(palette['base-content'])};
-    
+
     --p: ${hexToOklch(palette.primary)};
     --pc: ${getContrastOklch(palette.primary)};
-    
+
     --s: ${hexToOklch(palette.secondary)};
     --sc: ${getContrastOklch(palette.secondary)};
-    
+
     --a: ${hexToOklch(palette.accent)};
     --ac: ${getContrastOklch(palette.accent)};
-    
+
     --n: ${hexToOklch(palette.neutral)};
     --nc: ${hexToOklch(palette['neutral-content'])};
-    
+
     --in: 69.37% 0.047 231;
     --inc: 100% 0 0;
     --su: 78.15% 0.12 160;
@@ -201,11 +153,11 @@ export const applyCustomTheme = (customTheme: CustomTheme) => {
     [data-theme="${lightThemeName}"] {
       ${generateCustomThemeVariables(lightPalette)}
     }
-    
+
     [data-theme="${darkThemeName}"] {
       ${generateCustomThemeVariables(darkPalette)}
     }
-    
+
     :root {
       --${lightThemeName}: 1;
       --${darkThemeName}: 1;

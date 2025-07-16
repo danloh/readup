@@ -1,4 +1,3 @@
-import clsx from 'clsx';
 import i18n from 'i18next';
 import React, { useEffect, useState } from 'react';
 import { useEnv } from '@/context/EnvContext';
@@ -143,69 +142,51 @@ const LangPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
   }, [showTranslateSource]);
 
   return (
-    <div className={clsx('my-4 w-full space-y-6')}>
-      <div className='w-full'>
-        <h2 className='mb-2 font-medium'>{_('Language')}</h2>
-        <div className='card border-base-200 bg-base-100 border shadow'>
-          <div className='divide-base-200 divide-y'>
-            <div className='config-item'>
-              <span className=''>{_('Interface Language')}</span>
-              <Select
-                value={getCurrentUILangOption().value}
-                onChange={handleSelectUILang}
-                options={getLangOptions()}
-              />
-            </div>
-          </div>
-        </div>
+    <div className='my-4 w-full space-y-6'>
+      <div className='flex items-center justify-between'>
+        <b className=''>{_('Interface Language')}</b>
+        <Select
+          value={getCurrentUILangOption().value}
+          onChange={handleSelectUILang}
+          options={getLangOptions()}
+        />
       </div>
-
+      <div className='flex items-center justify-between'>
+        <b className=''>{_('Enable Translation')}</b>
+        <input
+          type='checkbox'
+          className='toggle toggle-success h-5'
+          checked={translationEnabled}
+          onChange={() => setTranslationEnabled(!translationEnabled)}
+        />
+      </div>
+      <div className='flex items-center justify-between'>
+        <b className=''>{_('Show Source Text')}</b>
+        <input
+          type='checkbox'
+          className='toggle toggle-success h-5'
+          checked={showTranslateSource}
+          disabled={!translationEnabled}
+          onChange={() => setShowTranslateSource(!showTranslateSource)}
+        />
+      </div>
+      <div className='flex items-center justify-between'>
+        <b className=''>{_('Translate To')}</b>
+        <Select
+          value={getCurrentTargetLangOption().value}
+          onChange={handleSelectTargetLang}
+          options={getLangOptions()}
+          disabled={!translationEnabled}
+        />
+      </div>
       <div className='w-full'>
-        <h2 className='mb-2 font-medium'>{_('Translation')}</h2>
-        <div className='card border-base-200 bg-base-100 border shadow'>
-          <div className='divide-base-200'>
-            <div className='config-item'>
-              <span className=''>{_('Enable Translation')}</span>
-              <input
-                type='checkbox'
-                className='toggle toggle-success h-5'
-                checked={translationEnabled}
-                onChange={() => setTranslationEnabled(!translationEnabled)}
-              />
-            </div>
-
-            <div className='config-item'>
-              <span className=''>{_('Show Source Text')}</span>
-              <input
-                type='checkbox'
-                className='toggle toggle-success h-5'
-                checked={showTranslateSource}
-                disabled={!translationEnabled}
-                onChange={() => setShowTranslateSource(!showTranslateSource)}
-              />
-            </div>
-
-            <div className='config-item'>
-              <span className=''>{_('Translation Service')}</span>
-              <Select
-                value={getCurrentTranslationProviderOption().value}
-                onChange={handleSelectTranslationProvider}
-                options={getTranslationProviderOptions()}
-                disabled={!translationEnabled}
-              />
-            </div>
-
-            <div className='config-item'>
-              <span className=''>{_('Translate To')}</span>
-              <Select
-                value={getCurrentTargetLangOption().value}
-                onChange={handleSelectTargetLang}
-                options={getLangOptions()}
-                disabled={!translationEnabled}
-              />
-            </div>
-          </div>
-        </div>
+        <Select
+          className="w-full"
+          value={getCurrentTranslationProviderOption().value}
+          onChange={handleSelectTranslationProvider}
+          options={getTranslationProviderOptions()}
+          disabled={!translationEnabled}
+        />
       </div>
     </div>
   );
