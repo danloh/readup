@@ -122,7 +122,7 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
               <span className=''>{_('Scrolled Mode')}</span>
               <input
                 type='checkbox'
-                className='toggle'
+                className='toggle toggle-success h-5'
                 checked={isScrolledMode}
                 onChange={() => setScrolledMode(!isScrolledMode)}
               />
@@ -131,7 +131,7 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
               <span className=''>{_('Continuous Scroll')}</span>
               <input
                 type='checkbox'
-                className='toggle'
+                className='toggle toggle-success h-5'
                 checked={isContinuousScroll}
                 onChange={() => setIsContinuousScroll(!isContinuousScroll)}
               />
@@ -157,7 +157,7 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
               <span className=''>{_('Clicks for Page Flip')}</span>
               <input
                 type='checkbox'
-                className='toggle'
+                className='toggle toggle-success h-5'
                 checked={!isDisableClick}
                 onChange={() => setIsDisableClick(!isDisableClick)}
               />
@@ -166,7 +166,7 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
               <span className=''>{_('Swap Clicks Area')}</span>
               <input
                 type='checkbox'
-                className='toggle'
+                className='toggle toggle-success h-5'
                 checked={swapClickArea}
                 disabled={isDisableClick}
                 onChange={() => setSwapClickArea(!swapClickArea)}
@@ -177,7 +177,7 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
                 <span className=''>{_('Volume Keys for Page Flip')}</span>
                 <input
                   type='checkbox'
-                  className='toggle'
+                  className='toggle toggle-success h-5'
                   checked={volumeKeysToFlip}
                   onChange={() => setVolumeKeysToFlip(!volumeKeysToFlip)}
                 />
@@ -195,7 +195,7 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
               <span className=''>{_('Paging Animation')}</span>
               <input
                 type='checkbox'
-                className='toggle'
+                className='toggle toggle-success h-5'
                 checked={animated}
                 onChange={() => setAnimated(!animated)}
               />
@@ -215,7 +215,7 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
               </div>
               <input
                 type='checkbox'
-                className='toggle'
+                className='toggle toggle-success h-5'
                 checked={allowScript}
                 disabled={bookData.book?.format !== 'EPUB'}
                 onChange={() => setAllowScript(!allowScript)}

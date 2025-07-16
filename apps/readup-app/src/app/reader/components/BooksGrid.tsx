@@ -157,6 +157,7 @@ const BooksGrid: React.FC<BooksGridProps> = ({ bookKeys, onCloseBook }) => {
             )}
             {showHeader && (
               <SectionInfo
+                bookTitle={book.title}
                 section={sectionLabel}
                 showDoubleBorder={viewSettings.vertical && viewSettings.doubleBorder}
                 isScrolled={viewSettings.scrolled}

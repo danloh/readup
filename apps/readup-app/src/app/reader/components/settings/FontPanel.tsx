@@ -253,7 +253,7 @@ const FontPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
         <h2 className=''>{_('Override Book Font')}</h2>
         <input
           type='checkbox'
-          className='toggle'
+          className='toggle toggle-success h-5'
           checked={overrideFont}
           onChange={() => setOverrideFont(!overrideFont)}
         />

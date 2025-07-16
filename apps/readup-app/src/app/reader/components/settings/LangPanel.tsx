@@ -168,7 +168,7 @@ const LangPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
               <span className=''>{_('Enable Translation')}</span>
               <input
                 type='checkbox'
-                className='toggle'
+                className='toggle toggle-success h-5'
                 checked={translationEnabled}
                 onChange={() => setTranslationEnabled(!translationEnabled)}
               />
@@ -178,7 +178,7 @@ const LangPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
               <span className=''>{_('Show Source Text')}</span>
               <input
                 type='checkbox'
-                className='toggle'
+                className='toggle toggle-success h-5'
                 checked={showTranslateSource}
                 disabled={!translationEnabled}
                 onChange={() => setShowTranslateSource(!showTranslateSource)}

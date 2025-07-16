@@ -367,7 +367,7 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
         <h2 className=''>{_('Override Book Layout')}</h2>
         <input
           type='checkbox'
-          className='toggle'
+          className='toggle toggle-success h-5'
           checked={overrideLayout}
           onChange={() => setOverrideLayout(!overrideLayout)}
         />
@@ -424,7 +424,7 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
                 <span className=''>{_('Double Border')}</span>
                 <input
                   type='checkbox'
-                  className='toggle'
+                  className='toggle toggle-success h-5'
                   checked={doubleBorder}
                   onChange={() => setDoubleBorder(!doubleBorder)}
                 />
@@ -499,7 +499,7 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
               <span className=''>{_('Full Justification')}</span>
               <input
                 type='checkbox'
-                className='toggle'
+                className='toggle toggle-success h-5'
                 checked={fullJustification}
                 onChange={() => setFullJustification(!fullJustification)}
               />
@@ -508,7 +508,7 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
               <span className=''>{_('Hyphenation')}</span>
               <input
                 type='checkbox'
-                className='toggle'
+                className='toggle toggle-success h-5'
                 checked={hyphenation}
                 onChange={() => setHyphenation(!hyphenation)}
               />
@@ -605,7 +605,7 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
               <span className=''>{_('Show Header')}</span>
               <input
                 type='checkbox'
-                className='toggle'
+                className='toggle toggle-success h-5'
                 checked={showHeader}
                 onChange={() => setShowHeader(!showHeader)}
               />
@@ -614,7 +614,7 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
               <span className=''>{_('Show Footer')}</span>
               <input
                 type='checkbox'
-                className='toggle'
+                className='toggle toggle-success h-5'
                 checked={showFooter}
                 onChange={() => setShowFooter(!showFooter)}
               />
@@ -623,7 +623,7 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
               <span className=''>{_('Show Remaining Time')}</span>
               <input
                 type='checkbox'
-                className='toggle'
+                className='toggle toggle-success h-5'
                 checked={showRemainingTime}
                 disabled={!showFooter}
                 onChange={() => {
@@ -640,7 +640,7 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
               <span className=''>{_('Show Remaining Pages')}</span>
               <input
                 type='checkbox'
-                className='toggle'
+                className='toggle toggle-success h-5'
                 checked={showRemainingPages}
                 disabled={!showFooter}
                 onChange={() => {
@@ -657,7 +657,7 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
               <span className=''>{_('Show Page Number')}</span>
               <input
                 type='checkbox'
-                className='toggle'
+                className='toggle toggle-success h-5'
                 checked={showPageNumber}
                 disabled={!showFooter}
                 onChange={() => setShowPageNumber(!showPageNumber)}
@@ -667,7 +667,7 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
               <span className=''>{_('Apply also in Scrolled Mode')}</span>
               <input
                 type='checkbox'
-                className='toggle'
+                className='toggle toggle-success h-5'
                 checked={showBarsOnScroll}
                 onChange={() => setShowBarsOnScroll(!showBarsOnScroll)}
               />

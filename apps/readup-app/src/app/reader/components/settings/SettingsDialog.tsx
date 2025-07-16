@@ -5,18 +5,18 @@ import { useEnv } from '@/context/EnvContext';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { RiFontSize } from 'react-icons/ri';
-import { RiDashboardLine, RiTranslate } from 'react-icons/ri';
 import { VscSymbolColor } from 'react-icons/vsc';
 import { PiDotsThreeVerticalBold } from 'react-icons/pi';
-import { LiaHandPointerSolid } from 'react-icons/lia';
-import { IoAccessibilityOutline } from 'react-icons/io5';
 import { MdArrowBackIosNew, MdArrowForwardIos } from 'react-icons/md';
+import { FaLanguage } from "react-icons/fa";
+import { BiCustomize, BiLayout } from "react-icons/bi";
+import { GiClick } from "react-icons/gi";
 import { getDirFromUILanguage } from '@/utils/rtl';
+import Dropdown from '@/components/Dropdown';
+import Dialog from '@/components/Dialog';
 import FontPanel from './FontPanel';
 import LayoutPanel from './LayoutPanel';
 import ColorPanel from './ColorPanel';
-import Dropdown from '@/components/Dropdown';
-import Dialog from '@/components/Dialog';
 import DialogMenu from './DialogMenu';
 import ControlPanel from './ControlPanel';
 import LangPanel from './LangPanel';
@@ -49,28 +49,28 @@ const SettingsDialog: React.FC<{ bookKey: string; config: BookConfig }> = ({ boo
       label: _('Font'),
     },
     {
-      tab: 'Layout',
-      icon: RiDashboardLine,
-      label: _('Layout'),
-    },
-    {
       tab: 'Color',
       icon: VscSymbolColor,
       label: _('Color'),
     },
     {
+      tab: 'Layout',
+      icon: BiLayout,
+      label: _('Layout'),
+    },
+    {
       tab: 'Control',
-      icon: LiaHandPointerSolid,
+      icon: GiClick,
       label: _('Behavior'),
     },
     {
       tab: 'Language',
-      icon: RiTranslate,
+      icon: FaLanguage,
       label: _('Language'),
     },
     {
       tab: 'Custom',
-      icon: IoAccessibilityOutline,
+      icon: BiCustomize,
       label: _('Custom'),
     },
   ] as TabConfig[];
@@ -185,25 +185,18 @@ const SettingsDialog: React.FC<{ bookKey: string; config: BookConfig }> = ({ boo
               className={clsx('dialog-tabs ms-1 flex h-10 w-full items-center gap-1 sm:ms-0')}
             >
               {tabConfig.map(({ tab, icon: Icon, label }) => (
-                <button
-                  key={tab}
-                  data-tab={tab}
-                  className={clsx(
-                    'btn btn-ghost text-base-content btn-sm gap-1 px-2',
-                    activePanel === tab ? 'btn-active' : '',
-                  )}
-                  onClick={() => handleSetActivePanel(tab)}
-                >
-                  <Icon className='mr-0' />
-                  <span
+                <div key={tab} className="tooltip tooltip-bottom" data-tip={label}>
+                  <button
+                    data-tab={tab}
                     className={clsx(
-                      window.innerWidth < 640 && 'hidden',
-                      !(showAllTabLabels || activePanel === tab) && 'hidden',
+                      'btn btn-ghost text-base-content btn-sm gap-1 px-2',
+                      activePanel === tab ? 'btn-active' : '',
                     )}
+                    onClick={() => handleSetActivePanel(tab)}
                   >
-                    {label}
-                  </span>
-                </button>
+                    <Icon className='mr-0' />
+                  </button>
+                </div>
               ))}
             </div>
             <div className='flex h-full items-center justify-end gap-x-2'>

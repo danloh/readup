@@ -5,6 +5,7 @@ import { useEnv } from '@/context/EnvContext';
 import { useThemeStore } from '@/store/themeStore';
 
 interface SectionInfoProps {
+  bookTitle?: string;
   section?: string;
   showDoubleBorder: boolean;
   isScrolled: boolean;
@@ -15,6 +16,7 @@ interface SectionInfoProps {
 }
 
 const SectionInfo: React.FC<SectionInfoProps> = ({
+  bookTitle,
   section,
   showDoubleBorder,
   isScrolled,
@@ -70,7 +72,7 @@ const SectionInfo: React.FC<SectionInfoProps> = ({
             isVertical ? '' : 'line-clamp-1',
           )}
         >
-          {section || ''}
+          {`${bookTitle ? `${bookTitle} > ` : ''}${section || ''}`}
         </h2>
       </div>
     </>

@@ -179,7 +179,7 @@ const ColorPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset
             <h2 className='font-medium'>{_('Invert Image In Dark Mode')}</h2>
             <input
               type='checkbox'
-              className='toggle'
+              className='toggle toggle-success h-5'
               checked={invertImgColorInDark}
               disabled={!isDarkMode}
               onChange={() => setInvertImgColorInDark(!invertImgColorInDark)}
@@ -190,7 +190,7 @@ const ColorPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset
             <h2 className=''>{_('Override Book Color')}</h2>
             <input
               type='checkbox'
-              className='toggle'
+              className='toggle toggle-success h-5'
               checked={overrideColor}
               onChange={() => setOverrideColor(!overrideColor)}
             />
@@ -251,7 +251,7 @@ const ColorPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset
                   <span className=''>{_('Enable Highlighting')}</span>
                   <input
                     type='checkbox'
-                    className='toggle'
+                    className='toggle toggle-success h-5'
                     checked={codeHighlighting}
                     onChange={() => setcodeHighlighting(!codeHighlighting)}
                   />
