@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import clsx from 'clsx';
 import { RiArrowLeftSLine, RiArrowRightSLine } from 'react-icons/ri';
 import { RiArrowGoBackLine, RiArrowGoForwardLine } from 'react-icons/ri';
@@ -95,6 +95,7 @@ const FooterBar: React.FC<FooterBarProps> = ({
       eventDispatcher.dispatch('tts-stop', { bookKey });
     } else {
       eventDispatcher.dispatch('tts-speak', { bookKey });
+      eventDispatcher.dispatch('tts-popup');
     }
   };
 
@@ -134,6 +135,8 @@ const FooterBar: React.FC<FooterBarProps> = ({
     progressValid && progressInfo?.total > 0
       ? (progressInfo!.current + 1) / progressInfo!.total || 0
       : 0;
+
+  const iconRef = useRef<HTMLDivElement>(null);
 
   return (
     <>
@@ -219,6 +222,7 @@ const FooterBar: React.FC<FooterBarProps> = ({
           </div>
         </div>
         <div
+          ref={iconRef}
           className={clsx(
             'bg-base-200 z-50 mt-auto flex w-full items-center gap-x-4 justify-center p-4',
           )}
@@ -226,13 +230,13 @@ const FooterBar: React.FC<FooterBarProps> = ({
         >
           <Button
             icon={<TOCIcon size={tocIconSize} className='' />}
-            onClick={() => handleSetActionTab('toc')} 
+            onClick={() => handleSetActionTab('toc')}
             tooltip={_('TOC')}
             tooltipDirection='top'
           />
-          <Button 
-            icon={<NoteIcon className='' />} 
-            onClick={() => handleSetActionTab('note')}  
+          <Button
+            icon={<NoteIcon className='' />}
+            onClick={() => handleSetActionTab('note')}
             tooltip={_('Annotate')}
             tooltipDirection='top'
           />
@@ -246,13 +250,13 @@ const FooterBar: React.FC<FooterBarProps> = ({
           />
           <Button
             icon={<TTSIcon className={ttsEnabled ? 'text-blue-500' : ''} />}
-            onClick={() => handleSetActionTab('tts')} 
+            onClick={() => handleSetActionTab('tts')}
             tooltip={_('Speak')}
             tooltipDirection='top'
           />
         </div>
       </div>
-      <TTSControl bookKey={bookKey} />
+      <TTSControl bookKey={bookKey} iconRef={iconRef} />
     </>
   );
 };

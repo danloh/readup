@@ -1,4 +1,3 @@
-import clsx from 'clsx';
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useEnv } from '@/context/EnvContext';
 import { useBookDataStore } from '@/store/bookDataStore';
@@ -14,17 +13,17 @@ import { invokeUseBackgroundAudio } from '@/utils/bridge';
 import { CFI } from '@/libs/document';
 import Popup from '@/components/Popup';
 import TTSPanel from './TTSPanel';
-import TTSIcon from './TTSIcon';
 
-const POPUP_WIDTH = 282;
-const POPUP_HEIGHT = 160;
+const POPUP_WIDTH = 280;
+const POPUP_HEIGHT = 60;
 const POPUP_PADDING = 10;
 
 interface TTSControlProps {
   bookKey: string;
+  iconRef: React.RefObject<HTMLDivElement>,
 }
 
-const TTSControl: React.FC<TTSControlProps> = ({ bookKey }) => {
+const TTSControl: React.FC<TTSControlProps> = ({ bookKey, iconRef }) => {
   const _ = useTranslation();
   const { appService } = useEnv();
   const { getBookData } = useBookDataStore();
@@ -33,7 +32,6 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey }) => {
   const [ttsLang, setTtsLang] = useState<string>('en');
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  const [showIndicator, setShowIndicator] = useState(false);
   const [showPanel, setShowPanel] = useState(false);
   const [panelPosition, setPanelPosition] = useState<Position>();
   const [trianglePosition, setTrianglePosition] = useState<Position>();
@@ -42,13 +40,11 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey }) => {
   const [timeoutTimestamp, setTimeoutTimestamp] = useState(0);
   const [timeoutFunc, setTimeoutFunc] = useState<ReturnType<typeof setTimeout> | null>(null);
 
-  const viewSettings = getViewSettings(bookKey);
   const popupPadding = useResponsiveSize(POPUP_PADDING);
   const maxWidth = window.innerWidth - 2 * popupPadding;
   const popupWidth = Math.min(maxWidth, useResponsiveSize(POPUP_WIDTH));
   const popupHeight = useResponsiveSize(POPUP_HEIGHT);
 
-  const iconRef = useRef<HTMLDivElement>(null);
   const unblockerAudioRef = useRef<HTMLAudioElement | null>(null);
   const ttsControllerRef = useRef<TTSController | null>(null);
   const [ttsController, setTtsController] = useState<TTSController | null>(null);
@@ -197,7 +193,6 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey }) => {
     }
 
     setTTSEnabled(bookKey, true);
-    setShowIndicator(true);
 
     try {
       if (appService?.isIOSApp) {
@@ -287,7 +282,6 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey }) => {
       getView(bookKey)?.deselect();
       setIsPlaying(false);
       setShowPanel(false);
-      setShowIndicator(false);
     }
     if (appService?.isIOSApp) {
       await invokeUseBackgroundAudio({ enabled: false });
@@ -387,6 +381,8 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey }) => {
       );
 
       setPanelPosition(popupPos);
+      // console.log("triangle position: ", trianglePos);
+      // console.log("Popup position: ", popupPos);
       setTrianglePosition(trianglePos);
     }
   };
@@ -397,11 +393,11 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey }) => {
       const speakingLang = ttsControllerRef.current.getSpeakingLang() || ttsLang;
       setTtsLang(speakingLang);
     }
-    setShowPanel((prev) => !prev);
+    setShowPanel(true);
   };
 
   const handleDismissPopup = () => {
-    setShowPanel(false);
+    setShowPanel((prev) => !prev);
   };
 
   useEffect(() => {
@@ -419,6 +415,18 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showPanel]);
 
+  const handleTTSPopup = (_event: CustomEvent) => {
+    togglePopup();
+  };
+
+  useEffect(() => {
+    eventDispatcher.on('tts-popup', handleTTSPopup);
+    return () => {
+      eventDispatcher.off('tts-popup', handleTTSPopup);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <>
       {showPanel && (
@@ -428,24 +436,10 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey }) => {
           onContextMenu={handleDismissPopup}
         />
       )}
-      {showIndicator && (
-        <div
-          ref={iconRef}
-          className={clsx(
-            'absolute h-12 w-12',
-            viewSettings?.rtl ? 'left-6' : 'right-6',
-            appService?.hasSafeAreaInset
-              ? 'bottom-[calc(env(safe-area-inset-bottom)+70px)]'
-              : 'bottom-[70px] sm:bottom-14',
-          )}
-        >
-          <TTSIcon isPlaying={isPlaying} ttsInited={ttsClientsInited} onClick={togglePopup} />
-        </div>
-      )}
       {showPanel && panelPosition && trianglePosition && ttsClientsInited && (
         <Popup
           width={popupWidth}
-          height={popupHeight}
+          minHeight={popupHeight}
           position={panelPosition}
           trianglePosition={trianglePosition}
           className='bg-base-200 flex shadow-lg'
