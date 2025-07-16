@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { FiSearch } from 'react-icons/fi';
 import { FiCopy } from 'react-icons/fi';
-import { PiHighlighterFill } from 'react-icons/pi';
+import { PiFeatherDuotone } from 'react-icons/pi';
 import { FaWikipediaW } from 'react-icons/fa';
-import { BsPencilSquare } from 'react-icons/bs';
-import { RiDeleteBinLine } from 'react-icons/ri';
 import { BsTranslate } from 'react-icons/bs';
-import { TbHexagonLetterD } from 'react-icons/tb';
+import { TbHighlight, TbHighlightOff, TbHexagonLetterD } from "react-icons/tb";
 import { FaHeadphones } from 'react-icons/fa6';
 
 import * as CFI from 'foliate-js/epubcfi.js';
@@ -481,15 +479,15 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
     { tooltipText: _('Copy'), Icon: FiCopy, onClick: handleCopy },
     {
       tooltipText: selectionAnnotated ? _('Delete Highlight') : _('Highlight'),
-      Icon: selectionAnnotated ? RiDeleteBinLine : PiHighlighterFill,
+      Icon: selectionAnnotated ? TbHighlightOff : TbHighlight,
       onClick: handleHighlight,
     },
-    { tooltipText: _('Annotate'), Icon: BsPencilSquare, onClick: handleAnnotate },
+    { tooltipText: _('Annotate'), Icon: PiFeatherDuotone, onClick: handleAnnotate },
     { tooltipText: _('Search'), Icon: FiSearch, onClick: handleSearch },
-    { tooltipText: _('Dictionary'), Icon: TbHexagonLetterD, onClick: handleDictionary },
     { tooltipText: _('Wikipedia'), Icon: FaWikipediaW, onClick: handleWikipedia },
+    { tooltipText: _('Dictionary'), Icon: TbHexagonLetterD, onClick: handleDictionary },
     { tooltipText: _('Translate'), Icon: BsTranslate, onClick: handleTranslation },
-    { tooltipText: _('Speak'), Icon: FaHeadphones, onClick: handleSpeakText },
+    { tooltipText: _('Audio'), Icon: FaHeadphones, onClick: handleSpeakText },
   ];
 
   return (

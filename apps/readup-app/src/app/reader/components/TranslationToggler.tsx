@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { RiTranslateAi } from 'react-icons/ri';
+import { BsTranslate } from 'react-icons/bs';
 
 import { useEnv } from '@/context/EnvContext';
 import { useReaderStore } from '@/store/readerStore';
@@ -43,7 +43,7 @@ const TranslationToggler = ({ bookKey }: { bookKey: string }) => {
   return (
     <Button
       icon={
-        <RiTranslateAi className={translationEnabled ? 'text-blue-500' : 'text-base-content'} />
+        <BsTranslate className={translationEnabled ? 'text-blue-500' : 'text-base-content'} />
       }
       disabled={!translationAvailable}
       onClick={() => setTranslationEnabled(!translationEnabled)}

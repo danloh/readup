@@ -1,9 +1,8 @@
 import clsx from 'clsx';
 import React from 'react';
-import { GiBookshelf } from 'react-icons/gi';
+import { LuLibraryBig } from "react-icons/lu";
 import { FiSearch } from 'react-icons/fi';
-import { MdOutlineMenu, MdOutlinePushPin, MdPushPin } from 'react-icons/md';
-import { MdArrowBackIosNew } from 'react-icons/md';
+import { MdOutlineMenu, MdOutlinePushPin, MdPushPin, MdArrowBackIosNew } from 'react-icons/md';
 
 import { useResponsiveSize } from '@/hooks/useResponsiveSize';
 import { useTrafficLightStore } from '@/store/trafficLightStore';
@@ -42,7 +41,7 @@ const SidebarHeader: React.FC<{
           className='btn btn-ghost hidden h-8 min-h-8 w-8 p-0 sm:flex'
           onClick={onGoToLibrary}
         >
-          <GiBookshelf className='fill-base-content' />
+          <LuLibraryBig className='fill-base-content' />
         </button>
       </div>
       <div className='flex min-w-24 max-w-32 items-center justify-between sm:size-[70%]'>

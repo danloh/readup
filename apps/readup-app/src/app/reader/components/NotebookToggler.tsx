@@ -1,5 +1,5 @@
 import React from 'react';
-import { LuNotebookPen } from 'react-icons/lu';
+import { LuNotebookText } from 'react-icons/lu';
 
 import { useEnv } from '@/context/EnvContext';
 import { useReaderStore } from '@/store/readerStore';
@@ -36,9 +36,9 @@ const NotebookToggler: React.FC<NotebookTogglerProps> = ({ bookKey }) => {
     <Button
       icon={
         sideBarBookKey == bookKey && isNotebookVisible ? (
-          <LuNotebookPen size={iconSize16} className='text-base-content' />
+          <LuNotebookText size={iconSize16} className='text-base-content' />
         ) : (
-          <LuNotebookPen size={iconSize16} className='text-base-content' />
+          <LuNotebookText size={iconSize16} className='text-base-content' />
         )
       }
       onClick={handleToggleSidebar}

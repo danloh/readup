@@ -19,7 +19,6 @@ import { interceptWindowOpen } from '@/utils/open';
 import { mountAdditionalFonts } from '@/utils/font';
 import { isTauriAppPlatform } from '@/services/environment';
 import { getSysFontsList, setSystemUIVisibility } from '@/utils/bridge';
-import { AboutWindow } from '@/components/AboutWindow';
 import { UpdaterWindow } from '@/components/UpdaterWindow';
 import { Toast } from '@/components/Toast';
 import { getLocale } from '@/utils/misc';
@@ -117,7 +116,6 @@ const Reader: React.FC<{ ids?: string }> = ({ ids }) => {
       >
         <Suspense>
           <ReaderContent ids={ids} settings={settings} />
-          <AboutWindow />
           <UpdaterWindow />
           <Toast />
         </Suspense>

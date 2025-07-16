@@ -2,10 +2,10 @@ import clsx from 'clsx';
 import React, { useEffect } from 'react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { BiMoon, BiSun } from 'react-icons/bi';
 import { TbSunMoon } from 'react-icons/tb';
-import { MdZoomOut, MdZoomIn, MdCheck } from 'react-icons/md';
-import { MdSync, MdSyncProblem } from 'react-icons/md';
+import { MdZoomOut, MdZoomIn, MdSync, MdSyncProblem } from 'react-icons/md';
+import { PiScrollLight, PiBookOpenLight } from "react-icons/pi";
+import { BiCheckboxChecked, BiCheckbox, BiMoon, BiSun } from "react-icons/bi";
 
 import { MAX_ZOOM_LEVEL, MIN_ZOOM_LEVEL, ZOOM_STEP } from '@/services/constants';
 import { useEnv } from '@/context/EnvContext';
@@ -25,13 +25,11 @@ import MenuItem from '@/components/MenuItem';
 interface ViewMenuProps {
   bookKey: string;
   setIsDropdownOpen?: (open: boolean) => void;
-  onSetSettingsDialogOpen: (open: boolean) => void;
 }
 
 const ViewMenu: React.FC<ViewMenuProps> = ({
   bookKey,
   setIsDropdownOpen,
-  onSetSettingsDialogOpen,
 }) => {
   const _ = useTranslation();
   const router = useRouter();
@@ -53,11 +51,6 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
   const zoomOut = () => setZoomLevel((prev) => Math.max(prev - ZOOM_STEP, MIN_ZOOM_LEVEL));
   const resetZoom = () => setZoomLevel(100);
   const toggleScrolledMode = () => setScrolledMode(!isScrolledMode);
-
-  const openFontLayoutMenu = () => {
-    setIsDropdownOpen?.(false);
-    onSetSettingsDialogOpen(true);
-  };
 
   const cycleThemeMode = () => {
     const nextMode = themeMode === 'auto' ? 'light' : themeMode === 'light' ? 'dark' : 'auto';
@@ -144,36 +137,13 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
           <MdZoomIn />
         </button>
       </div>
-
       <hr className='border-base-300 my-1' />
-
-      <MenuItem label={_('Font & Layout')} shortcut='Shift+F' onClick={openFontLayoutMenu} />
-
       <MenuItem
-        label={_('Scrolled Mode')}
+        label={isScrolledMode ? _('Scrolled Mode') : _('Page Mode')}
         shortcut='Shift+J'
-        Icon={isScrolledMode ? MdCheck : undefined}
+        Icon={isScrolledMode ? PiScrollLight : PiBookOpenLight}
         onClick={toggleScrolledMode}
       />
-
-      <hr className='border-base-300 my-1' />
-
-      <MenuItem
-        label={
-          !user
-            ? _('Sign in to Sync')
-            : lastSyncTime
-              ? _('Synced at {{time}}', {
-                  time: new Date(lastSyncTime).toLocaleString(),
-                })
-              : _('Never synced')
-        }
-        Icon={user ? MdSync : MdSyncProblem}
-        onClick={handleSync}
-      />
-
-      <hr className='border-base-300 my-1' />
-
       {appService?.hasWindow && <MenuItem label={_('Fullscreen')} onClick={handleFullScreen} />}
       <MenuItem
         label={
@@ -187,10 +157,23 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
         onClick={cycleThemeMode}
       />
       <MenuItem
-        label={_('Invert Image In Dark Mode')}
+        label={_('Invert Image In Dark')}
         disabled={!isDarkMode}
-        Icon={invertImgColorInDark ? MdCheck : undefined}
+        Icon={invertImgColorInDark ? BiCheckboxChecked : BiCheckbox}
         onClick={() => setInvertImgColorInDark(!invertImgColorInDark)}
+      />
+      <MenuItem
+        label={
+          !user
+            ? _('Sign in to Sync')
+            : lastSyncTime
+              ? _('Synced at {{time}}', {
+                  time: new Date(lastSyncTime).toLocaleString(),
+                })
+              : _('Never synced')
+        }
+        Icon={user ? MdSync : MdSyncProblem}
+        onClick={handleSync}
       />
     </div>
   );

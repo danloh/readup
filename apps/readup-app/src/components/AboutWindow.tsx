@@ -84,7 +84,7 @@ export const AboutWindow = () => {
       onClose={handleClose}
       boxClassName='sm:!w-96 sm:h-auto'
     >
-      <div className='about-content flex h-full flex-col items-center justify-center'>
+      <div className='about-content flex h-full flex-col items-center justify-center p-4'>
         <div className='flex flex-col items-center gap-2 px-8'>
           <div className='mb-2 mt-8'>
             <Image src='/icon.png' alt='App Logo' className='h-20 w-20' width={64} height={64} />
@@ -114,25 +114,6 @@ export const AboutWindow = () => {
               <p className='text-error mt-2 text-xs'>{_('Error checking for updates')}</p>
             )}
           </div>
-        </div>
-
-        <div className='divider py-16 sm:py-2'></div>
-
-        <div className='flex flex-col items-center px-4 text-center' dir='ltr'>
-          <p className='text-neutral-content text-sm'>
-            © {new Date().getFullYear()} Readup. All rights reserved.
-          </p>
-          <p className='text-neutral-content mt-2 text-xs'>
-            This software is licensed under the{' '}
-            <Link
-              href='https://www.gnu.org/licenses/agpl-3.0.html'
-              className='text-blue-500 underline'
-            >
-              GNU Affero General Public License v3.0
-            </Link>
-            . You are free to use, modify, and distribute this software under the terms of the AGPL
-            v3 license. Please see the license for more details.
-          </p>
         </div>
       </div>
     </Dialog>

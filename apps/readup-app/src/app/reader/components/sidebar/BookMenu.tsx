@@ -3,15 +3,12 @@ import React from 'react';
 import Image from 'next/image';
 
 import { MdCheck } from 'react-icons/md';
-import { setAboutDialogVisible } from '@/components/AboutWindow';
 import { useReaderStore } from '@/store/readerStore';
 import { useLibraryStore } from '@/store/libraryStore';
 import { useSidebarStore } from '@/store/sidebarStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useParallelViewStore } from '@/store/parallelViewStore';
-import { isWebAppPlatform } from '@/services/environment';
 import { eventDispatcher } from '@/utils/event';
-import { DOWNLOAD_READUP_URL } from '@/services/constants';
 import useBooksManager from '../../hooks/useBooksManager';
 import MenuItem from '@/components/MenuItem';
 
@@ -39,14 +36,6 @@ const BookMenu: React.FC<BookMenuProps> = ({ menuClassName, setIsDropdownOpen })
     window.location.reload();
     setIsDropdownOpen?.(false);
   };
-  const showAboutReadup = () => {
-    setAboutDialogVisible(true);
-    setIsDropdownOpen?.(false);
-  };
-  const downloadReadup = () => {
-    window.open(DOWNLOAD_READUP_URL, '_blank');
-    setIsDropdownOpen?.(false);
-  };
   const handleExportAnnotations = () => {
     eventDispatcher.dispatch('export-annotations', { bookKey: sideBarBookKey });
     setIsDropdownOpen?.(false);
@@ -69,8 +58,6 @@ const BookMenu: React.FC<BookMenuProps> = ({ menuClassName, setIsDropdownOpen })
     unsetParallel(bookKeys);
     setIsDropdownOpen?.(false);
   };
-
-  const isWebApp = isWebAppPlatform();
 
   return (
     <div
@@ -124,9 +111,6 @@ const BookMenu: React.FC<BookMenuProps> = ({ menuClassName, setIsDropdownOpen })
         onClick={handleToggleSortTOC}
       />
       <MenuItem label={_('Reload Page')} shortcut='Shift+R' onClick={handleReloadPage} />
-      <hr className='border-base-200 my-1' />
-      {isWebApp && <MenuItem label={_('Download Readup')} onClick={downloadReadup} />}
-      <MenuItem label={_('About Readup')} onClick={showAboutReadup} />
     </div>
   );
 };

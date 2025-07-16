@@ -2,7 +2,7 @@ import clsx from 'clsx';
 import React from 'react';
 import { MdBookmarkBorder as BookmarkIcon } from 'react-icons/md';
 import { IoIosList as TOCIcon } from 'react-icons/io';
-import { PiNotePencil as NoteIcon } from 'react-icons/pi';
+import { PiFeatherDuotone as NoteIcon } from 'react-icons/pi';
 
 import { useTranslation } from '@/hooks/useTranslation';
 

@@ -4,7 +4,7 @@ import { RiArrowLeftSLine, RiArrowRightSLine } from 'react-icons/ri';
 import { RiArrowGoBackLine, RiArrowGoForwardLine } from 'react-icons/ri';
 import { RiArrowLeftDoubleLine, RiArrowRightDoubleLine } from 'react-icons/ri';
 import { IoIosList as TOCIcon } from 'react-icons/io';
-import { PiNotePencil as NoteIcon } from 'react-icons/pi';
+import { PiFeatherDuotone as NoteIcon } from 'react-icons/pi';
 import { RxSlider as SliderIcon } from 'react-icons/rx';
 import { MdOutlineHeadphones as TTSIcon } from 'react-icons/md';
 
@@ -52,7 +52,6 @@ const FooterBar: React.FC<FooterBarProps> = ({
   const tocIconSize = useResponsiveSize(23);
 
   const view = getView(bookKey);
-  const config = getConfig(bookKey);
   const progress = getProgress(bookKey);
   const viewSettings = getViewSettings(bookKey);
   const viewState = getViewState(bookKey);
@@ -107,6 +106,7 @@ const FooterBar: React.FC<FooterBarProps> = ({
     } else if (tab === 'toc') {
       setHoveredBookKey('');
       setSideBarVisible(true);
+      const config = getConfig(bookKey);
       if (config && config.viewSettings) {
         config.viewSettings.sideBarTab = 'toc';
         setConfig(bookKey, config);
@@ -114,6 +114,7 @@ const FooterBar: React.FC<FooterBarProps> = ({
     } else if (tab === 'note') {
       setHoveredBookKey('');
       setSideBarVisible(true);
+      const config = getConfig(bookKey);
       if (config && config.viewSettings) {
         config.viewSettings.sideBarTab = 'annotations';
         setConfig(bookKey, config);
@@ -186,7 +187,7 @@ const FooterBar: React.FC<FooterBarProps> = ({
               onChange={(e) => handleProgressChange(e)}
             />
           </div>
-          <div className='flex w-full items-center justify-center gap-x-6'>
+          <div className='flex w-full items-center justify-center gap-x-4'>
             <Button
               icon={viewSettings?.rtl ? <RiArrowRightDoubleLine /> : <RiArrowLeftDoubleLine />}
               onClick={viewSettings?.rtl ? handleGoNextSection : handleGoPrevSection}
@@ -224,7 +225,7 @@ const FooterBar: React.FC<FooterBarProps> = ({
         <div
           ref={iconRef}
           className={clsx(
-            'bg-base-200 z-50 mt-auto flex w-full items-center gap-x-4 justify-center p-4',
+            'bg-base-200 z-50 mt-auto flex w-full items-center gap-x-4 justify-center p-2',
           )}
           style={{ paddingBottom: `${gridInsets.bottom + 16}px` }}
         >
@@ -251,7 +252,7 @@ const FooterBar: React.FC<FooterBarProps> = ({
           <Button
             icon={<TTSIcon className={ttsEnabled ? 'text-blue-500' : ''} />}
             onClick={() => handleSetActionTab('tts')}
-            tooltip={_('Speak')}
+            tooltip={_('Audio')}
             tooltipDirection='top'
           />
         </div>

@@ -23,7 +23,6 @@ interface HeaderBarProps {
   isHoveredAnim: boolean;
   gridInsets: Insets;
   onCloseBook: (bookKey: string) => void;
-  onSetSettingsDialogOpen: (open: boolean) => void;
 }
 
 const HeaderBar: React.FC<HeaderBarProps> = ({
@@ -33,7 +32,6 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
   isHoveredAnim,
   gridInsets,
   onCloseBook,
-  onSetSettingsDialogOpen,
 }) => {
   const { appService } = useEnv();
   const headerRef = useRef<HTMLDivElement>(null);
@@ -137,9 +135,8 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
             toggleButton={<PiDotsThreeVerticalBold size={iconSize16} />}
             onToggle={handleToggleDropdown}
           >
-            <ViewMenu bookKey={bookKey} onSetSettingsDialogOpen={onSetSettingsDialogOpen} />
+            <ViewMenu bookKey={bookKey}  />
           </Dropdown>
-
           <WindowButtons
             className='window-buttons flex h-full items-center'
             headerRef={headerRef}
