@@ -6,7 +6,7 @@ import { RiArrowLeftDoubleLine, RiArrowRightDoubleLine } from 'react-icons/ri';
 import { IoIosList as TOCIcon } from 'react-icons/io';
 import { PiFeatherDuotone as NoteIcon } from 'react-icons/pi';
 import { RxSlider as SliderIcon } from 'react-icons/rx';
-import { MdOutlineHeadphones as TTSIcon } from 'react-icons/md';
+import { RiSpeakAiLine } from "react-icons/ri";
 
 import { useEnv } from '@/context/EnvContext';
 import { useReaderStore } from '@/store/readerStore';
@@ -242,7 +242,7 @@ const FooterBar: React.FC<FooterBarProps> = ({
           <BookmarkToggler bookKey={bookKey} />
           <TranslationToggler bookKey={bookKey} />
           <Button
-            icon={<TTSIcon className={ttsEnabled ? 'text-blue-500' : ''} />}
+            icon={<RiSpeakAiLine className={ttsEnabled ? 'text-blue-500' : ''} />}
             onClick={() => handleSetActionTab('tts')}
             tooltip={_('Audio')}
             tooltipDirection='top'

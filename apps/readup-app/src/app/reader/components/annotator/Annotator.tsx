@@ -5,7 +5,7 @@ import { PiFeatherDuotone } from 'react-icons/pi';
 import { FaWikipediaW } from 'react-icons/fa';
 import { BsTranslate } from 'react-icons/bs';
 import { TbHighlight, TbHighlightOff, TbHexagonLetterD } from "react-icons/tb";
-import { FaHeadphones } from 'react-icons/fa6';
+import { RiSpeakAiLine } from "react-icons/ri";
 
 import * as CFI from 'foliate-js/epubcfi.js';
 import { Overlayer } from 'foliate-js/overlayer.js';
@@ -487,7 +487,7 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
     { tooltipText: _('Wikipedia'), Icon: FaWikipediaW, onClick: handleWikipedia },
     { tooltipText: _('Dictionary'), Icon: TbHexagonLetterD, onClick: handleDictionary },
     { tooltipText: _('Translate'), Icon: BsTranslate, onClick: handleTranslation },
-    { tooltipText: _('Audio'), Icon: FaHeadphones, onClick: handleSpeakText },
+    { tooltipText: _('Audio'), Icon: RiSpeakAiLine, onClick: handleSpeakText },
   ];
 
   return (

@@ -214,7 +214,7 @@ const TTSPanel = ({
             onClick={() => showSetting('rate')}
             className='flex flex-col items-center justify-center rounded-full p-1'
           >
-            <MdSpeed size={iconSize24} className={clsx(showRate && 'fill-secondary')} />
+            <MdSpeed size={iconSize24} className={clsx(showRate && 'fill-success')} />
             {rate && (
               <span
                 className={clsx(
@@ -245,7 +245,7 @@ const TTSPanel = ({
             onClick={() => showSetting('timer')}
             className='flex flex-col items-center justify-center rounded-full p-1'
           >
-            <GiNightSleep size={iconSize24} className={clsx(showTimer && 'fill-secondary')} />
+            <GiNightSleep size={iconSize24} className={clsx(showTimer && 'fill-success')} />
             {timeoutCountdown && (
               <span
                 className={clsx(
