@@ -38,3 +38,6 @@ next-env.d.ts
 
 # Rust build
 target
+
+# dev
+devlog.md

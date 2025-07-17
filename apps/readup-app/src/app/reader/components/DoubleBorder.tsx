@@ -22,7 +22,7 @@ const DoubleBorder: React.FC<DoubleBorderProps> = ({
       <div
         className={'borderframe pointer-events-none absolute'}
         style={{
-          border: `4px solid ${borderColor}`,
+          border: `2px solid ${borderColor}`,
           height: `calc(100% - ${contentInsets.top + contentInsets.bottom}px + ${paddingPx * 2}px)`,
           top: `calc(${contentInsets.top}px - ${paddingPx}px)`,
           left: `calc(${contentInsets.left}px - ${paddingPx}px)`,

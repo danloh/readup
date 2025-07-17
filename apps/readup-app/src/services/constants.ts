@@ -35,7 +35,7 @@ export const BOOK_UNGROUPED_ID = '';
 
 export const DEFAULT_SYSTEM_SETTINGS: Partial<SystemSettings> = {
   keepLogin: false,
-  autoUpload: true,
+  autoUpload: false,
   alwaysOnTop: false,
   alwaysShowStatusBar: false,
   autoCheckUpdates: true,
@@ -123,11 +123,11 @@ export const DEFAULT_BOOK_STYLE: BookStyle = {
   fullJustification: true,
   hyphenation: true,
   invertImgColorInDark: false,
-  theme: 'light',
+  theme: 'auto',
   overrideFont: false,
   overrideLayout: false,
   overrideColor: false,
-  codeHighlighting: false,
+  codeHighlighting: true,
   codeLanguage: 'auto-detect',
   userStylesheet: '',
   userUIStylesheet: '',
@@ -150,14 +150,14 @@ export const DEFAULT_VIEW_CONFIG: ViewConfig = {
   uiLanguage: '',
   sortedTOC: false,
 
-  doubleBorder: false,
-  borderColor: 'red',
+  doubleBorder: true,
+  borderColor: '',
 
   showHeader: true,
   showFooter: true,
   showBarsOnScroll: false,
   showRemainingTime: false,
-  showRemainingPages: false,
+  showRemainingPages: true,
   showPageNumber: true,
 };
 
