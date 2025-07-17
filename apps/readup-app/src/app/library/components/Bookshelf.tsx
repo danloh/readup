@@ -7,7 +7,6 @@ import { LibraryViewModeType } from '@/types/settings';
 import { useEnv } from '@/context/EnvContext';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useLibraryStore } from '@/store/libraryStore';
-import { useTranslation } from '@/hooks/useTranslation';
 import { navigateToLibrary, navigateToReader } from '@/utils/nav';
 import { formatAuthors, formatTitle } from '@/utils/book';
 import Spinner from '@/components/Spinner';
@@ -28,7 +27,6 @@ const Bookshelf: React.FC<BookshelfProps> = ({
   handleShowDetailsBook,
   booksTransferProgress,
 }) => {
-  const _ = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { appService } = useEnv();
@@ -42,7 +40,7 @@ const Bookshelf: React.FC<BookshelfProps> = ({
   const [sortOrder, setSortOrder] = useState(
     searchParams?.get('order') || (settings.librarySortAscending ? 'asc' : 'desc'),
   );
-  
+
   const isImportingBook = useRef(false);
 
   const { setCurrentBookshelf, setLibrary } = useLibraryStore();

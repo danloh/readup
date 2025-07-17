@@ -1,12 +1,11 @@
 import React, { useEffect, useRef } from 'react';
 import clsx from 'clsx';
-import { RiArrowLeftSLine, RiArrowRightSLine } from 'react-icons/ri';
-import { RiArrowGoBackLine, RiArrowGoForwardLine } from 'react-icons/ri';
+import { RiArrowLeftSLine, RiArrowRightSLine, RiChatVoiceFill } from 'react-icons/ri';
+import { RiArrowGoBackLine, RiArrowGoForwardLine, RiSpeakAiLine } from 'react-icons/ri';
 import { RiArrowLeftDoubleLine, RiArrowRightDoubleLine } from 'react-icons/ri';
 import { IoIosList as TOCIcon } from 'react-icons/io';
 import { PiFeatherDuotone as NoteIcon } from 'react-icons/pi';
 import { RxSlider as SliderIcon } from 'react-icons/rx';
-import { RiSpeakAiLine } from "react-icons/ri";
 
 import { useEnv } from '@/context/EnvContext';
 import { useReaderStore } from '@/store/readerStore';
@@ -88,14 +87,21 @@ const FooterBar: React.FC<FooterBarProps> = ({
     view?.history.forward();
   };
 
+  const [controlBtn, setControlBtn] = React.useState(false);
   const handleSpeakText = async () => {
     if (!view || !progress || !viewState) return;
     if (viewState.ttsEnabled) {
       eventDispatcher.dispatch('tts-stop', { bookKey });
+      setControlBtn(false);
     } else {
       eventDispatcher.dispatch('tts-speak', { bookKey });
       eventDispatcher.dispatch('tts-popup');
+      setControlBtn(true);
     }
+  };
+  const handleRePopup = async () => {
+      eventDispatcher.dispatch('tts-popup');
+      setControlBtn(true);
   };
 
   const handleSetActionTab = (tab: string) => {
@@ -240,13 +246,28 @@ const FooterBar: React.FC<FooterBarProps> = ({
             tooltipDirection='top'
           />
           <BookmarkToggler bookKey={bookKey} />
+          <div
+            className={clsx(
+              'flex items-center justify-center',
+              controlBtn && 'gap-x-1 bg-base-300 rounded-sm',
+            )}
+          >
+            <Button
+              icon={<RiSpeakAiLine className={ttsEnabled ? 'text-blue-500' : ''} />}
+              onClick={() => handleSetActionTab('tts')}
+              tooltip={_('Audio')}
+              tooltipDirection='top'
+            />
+            {controlBtn && (
+              <Button
+                icon={<RiChatVoiceFill />}
+                onClick={handleRePopup}
+                tooltip={_('Popup')}
+                tooltipDirection='top'
+              />
+            )}
+          </div>
           <TranslationToggler bookKey={bookKey} />
-          <Button
-            icon={<RiSpeakAiLine className={ttsEnabled ? 'text-blue-500' : ''} />}
-            onClick={() => handleSetActionTab('tts')}
-            tooltip={_('Audio')}
-            tooltipDirection='top'
-          />
           <Button
             icon={<SliderIcon className={clsx(actionTab === 'progress' && 'text-blue-500')} />}
             onClick={() => handleSetActionTab('progress')}
