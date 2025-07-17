@@ -47,7 +47,7 @@ const FooterBar: React.FC<FooterBarProps> = ({
   const { hoveredBookKey, setHoveredBookKey } = useReaderStore();
   const { getView, getViewState, getProgress, getViewSettings } = useReaderStore();
   const { isSideBarVisible, setSideBarVisible } = useSidebarStore();
-  const [actionTab, setActionTab] = React.useState('');
+  const [actionTab, setActionTab] = React.useState('progress');
   const sliderHeight = useResponsiveSize(28);
   const tocIconSize = useResponsiveSize(23);
 
@@ -123,10 +123,10 @@ const FooterBar: React.FC<FooterBarProps> = ({
   };
 
   useEffect(() => {
-    if (hoveredBookKey !== bookKey) {
-      // setActionTab('');
+    if (hoveredBookKey !== bookKey && actionTab !== 'progress') {
+      setActionTab('');
     }
-  }, [hoveredBookKey, bookKey]);
+  }, [hoveredBookKey, bookKey, actionTab]);
 
   const isVisible = hoveredBookKey === bookKey;
   const ttsEnabled = viewState?.ttsEnabled;

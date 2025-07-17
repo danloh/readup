@@ -55,7 +55,7 @@ export const DEFAULT_SYSTEM_SETTINGS: Partial<SystemSettings> = {
 
 export const DEFAULT_READSETTINGS: ReadSettings = {
   sideBarWidth: '15%',
-  isSideBarPinned: true,
+  isSideBarPinned: false,
   notebookWidth: '25%',
   isNotebookPinned: false,
   autohideCursor: true,
