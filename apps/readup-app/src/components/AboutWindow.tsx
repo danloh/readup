@@ -115,6 +115,13 @@ export const AboutWindow = () => {
             )}
           </div>
         </div>
+        <div className='divider py-16 sm:py-2'></div>
+
+        <div className='flex flex-col items-center px-4 text-center' dir='ltr'>
+          <p className='text-neutral-content text-sm'>
+            © {new Date().getFullYear()} Readup Team.
+          </p>
+        </div>
       </div>
     </Dialog>
   );

@@ -242,15 +242,15 @@ const FooterBar: React.FC<FooterBarProps> = ({
           <BookmarkToggler bookKey={bookKey} />
           <TranslationToggler bookKey={bookKey} />
           <Button
-            icon={<SliderIcon className={clsx(actionTab === 'progress' && 'text-blue-500')} />}
-            onClick={() => handleSetActionTab('progress')}
-            tooltip={_('Progress')}
-            tooltipDirection='top'
-          />
-          <Button
             icon={<TTSIcon className={ttsEnabled ? 'text-blue-500' : ''} />}
             onClick={() => handleSetActionTab('tts')}
             tooltip={_('Audio')}
+            tooltipDirection='top'
+          />
+          <Button
+            icon={<SliderIcon className={clsx(actionTab === 'progress' && 'text-blue-500')} />}
+            onClick={() => handleSetActionTab('progress')}
+            tooltip={_('Progress')}
             tooltipDirection='top'
           />
         </div>
