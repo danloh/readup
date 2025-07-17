@@ -57,7 +57,7 @@ const ThemeEditor: React.FC<ThemeEditorProps> = ({ customTheme, onSave, onDelete
       >
         <p className='mb-2 whitespace-pre-line text-xs'>
           {_(
-            "All the world's a stage,\nAnd all the men and women merely players;\nThey have their exits and their entrances,\nAnd one man in his time plays many parts,\nHis acts being seven ages.\n\n— William Shakespeare",
+            "The way of the Dao is to supplement the deprived at the expense of the excessive.\nThe way of the human is to proffer the excessive at the expense of the deprived.\n\n—Laozi",
           )}
           {'\n\n'}
           <span
@@ -66,7 +66,7 @@ const ThemeEditor: React.FC<ThemeEditorProps> = ({ customTheme, onSave, onDelete
               color: primaryColor,
             }}
           >
-            {_("(from 'As You Like It', Act II)")}
+            {_("77")}
           </span>
         </p>
       </div>

@@ -124,7 +124,7 @@ const FooterBar: React.FC<FooterBarProps> = ({
 
   useEffect(() => {
     if (hoveredBookKey !== bookKey) {
-      setActionTab('');
+      // setActionTab('');
     }
   }, [hoveredBookKey, bookKey]);
 
@@ -172,32 +172,14 @@ const FooterBar: React.FC<FooterBarProps> = ({
         {/*  footer progress bar */}
         <div
           className={clsx(
-            'bg-base-200 absolute bottom-16 flex w-full flex-col items-center gap-y-8 px-4 transition-all',
+            'bg-base-200 absolute bottom-16 flex w-full items-center px-4 transition-all',
             actionTab === 'progress'
               ? 'pointer-events-auto translate-y-0 pb-4 pt-8 ease-out'
-              : 'pointer-events-none invisible translate-y-full overflow-hidden pb-0 pt-0 ease-in',
+              : 'pointer-events-none invisible translate-y-full overflow-hidden p-0 ease-in',
           )}
-          style={{ bottom: `${gridInsets.bottom + 64}px` }}
+          style={{ bottom: `${gridInsets.bottom + 52}px` }}
         >
-          <div className='flex w-full items-center justify-between gap-x-6'>
-            <Slider
-              heightPx={sliderHeight}
-              bubbleLabel={`${Math.round(progressFraction * 100)}%`}
-              initialValue={progressValid ? progressFraction * 100 : 0}
-              onChange={(e) => handleProgressChange(e)}
-            />
-          </div>
           <div className='flex w-full items-center justify-center gap-x-4'>
-            <Button
-              icon={viewSettings?.rtl ? <RiArrowRightDoubleLine /> : <RiArrowLeftDoubleLine />}
-              onClick={viewSettings?.rtl ? handleGoNextSection : handleGoPrevSection}
-              tooltip={viewSettings?.rtl ? _('Next Section') : _('Previous Section')}
-            />
-            <Button
-              icon={viewSettings?.rtl ? <RiArrowRightSLine /> : <RiArrowLeftSLine />}
-              onClick={viewSettings?.rtl ? handleGoNextPage : handleGoPrevPage}
-              tooltip={viewSettings?.rtl ? _('Next Page') : _('Previous Page')}
-            />
             <Button
               icon={viewSettings?.rtl ? <RiArrowGoForwardLine /> : <RiArrowGoBackLine />}
               onClick={handleGoBack}
@@ -211,6 +193,16 @@ const FooterBar: React.FC<FooterBarProps> = ({
               disabled={!view?.history.canGoForward}
             />
             <Button
+              icon={viewSettings?.rtl ? <RiArrowRightDoubleLine /> : <RiArrowLeftDoubleLine />}
+              onClick={viewSettings?.rtl ? handleGoNextSection : handleGoPrevSection}
+              tooltip={viewSettings?.rtl ? _('Next Section') : _('Previous Section')}
+            />
+            <Button
+              icon={viewSettings?.rtl ? <RiArrowRightSLine /> : <RiArrowLeftSLine />}
+              onClick={viewSettings?.rtl ? handleGoNextPage : handleGoPrevPage}
+              tooltip={viewSettings?.rtl ? _('Next Page') : _('Previous Page')}
+            />
+            <Button
               icon={viewSettings?.rtl ? <RiArrowLeftSLine /> : <RiArrowRightSLine />}
               onClick={viewSettings?.rtl ? handleGoPrevPage : handleGoNextPage}
               tooltip={viewSettings?.rtl ? _('Previous Page') : _('Next Page')}
@@ -219,6 +211,12 @@ const FooterBar: React.FC<FooterBarProps> = ({
               icon={viewSettings?.rtl ? <RiArrowLeftDoubleLine /> : <RiArrowRightDoubleLine />}
               onClick={viewSettings?.rtl ? handleGoPrevSection : handleGoNextSection}
               tooltip={viewSettings?.rtl ? _('Previous Section') : _('Next Section')}
+            />
+            <Slider
+              heightPx={sliderHeight}
+              bubbleLabel={`${Math.round(progressFraction * 100)}%`}
+              initialValue={progressValid ? progressFraction * 100 : 0}
+              onChange={(e) => handleProgressChange(e)}
             />
           </div>
         </div>

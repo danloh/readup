@@ -196,7 +196,7 @@
   "No supported files found. Supported formats: {{formats}}": "Не знайдено підтримуваних файлів. Підтримувані формати: {{formats}}",
   "Drop to Import Books": "Перетягніть для імпорту книг",
   "Custom": "Користувацький",
-  "All the world's a stage,\nAnd all the men and women merely players;\nThey have their exits and their entrances,\nAnd one man in his time plays many parts,\nHis acts being seven ages.\n\n— William Shakespeare": "Весь світ — театр,\nІ всі чоловіки та жінки — просто актори;\nУ них є свої виходи та входи,\nІ один чоловік у свій час грає багато ролей,\nЙого вчинки — це сім віков.\n\n— Вільям Шекспір",
+
   "Custom Theme": "Користувацька тема",
   "Theme Name": "Назва теми",
   "Text Color": "Колір тексту",
@@ -260,7 +260,6 @@
   "No description available": "Опис недоступний",
   "List": "Список",
   "Grid": "Сітка",
-  "(from 'As You Like It', Act II)": "(із 'Як вам це подобається', Акт II)",
   "Link Color": "Колір посилання",
   "Volume Keys for Page Flip": "Перегортати сторінки клавішами гучності",
   "Clicks for Page Flip": "Перегортати сторінки натисканням",

@@ -19,7 +19,6 @@ import { debounce } from '@/utils/debounce';
 import WindowButtons from '@/components/WindowButtons';
 import Dropdown from '@/components/Dropdown';
 import SettingsMenu from './SettingsMenu';
-import ImportMenu from './ImportMenu';
 import ViewMenu from './ViewMenu';
 
 interface LibraryHeaderProps {
@@ -155,20 +154,16 @@ const LibraryHeader: React.FC<LibraryHeaderProps> = ({onImportBooks}) => {
           </div>
         </div>
         <div className='flex h-full items-center gap-x-2'>
-          <Dropdown
-            className={clsx(
-              'exclude-title-bar-mousedown dropdown-bottom flex h-6 cursor-pointer justify-center',
-              appService?.isMobile ? 'dropdown-end' : 'dropdown-center',
-            )}
-            buttonClassName='p-0 h-6 min-h-6 w-6 flex items-center justify-center'
-            toggleButton={
-              <div className='lg:tooltip lg:tooltip-bottom' data-tip={_('Import Books')}>
-                <LiaFileImportSolid className='m-0.5 h-5 w-5' />
-              </div>
-            }
-          >
-            <ImportMenu onImportBooks={onImportBooks} />
-          </Dropdown>
+          <div className='tooltip tooltip-bottom' data-tip={_('Import Books')}>
+            <button
+              type='button'
+              className='btn btn-ghost h-8 min-h-8 w-8 p-0'
+              onClick={onImportBooks}
+              aria-label={_('Import Books')}
+            >
+              <LiaFileImportSolid className='m-0.5 h-5 w-5' />
+            </button>
+          </div>
           <Dropdown
             className='exclude-title-bar-mousedown dropdown-bottom dropdown-end'
             buttonClassName='btn btn-ghost h-8 min-h-8 w-8 p-0'
