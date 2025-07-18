@@ -1,3 +1,5 @@
+A fork of [readest](https://github.com/readest/readest), we add an atproto layer on the reader for social reading.
+
 
 ## Features
 
@@ -58,8 +60,8 @@ rustup update
 ### 1. Clone the Repository
 
 ```bash
-git clone 
-cd 
+git clone
+cd
 git submodule update --init --recursive
 ```
 
@@ -158,7 +160,7 @@ Please check the [wiki][link-gh-wiki] of this project for more information on de
 2. Install or Update WebView2
    - Download the WebView2 Runtime directly from Microsoft: [link](https://developer.microsoft.com/en-us/microsoft-edge/webview2?form=MA13LH).
    - If you prefer an offline installer, download the offline package and run it as an Administrator.
-3. Re-run 
+3. Re-run
    - After installing/updating WebView2, launch readup.exe again.
    - If you still encounter problems, reboot your PC and try again.
 

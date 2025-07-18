@@ -1,7 +1,8 @@
+import { Overlayer } from 'foliate-js/overlayer.js';
 import { FoliateView } from '@/types/view';
 import { AppService } from '@/types/system';
 import { parseSSMLMarks } from '@/utils/ssml';
-import { Overlayer } from 'foliate-js/overlayer.js';
+import { createRejecttFilter } from '@/utils/node';
 import { TTSGranularity, TTSHighlightOptions, TTSMark, TTSVoice } from './types';
 import { WebSpeechClient } from './WebSpeechClient';
 import { NativeTTSClient } from './NativeTTSClient';
@@ -106,7 +107,14 @@ export class TTSController extends EventTarget {
       granularity = supportedGranularities[0]!;
     }
     const highlightOptions: TTSHighlightOptions = { style: 'highlight', color: 'green' };
-    await this.view.initTTS(granularity, this.#getHighlighter(highlightOptions));
+    await this.view.initTTS(
+      granularity,
+      createRejecttFilter({
+        tags: ['rt', 'sup'],
+        contents: [{ tag: 'a', content: /^\d+$/ }],
+      }),
+      this.#getHighlighter(highlightOptions),
+    );
   }
 
   async preloadSSML(ssml: string | undefined) {
