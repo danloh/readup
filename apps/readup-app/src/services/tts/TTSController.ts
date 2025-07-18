@@ -105,7 +105,7 @@ export class TTSController extends EventTarget {
     if (!supportedGranularities.includes(granularity)) {
       granularity = supportedGranularities[0]!;
     }
-    const highlightOptions: TTSHighlightOptions = { style: 'highlight', color: 'gray' };
+    const highlightOptions: TTSHighlightOptions = { style: 'highlight', color: 'green' };
     await this.view.initTTS(granularity, this.#getHighlighter(highlightOptions));
   }
 
