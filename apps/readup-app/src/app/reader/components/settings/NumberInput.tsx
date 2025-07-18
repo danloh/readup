@@ -71,8 +71,8 @@ const NumberInput: React.FC<NumberInputProps> = ({
   return (
     <div className={clsx('config-item', className)}>
       <div className='flex min-w-0 items-center'>
-        {Icon && (<Icon className='text-base-content mr-1' />)}
-        <span className='text-base-content line-clamp-2'>{label}</span>
+        {Icon && (<Icon className='text-base-content' />)}
+        <span className='text-base-content line-clamp-2 mx-1'>{label}</span>
       </div>
       <div className='text-base-content flex items-center gap-2'>
         <input

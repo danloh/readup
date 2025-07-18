@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { BookConfig } from '@/types/book';
 import { useEnv } from '@/context/EnvContext';
 import { useSettingsStore } from '@/store/settingsStore';
@@ -38,8 +38,6 @@ const SettingsDialog: React.FC<{ bookKey: string; config: BookConfig }> = ({ boo
   const _ = useTranslation();
   const { appService } = useEnv();
   const [isRtl] = useState(() => getDirFromUILanguage() === 'rtl');
-  const tabsRef = useRef<HTMLDivElement | null>(null);
-  const [showAllTabLabels, setShowAllTabLabels] = useState(false);
   const { setFontLayoutSettingsDialogOpen } = useSettingsStore();
 
   const tabConfig = [
@@ -114,48 +112,6 @@ const SettingsDialog: React.FC<{ bookKey: string; config: BookConfig }> = ({ boo
     setFontLayoutSettingsDialogOpen(false);
   };
 
-  useEffect(() => {
-    const container = tabsRef.current;
-    if (!container) return;
-
-    const checkButtonWidths = () => {
-      const threshold = (container.clientWidth - 64) * 0.22;
-      const hideLabel = Array.from(container.querySelectorAll('button')).some((button) => {
-        const labelSpan = button.querySelector('span');
-        const labelText = labelSpan?.textContent || '';
-        const clone = button.cloneNode(true) as HTMLButtonElement;
-        clone.style.position = 'absolute';
-        clone.style.visibility = 'hidden';
-        clone.style.width = 'auto';
-        const cloneSpan = clone.querySelector('span');
-        if (cloneSpan) {
-          cloneSpan.classList.remove('hidden');
-          cloneSpan.textContent = labelText;
-        }
-        document.body.appendChild(clone);
-        const fullWidth = clone.scrollWidth;
-        document.body.removeChild(clone);
-        return fullWidth > threshold;
-      });
-      setShowAllTabLabels(!hideLabel);
-    };
-
-    checkButtonWidths();
-
-    const resizeObserver = new ResizeObserver(checkButtonWidths);
-    resizeObserver.observe(container);
-    const mutationObserver = new MutationObserver(checkButtonWidths);
-    mutationObserver.observe(container, {
-      subtree: true,
-      characterData: true,
-    });
-
-    return () => {
-      resizeObserver.disconnect();
-      mutationObserver.disconnect();
-    };
-  }, []);
-
   const currentPanel = tabConfig.find((tab) => tab.tab === activePanel);
 
   return (
@@ -180,10 +136,7 @@ const SettingsDialog: React.FC<{ bookKey: string; config: BookConfig }> = ({ boo
             >
               {isRtl ? <MdArrowForwardIos /> : <MdArrowBackIosNew />}
             </button>
-            <div
-              ref={tabsRef}
-              className={clsx('dialog-tabs ms-1 flex h-10 w-full items-center gap-1 sm:ms-0')}
-            >
+            <div className={clsx('dialog-tabs ms-1 flex h-10 w-full items-center gap-1 sm:ms-0')}>
               {tabConfig.map(({ tab, icon: Icon, label }) => (
                 <div key={tab} className="tooltip tooltip-bottom" data-tip={label}>
                   <button
