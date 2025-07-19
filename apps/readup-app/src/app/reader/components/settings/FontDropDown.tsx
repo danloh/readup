@@ -96,6 +96,8 @@ const FontDropdown: React.FC<DropdownProps> = ({
     [moreOptions, selected, onSelect, onGetFontFamily, family, iconSize],
   );
 
+  const [showSysFont, setShowSysFont] = React.useState(false);
+
   return (
     <div className='dropdown dropdown-top'>
       <button
@@ -139,7 +141,10 @@ const FontDropdown: React.FC<DropdownProps> = ({
         {/* More options with nested dropdown */}
         {moreOptions && moreOptions.length > 0 && (
           <li className='dropdown dropdown-left dropdown-top px-1 sm:px-2'>
-            <div className='flex items-center px-0 text-sm'>
+            <div
+              className='flex items-center px-0 text-sm'
+              onClick={() => setShowSysFont((prev) => !prev)}
+            >
               <span style={{ minWidth: `${iconSize}px` }}>
                 <FiChevronLeft size={iconSize} />
               </span>
@@ -150,6 +155,7 @@ const FontDropdown: React.FC<DropdownProps> = ({
               className={clsx(
                 'dropdown-content bgcolor-base-200 menu rounded-box relative z-[1] shadow',
                 '!mr-4 mb-[-46px] inline w-[46vw] overflow-hidden !px-0 sm:w-[200px]',
+                !showSysFont && 'hidden',
               )}
             >
               {/* Virtualized more options */}
