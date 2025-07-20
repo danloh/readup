@@ -40,6 +40,7 @@ export const DEFAULT_SYSTEM_SETTINGS: Partial<SystemSettings> = {
   alwaysShowStatusBar: false,
   autoCheckUpdates: true,
   screenWakeLock: false,
+  openBookInNewWindow: false,
   openLastBooks: false,
   lastOpenBooks: [],
   autoImportBooksOnOpen: false,

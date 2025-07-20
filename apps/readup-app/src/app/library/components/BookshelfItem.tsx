@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { navigateToLibrary, navigateToReader } from '@/utils/nav';
+import { navigateToLibrary, navigateToReader, showReaderWindow } from '@/utils/nav';
 import { useEnv } from '@/context/EnvContext';
 import { useLibraryStore } from '@/store/libraryStore';
 import { useSettingsStore } from '@/store/settingsStore';
@@ -105,8 +105,9 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
   const makeBookAvailable = async (book: Book) => {
     if (book.uploadedAt && !book.downloadedAt) {
       if (await appService?.isBookAvailable(book)) {
-        if (!book.downloadedAt) {
+        if (!book.downloadedAt || !book.coverDownloadedAt) {
           book.downloadedAt = Date.now();
+          book.coverDownloadedAt = Date.now();
           updateBook(envConfig, book);
         }
         return true;
@@ -127,7 +128,11 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
 
   const handleBookClick = async (book: Book) => {
     if (!(await makeBookAvailable(book))) return;
-    navigateToReader(router, [book.hash]);
+    if (appService?.hasWindow && settings.openBookInNewWindow) {
+      showReaderWindow(appService, [book.hash]);
+    } else {
+      navigateToReader(router, [book.hash]);
+    }
   };
 
   const handleGroupClick = (group: BooksGroup) => {
@@ -149,7 +154,7 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
         revealItemInDir(folder);
       },
     });
-    
+
     const menu = await Menu.new();
     menu.append(showBookInFinderMenuItem);
     menu.popup();
@@ -157,7 +162,7 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
 
   const groupContextMenuHandler = async (group: BooksGroup) => {
     if (!appService?.hasContextMenu) return;
-    
+
     const deleteGroupMenuItem = await MenuItem.new({
       text: _('Delete'),
       action: async () => {

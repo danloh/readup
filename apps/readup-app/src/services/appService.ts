@@ -297,6 +297,7 @@ export abstract class BaseAppService implements AppService {
     if (includingLocal) {
       book.deletedAt = Date.now();
       book.downloadedAt = null;
+      book.coverDownloadedAt = null;
     }
     if (includingUploaded) {
       book.uploadedAt = null;
@@ -356,6 +357,7 @@ export abstract class BaseAppService implements AppService {
       book.updatedAt = Date.now();
       book.uploadedAt = Date.now();
       book.downloadedAt = Date.now();
+      book.coverDownloadedAt = Date.now();
     } else {
       throw new Error('Book file not uploaded');
     }
@@ -378,6 +380,7 @@ export abstract class BaseAppService implements AppService {
 
   async downloadBook(book: Book, onlyCover = false, onProgress?: ProgressHandler): Promise<void> {
     let bookDownloaded = false;
+    let bookCoverDownloaded = false;
     const completedFiles = { count: 0 };
     let toDownloadFpCount = 0;
     const needDownCover = !(await this.fs.exists(getCoverFilename(book), 'Books'));
@@ -401,6 +404,7 @@ export abstract class BaseAppService implements AppService {
         const cfp = `${CLOUD_BOOKS_SUBDIR}/${lfp}`;
         await this.downloadCloudFile(lfp, cfp, handleProgress);
         completedFiles.count++;
+        bookCoverDownloaded = true;
       }
     } catch (error) {
       // don't throw error here since some books may not have cover images at all
@@ -418,6 +422,9 @@ export abstract class BaseAppService implements AppService {
     // some books may not have cover image, so we need to check if the book is downloaded
     if (bookDownloaded || (!onlyCover && !needDownBook)) {
       book.downloadedAt = Date.now();
+    }
+    if ((bookCoverDownloaded || !needDownCover) && !book.coverDownloadedAt) {
+      book.coverDownloadedAt = Date.now();
     }
   }
 

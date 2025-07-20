@@ -58,19 +58,19 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
 
     initializeTrafficLightStore(appService);
     initializeTrafficLightListeners();
-    setTrafficLightVisibility(true);
+
     return () => {
       cleanupTrafficLightListeners();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [appService]);
 
   useEffect(() => {
     if (!appService?.hasTrafficLight) return;
 
     setTrafficLightVisibility(isSideBarVisible);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isSideBarVisible]);
+  }, [appService, isSideBarVisible]);
 
   const isVisible = hoveredBookKey === bookKey || isDropdownOpen;
 
@@ -82,7 +82,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
       }}
     >
       <div
-        className={clsx('absolute top-0 z-10 hidden h-11 w-full sm:flex')}
+        className={clsx('absolute top-0 z-10 h-11 w-full')}
         onMouseEnter={() => !appService?.isMobile && setHoveredBookKey(bookKey)}
         onTouchStart={() => !appService?.isMobile && setHoveredBookKey(bookKey)}
       />
