@@ -423,5 +423,6 @@
   "Failed to delete cloud backup of the book": "Échec de la suppression de la sauvegarde cloud du livre",
   "Are you sure to delete the cloud backup of the selected book?": "Êtes-vous sûr de vouloir supprimer la sauvegarde cloud du livre sélectionné ?",
   "Don't have an account? Sign up": "Vous n'avez pas de compte ? Inscrivez-vous",
-  "What's New in Readup": "Quoi de neuf dans Readup"
+  "What's New in Readup": "Quoi de neuf dans Readup",
+  "Open Book in New Window": "Ouvrir dans une nouvelle fenêtre"
 }

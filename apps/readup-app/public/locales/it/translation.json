@@ -423,5 +423,6 @@
   "Deleted cloud backup of the book: {{title}}": "Backup cloud del libro eliminato: {{title}}",
   "Failed to delete cloud backup of the book": "Impossibile eliminare il backup cloud del libro",
   "Are you sure to delete the cloud backup of the selected book?": "Sei sicuro di voler eliminare il backup cloud del libro selezionato?",
-  "What's New in Readup": "Novità in Readup"
+  "What's New in Readup": "Novità in Readup",
+  "Open Book in New Window": "Apri libro in una nuova finestra"
 }

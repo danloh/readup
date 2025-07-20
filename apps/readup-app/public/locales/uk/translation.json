@@ -427,5 +427,6 @@
   "Deleted cloud backup of the book: {{title}}": "Видалено хмарну резервну копію книги: {{title}}",
   "Failed to delete cloud backup of the book": "Не вдалося видалити хмарну резервну копію.",
   "Are you sure to delete the cloud backup of the selected book?": "Ви впевнені, що хочете видалити хмарну резервну копію вибраної книги?",
-  "What's New in Readup": "Що нового в Readup"
+  "What's New in Readup": "Що нового в Readup",
+  "Open Book in New Window": "Відкрити книгу в новому вікні"
 }

@@ -419,5 +419,6 @@
   "Deleted cloud backup of the book: {{title}}": "पुस्तक का क्लाउड बैकअप हटाया गया: {{title}}",
   "Failed to delete cloud backup of the book": "पुस्तक का क्लाउड बैकअप हटाने में विफल",
   "Are you sure to delete the cloud backup of the selected book?": "क्या आप सुनिश्चित हैं कि आप चयनित पुस्तक का क्लाउड बैकअप हटाना चाहते हैं?",
-  "What's New in Readup": "Readup में नया क्या है"
+  "What's New in Readup": "Readup में नया क्या है",
+  "Open Book in New Window": "नई विंडो में पुस्तक खोलें"
 }

@@ -415,5 +415,6 @@
   "Deleted cloud backup of the book: {{title}}": "Cadangan cloud buku dihapus: {{title}}",
   "Failed to delete cloud backup of the book": "Cadangan cloud buku gagal dihapus",
   "Are you sure to delete the cloud backup of the selected book?": "Apakah Anda yakin ingin menghapus cadangan cloud dari buku yang dipilih?",
-  "What's New in Readup": "Yang Baru di Readup"
+  "What's New in Readup": "Yang Baru di Readup",
+  "Open Book in New Window": "Buka Buku di Jendela Baru"
 }

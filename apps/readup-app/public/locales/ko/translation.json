@@ -415,5 +415,6 @@
   "Deleted cloud backup of the book: {{title}}": "책의 클라우드 백업이 삭제됨: {{title}}",
   "Failed to delete cloud backup of the book": "책의 클라우드 백업을 삭제하지 못했습니다.",
   "Are you sure to delete the cloud backup of the selected book?": "선택한 책의 클라우드 백업을 삭제하시겠습니까?",
-  "What's New in Readup": "Readup의 새로운 기능"
+  "What's New in Readup": "Readup의 새로운 기능",
+  "Open Book in New Window": "새 창에서 책 열기"
 }

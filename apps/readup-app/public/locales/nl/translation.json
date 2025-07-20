@@ -419,5 +419,6 @@
   "Deleted cloud backup of the book: {{title}}": "Verwijderde cloudback-up van het boek: {{title}}",
   "Failed to delete cloud backup of the book": "Verwijderen van cloudback-up van het boek is mislukt.",
   "Are you sure to delete the cloud backup of the selected book?": "Weet je zeker dat je de cloudback-up van het geselecteerde boek wilt verwijderen?",
-  "What's New in Readup": "Wat is er nieuw in Readup"
+  "What's New in Readup": "Wat is er nieuw in Readup",
+  "Open Book in New Window": "Open boek in nieuw venster"
 }

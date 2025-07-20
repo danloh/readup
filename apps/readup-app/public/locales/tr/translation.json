@@ -419,5 +419,6 @@
   "Deleted cloud backup of the book: {{title}}": "Kitabın bulut yedeği silindi: {{title}}",
   "Failed to delete cloud backup of the book": "Kitabın bulut yedeğini silme işlemi başarısız oldu.",
   "Are you sure to delete the cloud backup of the selected book?": "Seçilen kitabın bulut yedeğini silmek istediğinize emin misiniz?",
-  "What's New in Readup": "Readup'te Neler Yeni"
+  "What's New in Readup": "Readup'te Neler Yeni",
+  "Open Book in New Window": "Kitabı Yeni Pencerede Aç"
 }

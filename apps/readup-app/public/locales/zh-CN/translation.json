@@ -415,5 +415,6 @@
   "Deleted cloud backup of the book: {{title}}": "已删除书籍云备份：{{title}}",
   "Failed to delete cloud backup of the book": "无法删除书籍云备份。",
   "Are you sure to delete the cloud backup of the selected book?": "您确定要删除所选书籍的云备份吗？",
-  "What's New in Readup": "Readup 更新功能"
+  "What's New in Readup": "Readup 更新功能",
+  "Open Book in New Window": "在新窗口中打开书籍"
 }

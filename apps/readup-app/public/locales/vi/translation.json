@@ -415,5 +415,6 @@
   "Deleted cloud backup of the book: {{title}}": "Đã xóa bản sao lưu đám mây của sách: {{title}}",
   "Failed to delete cloud backup of the book": "Không thể xóa bản sao lưu đám mây của sách.",
   "Are you sure to delete the cloud backup of the selected book?": "Bạn có chắc chắn muốn xóa bản sao lưu đám mây của sách đã chọn không?",
-  "What's New in Readup": "Những gì mới trong Readup"
+  "What's New in Readup": "Những gì mới trong Readup",
+  "Open Book in New Window": "Open Sách trong Cửa sổ Mới"
 }

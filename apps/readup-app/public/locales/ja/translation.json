@@ -415,5 +415,6 @@
   "Deleted cloud backup of the book: {{title}}": "書籍のクラウドバックアップを削除しました：{{title}}",
   "Failed to delete cloud backup of the book": "書籍のクラウドバックアップを削除できませんでした",
   "Are you sure to delete the cloud backup of the selected book?": "選択した書籍のクラウドバックアップを削除してもよろしいですか？",
-  "What's New in Readup": "Readupの新機能"
+  "What's New in Readup": "Readupの新機能",
+  "Open Book in New Window": "新しいウィンドウで本を開く"
 }
