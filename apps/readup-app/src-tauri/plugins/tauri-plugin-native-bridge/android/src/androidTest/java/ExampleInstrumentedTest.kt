@@ -19,6 +19,6 @@ class ExampleInstrumentedTest {
     fun useAppContext() {
         // Context of the app under test.
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-        assertEquals("cc.reaadup.native_bridge", appContext.packageName)
+        assertEquals("cc.readup.native_bridge", appContext.packageName)
     }
 }

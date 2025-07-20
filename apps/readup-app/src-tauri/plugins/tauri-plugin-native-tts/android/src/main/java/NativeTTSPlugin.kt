@@ -62,24 +62,24 @@ class SetVoiceArgs(
 
 @TauriPlugin
 class NativeTTSPlugin(private val activity: Activity) : Plugin(activity) {
-    
+
     companion object {
         private const val TAG = "NativeTTSPlugin"
         private const val CHANNEL_NAME = "tts_events"
     }
-    
+
     private var textToSpeech: TextToSpeech? = null
     private var isInitialized = AtomicBoolean(false)
     private var isPaused = AtomicBoolean(false)
     private var isSpeaking = AtomicBoolean(false)
     private var currentRate = AtomicReference<Float>(1.0f)
     private var currentPitch = AtomicReference<Float>(1.0f)
-    
+
     private val eventChannels = ConcurrentHashMap<String, Channel<TTSMessageEvent>>()
     private val speakingJobs = ConcurrentHashMap<String, Job>()
-    
+
     private val coroutineScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
-    
+
     @Command
     fun init(invoke: Invoke) {
         coroutineScope.launch {
@@ -95,7 +95,7 @@ class NativeTTSPlugin(private val activity: Activity) : Plugin(activity) {
             }
         }
     }
-    
+
     private suspend fun initializeTTS(): Boolean = suspendCancellableCoroutine { continuation ->
         try {
             val preferredEngine = Settings.Secure.getString(
@@ -123,7 +123,7 @@ class NativeTTSPlugin(private val activity: Activity) : Plugin(activity) {
             continuation.resume(false) {}
         }
     }
-    
+
     private fun setupTTSListener() {
         textToSpeech?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
             override fun onStart(utteranceId: String?) {
@@ -132,7 +132,7 @@ class NativeTTSPlugin(private val activity: Activity) : Plugin(activity) {
                     sendEvent(id, TTSMessageEvent("boundary", "start"))
                 }
             }
-            
+
             override fun onDone(utteranceId: String?) {
                 utteranceId?.let { id ->
                     isSpeaking.set(false)
@@ -149,7 +149,7 @@ class NativeTTSPlugin(private val activity: Activity) : Plugin(activity) {
                     closeEventChannel(id)
                 }
             }
-            
+
             override fun onError(utteranceId: String?, errorCode: Int) {
                 utteranceId?.let { id ->
                     isSpeaking.set(false)
@@ -157,7 +157,7 @@ class NativeTTSPlugin(private val activity: Activity) : Plugin(activity) {
                     closeEventChannel(id)
                 }
             }
-            
+
             override fun onRangeStart(utteranceId: String?, start: Int, end: Int, frame: Int) {
                 utteranceId?.let { id ->
                     sendEvent(id, TTSMessageEvent("boundary", "range", "pos:$start-$end"))
@@ -165,44 +165,44 @@ class NativeTTSPlugin(private val activity: Activity) : Plugin(activity) {
             }
         })
     }
-    
+
     @Command
     fun speak(invoke: Invoke) {
         val args = invoke.parseArgs(SpeakArgs::class.java)
         val text = args.text ?: ""
-        
+
         if (text.isEmpty()) {
             invoke.reject("Text cannot be empty")
             return
         }
-        
+
         val utteranceId = UUID.randomUUID().toString()
-        
+
         coroutineScope.launch {
             try {
                 val eventChannel = Channel<TTSMessageEvent>(Channel.UNLIMITED)
                 eventChannels[utteranceId] = eventChannel
-                
+
                 val speakJob = launch {
                     speakText(text, utteranceId, args.preload ?: false)
                 }
                 speakingJobs[utteranceId] = speakJob
-                
+
                 val result = JSObject().apply {
                     put("utteranceId", utteranceId)
                 }
                 invoke.resolve(result)
-                
+
                 // Start sending events to the frontend
                 startEventStream(utteranceId)
-                
+
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to start speaking", e)
                 invoke.reject("Failed to start speaking: ${e.message}")
             }
         }
     }
-    
+
     private suspend fun speakText(text: String, utteranceId: String, preload: Boolean) {
         withContext(Dispatchers.Main) {
             try {
@@ -210,18 +210,18 @@ class NativeTTSPlugin(private val activity: Activity) : Plugin(activity) {
                     setSpeechRate(currentRate.get())
                     setPitch(currentPitch.get())
                 }
-                
+
                 val params = Bundle().apply {
                     putString(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, utteranceId)
                 }
-                
+
                 val result = textToSpeech?.speak(
                     text,
                     if (preload) TextToSpeech.QUEUE_ADD else TextToSpeech.QUEUE_FLUSH,
                     params,
                     utteranceId
                 )
-                
+
                 if (result != TextToSpeech.SUCCESS) {
                     sendEvent(utteranceId, TTSMessageEvent("error", "Failed to start speech"))
                 }
@@ -230,7 +230,7 @@ class NativeTTSPlugin(private val activity: Activity) : Plugin(activity) {
             }
         }
     }
-    
+
     private fun startEventStream(utteranceId: String) {
         coroutineScope.launch {
             val channel = eventChannels[utteranceId] ?: return@launch
@@ -249,13 +249,13 @@ class NativeTTSPlugin(private val activity: Activity) : Plugin(activity) {
             }
         }
     }
-    
+
     private fun sendEvent(utteranceId: String, event: TTSMessageEvent) {
         coroutineScope.launch {
             eventChannels[utteranceId]?.trySend(event)
         }
     }
-    
+
     private fun closeEventChannel(utteranceId: String) {
         coroutineScope.launch {
             eventChannels[utteranceId]?.close()
@@ -264,7 +264,7 @@ class NativeTTSPlugin(private val activity: Activity) : Plugin(activity) {
             speakingJobs.remove(utteranceId)
         }
     }
-    
+
     @Command
     fun pause(invoke: Invoke) {
         try {
@@ -278,7 +278,7 @@ class NativeTTSPlugin(private val activity: Activity) : Plugin(activity) {
             invoke.reject("Exception while pausing: ${e.message}")
         }
     }
-    
+
     @Command
     fun resume(invoke: Invoke) {
         try {
@@ -288,7 +288,7 @@ class NativeTTSPlugin(private val activity: Activity) : Plugin(activity) {
             invoke.reject("Exception while resuming: ${e.message}")
         }
     }
-    
+
     @Command
     fun stop(invoke: Invoke) {
         try {
@@ -299,7 +299,7 @@ class NativeTTSPlugin(private val activity: Activity) : Plugin(activity) {
                 eventChannels.values.forEach { it.close() }
                 speakingJobs.clear()
                 eventChannels.clear()
-                
+
                 invoke.resolve()
             } else {
                 invoke.reject("Failed to stop TTS")
@@ -308,7 +308,7 @@ class NativeTTSPlugin(private val activity: Activity) : Plugin(activity) {
             invoke.reject("Exception while stopping: ${e.message}")
         }
     }
-    
+
     @Command
     fun set_rate(invoke: Invoke) {
         val args = invoke.parseArgs(SetRateArgs::class.java)
@@ -319,7 +319,7 @@ class NativeTTSPlugin(private val activity: Activity) : Plugin(activity) {
             invoke.reject("Exception setting rate: ${e.message}")
         }
     }
-    
+
     @Command
     fun set_pitch(invoke: Invoke) {
         val args = invoke.parseArgs(SetPitchArgs::class.java)
@@ -330,14 +330,14 @@ class NativeTTSPlugin(private val activity: Activity) : Plugin(activity) {
             invoke.reject("Exception setting pitch: ${e.message}")
         }
     }
-    
+
     @Command
     fun set_voice(invoke: Invoke) {
         val args = invoke.parseArgs(SetVoiceArgs::class.java)
         try {
             val voices = textToSpeech?.voices
             val targetVoice = voices?.find { it.name == args.voice }
-            
+
             if (targetVoice != null) {
                 val result = textToSpeech?.setVoice(targetVoice)
                 if (result == TextToSpeech.SUCCESS) {
@@ -352,7 +352,7 @@ class NativeTTSPlugin(private val activity: Activity) : Plugin(activity) {
             invoke.reject("Exception setting voice: ${e.message}")
         }
     }
-    
+
     @Command
     fun get_all_voices(invoke: Invoke) {
         try {
@@ -364,7 +364,7 @@ class NativeTTSPlugin(private val activity: Activity) : Plugin(activity) {
                     put("disabled", false)
                 }
             } ?: emptyList()
-            
+
             val result = JSObject().apply {
                 put("voices", JSONArray(voices))
             }
@@ -373,7 +373,7 @@ class NativeTTSPlugin(private val activity: Activity) : Plugin(activity) {
             invoke.reject("Exception getting voices: ${e.message}")
         }
     }
-    
+
     fun destroy() {
         coroutineScope.cancel()
         textToSpeech?.shutdown()

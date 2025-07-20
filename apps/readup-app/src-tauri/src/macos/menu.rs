@@ -30,7 +30,9 @@ pub fn handle_menu_event(app: &AppHandle, event: &MenuEvent) {
     let opener = app.opener();
     if event.id() == "privacy_policy" {
         let _ = opener.open_url("https://readup.cc/privacy-policy", None::<&str>);
-    } if event.id() == "readup_help" {
+    } else if event.id() == "report_issue" {
+        let _ = opener.open_url("https://github.com/danloh/readup/issues", None::<&str>);
+    } else if event.id() == "readup_help" {
         let _ = opener.open_url("https://readup.cc/support", None::<&str>);
     }
 }

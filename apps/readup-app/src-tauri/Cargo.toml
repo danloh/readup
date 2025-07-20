@@ -1,6 +1,6 @@
 [package]
 name = "Readup"
-version = "0.2.2"
+version = "0.1.0"
 description = "Your online library"
 authors = [""]
 license = ""
