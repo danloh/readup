@@ -89,7 +89,7 @@ const getFontStyles = (
     body * {
       ${overrideFont ? 'font-family: revert !important;' : ''}
     }
-    
+
   `;
   return fontStyles;
 };
@@ -213,8 +213,15 @@ const getLayoutStyles = (
   }
   /* enlarge the clickable area of links */
   a {
-    padding: 10px;
-    margin: -10px;
+    position: relative !important;
+  }
+  a::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    right: -10px;
+    bottom: -10px;
   }
   p, blockquote, dd, div:not(:has(*:not(b, a, em, i, strong, u, span))) {
     line-height: ${lineSpacing} ${overrideLayout ? '!important' : ''};
@@ -237,7 +244,8 @@ const getLayoutStyles = (
     text-indent: initial !important;
   }
   blockquote[align="center"], div[align="center"],
-  p[align="center"], dd[align="center"] {
+  p[align="center"], dd[align="center"],
+  li p, ol p, ul p {
     text-indent: initial !important;
   }
   p {

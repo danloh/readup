@@ -81,7 +81,12 @@ const TOCView: React.FC<{
     }
   }, [initialize]);
 
-  useTextTranslation(bookKey, containerRef.current, false, 'translation-target-toc');
+  useTextTranslation(
+    bookKey,
+    containerRef.current || staticListRef.current,
+    false,
+    'translation-target-toc',
+  );
 
   useEffect(() => {
     const updateHeight = () => {
@@ -112,7 +117,7 @@ const TOCView: React.FC<{
         resizeObserver.disconnect();
       }
     };
-  }, []);
+  }, [expandedItems]);
 
   const activeHref = useMemo(() => progress?.sectionHref || null, [progress?.sectionHref]);
   const flatItems = useFlattenedTOC(toc, expandedItems);
@@ -208,7 +213,11 @@ const TOCView: React.FC<{
   }, [flatItems, scrollToActiveItem]);
 
   return flatItems.length > 256 ? (
-    <div className='rounded' data-overlayscrollbars-initialize='' ref={containerRef}>
+    <div
+      className='virtual-list rounded pt-2'
+      data-overlayscrollbars-initialize=''
+      ref={containerRef}
+    >
       <VirtualList
         ref={vitualListRef}
         outerRef={listOuterRef}
@@ -228,7 +237,7 @@ const TOCView: React.FC<{
       </VirtualList>
     </div>
   ) : (
-    <div className='rounded pt-2' ref={staticListRef}>
+    <div className='static-list rounded pt-2' ref={staticListRef}>
       {flatItems.map((flatItem, index) => (
         <StaticListRow
           key={`static-row-${index}`}
