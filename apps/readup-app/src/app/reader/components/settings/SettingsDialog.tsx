@@ -1,9 +1,5 @@
 import clsx from 'clsx';
 import React, { useState } from 'react';
-import { BookConfig } from '@/types/book';
-import { useEnv } from '@/context/EnvContext';
-import { useSettingsStore } from '@/store/settingsStore';
-import { useTranslation } from '@/hooks/useTranslation';
 import { RiFontSize } from 'react-icons/ri';
 import { VscSymbolColor } from 'react-icons/vsc';
 import { PiDotsThreeVerticalBold } from 'react-icons/pi';
@@ -11,6 +7,10 @@ import { MdArrowBackIosNew, MdArrowForwardIos } from 'react-icons/md';
 import { FaLanguage } from "react-icons/fa";
 import { BiCustomize, BiLayout } from "react-icons/bi";
 import { GiClick } from "react-icons/gi";
+import { BookConfig } from '@/types/book';
+import { useEnv } from '@/context/EnvContext';
+import { useSettingsStore } from '@/store/settingsStore';
+import { useTranslation } from '@/hooks/useTranslation';
 import { getDirFromUILanguage } from '@/utils/rtl';
 import Dropdown from '@/components/Dropdown';
 import Dialog from '@/components/Dialog';
@@ -73,18 +73,7 @@ const SettingsDialog: React.FC<{ bookKey: string; config: BookConfig }> = ({ boo
     },
   ] as TabConfig[];
 
-  const [activePanel, setActivePanel] = useState<SettingsPanelType>(() => {
-    const lastPanel = localStorage.getItem('lastConfigPanel');
-    if (lastPanel && tabConfig.some((tab) => tab.tab === lastPanel)) {
-      return lastPanel as SettingsPanelType;
-    }
-    return 'Font' as SettingsPanelType;
-  });
-
-  const handleSetActivePanel = (tab: SettingsPanelType) => {
-    setActivePanel(tab);
-    localStorage.setItem('lastConfigPanel', tab);
-  };
+  const [activePanel, setActivePanel] = useState<SettingsPanelType>('Font');
 
   const [resetFunctions, setResetFunctions] = useState<
     Record<SettingsPanelType, (() => void) | null>
@@ -123,7 +112,7 @@ const SettingsDialog: React.FC<{ bookKey: string; config: BookConfig }> = ({ boo
       snapHeight={appService?.isMobile ? 0.7 : undefined}
       header={
         <div className='flex w-full flex-col items-center'>
-          <div className='tab-title flex pb-2 text-base font-semibold sm:hidden'>
+          <div className='tab-title flex pb-2 text-base font-semibold'>
             {currentPanel?.label || ''}
           </div>
           <div className='flex w-full flex-row items-center justify-between'>
@@ -145,7 +134,7 @@ const SettingsDialog: React.FC<{ bookKey: string; config: BookConfig }> = ({ boo
                       'btn btn-ghost text-base-content btn-sm gap-1 px-2',
                       activePanel === tab ? 'btn-active' : '',
                     )}
-                    onClick={() => handleSetActivePanel(tab)}
+                    onClick={() => setActivePanel(tab)}
                   >
                     <Icon className='mr-0' />
                   </button>
@@ -171,7 +160,7 @@ const SettingsDialog: React.FC<{ bookKey: string; config: BookConfig }> = ({ boo
               <button
                 onClick={handleClose}
                 className={
-                  'bg-base-300/65 btn btn-ghost btn-circle hidden h-6 min-h-6 w-6 p-0 sm:flex'
+                  'bg-base-300/65 btn btn-ghost btn-circle h-6 min-h-6 w-6 p-0 hidden sm:flex'
                 }
               >
                 <svg

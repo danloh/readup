@@ -77,7 +77,7 @@ const SectionInfo: React.FC<SectionInfoProps> = ({
             !isVertical && hoveredBookKey == bookKey && 'hidden',
           )}
         >
-          {`${bookTitle ? `${bookTitle} > ` : ''}${section || ''}`}
+          {`${bookTitle ? `${bookTitle} § ` : ''}${section || ''}`}
         </h2>
       </div>
     </>
