@@ -312,7 +312,7 @@ const TTSPanel = ({
                         </span>
                         <span
                           className={clsx(
-                            'text-base sm:text-sm',
+                            'max-w-[180px] overflow-hidden text-ellipsis text-base sm:text-sm',
                             voice.disabled && 'text-gray-400',
                           )}
                         >
