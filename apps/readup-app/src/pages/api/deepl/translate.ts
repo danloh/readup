@@ -48,9 +48,8 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   const deepFreeApiUrl = DEEPL_FREE_API || DEFAULT_DEEPL_FREE_API;
   const deeplProApiUrl = DEEPL_PRO_API || DEFAULT_DEEPL_PRO_API;
 
-  let deeplApiUrl = deepFreeApiUrl;
-  let userPlan = 'free';
- 
+  const deeplApiUrl = deepFreeApiUrl;
+
   const deeplAuthKey =
     deeplApiUrl === deeplProApiUrl
       ? getDeepLAPIKey(process.env['DEEPL_PRO_API_KEYS'])
