@@ -1,3 +1,5 @@
+import { BookMetadata } from '@/libs/document';
+
 export type BookFormat = 'EPUB' | 'PDF' | 'MOBI' | 'CBZ' | 'FB2' | 'FBZ';
 export type BookNoteType = 'bookmark' | 'annotation' | 'excerpt';
 export type HighlightStyle = 'highlight' | 'underline' | 'squiggly';
@@ -10,7 +12,8 @@ export interface Book {
   filePath?: string;
   hash: string;
   format: BookFormat;
-  title: string;
+  title: string; // editable title from metadata
+  sourceTitle?: string; // parsed when the book is imported and used to locate the file
   author: string;
   group?: string; // deprecated in favor of groupId and groupName
   groupId?: string;
@@ -29,6 +32,8 @@ export interface Book {
   lastUpdated?: number; // deprecated in favor of updatedAt
   progress?: [number, number]; // Add progress field: [current, total], 1-based page number
   primaryLanguage?: string;
+
+  metadata?: BookMetadata;
 }
 
 export interface BookGroupType {
