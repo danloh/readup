@@ -59,9 +59,11 @@ const SearchBar: React.FC<SearchBarProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookKey]);
 
+  // to handle search triggled from annotator
   useEffect(() => {
     setSearchTerm(term);
     handleSearchTermChange(term);
+  　queuedSearchTerm.current = term;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [term]);
 
