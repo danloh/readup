@@ -11,14 +11,12 @@ import BookCover from '@/components/BookCover';
 interface BookItemProps {
   book: Book;
   mode: LibraryViewModeType;
-  transferProgress: number | null;
   showBookDetailsModal: (book: Book) => void;
 }
 
 const BookItem: React.FC<BookItemProps> = ({
   book,
   mode,
-  transferProgress,
   showBookDetailsModal,
 }) => {
   const iconSize15 = useResponsiveSize(15);
@@ -89,21 +87,6 @@ const BookItem: React.FC<BookItemProps> = ({
                 <LiaInfoCircleSolid size={iconSize15} />
               </div>
             </button>
-            {transferProgress == null ? null : (
-              transferProgress === 100 ? null : (
-                <div
-                  className='radial-progress'
-                  style={
-                    {
-                      '--value': transferProgress,
-                      '--size': `${iconSize15}px`,
-                      '--thickness': '2px',
-                    } as React.CSSProperties
-                  }
-                  role='progressbar'
-                ></div>
-              )
-            )}
           </div>
         </div>
       </div>

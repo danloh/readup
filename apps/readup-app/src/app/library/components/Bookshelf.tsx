@@ -14,18 +14,12 @@ import BookshelfItem, { generateGridItems, generateListItems } from './Bookshelf
 
 interface BookshelfProps {
   libraryBooks: Book[];
-  handleBookDownload: (book: Book) => Promise<boolean>;
-  handleBookDelete: (book: Book) => Promise<boolean>;
   handleShowDetailsBook: (book: Book) => void;
-  booksTransferProgress: { [key: string]: number | null };
 }
 
 const Bookshelf: React.FC<BookshelfProps> = ({
   libraryBooks,
-  handleBookDownload,
-  handleBookDelete,
   handleShowDetailsBook,
-  booksTransferProgress,
 }) => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -207,12 +201,7 @@ const Bookshelf: React.FC<BookshelfProps> = ({
             item={item}
             mode={viewMode as LibraryViewModeType}
             setLoading={setLoading}
-            handleBookDownload={handleBookDownload}
-            handleBookDelete={handleBookDelete}
             handleShowDetailsBook={handleShowDetailsBook}
-            transferProgress={
-              'hash' in item ? booksTransferProgress[(item as Book).hash] || null : null
-            }
           />
         ))}
       </div>

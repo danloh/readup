@@ -1,5 +1,6 @@
 import clsx from 'clsx';
 import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   MdOutlineDelete,
   MdOutlineCloudDownload,
@@ -7,6 +8,9 @@ import {
   MdOutlineCloudOff,
 } from 'react-icons/md';
 
+import { eventDispatcher } from '@/utils/event';
+import { useLibraryStore } from '@/store/libraryStore';
+import { navigateToLogin } from '@/utils/nav';
 import { Book } from '@/types/book';
 import { BookDoc } from '@/libs/document';
 import { useEnv } from '@/context/EnvContext';
@@ -26,33 +30,25 @@ import Dialog from './Dialog';
 import Spinner from './Spinner';
 import BookCover from './BookCover';
 
-interface BookDetailModalProps {
+interface DetailModalProps {
   book: Book;
   isOpen: boolean;
   onClose: () => void;
-  handleBookDownload?: (book: Book) => void;
-  handleBookUpload?: (book: Book) => void;
-  handleBookDelete?: (book: Book) => void;
-  handleBookDeleteCloudBackup?: (book: Book) => void;
+  showBtns?: boolean;
 }
 
-const BookDetailModal = ({
-  book,
-  isOpen,
-  onClose,
-  handleBookDownload,
-  handleBookUpload,
-  handleBookDelete,
-  handleBookDeleteCloudBackup,
-}: BookDetailModalProps) => {
+const BookDetailModal = ({ book, isOpen, onClose, showBtns = true }: DetailModalProps) => {
   const _ = useTranslation();
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [showDeleteCloudBackupAlert, setShowDeleteCloudBackupAlert] = useState(false);
   const [bookMeta, setBookMeta] = useState<BookDoc['metadata'] | null>(null);
   const [fileSize, setFileSize] = useState<number | null>(null);
-  const { envConfig } = useEnv();
-  const { settings } = useSettingsStore();
+  const { envConfig, appService } = useEnv();
+  const { settings, setSettings } = useSettingsStore();
+
+  const { updateBook } = useLibraryStore();
 
   useEffect(() => {
     const loadingTimeout = setTimeout(() => setLoading(true), 300);
@@ -85,34 +81,136 @@ const BookDetailModal = ({
     setShowDeleteCloudBackupAlert(true);
   };
 
+  const onBookUpload = async (book: Book) => {
+    try {
+      await appService?.uploadBook(book);
+      await updateBook(envConfig, book);
+
+      eventDispatcher.dispatch('toast', {
+        type: 'info',
+        timeout: 2000,
+        message: _('Book uploaded: {{title}}', {
+          title: book.title,
+        }),
+      });
+      return true;
+    } catch (err) {
+      if (err instanceof Error) {
+        if (err.message.includes('Not authenticated') && settings.keepLogin) {
+          settings.keepLogin = false;
+          setSettings(settings);
+          navigateToLogin(router);
+          return false;
+        } else if (err.message.includes('Insufficient storage quota')) {
+          eventDispatcher.dispatch('toast', {
+            type: 'error',
+            message: _('Insufficient storage quota'),
+          });
+          return false;
+        }
+      }
+      eventDispatcher.dispatch('toast', {
+        type: 'error',
+        message: _('Failed to upload book: {{title}}', {
+          title: book.title,
+        }),
+      });
+      return false;
+    }
+  };
+
+  const onBookDownload = async (book: Book) => {
+    try {
+      await appService?.downloadBook(book, false);
+      await updateBook(envConfig, book);
+      eventDispatcher.dispatch('toast', {
+        type: 'info',
+        timeout: 2000,
+        message: _('Book downloaded: {{title}}', {
+          title: book.title,
+        }),
+      });
+      return true;
+    } catch {
+      eventDispatcher.dispatch('toast', {
+        message: _('Failed to download book: {{title}}', {
+          title: book.title,
+        }),
+        type: 'error',
+      });
+      return false;
+    }
+  };
+
+  const onBookDelete = async (book: Book) => {
+    try {
+      await appService?.deleteBook(book, !!book.uploadedAt, true);
+      await updateBook(envConfig, book);
+      
+      eventDispatcher.dispatch('toast', {
+        type: 'info',
+        timeout: 2000,
+        message: _('Book deleted: {{title}}', {
+          title: book.title,
+        }),
+      });
+      return true;
+    } catch {
+      eventDispatcher.dispatch('toast', {
+        message: _('Failed to delete book: {{title}}', {
+          title: book.title,
+        }),
+        type: 'error',
+      });
+      return false;
+    }
+  };
+
+  const onBookDeleteCloudBackup = async (book: Book) => {
+    try {
+      await appService?.deleteBook(book, !!book.uploadedAt, false);
+      await updateBook(envConfig, book);
+      
+      eventDispatcher.dispatch('toast', {
+        type: 'info',
+        timeout: 2000,
+        message: _('Deleted cloud backup of the book: {{title}}', {
+          title: book.title,
+        }),
+      });
+      return true;
+    } catch (e) {
+      console.error(e);
+      eventDispatcher.dispatch('toast', {
+        type: 'error',
+        message: _('Failed to delete cloud backup of the book', {
+          title: book.title,
+        }),
+      });
+      return false;
+    }
+  };
+
   const confirmDelete = async () => {
     handleClose();
     setShowDeleteAlert(false);
-    if (handleBookDelete) {
-      handleBookDelete(book);
-    }
+    onBookDelete(book);
   };
 
   const confirmDeleteCloudBackup = async () => {
     handleClose();
     setShowDeleteCloudBackupAlert(false);
-    if (handleBookDeleteCloudBackup) {
-      handleBookDeleteCloudBackup(book);
-    }
+    onBookDeleteCloudBackup(book);
   };
 
   const handleRedownload = async () => {
     handleClose();
-    if (handleBookDownload) {
-      handleBookDownload(book);
-    }
+    onBookDownload(book);
   };
 
   const handleReupload = async () => {
     handleClose();
-    if (handleBookUpload) {
-      handleBookUpload(book);
-    }
+    onBookUpload(book);
   };
 
   if (!bookMeta)
@@ -149,28 +247,28 @@ const BookDetailModal = ({
                     {formatAuthors(book.author, book.primaryLanguage) || _('Unknown')}
                   </p>
                 </div>
-                <div className='flex flex-wrap items-center gap-x-4'>
-                  {handleBookDelete && (
+                {showBtns && (
+                  <div className='flex flex-wrap items-center gap-x-4'>
                     <button onClick={handleDelete}>
                       <MdOutlineDelete className='fill-red-500' />
                     </button>
-                  )}
-                  {book.uploadedAt && handleBookDeleteCloudBackup && (
-                    <button onClick={handleDeleteCloudBackup}>
-                      <MdOutlineCloudOff className='fill-red-500' />
-                    </button>
-                  )}
-                  {book.uploadedAt && handleBookDownload && (
-                    <button onClick={handleRedownload}>
-                      <MdOutlineCloudDownload className='fill-base-content' />
-                    </button>
-                  )}
-                  {book.downloadedAt && handleBookUpload && (
-                    <button onClick={handleReupload}>
-                      <MdOutlineCloudUpload className='fill-base-content' />
-                    </button>
-                  )}
-                </div>
+                    {book.uploadedAt && (
+                      <button onClick={handleDeleteCloudBackup}>
+                        <MdOutlineCloudOff className='fill-red-500' />
+                      </button>
+                    )}
+                    {book.uploadedAt && (
+                      <button onClick={handleRedownload}>
+                        <MdOutlineCloudDownload className='fill-base-content' />
+                      </button>
+                    )}
+                    {book.downloadedAt && (
+                      <button onClick={handleReupload}>
+                        <MdOutlineCloudUpload className='fill-base-content' />
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 

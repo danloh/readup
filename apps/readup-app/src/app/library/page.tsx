@@ -9,11 +9,9 @@ import 'overlayscrollbars/overlayscrollbars.css';
 
 import { Book } from '@/types/book';
 import { AppService } from '@/types/system';
-import { navigateToLogin, navigateToReader } from '@/utils/nav';
+import { navigateToReader } from '@/utils/nav';
 import { getFilename, listFormater } from '@/utils/book';
 import { eventDispatcher } from '@/utils/event';
-import { ProgressPayload } from '@/utils/transfer';
-import { throttle } from '@/utils/throttle';
 import { parseOpenWithFiles } from '@/helpers/openWith';
 import { isTauriAppPlatform } from '@/services/environment';
 import { checkForAppUpdates, checkAppReleaseNotes } from '@/helpers/updater';
@@ -26,14 +24,13 @@ import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useLibraryStore } from '@/store/libraryStore';
 import { useSettingsStore } from '@/store/settingsStore';
-import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { useTheme } from '@/hooks/useTheme';
 import { useUICSS } from '@/hooks/useUICSS';
 import { useDemoBooks } from './hooks/useDemoBooks';
-import { useBooksSync } from './hooks/useBooksSync';
 import { useSafeAreaInsets } from '@/hooks/useSafeAreaInsets';
 import { useScreenWakeLock } from '@/hooks/useScreenWakeLock';
 import { useOpenWithBooks } from '@/hooks/useOpenWithBooks';
+import useShortcuts from '@/hooks/useShortcuts';
 import { lockScreenOrientation } from '@/utils/bridge';
 import {
   tauriHandleSetAlwaysOnTop,
@@ -43,13 +40,12 @@ import {
 
 import { AboutWindow } from '@/components/AboutWindow';
 import { UpdaterWindow } from '@/components/UpdaterWindow';
+import BookDetailModal from '@/components/BookDetailModal';
+import DropIndicator from '@/components/DropIndicator';
 import { Toast } from '@/components/Toast';
 import Spinner from '@/components/Spinner';
 import LibraryHeader from './components/LibraryHeader';
 import Bookshelf from './components/Bookshelf';
-import BookDetailModal from '@/components/BookDetailModal';
-import useShortcuts from '@/hooks/useShortcuts';
-import DropIndicator from '@/components/DropIndicator';
 
 const LibraryPageWithSearchParams = () => {
   const searchParams = useSearchParams();
@@ -62,7 +58,6 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
   const { token, user } = useAuth();
   const {
     library: libraryBooks,
-    updateBook,
     setLibrary,
     checkOpenWithBooks,
     checkLastOpenBooks,
@@ -76,9 +71,6 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
   const isInitiating = useRef(false);
   const [libraryLoaded, setLibraryLoaded] = useState(false);
   const [showDetailsBook, setShowDetailsBook] = useState<Book | null>(null);
-  const [booksTransferProgress, setBooksTransferProgress] = useState<{
-    [key: string]: number | null;
-  }>({});
   const [pendingNavigationBookIds, setPendingNavigationBookIds] = useState<string[] | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const demoBooks = useDemoBooks();
@@ -91,12 +83,7 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
 
   useOpenWithBooks();
 
-  const { pullLibrary, pushLibrary } = useBooksSync({
-    onSyncStart: () => setLoading(true),
-    onSyncEnd: () => setLoading(false),
-  });
-
-  usePullToRefresh(containerRef, pullLibrary);
+  // usePullToRefresh(containerRef, pullLibrary);
   useScreenWakeLock(settings.screenWakeLock);
 
   useShortcuts({
@@ -390,12 +377,12 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
     const { library } = useLibraryStore.getState();
     for (const file of files) {
       try {
-        const book = await appService?.importBook(file, library);
+        await appService?.importBook(file, library);
         setLibrary([...library]);
-        if (user && book && !book.uploadedAt && settings.autoUpload) {
-          console.log('Uploading book:', book.title);
-          handleBookUpload(book);
-        }
+        // if (user && book && !book.uploadedAt && settings.autoUpload) {
+        //   console.log('Uploading book:', book.title);
+        //   handleBookUpload(book);
+        // }
       } catch (error) {
         const filename = typeof file === 'string' ? file : file.name;
         const baseFilename = getFilename(filename);
@@ -443,129 +430,6 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
         resolve(fileInput.files);
       };
     });
-  };
-
-  const updateBookTransferProgress = throttle((bookHash: string, progress: ProgressPayload) => {
-    if (progress.total === 0) return;
-    const progressPct = (progress.progress / progress.total) * 100;
-    setBooksTransferProgress((prev) => ({
-      ...prev,
-      [bookHash]: progressPct,
-    }));
-  }, 500);
-
-  const handleBookUpload = async (book: Book) => {
-    try {
-      await appService?.uploadBook(book, (progress) => {
-        updateBookTransferProgress(book.hash, progress);
-      });
-      await updateBook(envConfig, book);
-      pushLibrary();
-      eventDispatcher.dispatch('toast', {
-        type: 'info',
-        timeout: 2000,
-        message: _('Book uploaded: {{title}}', {
-          title: book.title,
-        }),
-      });
-      return true;
-    } catch (err) {
-      if (err instanceof Error) {
-        if (err.message.includes('Not authenticated') && settings.keepLogin) {
-          settings.keepLogin = false;
-          setSettings(settings);
-          navigateToLogin(router);
-          return false;
-        } else if (err.message.includes('Insufficient storage quota')) {
-          eventDispatcher.dispatch('toast', {
-            type: 'error',
-            message: _('Insufficient storage quota'),
-          });
-          return false;
-        }
-      }
-      eventDispatcher.dispatch('toast', {
-        type: 'error',
-        message: _('Failed to upload book: {{title}}', {
-          title: book.title,
-        }),
-      });
-      return false;
-    }
-  };
-
-  const handleBookDownload = async (book: Book) => {
-    try {
-      await appService?.downloadBook(book, false, (progress) => {
-        updateBookTransferProgress(book.hash, progress);
-      });
-      await updateBook(envConfig, book);
-      eventDispatcher.dispatch('toast', {
-        type: 'info',
-        timeout: 2000,
-        message: _('Book downloaded: {{title}}', {
-          title: book.title,
-        }),
-      });
-      return true;
-    } catch {
-      eventDispatcher.dispatch('toast', {
-        message: _('Failed to download book: {{title}}', {
-          title: book.title,
-        }),
-        type: 'error',
-      });
-      return false;
-    }
-  };
-
-  const handleBookDelete = async (book: Book) => {
-    try {
-      await appService?.deleteBook(book, !!book.uploadedAt, true);
-      await updateBook(envConfig, book);
-      pushLibrary();
-      eventDispatcher.dispatch('toast', {
-        type: 'info',
-        timeout: 2000,
-        message: _('Book deleted: {{title}}', {
-          title: book.title,
-        }),
-      });
-      return true;
-    } catch {
-      eventDispatcher.dispatch('toast', {
-        message: _('Failed to delete book: {{title}}', {
-          title: book.title,
-        }),
-        type: 'error',
-      });
-      return false;
-    }
-  };
-
-  const handleBookDeleteCloudBackup = async (book: Book) => {
-    try {
-      await appService?.deleteBook(book, !!book.uploadedAt, false);
-      await updateBook(envConfig, book);
-      pushLibrary();
-      eventDispatcher.dispatch('toast', {
-        type: 'info',
-        timeout: 2000,
-        message: _('Deleted cloud backup of the book: {{title}}', {
-          title: book.title,
-        }),
-      });
-      return true;
-    } catch (e) {
-      console.error(e);
-      eventDispatcher.dispatch('toast', {
-        type: 'error',
-        message: _('Failed to delete cloud backup of the book', {
-          title: book.title,
-        }),
-      });
-      return false;
-    }
   };
 
   const handleImportBooks = async () => {
@@ -642,10 +506,7 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
               <DropIndicator />
               <Bookshelf
                 libraryBooks={libraryBooks}
-                handleBookDownload={handleBookDownload}
-                handleBookDelete={handleBookDelete}
                 handleShowDetailsBook={handleShowDetailsBook}
-                booksTransferProgress={booksTransferProgress}
               />
             </div>
           </OverlayScrollbarsComponent>
@@ -672,10 +533,6 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
           isOpen={!!showDetailsBook}
           book={showDetailsBook}
           onClose={() => setShowDetailsBook(null)}
-          handleBookUpload={handleBookUpload}
-          handleBookDownload={handleBookDownload}
-          handleBookDelete={handleBookDelete}
-          handleBookDeleteCloudBackup={handleBookDeleteCloudBackup}
         />
       )}
       <AboutWindow />

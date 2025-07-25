@@ -10,6 +10,7 @@ import { Menu, MenuItem } from '@tauri-apps/api/menu';
 import { revealItemInDir } from '@tauri-apps/plugin-opener';
 import { getOSPlatform } from '@/utils/misc';
 import { getLocalBookFilename } from '@/utils/book';
+import { eventDispatcher } from '@/utils/event';
 import { LibraryViewModeType } from '@/types/settings';
 import { BOOK_UNGROUPED_ID, BOOK_UNGROUPED_NAME } from '@/services/constants';
 import { FILE_REVEAL_LABELS, FILE_REVEAL_PLATFORMS } from '@/utils/os';
@@ -73,20 +74,14 @@ export const generateGroupsList = (items: Book[]): BookGroupType[] => {
 interface BookshelfItemProps {
   mode: LibraryViewModeType;
   item: BookshelfItem;
-  transferProgress: number | null;
   setLoading: React.Dispatch<React.SetStateAction<boolean>>;
-  handleBookDownload: (book: Book) => Promise<boolean>;
-  handleBookDelete: (book: Book) => Promise<boolean>;
   handleShowDetailsBook: (book: Book) => void;
 }
 
 const BookshelfItem: React.FC<BookshelfItemProps> = ({
   mode,
   item,
-  transferProgress,
   setLoading,
-  handleBookDownload,
-  handleBookDelete,
   handleShowDetailsBook,
 }) => {
   const _ = useTranslation();
@@ -99,6 +94,29 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
   const showBookDetailsModal = async (book: Book) => {
     if (await makeBookAvailable(book)) {
       handleShowDetailsBook(book);
+    }
+  };
+
+  const handleBookDownload = async (book: Book) => {
+    try {
+      await appService?.downloadBook(book, false);
+      await updateBook(envConfig, book);
+      eventDispatcher.dispatch('toast', {
+        type: 'info',
+        timeout: 2000,
+        message: _('Book downloaded: {{title}}', {
+          title: book.title,
+        }),
+      });
+      return true;
+    } catch {
+      eventDispatcher.dispatch('toast', {
+        message: _('Failed to download book: {{title}}', {
+          title: book.title,
+        }),
+        type: 'error',
+      });
+      return false;
     }
   };
 
@@ -160,22 +178,6 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
     menu.popup();
   };
 
-  const groupContextMenuHandler = async (group: BooksGroup) => {
-    if (!appService?.hasContextMenu) return;
-
-    const deleteGroupMenuItem = await MenuItem.new({
-      text: _('Delete'),
-      action: async () => {
-        for (const book of group.books) {
-          await handleBookDelete(book);
-        }
-      },
-    });
-    const menu = await Menu.new();
-    menu.append(deleteGroupMenuItem);
-    menu.popup();
-  };
-
   const { pressing, handlers } = useLongPress({
     onTap: () => {
       if ('format' in item) {
@@ -187,8 +189,6 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
     onContextMenu: () => {
       if ('format' in item) {
         bookContextMenuHandler(item as Book);
-      } else {
-        groupContextMenuHandler(item as BooksGroup);
       }
     },
   });
@@ -212,7 +212,6 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
             <BookItem
               mode={mode}
               book={item}
-              transferProgress={transferProgress}
               showBookDetailsModal={showBookDetailsModal}
             />
           ) : (
