@@ -26,7 +26,7 @@ import { useLibraryStore } from '@/store/libraryStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useTheme } from '@/hooks/useTheme';
 import { useUICSS } from '@/hooks/useUICSS';
-import { useDemoBooks } from './hooks/useDemoBooks';
+
 import { useSafeAreaInsets } from '@/hooks/useSafeAreaInsets';
 import { useScreenWakeLock } from '@/hooks/useScreenWakeLock';
 import { useOpenWithBooks } from '@/hooks/useOpenWithBooks';
@@ -38,14 +38,15 @@ import {
   tauriQuitApp,
 } from '@/utils/window';
 
+import BookDetailModal from '@/app/library/components/BookDetailModal';
 import { AboutWindow } from '@/components/AboutWindow';
 import { UpdaterWindow } from '@/components/UpdaterWindow';
-import BookDetailModal from '@/components/BookDetailModal';
 import DropIndicator from '@/components/DropIndicator';
 import { Toast } from '@/components/Toast';
 import Spinner from '@/components/Spinner';
 import LibraryHeader from './components/LibraryHeader';
 import Bookshelf from './components/Bookshelf';
+import { useDemoBooks } from './hooks/useDemoBooks';
 
 const LibraryPageWithSearchParams = () => {
   const searchParams = useSearchParams();

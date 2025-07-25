@@ -6,7 +6,7 @@ import { useResponsiveSize } from '@/hooks/useResponsiveSize';
 import { LibraryViewModeType } from '@/types/settings';
 import { formatAuthors } from '@/utils/book';
 import ReadingProgress from './ReadingProgress';
-import BookCover from '@/components/BookCover';
+import BookCover from '@/app/library/components/BookCover';
 
 interface BookItemProps {
   book: Book;

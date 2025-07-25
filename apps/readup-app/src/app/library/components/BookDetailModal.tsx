@@ -26,9 +26,10 @@ import {
   formatTitle,
 } from '@/utils/book';
 import Alert from '@/components/Alert';
-import Dialog from './Dialog';
-import Spinner from './Spinner';
+import Spinner from '@/components/Spinner';
+import Dialog from '@/components/Dialog';
 import BookCover from './BookCover';
+
 
 interface DetailModalProps {
   book: Book;
