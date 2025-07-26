@@ -18,7 +18,7 @@ import {
   getPrimaryLanguage,
 } from '@/utils/book';
 import { partialMD5 } from '@/utils/md5';
-import { BookDoc, DocumentLoader } from '@/libs/document';
+import { BookDoc, DocumentLoader, EXTS } from '@/libs/document';
 import {
   DEFAULT_BOOK_LAYOUT,
   DEFAULT_BOOK_STYLE,
@@ -36,6 +36,7 @@ import {
   DEFAULT_SCREEN_CONFIG,
   DEFAULT_TRANSLATOR_CONFIG,
 } from './constants';
+import { fetch as tauriFetch } from '@tauri-apps/plugin-http';
 import { getOSPlatform, getTargetLang, isCJKEnv, isContentURI, isValidURL } from '@/utils/misc';
 import { deserializeConfig, serializeConfig } from '@/utils/serializer';
 import { downloadFile, uploadFile, deleteFile, createProgressHandler } from '@/libs/storage';
@@ -204,6 +205,7 @@ export abstract class BaseAppService implements AppService {
         hash,
         format,
         title: formatTitle(loadedBook.metadata.title),
+        sourceTitle: formatTitle(loadedBook.metadata.title),
         author: formatAuthors(loadedBook.metadata.author, loadedBook.metadata.language),
         primaryLanguage: getPrimaryLanguage(loadedBook.metadata.language),
         createdAt: existingBook ? existingBook.createdAt : Date.now(),
@@ -214,9 +216,11 @@ export abstract class BaseAppService implements AppService {
       };
       // update book metadata when reimporting the same book
       if (existingBook) {
-        existingBook.title = book.title;
-        existingBook.author = book.author;
+        existingBook.title = existingBook.title ?? book.title;
+        existingBook.sourceTitle = existingBook.sourceTitle ?? book.sourceTitle;
+        existingBook.author = existingBook.author ?? book.author;
         existingBook.primaryLanguage = existingBook.primaryLanguage ?? book.primaryLanguage;
+        existingBook.downloadedAt = Date.now();
       }
 
       if (!(await this.fs.exists(getDir(book), 'Books'))) {
@@ -378,13 +382,19 @@ export abstract class BaseAppService implements AppService {
     }
   }
 
-  async downloadBook(book: Book, onlyCover = false, onProgress?: ProgressHandler): Promise<void> {
+  async downloadBook(
+    book: Book,
+    onlyCover = false,
+    redownload = false,
+    onProgress?: ProgressHandler,
+  ): Promise<void> {
     let bookDownloaded = false;
     let bookCoverDownloaded = false;
     const completedFiles = { count: 0 };
     let toDownloadFpCount = 0;
-    const needDownCover = !(await this.fs.exists(getCoverFilename(book), 'Books'));
-    const needDownBook = !onlyCover && !(await this.fs.exists(getLocalBookFilename(book), 'Books'));
+    const needDownCover = !(await this.fs.exists(getCoverFilename(book), 'Books')) || redownload;
+    const needDownBook =
+      (!onlyCover && !(await this.fs.exists(getLocalBookFilename(book), 'Books'))) || redownload;
     if (needDownCover) {
       toDownloadFpCount++;
     }
@@ -466,7 +476,19 @@ export abstract class BaseAppService implements AppService {
     } else if (book.url) {
       file = await this.fs.openFile(book.url, 'None');
     } else {
-      throw new Error(BOOK_FILE_NOT_FOUND_ERROR);
+      // 0.9.64 has a bug that book.title might be modified but the filename is not updated
+      const bookDir = getDir(book);
+      const files = await this.fs.readDir(getDir(book), 'Books');
+      if (files.length > 0) {
+        const bookFile = files.find((f) => f.path.endsWith(`.${EXTS[book.format]}`));
+        if (bookFile) {
+          file = await this.fs.openFile(`${bookDir}/${bookFile.path}`, 'Books');
+        } else {
+          throw new Error(BOOK_FILE_NOT_FOUND_ERROR);
+        }
+      } else {
+        throw new Error(BOOK_FILE_NOT_FOUND_ERROR);
+      }
     }
     return { book, file, config: await this.loadBookConfig(book, settings) };
   }
@@ -543,5 +565,38 @@ export abstract class BaseAppService implements AppService {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const libraryBooks = books.map(({ coverImageUrl, ...rest }) => rest);
     await this.fs.writeFile(getLibraryFilename(), 'Books', JSON.stringify(libraryBooks));
+  }
+
+  private imageToArrayBuffer(imageUrl?: string, imageFile?: string): Promise<ArrayBuffer> {
+    return new Promise((resolve, reject) => {
+      if (!imageUrl && !imageFile) {
+        reject(new Error('No image URL or file provided'));
+        return;
+      }
+      if (this.appPlatform === 'web' && imageUrl && imageUrl.startsWith('blob:')) {
+        fetch(imageUrl)
+          .then((response) => response.arrayBuffer())
+          .then((buffer) => resolve(buffer))
+          .catch((error) => reject(error));
+      } else if (this.appPlatform === 'tauri' && imageFile) {
+        this.fs
+          .openFile(imageFile, 'None')
+          .then((file) => file.arrayBuffer())
+          .then((buffer) => resolve(buffer))
+          .catch((error) => reject(error));
+      } else if (this.appPlatform === 'tauri' && imageUrl) {
+        tauriFetch(imageUrl, { method: 'GET' })
+          .then((response) => response.arrayBuffer())
+          .then((buffer) => resolve(buffer))
+          .catch((error) => reject(error));
+      } else {
+        reject(new Error('Unsupported platform or missing image data'));
+      }
+    });
+  }
+
+  async updateCoverImage(book: Book, imageUrl?: string, imageFile?: string): Promise<void> {
+    const arrayBuffer = await this.imageToArrayBuffer(imageUrl, imageFile);
+    await this.fs.writeFile(getCoverFilename(book), 'Books', arrayBuffer);
   }
 }
