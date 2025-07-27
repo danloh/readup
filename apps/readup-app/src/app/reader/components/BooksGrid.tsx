@@ -152,7 +152,7 @@ const BooksGrid: React.FC<BooksGridProps> = ({ bookKeys, onCloseBook }) => {
                 showFooter={showFooter}
                 borderColor={viewSettings.borderColor}
                 horizontalGap={horizontalGapPercent}
-                contentInsets={contentInsets}
+                insets={viewInsets}
               />
             )}
             {showHeader && (
