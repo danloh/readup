@@ -8,6 +8,7 @@ version = "0.1.0"
 dependencies = [
  "block",
  "cocoa",
+ "futures",
  "futures-util",
  "log",
  "objc",
