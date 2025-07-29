@@ -63,7 +63,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   useEffect(() => {
     setSearchTerm(term);
     handleSearchTermChange(term);
-  　queuedSearchTerm.current = term;
+    queuedSearchTerm.current = term;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [term]);
 
@@ -202,7 +202,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
           value={searchTerm}
           spellCheck={false}
           onChange={handleInputChange}
-          placeholder={_('Search...')}
+          placeholder={`${_('Search')}...`}
           className='w-full bg-transparent p-2 font-sans text-sm font-light focus:outline-none'
         />
 

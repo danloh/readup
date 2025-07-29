@@ -498,11 +498,6 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
             <div className='hero-content text-neutral-content text-center'>
               <div className='max-w-md'>
                 <h1 className='mb-5 text-5xl font-bold'>{_('Library')}</h1>
-                <p className='mb-5'>
-                  {_(
-                    'Welcome to your library. You can import your books here and read them anytime.',
-                  )}
-                </p>
                 <button className='btn btn-primary rounded-xl' onClick={handleImportBooks}>
                   {_('Import Books')}
                 </button>

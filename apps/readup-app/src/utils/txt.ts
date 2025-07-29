@@ -21,7 +21,7 @@ interface Txt2EpubOptions {
 
 interface ExtractChapterOptions {
   linesBetweenSegments: number;
-  paragraphsPerChapter?: number;
+  fallbackParagraphsPerChapter: number;
 }
 
 interface ConversionResult {
@@ -62,15 +62,20 @@ export class TxtToEpubConverter {
     const authorMatch =
       fileHeader.match(/[【\[]?作者[】\]]?[:：\s]\s*(.+)\r?\n/) ||
       fileHeader.match(/[【\[]?\s*(.+)\s+著\s*[】\]]?\r?\n/);
-    const author = authorMatch ? authorMatch[1]!.trim() : providedAuthor || '';
+    let matchedAuthor = authorMatch ? authorMatch[1]!.trim() : providedAuthor || '';
+    try {
+      matchedAuthor = matchedAuthor.replace(/^[\p{P}\p{S}]+|[\p{P}\p{S}]+$/gu, '');
+    } catch {}
+    const author = matchedAuthor || providedAuthor || '';
     const language = providedLanguage || this.detectLanguage(fileHeader);
     const identifier = await partialMD5(txtFile);
     const metadata = { bookTitle, author, language, identifier };
 
     let chapters: Chapter[] = [];
-    for (let i = 4; i >= 3; i--) {
+    for (let i = 8; i >= 6; i--) {
       chapters = this.extractChapters(txtContent, metadata, {
         linesBetweenSegments: i,
+        fallbackParagraphsPerChapter: 100,
       });
 
       if (chapters.length === 0) {
@@ -78,12 +83,6 @@ export class TxtToEpubConverter {
       } else if (chapters.length > 1) {
         break;
       }
-    }
-    if (chapters.length === 1) {
-      chapters = this.extractChapters(txtContent, metadata, {
-        linesBetweenSegments: 4,
-        paragraphsPerChapter: 100,
-      });
     }
 
     const blob = await this.createEpub(chapters, metadata);
@@ -101,24 +100,38 @@ export class TxtToEpubConverter {
     option: ExtractChapterOptions,
   ): Chapter[] {
     const { language } = metadata;
-    const { linesBetweenSegments, paragraphsPerChapter } = option;
+    const { linesBetweenSegments, fallbackParagraphsPerChapter } = option;
     const segmentRegex = new RegExp(`(?:\\r?\\n){${linesBetweenSegments},}|-{8,}\r?\n`);
-    let chapterRegex: RegExp;
+    const chapterRegexps: RegExp[] = [];
     if (language === 'zh') {
-      chapterRegex = new RegExp(
-        String.raw`(?:^|\n|\s)` +
-          '(' +
-          [
-            String.raw`第[零〇一二三四五六七八九十0-9][零〇一二三四五六七八九十百千万0-9]*(?:[章卷节回讲篇封])(?:[：:、 　\(\)0-9]*[^\n-]{0,24})(?!\S)`,
-            String.raw`(?:^|\n|\s|《[^》]+》)[一二三四五六七八九十][零〇一二三四五六七八九十百千万]*(?:[：: 　][^\n-]{0,24})(?!\S)`,
-            String.raw`(?:楔子|前言|引言|序言|序章|总论|概论)(?:[：: 　][^\n-]{0,24})?(?!\S)`,
-          ].join('|') +
-          ')',
-        'gu',
+      chapterRegexps.push(
+        new RegExp(
+          String.raw`(?:^|\n)\s*` +
+            '(' +
+            [
+              String.raw`第[零〇一二三四五六七八九十0-9][零〇一二三四五六七八九十百千万0-9]*(?:[章卷节回讲篇封])(?:[：:、 　\(\)0-9]*[^\n-]{0,24})(?!\S)`,
+              String.raw`(?:楔子|前言|简介|引言|序言|序章|总论|概论)(?:[：: 　][^\n-]{0,24})?(?!\S)`,
+            ].join('|') +
+            ')',
+          'gu',
+        ),
+      );
+      chapterRegexps.push(
+        new RegExp(
+          String.raw`(?:^|\n)\s*` +
+            '(' +
+            [
+              String.raw`[一二三四五六七八九十][零〇一二三四五六七八九十百千万]?[：:、 　][^\n-]{0,24}(?=\n|$)`,
+              String.raw`[0-9]+[^\n]{0,16}(?=\n|$)`,
+            ].join('|') +
+            ')',
+          'gu',
+        ),
       );
     } else {
-      chapterRegex =
-        /(?:^|\n|\s)(?:(Chapter|Part)\s+(\d+|[IVXLCDM]+)(?:[:.\-–—]?\s+[^\n]*)?|(?:Prologue|Epilogue|Introduction|Foreword)(?:[:.\-–—]?\s+[^\n]*)?)(?=\s|$)/gi;
+      chapterRegexps.push(
+        /(?:^|\n|\s)(?:(Chapter|Part)\s+(\d+|[IVXLCDM]+)(?:[:.\-–—]?\s+[^\n]*)?|(?:Prologue|Epilogue|Introduction|Foreword)(?:[:.\-–—]?\s+[^\n]*)?)(?=\s|$)/gi,
+      );
     }
 
     const formatSegment = (segment: string): string => {
@@ -149,17 +162,35 @@ export class TxtToEpubConverter {
         return acc;
       }, []);
 
+    const isGoodMatches = (matches: string[], maxLength: number = 100000): boolean => {
+      const meaningfulParts = matches.filter((part) => part.trim().length > 0);
+      if (meaningfulParts.length <= 1) return false;
+
+      const hasLongParts = meaningfulParts.some((part) => part.length > maxLength);
+      return !hasLongParts;
+    };
+
     const chapters: Chapter[] = [];
     const segments = txtContent.split(segmentRegex);
     for (const segment of segments) {
       const trimmedSegment = segment.replace(/<!--.*?-->/g, '').trim();
       if (!trimmedSegment) continue;
 
-      if (paragraphsPerChapter && paragraphsPerChapter > 0) {
+      const segmentChapters = [];
+      let matches: string[] = [];
+      for (const chapterRegex of chapterRegexps) {
+        const tryMatches = trimmedSegment.split(chapterRegex);
+        if (isGoodMatches(tryMatches)) {
+          matches = joinAroundUndefined(tryMatches);
+          break;
+        }
+      }
+
+      if (matches.length === 0 && fallbackParagraphsPerChapter > 0) {
         const paragraphs = trimmedSegment.split(/\n+/);
         const totalParagraphs = paragraphs.length;
-        for (let i = 0; i < totalParagraphs; i += paragraphsPerChapter) {
-          const chunks = paragraphs.slice(i, i + paragraphsPerChapter);
+        for (let i = 0; i < totalParagraphs; i += fallbackParagraphsPerChapter) {
+          const chunks = paragraphs.slice(i, i + fallbackParagraphsPerChapter);
           const formattedSegment = formatSegment(chunks.join('\n'));
           const title = `${chapters.length + 1}`;
           const content = `<h2>${title}</h2><p>${formattedSegment}</p>`;
@@ -168,8 +199,6 @@ export class TxtToEpubConverter {
         continue;
       }
 
-      const segmentChapters = [];
-      const matches = joinAroundUndefined(trimmedSegment.split(chapterRegex));
       for (let j = 1; j < matches.length; j += 2) {
         const title = matches[j]?.trim() || '';
         const content = matches[j + 1]?.trim() || '';
