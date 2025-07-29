@@ -106,8 +106,7 @@ const Reader: React.FC<{ ids?: string }> = ({ ids }) => {
   }, [hoveredBookKey]);
 
   return (
-    libraryLoaded &&
-    settings.globalReadSettings && (
+    libraryLoaded && settings.globalReadSettings && (
       <div
         className={clsx(
           `reader-page bg-base-100 text-base-content select-none`,
