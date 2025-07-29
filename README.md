@@ -1,4 +1,4 @@
-A fork of [Readest](https://github.com/readest/readest), we add an atproto layer on the reader for social reading.
+A fork of [Foliate](https://github.com/johnfactotum/foliate) and [Readest](https://github.com/readest/readest), we add an atproto layer on the reader for social reading.
 
 
 ## Features
