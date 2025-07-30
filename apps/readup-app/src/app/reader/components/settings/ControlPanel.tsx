@@ -27,6 +27,9 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
   const [scrollingOverlap, setScrollingOverlap] = useState(viewSettings.scrollingOverlap!);
   const [volumeKeysToFlip, setVolumeKeysToFlip] = useState(viewSettings.volumeKeysToFlip!);
   const [isDisableClick, setIsDisableClick] = useState(viewSettings.disableClick!);
+  const [isDisableDoubleClick, setIsDisableDoubleClick] = useState(
+    viewSettings.disableDoubleClick!,
+  );
   const [swapClickArea, setSwapClickArea] = useState(viewSettings.swapClickArea!);
   const [animated, setAnimated] = useState(viewSettings.animated!);
   const [allowScript, setAllowScript] = useState(viewSettings.allowScript!);
@@ -92,6 +95,11 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
   }, [isDisableClick]);
 
   useEffect(() => {
+    saveViewSettings(envConfig, bookKey, 'disableDoubleClick', isDisableDoubleClick, false, false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDisableDoubleClick]);
+
+  useEffect(() => {
     saveViewSettings(envConfig, bookKey, 'swapClickArea', swapClickArea, false, false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [swapClickArea]);
@@ -122,6 +130,15 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
           className='toggle toggle-success h-5'
           checked={!isDisableClick}
           onChange={() => setIsDisableClick(!isDisableClick)}
+        />
+      </div>
+      <div className='flex items-center justify-between'>
+        <b className=''>{_('Disable Double Click')}</b>
+        <input
+          type='checkbox'
+          className='toggle toggle-success h-5'
+          checked={isDisableDoubleClick}
+          onChange={() => setIsDisableDoubleClick(!isDisableDoubleClick)}
         />
       </div>
       <div className='flex items-center justify-between'>

@@ -393,6 +393,20 @@ const parseClock = str => {
     return n * f
 }
 
+const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp']
+
+const getImageMediaType = (path) => {
+    const extension = path.toLowerCase().split('.').pop()
+    const mediaTypeMap = {
+        'jpg': 'image/jpeg',
+        'jpeg': 'image/jpeg',
+        'png': 'image/png',
+        'gif': 'image/gif',
+        'webp': 'image/webp',
+    }
+    return mediaTypeMap[extension] || 'image/jpeg'
+}
+
 class MediaOverlay extends EventTarget {
     #entries
     #lastMediaOverlayItem
@@ -715,11 +729,12 @@ class Loader {
     #refCount = new Map()
     allowScript = false
     eventTarget = new EventTarget()
-    constructor({ loadText, loadBlob, resources }) {
+    constructor({ loadText, loadBlob, resources, entries }) {
         this.loadText = loadText
         this.loadBlob = loadBlob
         this.manifest = resources.manifest
         this.assets = resources.manifest
+        this.entries = entries
         // needed only when replacing in (X)HTML w/o parsing (see below)
         //.filter(({ mediaType }) => ![MIME.XHTML, MIME.HTML].includes(mediaType))
     }
@@ -799,11 +814,28 @@ class Loader {
         const url = await this.loadItem(item, parents)
         if (url) return this.#cacheXHTMLContent.get(url)?.data
     }
+    tryImageEntryItem(path) {
+        if (!IMAGE_EXTENSIONS.some(ext => path.toLowerCase().endsWith(`.${ext}`))) {
+            return null
+        }
+        if (!this.entries.get(path)) {
+            return null
+        }
+        return {
+            href: path,
+            mediaType: getImageMediaType(path),
+        }
+    }
     async loadHref(href, base, parents = []) {
         if (isExternal(href)) return href
         const path = resolveURL(href, base)
-        const item = this.manifest.find(item => item.href === path)
-        if (!item) return href
+        let item = this.manifest.find(item => item.href === path)
+        if (!item) {
+            item = this.tryImageEntryItem(path)
+            if (!item) {
+                return href
+            }
+        }
         return this.loadItem(item, parents.concat(base))
     }
     async loadReplaced(item, parents = []) {
@@ -945,7 +977,11 @@ export class EPUB {
     parser = new DOMParser()
     #loader
     #encryption
-    constructor({ loadText, loadBlob, getSize, sha1 }) {
+    constructor({ entries, loadText, loadBlob, getSize, sha1 }) {
+        this.entries = entries.reduce((map, entry) => {
+            map.set(entry.filename, entry)
+            return map
+        }, new Map())
         this.loadText = loadText
         this.loadBlob = loadBlob
         this.getSize = getSize
@@ -986,6 +1022,7 @@ ${doc.querySelector('parsererror').innerText}`)
             loadBlob: uri => Promise.resolve(this.loadBlob(uri))
                 .then(this.#encryption.getDecoder(uri)),
             resources: this.resources,
+            entries: this.entries,
         })
         this.transformTarget = this.#loader.eventTarget
         this.sections = this.resources.spine.map((spineItem, index) => {
