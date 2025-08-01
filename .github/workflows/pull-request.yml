@@ -54,7 +54,7 @@ jobs:
           pnpm install && pnpm setup-pdfjs 
           
       - name: run tests
-        working-directory: apps/readest-app
+        working-directory: apps/readup-app
         run: |
           pnpm test -- --watchAll=false
 

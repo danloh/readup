@@ -106,6 +106,7 @@ export const UpdaterContent = ({
       }
     };
     const checkAndroidUpdate = async () => {
+      if (!appService) return;
       const fetch = isTauriAppPlatform() ? tauriFetch : window.fetch;
       const response = await fetch(READUP_UPDATER_FILE);
       const data = await response.json();
@@ -114,7 +115,7 @@ export const UpdaterContent = ({
         const platformKey = OS_ARCH === 'aarch64' ? 'android-arm64' : 'android-universal';
         const arch = OS_ARCH === 'aarch64' ? 'arm64' : 'universal';
         const downloadUrl = data.platforms[platformKey]?.url as string;
-        const cachePrefix = appService?.fs.getPrefix('Cache');
+        const cachePrefix = await appService.fs.getPrefix('Cache');
         const apkFilePath = `${cachePrefix}/Readup_${data.version}_${arch}.apk`;
         setUpdate({
           currentVersion,
@@ -398,7 +399,7 @@ export const UpdaterContent = ({
           )}
         </div>
         <div className='text-base-content text-sm'>
-          <h3 className='mb-2 font-bold'>{_('Changelog:')}</h3>
+          <h3 className='mb-2 font-bold'>{_('Changelog')}</h3>
           <div className='bg-base-300 mb-4 rounded-lg px-4 pb-2 pt-4'>
             {changelogs.length > 0 ? (
               changelogs.map((entry: Changelog) => (
