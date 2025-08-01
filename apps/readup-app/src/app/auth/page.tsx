@@ -133,38 +133,46 @@ export default function AuthPage() {
   return isTauriAppPlatform() ? (
     <div
       className={clsx(
-        'fixed inset-0 z-0 flex select-none flex-col items-center overflow-y-auto',
-        'bg-base-100 border-base-200 border',
-        appService?.hasSafeAreaInset && 'pt-[env(safe-area-inset-top)]',
+        'bg-base-100 inset-0 flex select-none flex-col items-center overflow-hidden',
+        appService?.isIOSApp ? 'h-[100vh]' : 'h-dvh',
+        appService?.isLinuxApp && 'window-border',
+        appService?.hasRoundedWindow && 'rounded-window',
       )}
     >
-      <div
-        ref={headerRef}
+       <div
         className={clsx(
-          'fixed z-10 flex w-full items-center justify-between py-2 pe-6 ps-4',
-          appService?.hasTrafficLight && 'pt-11',
+          'flex h-full w-full flex-col items-center overflow-y-auto',
+          appService?.hasSafeAreaInset && 'pt-[env(safe-area-inset-top)]',
         )}
       >
-        <button onClick={handleGoBack} className={clsx('btn btn-ghost h-8 min-h-8 w-8 p-0')}>
-          <IoArrowBack className='text-base-content' />
-        </button>
+        <div
+          ref={headerRef}
+          className={clsx(
+            'fixed z-10 flex w-full items-center justify-between py-2 pe-6 ps-4',
+            appService?.hasTrafficLight && 'pt-11',
+          )}
+        >
+          <button onClick={handleGoBack} className={clsx('btn btn-ghost h-8 min-h-8 w-8 p-0')}>
+            <IoArrowBack className='text-base-content' />
+          </button>
 
-        {appService?.hasWindowBar && (
-          <WindowButtons
-            headerRef={headerRef}
-            showMinimize={!isTrafficLightVisible}
-            showMaximize={!isTrafficLightVisible}
-            showClose={!isTrafficLightVisible}
-            onClose={handleGoBack}
-          />
-        )}
-      </div>
-      <div
-        className={clsx('z-20 pb-8', appService?.hasTrafficLight ? 'mt-24' : 'mt-12')}
-        style={{ maxWidth: '420px' }}
-      >
-        <hr className='border-base-300 my-3 mt-6 w-64 border-t' />
-        {/* TODO: Auth */}
+          {appService?.hasWindowBar && (
+            <WindowButtons
+              headerRef={headerRef}
+              showMinimize={!isTrafficLightVisible}
+              showMaximize={!isTrafficLightVisible}
+              showClose={!isTrafficLightVisible}
+              onClose={handleGoBack}
+            />
+          )}
+        </div>
+        <div
+          className={clsx('z-20 pb-8', appService?.hasTrafficLight ? 'mt-24' : 'mt-12')}
+          style={{ maxWidth: '420px' }}
+        >
+          <hr className='border-base-300 my-3 mt-6 w-64 border-t' />
+          {/* TODO: Auth */}
+        </div>
       </div>
     </div>
   ) : (
