@@ -1,5 +1,8 @@
 import clsx from 'clsx';
 import React from 'react';
+import { TRANSLATED_LANGS } from '@/services/constants';
+import { useThemeStore } from '@/store/themeStore';
+import { useTranslation } from '@/hooks/useTranslation';
 
 type Option = {
   value: string;
@@ -41,5 +44,44 @@ export default function Select({
         </option>
       ))}
     </select>
+  );
+}
+
+
+export const getLangOptions = () => {
+  const _ = useTranslation();
+  const langs = TRANSLATED_LANGS as Record<string, string>;
+  const options = Object.entries(langs).map(([value, label]) => ({ value, label }));
+  options.sort((a, b) => a.label.localeCompare(b.label));
+  options.unshift({ value: '', label: _('System Language') });
+  return options;
+};
+
+export function LangSelect() {
+  const _ = useTranslation();
+  const { setUILang } = useThemeStore();
+  
+  const getCurrentUILangOption = () => {
+    const uiLang = localStorage?.getItem('i18nextLng') || '';
+    return {
+      value: uiLang,
+      label:
+        uiLang === ''
+          ? _('Auto')
+          : TRANSLATED_LANGS[uiLang as keyof typeof TRANSLATED_LANGS],
+    };
+  };
+
+  const handleSelectUILang = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const option = event.target.value;
+    setUILang(option);
+  };
+
+  return (
+    <Select
+      value={getCurrentUILangOption().value}
+      onChange={handleSelectUILang}
+      options={getLangOptions()}
+    />
   );
 }

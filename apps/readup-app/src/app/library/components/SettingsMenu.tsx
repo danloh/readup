@@ -8,6 +8,10 @@ import { GrSystem } from "react-icons/gr";
 import { BiMoon, BiSun } from 'react-icons/bi';
 
 import { setAboutDialogVisible } from '@/components/AboutWindow';
+import UserAvatar from '@/components/UserAvatar';
+import MenuItem from '@/components/MenuItem';
+import Quota from '@/components/Quota';
+import { LangSelect } from '@/components/Select';
 import { isTauriAppPlatform, isWebAppPlatform } from '@/services/environment';
 import { DOWNLOAD_READUP_URL } from '@/services/constants';
 import { useAuth } from '@/context/AuthContext';
@@ -20,9 +24,6 @@ import { useResponsiveSize } from '@/hooks/useResponsiveSize';
 import { navigateToLogin, navigateToProfile } from '@/utils/nav';
 import { tauriHandleSetAlwaysOnTop, tauriHandleToggleFullScreen } from '@/utils/window';
 import { optInTelemetry, optOutTelemetry } from '@/utils/telemetry';
-import UserAvatar from '@/components/UserAvatar';
-import MenuItem from '@/components/MenuItem';
-import Quota from '@/components/Quota';
 
 interface SettingsMenuProps {
   setIsDropdownOpen?: (isOpen: boolean) => void;
@@ -277,6 +278,9 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
         Icon={isTelemetryEnabled ? MdCheck : undefined}
         onClick={toggleTelemetry}
       />
+      <div className='flex items-end justify-between'>  
+        <LangSelect />
+      </div>
     </div>
   );
 };

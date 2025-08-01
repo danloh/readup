@@ -1,26 +1,24 @@
-import i18n from 'i18next';
 import React, { useEffect, useState } from 'react';
 import { useEnv } from '@/context/EnvContext';
 import { useAuth } from '@/context/AuthContext';
 import { useReaderStore } from '@/store/readerStore';
+import { useThemeStore } from '@/store/themeStore';
 import { useTranslation } from '@/hooks/useTranslation';
-import { saveViewSettings } from '../../utils/viewSettingsHelper';
+import { saveAndReload } from '@/utils/reload';
+import Select, { getLangOptions, LangSelect } from '@/components/Select';
 import { getTranslators } from '@/services/translators';
-import { TRANSLATED_LANGS } from '@/services/constants';
+import { saveViewSettings } from '../../utils/viewSettingsHelper';
 import { SettingsPanelPanelProp } from './SettingsDialog';
 import { useResetViewSettings } from '../../hooks/useResetSettings';
-import { saveAndReload } from '@/utils/reload';
-import { initDayjs } from '@/utils/time';
-import Select from '@/components/Select';
 
 const LangPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset }) => {
   const _ = useTranslation();
   const { token } = useAuth();
   const { envConfig } = useEnv();
   const { getViewSettings, setViewSettings } = useReaderStore();
+  const { setUILang } = useThemeStore();
   const viewSettings = getViewSettings(bookKey)!;
 
-  const [uiLanguage, setUILanguage] = useState(viewSettings.uiLanguage!);
   const [translationEnabled, setTranslationEnabled] = useState(viewSettings.translationEnabled!);
   const [translationProvider, setTranslationProvider] = useState(viewSettings.translationProvider!);
   const [translateTargetLang, setTranslateTargetLang] = useState(viewSettings.translateTargetLang!);
@@ -30,41 +28,17 @@ const LangPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
 
   const handleReset = () => {
     resetToDefaults({
-      uiLanguage: setUILanguage,
       translationEnabled: setTranslationEnabled,
       translationProvider: setTranslationProvider,
       translateTargetLang: setTranslateTargetLang,
     });
+    setUILang('');
   };
 
   useEffect(() => {
     onRegisterReset(handleReset);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const getCurrentUILangOption = () => {
-    const uiLanguage = viewSettings.uiLanguage;
-    return {
-      value: uiLanguage,
-      label:
-        uiLanguage === ''
-          ? _('Auto')
-          : TRANSLATED_LANGS[uiLanguage as keyof typeof TRANSLATED_LANGS],
-    };
-  };
-
-  const getLangOptions = () => {
-    const langs = TRANSLATED_LANGS as Record<string, string>;
-    const options = Object.entries(langs).map(([value, label]) => ({ value, label }));
-    options.sort((a, b) => a.label.localeCompare(b.label));
-    options.unshift({ value: '', label: _('System Language') });
-    return options;
-  };
-
-  const handleSelectUILang = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const option = event.target.value;
-    setUILanguage(option);
-  };
 
   const getTranslationProviderOptions = () => {
     const translators = getTranslators();
@@ -115,15 +89,6 @@ const LangPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
   };
 
   useEffect(() => {
-    if (uiLanguage === viewSettings.uiLanguage) return;
-    saveViewSettings(envConfig, bookKey, 'uiLanguage', uiLanguage, false, false);
-    const locale = uiLanguage ? uiLanguage : navigator.language;
-    i18n.changeLanguage(locale);
-    initDayjs(locale);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [uiLanguage]);
-
-  useEffect(() => {
     if (translationEnabled === viewSettings.translationEnabled) return;
     saveViewSettings(envConfig, bookKey, 'translationEnabled', translationEnabled, true, false);
     viewSettings.translationEnabled = translationEnabled;
@@ -145,11 +110,7 @@ const LangPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
     <div className='my-4 w-full space-y-6'>
       <div className='flex items-center justify-between'>
         <b className=''>{_('Interface Language')}</b>
-        <Select
-          value={getCurrentUILangOption().value}
-          onChange={handleSelectUILang}
-          options={getLangOptions()}
-        />
+        <LangSelect />
       </div>
       <div className='flex items-center justify-between'>
         <b className=''>{_('Enable Translation')}</b>

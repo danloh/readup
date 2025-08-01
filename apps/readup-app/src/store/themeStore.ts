@@ -3,6 +3,8 @@ import { getThemeCode, ThemeCode } from '@/utils/style';
 import { CustomTheme, Palette, ThemeMode } from '@/styles/themes';
 import { EnvConfigType, isWebAppPlatform } from '@/services/environment';
 import { SystemSettings } from '@/types/settings';
+import i18n from '@/i18n/i18n';
+import { initDayjs } from '@/utils/time';
 
 interface ThemeState {
   themeMode: ThemeMode;
@@ -11,12 +13,14 @@ interface ThemeState {
   themeCode: ThemeCode;
   isDarkMode: boolean;
   systemUIVisible: boolean;
+  uiLang: string;
   statusBarHeight: number;
   systemUIAlwaysHidden: boolean;
   setSystemUIAlwaysHidden: (hidden: boolean) => void;
   setStatusBarHeight: (height: number) => void;
   showSystemUI: () => void;
   dismissSystemUI: () => void;
+  setUILang: (lang: string) => void;
   getIsDarkMode: () => boolean;
   setThemeMode: (mode: ThemeMode) => void;
   setThemeColor: (color: string) => void;
@@ -70,10 +74,17 @@ export const useThemeStore = create<ThemeState>((set, get) => {
     isDarkMode,
     themeCode,
     systemUIVisible: false,
+    uiLang: '',
     statusBarHeight: 24,
     systemUIAlwaysHidden: false,
     showSystemUI: () => set({ systemUIVisible: true }),
     dismissSystemUI: () => set({ systemUIVisible: false }),
+    setUILang: (lang) => {
+      const locale = lang ? lang : navigator.language;
+      i18n.changeLanguage(locale);
+      initDayjs(locale);
+      set({ uiLang: lang });
+    },
     setStatusBarHeight: (height: number) => set({ statusBarHeight: height }),
     setSystemUIAlwaysHidden: (hidden: boolean) => set({ systemUIAlwaysHidden: hidden }),
     getIsDarkMode: () => get().isDarkMode,
