@@ -727,7 +727,6 @@ class Loader {
     #cacheXHTMLContent = new Map()
     #children = new Map()
     #refCount = new Map()
-    allowScript = false
     eventTarget = new EventTarget()
     constructor({ loadText, loadBlob, resources, entries }) {
         this.loadText = loadText
@@ -792,11 +791,11 @@ class Loader {
         const { href, mediaType } = item
 
         const isScript = MIME.JS.test(item.mediaType)
-        const detail = { type: mediaType, isScript, allowScript: this.allowScript }
+        const detail = { type: mediaType, isScript, allow: true}
         const event = new CustomEvent('load', { detail })
         this.eventTarget.dispatchEvent(event)
-        const allowScript = await event.detail.allowScript
-        if (isScript && !allowScript) return null
+        const allow = await event.detail.allow
+        if (!allow) return null
 
         const parent = parents.at(-1)
         if (this.#cache.has(href)) return this.ref(href, parent)

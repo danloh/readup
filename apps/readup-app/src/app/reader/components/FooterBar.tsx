@@ -178,7 +178,7 @@ const FooterBar: React.FC<FooterBarProps> = ({
         {/*  footer progress bar */}
         <div
           className={clsx(
-            'bg-base-200 absolute bottom-16 flex w-full items-center px-4 transition-all',
+            'footerbar-progress bg-base-200 absolute bottom-16 flex w-full items-center px-4 transition-all',
             actionTab === 'progress'
               ? 'pointer-events-auto translate-y-0 pb-4 pt-8 ease-out'
               : 'pointer-events-none invisible translate-y-full overflow-hidden p-0 ease-in',

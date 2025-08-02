@@ -20,7 +20,7 @@ const POPUP_PADDING = 10;
 
 interface TTSControlProps {
   bookKey: string;
-  iconRef: React.RefObject<HTMLDivElement>,
+  iconRef: React.RefObject<HTMLDivElement | null>,
 }
 
 const TTSControl: React.FC<TTSControlProps> = ({ bookKey, iconRef }) => {
@@ -192,8 +192,6 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey, iconRef }) => {
       ttsControllerRef.current = null;
     }
 
-    setTTSEnabled(bookKey, true);
-
     try {
       if (appService?.isIOSApp) {
         await invokeUseBackgroundAudio({ enabled: true });
@@ -218,9 +216,10 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey, iconRef }) => {
         setTtsController(ttsController);
       }
       setTtsClientsInitialized(true);
+      setTTSEnabled(bookKey, true);
     } catch (error) {
       eventDispatcher.dispatch('toast', {
-        message: _('TTS not supported in this device'),
+        message: _('TTS not supported for this document'),
         type: 'error',
       });
       console.error(error);

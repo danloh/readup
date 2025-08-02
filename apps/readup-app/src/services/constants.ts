@@ -33,6 +33,9 @@ export const FILE_ACCEPT_FORMATS = SUPPORTED_FILE_EXTS.map((ext) => `.${ext}`).j
 export const BOOK_UNGROUPED_NAME = '';
 export const BOOK_UNGROUPED_ID = '';
 
+export const SUPPORTED_IMAGE_EXTS = ['png', 'jpg', 'jpeg'];
+export const IMAGE_ACCEPT_FORMATS = SUPPORTED_IMAGE_EXTS.map((ext) => `.${ext}`).join(', ');
+
 export const DEFAULT_SYSTEM_SETTINGS: Partial<SystemSettings> = {
   keepLogin: false,
   autoUpload: false,
@@ -56,7 +59,7 @@ export const DEFAULT_SYSTEM_SETTINGS: Partial<SystemSettings> = {
 
 export const DEFAULT_READSETTINGS: ReadSettings = {
   sideBarWidth: '15%',
-  isSideBarPinned: false,
+  isSideBarPinned: true,
   notebookWidth: '25%',
   isNotebookPinned: false,
   autohideCursor: true,
@@ -552,8 +555,8 @@ export const ZOOM_STEP = 10;
 
 export const DEFAULT_STORAGE_QUOTA: UserStorageQuota = {
   free: 500 * 1024 * 1024,
-  plus: 2 * 1024 * 1024 * 1024,
-  pro: 10 * 1024 * 1024 * 1024,
+  plus: 5 * 1024 * 1024 * 1024,
+  pro: 20 * 1024 * 1024 * 1024,
 };
 
 export const DEFAULT_DAILY_TRANSLATION_QUOTA: UserDailyTranslationQuota = {
@@ -652,4 +655,24 @@ export const TRANSLATED_LANGS = {
   'zh-TW': '正體中文',
 };
 
+export const TRANSLATOR_LANGS: Record<string, string> = {
+  ...TRANSLATED_LANGS,
+  no: 'Norsk',
+  sv: 'Svenska',
+  fi: 'Suomi',
+  da: 'Dansk',
+  cs: 'Čeština',
+  hu: 'Magyar',
+  ro: 'Română',
+  bg: 'Български',
+  hr: 'Hrvatski',
+  lt: 'Lietuvių',
+  sl: 'Slovenščina',
+  sk: 'Slovenčina',
+};
+
 export const SUPPORTED_LANGS: Record<string, string> = { ...TRANSLATED_LANGS, zh: '中文' };
+
+export const SUPPORTED_LANGNAMES: Record<string, string> = Object.fromEntries(
+  Object.entries(SUPPORTED_LANGS).map(([code, name]) => [name, code]),
+);

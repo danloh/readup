@@ -5,6 +5,7 @@ import { useReaderStore } from '@/store/readerStore';
 import { useThemeStore } from '@/store/themeStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { saveAndReload } from '@/utils/reload';
+import { TRANSLATOR_LANGS } from '@/services/constants';
 import Select, { getLangOptions, LangSelect } from '@/components/Select';
 import { getTranslators } from '@/services/translators';
 import { saveViewSettings } from '../../utils/viewSettingsHelper';
@@ -76,7 +77,7 @@ const LangPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
 
   const getCurrentTargetLangOption = () => {
     const value = translateTargetLang;
-    const availableOptions = getLangOptions();
+    const availableOptions = getLangOptions(TRANSLATOR_LANGS);
     return availableOptions.find((o) => o.value === value) || availableOptions[0]!;
   };
 
@@ -136,7 +137,7 @@ const LangPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
         <Select
           value={getCurrentTargetLangOption().value}
           onChange={handleSelectTargetLang}
-          options={getLangOptions()}
+          options={getLangOptions(TRANSLATOR_LANGS)}
           disabled={!translationEnabled}
         />
       </div>
