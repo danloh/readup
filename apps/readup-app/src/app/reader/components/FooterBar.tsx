@@ -233,18 +233,22 @@ const FooterBar: React.FC<FooterBarProps> = ({
           )}
           style={{ paddingBottom: `${gridInsets.bottom + 16}px` }}
         >
-          <Button
-            icon={<TOCIcon size={tocIconSize} className='' />}
-            onClick={() => handleSetActionTab('toc')}
-            tooltip={_('TOC')}
-            tooltipDirection='top'
-          />
-          <Button
-            icon={<NoteIcon className='' />}
-            onClick={() => handleSetActionTab('note')}
-            tooltip={_('Annotate')}
-            tooltipDirection='top'
-          />
+          {!isSideBarVisible && (
+            <>
+              <Button
+                icon={<TOCIcon size={tocIconSize} className='' />}
+                onClick={() => handleSetActionTab('toc')}
+                tooltip={_('TOC')}
+                tooltipDirection='top'
+              />
+              <Button
+                icon={<NoteIcon className='' />}
+                onClick={() => handleSetActionTab('note')}
+                tooltip={_('Annotate')}
+                tooltipDirection='top'
+              />
+            </>
+          )}
           <BookmarkToggler bookKey={bookKey} />
           <div
             className={clsx(

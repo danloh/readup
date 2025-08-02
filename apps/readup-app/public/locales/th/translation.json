@@ -281,6 +281,7 @@
   "Translation Not Available": "ไม่มีการแปล",
   "TTS not supported for PDF": "ไม่รองรับ TTS สำหรับ PDF",
   "TTS not supported in this device": "อุปกรณ์นี้ไม่รองรับ TTS",
+  "TTS not supported for this document": "ไม่รองรับ TTS สำหรับเอกสารนี้",
   "No Timeout": "ไม่จำกัดเวลา",
   "{{value}} minute": "{{value}} นาที",
   "{{value}} minutes": "{{value}} นาที",

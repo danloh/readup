@@ -214,6 +214,7 @@
   "Sidebar": "Zijbalk",
   "TTS not supported for PDF": "TTS niet ondersteund voor PDF",
   "TTS not supported in this device": "TTS niet ondersteund op dit apparaat",
+  "TTS not supported for this document": "TTS niet ondersteund voor dit document",
   "No Timeout": "Geen time-out",
   "{{value}} minute": "{{value}} minuut",
   "{{value}} minutes": "{{value}} minuten",
