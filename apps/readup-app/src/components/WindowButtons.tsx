@@ -7,7 +7,7 @@ import { isTauriAppPlatform } from '@/services/environment';
 
 interface WindowButtonsProps {
   className?: string;
-  headerRef?: React.RefObject<HTMLDivElement>;
+  headerRef?: React.RefObject<HTMLDivElement | null>;
   showMinimize?: boolean;
   showMaximize?: boolean;
   showClose?: boolean;

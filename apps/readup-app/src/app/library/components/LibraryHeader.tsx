@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FaSearch } from 'react-icons/fa';
 import { PiDotsThreeCircle } from 'react-icons/pi';
@@ -7,16 +7,11 @@ import { LiaFileImportSolid } from 'react-icons/lia';
 import { MdOutlineSettings, MdArrowBackIosNew } from 'react-icons/md';
 import { IoMdCloseCircle } from 'react-icons/io';
 
-import { useEnv } from '@/context/EnvContext';
-import { useThemeStore } from '@/store/themeStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useLibraryStore } from '@/store/libraryStore';
 import { useResponsiveSize } from '@/hooks/useResponsiveSize';
-import { useSafeAreaInsets } from '@/hooks/useSafeAreaInsets';
-import { useTrafficLightStore } from '@/store/trafficLightStore';
 import { navigateToLibrary } from '@/utils/nav';
 import { debounce } from '@/utils/debounce';
-import WindowButtons from '@/components/WindowButtons';
 import Dropdown from '@/components/Dropdown';
 import SettingsMenu from './SettingsMenu';
 import ViewMenu from './ViewMenu';
@@ -29,22 +24,12 @@ const LibraryHeader: React.FC<LibraryHeaderProps> = ({onImportBooks}) => {
   const _ = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { appService } = useEnv();
-  const { systemUIVisible, statusBarHeight } = useThemeStore();
   const { currentBookshelf } = useLibraryStore();
-  const {
-    isTrafficLightVisible,
-    initializeTrafficLightStore,
-    initializeTrafficLightListeners,
-    setTrafficLightVisibility,
-    cleanupTrafficLightListeners,
-  } = useTrafficLightStore();
+
   const [searchQuery, setSearchQuery] = useState(searchParams?.get('q') ?? '');
 
-  const headerRef = useRef<HTMLDivElement>(null);
   const iconSize18 = useResponsiveSize(18);
   const iconSize20 = useResponsiveSize(20);
-  const insets = useSafeAreaInsets();
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const debouncedUpdateQueryParam = useCallback(
@@ -66,40 +51,14 @@ const LibraryHeader: React.FC<LibraryHeaderProps> = ({onImportBooks}) => {
     debouncedUpdateQueryParam(newQuery);
   };
 
-  useEffect(() => {
-    if (!appService?.hasTrafficLight) return;
-
-    initializeTrafficLightStore(appService);
-    initializeTrafficLightListeners();
-    setTrafficLightVisibility(true);
-    return () => {
-      cleanupTrafficLightListeners();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const windowButtonVisible = appService?.hasWindowBar && !isTrafficLightVisible;
   const isInGroupView = !!searchParams?.get('group');
   const currentBooksCount = currentBookshelf.reduce(
     (acc, item) => acc + ('books' in item ? item.books.length : 1),
     0,
   );
 
-  if (!insets) return null;
-
   return (
-    <div
-      ref={headerRef}
-      className={clsx(
-        'titlebar bg-base-200 z-10 flex h-[52px] w-full items-center py-2 pr-4 sm:h-[48px] sm:pr-6',
-        isTrafficLightVisible ? 'pl-16' : 'pl-0 sm:pl-2',
-      )}
-      style={{
-        marginTop: appService?.hasSafeAreaInset
-          ? `max(${insets.top}px, ${systemUIVisible ? statusBarHeight : 0}px)`
-          : '0px',
-      }}
-    >
+    <div className='library-head bg-base-200 z-10 flex h-[48px] w-full items-center p-2'>
       <div className='flex w-full items-center justify-between space-x-6 sm:space-x-12'>
         <div className='exclude-title-bar-mousedown relative flex w-full items-center pl-4'>
           {isInGroupView && (
@@ -178,14 +137,6 @@ const LibraryHeader: React.FC<LibraryHeaderProps> = ({onImportBooks}) => {
           >
             <SettingsMenu />
           </Dropdown>
-          {appService?.hasWindowBar && (
-            <WindowButtons
-              headerRef={headerRef}
-              showMinimize={windowButtonVisible}
-              showMaximize={windowButtonVisible}
-              showClose={windowButtonVisible}
-            />
-          )}
         </div>
       </div>
     </div>

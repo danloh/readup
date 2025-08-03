@@ -86,7 +86,9 @@ This command will display information about the installed Tauri dependencies and
 
 For Windows targets, “Build Tools for Visual Studio 2022” (or a higher edition of Visual Studio) and the “Desktop development with C++” workflow must be installed. For Windows ARM64 targets, the “VS 2022 C++ ARM64 build tools” and "C++ Clang Compiler for Windows" components must be installed. And make sure `clang` can be found in the path by adding `C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\Llvm\x64\bin` for example in the environment variable `Path`.
 
-### 4. Build for Development
+### 4. Build for Development　
+
+In `/apps/readup-app`
 
 ```bash
 # Start development for the Tauri app
