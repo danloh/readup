@@ -89,6 +89,9 @@ const NavTab: React.FC<{
           : '0px',
       }}
     >
+      <div className='flex text-xl font-bold items-start mx-1'>
+        {'Readup'}
+      </div>
       {tabs.map((tab) => (
         <div
           key={tab}
