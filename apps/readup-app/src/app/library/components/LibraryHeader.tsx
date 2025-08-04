@@ -122,6 +122,15 @@ const LibraryHeader: React.FC<LibraryHeaderProps> = ({onImportBooks}) => {
             >
               <LiaFileImportSolid className='m-0.5 h-5 w-5' />
             </button>
+            <button
+              type='button'
+              className='btn btn-ghost h-8 min-h-8 w-8 p-0'
+              onClick={() => {
+                router.push('/catalog')
+              }}
+            >
+              Feed
+            </button>
           </div>
           <Dropdown
             className='exclude-title-bar-mousedown dropdown-bottom dropdown-end'

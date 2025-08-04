@@ -83,3 +83,11 @@ export const navigateToLibrary = (
 export const redirectToLibrary = () => {
   redirect('/library');
 };
+
+export const navigateToTab = (
+  router: ReturnType<typeof useRouter>,
+  tab: string,
+  navOptions?: { scroll?: boolean },
+) => {
+  router.push(`/${tab}`, navOptions);
+};

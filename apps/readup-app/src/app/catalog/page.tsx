@@ -1,4 +1,7 @@
+'use client';
+
 import React, { JSX, useState } from "react";
+import { NavLayout } from '../library/page';
 
 export const getFavicon = (url: string) => {
   const hostname = url ? new URL(url).hostname : "";
@@ -57,21 +60,20 @@ const CatalogPage: React.FC = () => {
 
   return (
     <div className="flex flex-col">
-      <div className="flex items-center justify-end">
-        <div className="flex flex-end">
-          Readup
-        </div>
-      </div>
       <div className="p-1">
-        <div 
-          className="flex flex-row items-center justify-between cursor-pointer"
-        >
-          All Book
-        </div>
         {renderFeedList()}
+        <p>{'Hello Catalog'}</p>
       </div>
     </div>
   );
 }
 
-export default CatalogPage;
+const Catalog = () => {
+  return (
+    <NavLayout tab={'catalog'}>
+      <CatalogPage />
+    </NavLayout>
+  );
+};
+
+export default Catalog;

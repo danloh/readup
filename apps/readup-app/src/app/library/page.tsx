@@ -7,18 +7,29 @@ import { ImFeed } from "react-icons/im";
 import { BiLibrary } from 'react-icons/bi';
 import { SiProgress } from "react-icons/si";
 import { useTranslation } from '@/hooks/useTranslation';
-import CatalogPage from './components/CatalogPage';
 import LibraryPage from './components/LibraryPage';
-import StreakPage from './components/StreakPage';
 import { useEnv } from '@/context/EnvContext';
 import WindowButtons from '@/components/WindowButtons';
 import { useTrafficLightStore } from '@/store/trafficLightStore';
 import { useSafeAreaInsets } from '@/hooks/useSafeAreaInsets';
 import { useThemeStore } from '@/store/themeStore';
 
+import { useRouter } from 'next/navigation';
+import { navigateToTab } from '@/utils/nav';
+
 const Library = () => {
+  return (
+    <NavLayout tab={'library'}>
+      <LibraryPage />
+    </NavLayout>
+  );
+};
+
+export function NavLayout(
+  { tab, children }: { tab: string; children: React.ReactNode }
+) {
   const { appService } = useEnv();
-  const [activeTab, setActiveTab] = useState('library');
+
   return (
     <div 
       className={clsx(
@@ -29,23 +40,17 @@ const Library = () => {
       )}
     >
       <div className='nav-tab'>
-        <NavTab activeTab={activeTab} onTabChange={setActiveTab} />
+        <NavTab activeTab={tab} />
       </div>
-      {activeTab === 'library' ? (
-        <LibraryPage />
-      ) : activeTab === 'catalog' ? (
-        <CatalogPage />
-      ) : (
-        <StreakPage />
-      )}
+      {children}
     </div>
   );
 };
 
-const NavTab: React.FC<{
+export const NavTab: React.FC<{
   activeTab: string;
-  onTabChange: (tab: string) => void;
-}> = ({ activeTab, onTabChange }) => {
+}> = ({ activeTab }) => {
+  const router = useRouter();
   const _ = useTranslation();
   const { appService } = useEnv();
   const headerRef = useRef<HTMLDivElement>(null);
@@ -74,6 +79,11 @@ const NavTab: React.FC<{
 
   const tabs = ['library', 'catalog', 'streak'];
 
+  const handleTabClick = (tab: string) => {  
+    // if (activeTab === tab) return;
+    navigateToTab(router, tab);
+  };
+
   if (!insets) return null;
 
   return (
@@ -95,12 +105,19 @@ const NavTab: React.FC<{
       {tabs.map((tab) => (
         <div
           key={tab}
-          className='tooltip tooltip-bottom z-50 m-1 flex-1 cursor-pointer rounded-md p-2 hover:bg-base-300'
+          className='tooltip tooltip-bottom z-50 m-1 flex-1 rounded-md p-2 hover:bg-base-300'
           data-tip={
             tab === 'library' ? _('Library') : tab === 'catalog' ? _('Catalog') : _('Streak')
           }
         >
-          <div className='flex h-6 items-center' onClick={() => onTabChange(tab)}>
+          <button 
+            type='button'
+            className='btn btn-ghost h-8 min-h-8 w-8 p-0' 
+            onClick={(e) => {
+              e.preventDefault();
+              handleTabClick(tab);
+            }}
+          >
             {tab === 'library' ? (
               <BiLibrary className={clsx('mx-auto', tab === activeTab && 'text-success')} />
             ) : tab === 'catalog' ? (
@@ -108,7 +125,7 @@ const NavTab: React.FC<{
             ) : (
               <SiProgress className={clsx('mx-auto', tab === activeTab && 'text-success')} />
             )}
-          </div>
+          </button>
         </div>
       ))}
       {appService?.hasWindowBar && (
