@@ -80,8 +80,7 @@ const NavTab: React.FC<{
     <div
       ref={headerRef}
       className={clsx(
-        'navbar bg-base-200 z-10 flex w-full items-center py-2 pr-2',
-        isTrafficLightVisible ? 'pl-16' : 'pl-2',
+        'navbar bg-base-200 z-10 flex flex-wrap w-full items-center justify-between py-1 px-2'
       )}
       style={{
         marginTop: appService?.hasSafeAreaInset
@@ -95,12 +94,16 @@ const NavTab: React.FC<{
       {tabs.map((tab) => (
         <div
           key={tab}
-          className='tooltip tooltip-bottom z-50 m-1 flex-1 cursor-pointer rounded-md p-2 hover:bg-base-300'
+          className='tooltip tooltip-bottom z-50 m-1 rounded-md p-1'
           data-tip={
             tab === 'library' ? _('Library') : tab === 'catalog' ? _('Catalog') : _('Streak')
           }
         >
-          <div className='flex h-6 items-center' onClick={() => onTabChange(tab)}>
+          <button 
+            type='button'
+            className='btn btn-ghost' 
+            onClick={() => onTabChange(tab)}
+          >
             {tab === 'library' ? (
               <BiLibrary className={clsx('mx-auto', tab === activeTab && 'text-success')} />
             ) : tab === 'catalog' ? (
@@ -108,7 +111,7 @@ const NavTab: React.FC<{
             ) : (
               <SiProgress className={clsx('mx-auto', tab === activeTab && 'text-success')} />
             )}
-          </div>
+          </button>
         </div>
       ))}
       {appService?.hasWindowBar && (

@@ -57,19 +57,7 @@ const CatalogPage: React.FC = () => {
 
   return (
     <div className="flex flex-col">
-      <div className="flex items-center justify-end">
-        <div className="flex flex-end">
-          Readup
-        </div>
-      </div>
-      <div className="p-1">
-        <div 
-          className="flex flex-row items-center justify-between cursor-pointer"
-        >
-          All Book
-        </div>
-        {renderFeedList()}
-      </div>
+      {renderFeedList()}
     </div>
   );
 }
