@@ -8,11 +8,6 @@ import { useThemeStore } from '@/store/themeStore';
 import { useReaderStore } from '@/store/readerStore';
 import { useBookDataStore } from '@/store/bookDataStore';
 import { useParallelViewStore } from '@/store/parallelViewStore';
-import { useMouseEvent, useTouchEvent } from '../hooks/useIframeEvents';
-import { usePagination } from '../hooks/usePagination';
-import { useFoliateEvents } from '../hooks/useFoliateEvents';
-import { useProgressSync } from '../hooks/useProgressSync';
-import { useProgressAutoSave } from '../hooks/useProgressAutoSave';
 import {
   applyFixedlayoutStyles,
   applyImageStyle,
@@ -23,6 +18,20 @@ import {
 import { mountAdditionalFonts } from '@/utils/font';
 import { getBookDirFromLanguage, getBookDirFromWritingMode } from '@/utils/book';
 import { useUICSS } from '@/hooks/useUICSS';
+import { getMaxInlineSize } from '@/utils/config';
+import { getDirFromUILanguage } from '@/utils/rtl';
+import { isCJKLang } from '@/utils/lang';
+import { isTauriAppPlatform } from '@/services/environment';
+import { transformContent } from '@/services/transformService';
+import { lockScreenOrientation } from '@/utils/bridge';
+import { manageSyntaxHighlighting } from '@/utils/highlightjs';
+import { getViewInsets } from '@/utils/insets';
+import { useMouseEvent, useTouchEvent } from '../hooks/useIframeEvents';
+import { usePagination } from '../hooks/usePagination';
+import { useFoliateEvents } from '../hooks/useFoliateEvents';
+import { useProgressSync } from '../hooks/useProgressSync';
+import { useProgressAutoSave } from '../hooks/useProgressAutoSave';
+import { useTextTranslation } from '../hooks/useTextTranslation';
 import {
   handleKeydown,
   handleMousedown,
@@ -33,15 +42,6 @@ import {
   handleTouchMove,
   handleTouchEnd,
 } from '../utils/iframeEventHandlers';
-import { getMaxInlineSize } from '@/utils/config';
-import { getDirFromUILanguage } from '@/utils/rtl';
-import { isCJKLang } from '@/utils/lang';
-import { isTauriAppPlatform } from '@/services/environment';
-import { transformContent } from '@/services/transformService';
-import { lockScreenOrientation } from '@/utils/bridge';
-import { useTextTranslation } from '../hooks/useTextTranslation';
-import { manageSyntaxHighlighting } from '@/utils/highlightjs';
-import { getViewInsets } from '@/utils/insets';
 
 declare global {
   interface Window {
