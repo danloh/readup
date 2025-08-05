@@ -27,11 +27,10 @@ import { type as osType } from '@tauri-apps/plugin-os';
 
 import { Book } from '@/types/book';
 import { FileSystem, BaseDir, AppPlatform } from '@/types/system';
-import { getOSPlatform, isContentURI, isFileURI, isValidURL } from '@/utils/misc';
+import { getOSPlatform, isContentURI, isValidURL } from '@/utils/misc';
 import { getCoverFilename, getFilename } from '@/utils/book';
 import { copyURIToPath } from '@/utils/bridge';
 import { NativeFile, RemoteFile } from '@/utils/file';
-
 import { BaseAppService, ResolvedPath } from './appService';
 import { LOCAL_BOOKS_SUBDIR } from './constants';
 
@@ -119,10 +118,11 @@ export const nativeFileSystem: FileSystem = {
       }
     } else {
       const prefix = await this.getPrefix(base);
-      if (isFileURI(path)) {
-        path = path.replace(/^file:\/\//, '');
-      }
-      const absolutePath = path.startsWith('/') ? path : await join(prefix, path);
+      const absolutePath = path.startsWith('/') 
+        ? path 
+        : prefix 
+          ? await join(prefix, path) 
+          : null;
       if (absolutePath && OS_TYPE !== 'android') {
         // NOTE: RemoteFile currently performs about 2× faster than NativeFile
         // due to an unresolved performance issue in Tauri (see tauri-apps/tauri#9190).
