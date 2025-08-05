@@ -1,37 +1,21 @@
 'use client';
 
 import clsx from 'clsx';
-import Stripe from 'stripe';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useEnv } from '@/context/EnvContext';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/hooks/useTheme';
-import { useQuotaStats } from '@/hooks/useQuotaStats';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useSettingsStore } from '@/store/settingsStore';
-import { UserPlan } from '@/types/user';
 import { navigateToLibrary } from '@/utils/nav';
 import { deleteUser } from '@/libs/user';
 import { eventDispatcher } from '@/utils/event';
 
 import { Toast } from '@/components/Toast';
-import Spinner from '@/components/Spinner';
 import ProfileHeader from './components/Header';
 import UserInfo from './components/UserInfo';
-import UsageStats from './components/UsageStats';
 import AccountActions from './components/AccountActions';
-
-
-export type AvailablePlan = {
-  plan: UserPlan;
-  price_id: string;
-  price: number; // in cents
-  currency: string;
-  interval: string;
-  productName: string;
-  product?: Stripe.Product;
-};
 
 const ProfilePage = () => {
   const _ = useTranslation();
@@ -40,17 +24,12 @@ const ProfilePage = () => {
   const { token, user, logout } = useAuth();
   const { settings, setSettings, saveSettings } = useSettingsStore();
 
-  const [loading, setLoading] = useState(false);
-  
   const [showEmbeddedCheckout, setShowEmbeddedCheckout] = useState(false);
-  
-
   const [mounted, setMounted] = useState(false);
+
   useEffect(() => setMounted(true), []);
 
   useTheme({ systemUIVisible: false });
-
-  const { quotas } = useQuotaStats();
 
   const handleGoBack = () => {
     if (showEmbeddedCheckout) {
@@ -118,11 +97,6 @@ const ProfilePage = () => {
       >
         <ProfileHeader onGoBack={handleGoBack} />
         <div className='w-full min-w-60 max-w-4xl py-10'>
-          {loading && (
-            <div className='fixed inset-0 z-50 flex items-center justify-center'>
-              <Spinner loading />
-            </div>
-          )}
           {showEmbeddedCheckout ? (
             <div className='bg-base-100 rounded-lg p-4'>
               TODO
@@ -137,11 +111,7 @@ const ProfilePage = () => {
                     userEmail={userEmail}
                     
                   />
-
-                  <UsageStats quotas={quotas} />
                 </div>
-
-                
 
                 <div className='flex flex-col gap-y-8 px-6'>
                   <AccountActions

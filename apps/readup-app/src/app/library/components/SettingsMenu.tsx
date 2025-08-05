@@ -10,14 +10,12 @@ import { BiMoon, BiSun } from 'react-icons/bi';
 import { setAboutDialogVisible } from '@/components/AboutWindow';
 import UserAvatar from '@/components/UserAvatar';
 import MenuItem from '@/components/MenuItem';
-import Quota from '@/components/Quota';
 import { LangSelect } from '@/components/Select';
 import { isTauriAppPlatform, isWebAppPlatform } from '@/services/environment';
 import { DOWNLOAD_READUP_URL } from '@/services/constants';
 import { useAuth } from '@/context/AuthContext';
 import { useEnv } from '@/context/EnvContext';
 import { useThemeStore } from '@/store/themeStore';
-import { useQuotaStats } from '@/hooks/useQuotaStats';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useResponsiveSize } from '@/hooks/useResponsiveSize';
@@ -34,7 +32,6 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
   const router = useRouter();
   const { envConfig, appService } = useEnv();
   const { user } = useAuth();
-  const { userPlan, quotas } = useQuotaStats();
   const { themeMode, setThemeMode } = useThemeStore();
   const { settings, setSettings, saveSettings } = useSettingsStore();
   const [isAutoUpload, setIsAutoUpload] = useState(settings.autoUpload);
@@ -159,11 +156,6 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
     setIsTelemetryEnabled(settings.telemetryEnabled);
   };
 
-  const handleUpgrade = () => {
-    navigateToProfile(router);
-    setIsDropdownOpen?.(false);
-  };
-
   const avatarUrl = user?.user_metadata?.['picture'] || user?.user_metadata?.['avatar_url'];
   const userFullName = user?.user_metadata?.['full_name'];
   const userDisplayName = userFullName ? userFullName.split(' ')[0] : null;
@@ -193,7 +185,6 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
           }
         >
           <ul>
-            <Quota quotas={quotas} labelClassName='h-10 pl-3 pr-2' />
             <MenuItem label={_('Account')} noIcon onClick={handleUserProfile} />
           </ul>
         </MenuItem>
@@ -267,9 +258,6 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
         onClick={cycleThemeMode}
       />
       <hr className='border-base-200 my-1' />
-      {user && userPlan === 'free' && !appService?.isIOSApp && (
-        <MenuItem label={_('Upgrade to Readup Premium')} onClick={handleUpgrade} />
-      )}
       {isWebAppPlatform() && <MenuItem label={_('Download Readup')} onClick={downloadReadup} />}
       <MenuItem label={_('About Readup')} onClick={showAboutReadup} />
       <MenuItem

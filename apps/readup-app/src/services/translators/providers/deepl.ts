@@ -1,8 +1,6 @@
 import { getAPIBaseUrl } from '@/services/environment';
 import { stubTranslation as _ } from '@/utils/misc';
 import { ErrorCodes, TranslationProvider } from '../types';
-import { UserPlan } from '@/types/user';
-import { getUserPlan } from '@/utils/access';
 import { normalizeToShortLang } from '@/utils/lang';
 import { DEFAULT_DAILY_TRANSLATION_QUOTA } from '@/services/constants';
 import { saveDailyUsage } from '../utils';
@@ -27,12 +25,6 @@ export const deeplProvider: TranslationProvider = {
       'Content-Type': 'application/json',
     };
 
-    let userPlan: UserPlan = 'free';
-    if (token) {
-      userPlan = getUserPlan(token);
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-
     if (authRequired && !token) {
       throw new Error('Authentication token is required for DeepL translation');
     }
@@ -44,7 +36,7 @@ export const deeplProvider: TranslationProvider = {
       use_cache: useCache,
     });
 
-    const quota = DEFAULT_DAILY_TRANSLATION_QUOTA[userPlan];
+    const quota = DEFAULT_DAILY_TRANSLATION_QUOTA;
     try {
       const response = await fetch(DEEPL_API_ENDPOINT, { method: 'POST', headers, body });
 

@@ -6,7 +6,6 @@ interface UserInfoProps {
   avatarUrl?: string;
   userFullName: string;
   userEmail: string;
-  // planDetails: PlanDetails;
 }
 
 const UserInfo: React.FC<UserInfoProps> = ({ avatarUrl, userFullName, userEmail }) => {
