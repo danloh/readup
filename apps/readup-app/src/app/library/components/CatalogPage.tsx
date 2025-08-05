@@ -1,4 +1,5 @@
 import React, { JSX, useState } from "react";
+import Image from 'next/image';
 
 export const getFavicon = (url: string) => {
   const hostname = url ? new URL(url).hostname : "";
@@ -45,7 +46,7 @@ const CatalogPage: React.FC = () => {
               }}
             >
               <div className="flex flex-row items-center justify-start mr-1">
-                <img src={ico} className="h-4 w-4 mx-1" alt=">" />
+                <Image src={ico} className="h-4 w-4 mx-1" alt=">" />
                 <span className="text-sm text-black dark:text-white">{title}</span>
               </div>
             </div>

@@ -6,7 +6,6 @@ import { checkForAppUpdates, checkAppReleaseNotes } from '@/helpers/updater';
 import { parseWebViewVersion } from '@/utils/ua';
 import { getAppVersion } from '@/utils/version';
 import Dialog from './Dialog';
-import Link from './Link';
 
 export const setAboutDialogVisible = (visible: boolean) => {
   const dialog = document.getElementById('about_window');
