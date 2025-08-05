@@ -48,11 +48,10 @@ export default function Select({
 }
 
 
-export const getLangOptions = (langs: Record<string, string>) => {
-  const _ = useTranslation();
+export const getLangOptions = (langs: Record<string, string>, label: string) => {
   const options = Object.entries(langs).map(([value, label]) => ({ value, label }));
   options.sort((a, b) => a.label.localeCompare(b.label));
-  options.unshift({ value: '', label: _('System Language') });
+  options.unshift({ value: '', label });
   return options;
 };
 
@@ -80,7 +79,7 @@ export function LangSelect() {
     <Select
       value={getCurrentUILangOption().value}
       onChange={handleSelectUILang}
-      options={getLangOptions(TRANSLATED_LANGS)}
+      options={getLangOptions(TRANSLATED_LANGS, _('System Language'))}
     />
   );
 }

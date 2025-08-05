@@ -77,7 +77,7 @@ const LangPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
 
   const getCurrentTargetLangOption = () => {
     const value = translateTargetLang;
-    const availableOptions = getLangOptions(TRANSLATOR_LANGS);
+    const availableOptions = getLangOptions(TRANSLATOR_LANGS, _('System Language'));
     return availableOptions.find((o) => o.value === value) || availableOptions[0]!;
   };
 
@@ -137,7 +137,7 @@ const LangPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
         <Select
           value={getCurrentTargetLangOption().value}
           onChange={handleSelectTargetLang}
-          options={getLangOptions(TRANSLATOR_LANGS)}
+          options={getLangOptions(TRANSLATOR_LANGS, _('System Language'))}
           disabled={!translationEnabled}
         />
       </div>
