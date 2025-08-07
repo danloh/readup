@@ -82,6 +82,9 @@ const getFontStyles = (
     font[size="7"] {
       font-size: ${fontSize * 3}px;
     }
+    pre, code, kbd {
+      font-family: var(--monospace);
+    }
     /* hardcoded inline font size */
     [style*="font-size: 16px"], [style*="font-size:16px"] {
       font-size: 1rem !important;
@@ -89,7 +92,7 @@ const getFontStyles = (
     body * {
       ${overrideFont ? 'font-family: revert !important;' : ''}
     }
-
+    
   `;
   return fontStyles;
 };
@@ -117,7 +120,7 @@ const getColorStyles = (
       background-color: var(--theme-bg-color, transparent);
       background: var(--background-set, none);
     }
-    div, p, font, h1, h2, h3, h4, h5, h6 {
+    section, div, p, font, h1, h2, h3, h4, h5, h6 {
       ${overrideColor ? `background-color: ${bg} !important;` : ''}
       ${overrideColor ? `color: ${fg} !important;` : ''}
     }
@@ -137,6 +140,13 @@ const getColorStyles = (
     img {
       ${isDarkMode && invertImgColorInDark ? 'filter: invert(100%);' : ''}
       ${!isDarkMode && overrideColor ? 'mix-blend-mode: multiply;' : ''}
+    }
+    /* horizontal rule */
+    *:has(hr) {
+      background-color: ${bg};
+    }
+    hr {
+      mix-blend-mode: multiply;
     }
     /* inline images */
     p img, span img, sup img {
@@ -521,10 +531,11 @@ export const transformStylesheet = (vw: number, vh: number, css: string) => {
     })
     .replace(/(\d*\.?\d+)vw/gi, (_, d) => (parseFloat(d) * vw) / 100 + 'px')
     .replace(/(\d*\.?\d+)vh/gi, (_, d) => (parseFloat(d) * vh) / 100 + 'px')
-    .replace(/[\s;]color\s*:\s*black/gi, 'color: var(--theme-fg-color)')
-    .replace(/[\s;]color\s*:\s*#000000/gi, 'color: var(--theme-fg-color)')
-    .replace(/[\s;]color\s*:\s*#000/gi, 'color: var(--theme-fg-color)')
-    .replace(/[\s;]color\s*:\s*rgb\(0,\s*0,\s*0\)/gi, 'color: var(--theme-fg-color)');
+    .replace(/([\s;])font-family\s*:\s*monospace/gi, '$1font-family: var(--monospace)')
+    .replace(/([\s;])color\s*:\s*black/gi, '$1color: var(--theme-fg-color)')
+    .replace(/([\s;])color\s*:\s*#000000/gi, '$1color: var(--theme-fg-color)')
+    .replace(/([\s;])color\s*:\s*#000/gi, '$1color: var(--theme-fg-color)')
+    .replace(/([\s;])color\s*:\s*rgb\(0,\s*0,\s*0\)/gi, '$1color: var(--theme-fg-color)');
   return css;
 };
 
