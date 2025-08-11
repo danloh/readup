@@ -62,7 +62,7 @@ const ProgressInfoView: React.FC<PageInfoProps> = ({
   const timeLeft = timeinfo ? _('{{time}} min', { time: Math.round(timeinfo.section) }) : '';
   const { page = 0, pages = 0 } = view?.renderer || {};
   const pageLeft = pages - 1 > page ? _('{{count}} pages', { count: pages - 1 - page }) : '';
-  const remainingInfo = `${timeLeft}${timeLeft && pageLeft ? ' · ' : ''}${pageLeft}`;
+  const remainingInfo = `${timeLeft}${timeLeft && pageLeft ? ' § ' : ''}${pageLeft}`;
 
   return (
     <div

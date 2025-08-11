@@ -145,7 +145,7 @@ const BookDetailModal = ({ book, isOpen, onClose, showBtns = true }: DetailModal
 
   const onBookDelete = async (book: Book) => {
     try {
-      await appService?.deleteBook(book, !!book.uploadedAt, true);
+      await appService?.deleteBook(book, 'local');
       await updateBook(envConfig, book);
       
       eventDispatcher.dispatch('toast', {
@@ -169,7 +169,7 @@ const BookDetailModal = ({ book, isOpen, onClose, showBtns = true }: DetailModal
 
   const onBookDeleteCloudBackup = async (book: Book) => {
     try {
-      await appService?.deleteBook(book, !!book.uploadedAt, false);
+      await appService?.deleteBook(book, 'cloud');
       await updateBook(envConfig, book);
       
       eventDispatcher.dispatch('toast', {
