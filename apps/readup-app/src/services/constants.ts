@@ -160,9 +160,6 @@ export const DEFAULT_VIEW_CONFIG: ViewConfig = {
   showHeader: true,
   showFooter: true,
   showBarsOnScroll: false,
-  showRemainingTime: false,
-  showRemainingPages: true,
-  showPageNumber: true,
 };
 
 export const DEFAULT_TTS_CONFIG: TTSConfig = {

@@ -6,6 +6,20 @@ import { useReaderStore } from '@/store/readerStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PageInfo, TimeInfo } from '@/types/book';
 
+function formatReadingProgress(
+  current: number | undefined,
+  total: number | undefined,
+  template: string,
+): string {
+  if (current === undefined || total === undefined || total <= 0 || current < 0) {
+    return '';
+  }
+  return template
+    .replace('{current}', String(current + 1))
+    .replace('{total}', String(total))
+    .replace('{percent}', (((current + 1) / total) * 100).toFixed(1));
+}
+
 interface PageInfoProps {
   bookKey: string;
   bookFormat: string;
@@ -36,24 +50,22 @@ const ProgressInfoView: React.FC<PageInfoProps> = ({
   const showDoubleBorder = viewSettings.vertical && viewSettings.doubleBorder;
   const isScrolled = viewSettings.scrolled;
   const isVertical = viewSettings.vertical;
-  const pageInfo = ['PDF', 'CBZ'].includes(bookFormat)
-    ? section
-      ? isVertical
-        ? `${section.current + 1} · ${section.total}`
-        : `${section.current + 1} / ${section.total}`
-      : ''
-    : pageinfo && pageinfo.current >= 0 && pageinfo.total > 0
-      ? _(isVertical ? '{{currentPage}} · {{totalPage}}' : '{{currentPage}} / {{totalPage}}', {
-          currentPage: pageinfo.current + 1,
-          totalPage: pageinfo.total,
-        })
-      : '';
+
+  const formatTemplate = isVertical
+    ? '{current} · {total} · {percent}%'
+    : '{current} / {total} / {percent}%';
+
+  const progressInfo = ['PDF', 'CBZ'].includes(bookFormat)
+    ? formatReadingProgress(section?.current, section?.total, formatTemplate)
+    : formatReadingProgress(pageinfo?.current, pageinfo?.total, formatTemplate);
+
   const timeLeft = timeinfo
-    ? _('{{time}} min left in chapter', { time: Math.round(timeinfo.section) })
+    ? _('{{time}} min ·', { time: Math.round(timeinfo.section) })
     : '';
   const { page = 0, pages = 0 } = view?.renderer || {};
   const pageLeft =
-    pages - 1 > page ? _('{{count}} pages left in chapter', { count: pages - 1 - page }) : '';
+    pages - 1 > page ? _('· {{count}} pages', { count: pages - 1 - page }) : '';
+  const remainingInfo = `${timeLeft}${pageLeft}`;
 
   return (
     <div
@@ -80,12 +92,8 @@ const ProgressInfoView: React.FC<PageInfoProps> = ({
             }
       }
     >
-      {viewSettings.showRemainingTime ? (
-        <span className='text-start'>{timeLeft}</span>
-      ) : viewSettings.showRemainingPages ? (
-        <span className='text-start'>{pageLeft}</span>
-      ) : null}
-      {viewSettings.showPageNumber && <span className='ms-auto text-end'>{pageInfo}</span>}
+      <span className='text-start'>{remainingInfo}</span>
+      <span className='ms-auto text-end'>{progressInfo}</span>
     </div>
   );
 };

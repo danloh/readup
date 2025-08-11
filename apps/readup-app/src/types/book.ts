@@ -146,9 +146,6 @@ export interface ViewConfig {
 
   showHeader: boolean;
   showFooter: boolean;
-  showRemainingTime: boolean;
-  showRemainingPages: boolean;
-  showPageNumber: boolean;
   showBarsOnScroll: boolean;
 }
 

@@ -22,9 +22,9 @@ import { getStyles } from '@/utils/style';
 import { saveAndReload } from '@/utils/reload';
 import { getMaxInlineSize } from '@/utils/config';
 import { lockScreenOrientation } from '@/utils/bridge';
-import { saveViewSettings } from '../../utils/viewSettingsHelper';
 import { getBookDirFromWritingMode, getBookLangCode } from '@/utils/book';
 import { MIGHT_BE_RTL_LANGS } from '@/services/constants';
+import { saveViewSettings } from '../../utils/viewSettingsHelper';
 import { SettingsPanelPanelProp } from './SettingsDialog';
 import NumberInput from './NumberInput';
 
@@ -72,9 +72,6 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
   const [showHeader, setShowHeader] = useState(viewSettings.showHeader!);
   const [showFooter, setShowFooter] = useState(viewSettings.showFooter!);
   const [showBarsOnScroll, setShowBarsOnScroll] = useState(viewSettings.showBarsOnScroll!);
-  const [showRemainingTime, setShowRemainingTime] = useState(viewSettings.showRemainingTime!);
-  const [showRemainingPages, setShowRemainingPages] = useState(viewSettings.showRemainingPages!);
-  const [showPageNumber, setShowPageNumber] = useState(viewSettings.showPageNumber!);
   const [screenOrientation, setScreenOrientation] = useState(viewSettings.screenOrientation!);
 
   const resetToDefaults = useResetViewSettings();
@@ -106,9 +103,6 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
       showHeader: setShowHeader,
       showFooter: setShowFooter,
       showBarsOnScroll: setShowBarsOnScroll,
-      showRemainingTime: setShowRemainingTime,
-      showRemainingPages: setShowRemainingPages,
-      showPageNumber: setShowPageNumber,
     });
   };
 
@@ -315,21 +309,6 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
     saveViewSettings(envConfig, bookKey, 'showBarsOnScroll', showBarsOnScroll, false, false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showBarsOnScroll]);
-
-  useEffect(() => {
-    saveViewSettings(envConfig, bookKey, 'showRemainingTime', showRemainingTime, false, false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showRemainingTime]);
-
-  useEffect(() => {
-    saveViewSettings(envConfig, bookKey, 'showRemainingPages', showRemainingPages, false, false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showRemainingPages]);
-
-  useEffect(() => {
-    saveViewSettings(envConfig, bookKey, 'showPageNumber', showPageNumber, false, false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showPageNumber]);
 
   useEffect(() => {
     if (showHeader === viewSettings.showHeader) return;
@@ -633,50 +612,6 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
           className='toggle toggle-success h-5'
           checked={showFooter}
           onChange={() => setShowFooter(!showFooter)}
-        />
-      </div>
-      <div className='flex items-center justify-between'>
-        <b className=''>{_('Show Remaining Time')}</b>
-        <input
-          type='checkbox'
-          className='toggle toggle-success h-5'
-          checked={showRemainingTime}
-          disabled={!showFooter}
-          onChange={() => {
-            if (!showRemainingTime) {
-              setShowRemainingTime(true);
-              setShowRemainingPages(false);
-            } else {
-              setShowRemainingTime(false);
-            }
-          }}
-        />
-      </div>
-      <div className='flex items-center justify-between'>
-        <b className=''>{_('Show Remaining Pages')}</b>
-        <input
-          type='checkbox'
-          className='toggle toggle-success h-5'
-          checked={showRemainingPages}
-          disabled={!showFooter}
-          onChange={() => {
-            if (!showRemainingPages) {
-              setShowRemainingPages(true);
-              setShowRemainingTime(false);
-            } else {
-              setShowRemainingPages(false);
-            }
-          }}
-        />
-      </div>
-      <div className='flex items-center justify-between'>
-        <b className=''>{_('Show Page Number')}</b>
-        <input
-          type='checkbox'
-          className='toggle toggle-success h-5'
-          checked={showPageNumber}
-          disabled={!showFooter}
-          onChange={() => setShowPageNumber(!showPageNumber)}
         />
       </div>
       <div className='flex items-center justify-between'>
