@@ -6,15 +6,16 @@ import { useEffect, useRef, useState } from 'react';
 import { ImFeed } from "react-icons/im";
 import { BiLibrary } from 'react-icons/bi';
 import { SiProgress } from "react-icons/si";
+
 import { useTranslation } from '@/hooks/useTranslation';
-import CatalogPage from './components/CatalogPage';
-import LibraryPage from './components/LibraryPage';
-import StreakPage from './components/StreakPage';
 import { useEnv } from '@/context/EnvContext';
 import WindowButtons from '@/components/WindowButtons';
 import { useTrafficLightStore } from '@/store/trafficLightStore';
 import { useSafeAreaInsets } from '@/hooks/useSafeAreaInsets';
 import { useThemeStore } from '@/store/themeStore';
+import CatalogPage from './components/feed/CatalogPage';
+import LibraryPage from './components/LibraryPage';
+import StreakPage from './components/StreakPage';
 
 const Library = () => {
   const { appService } = useEnv();
