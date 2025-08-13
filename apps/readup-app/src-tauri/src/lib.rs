@@ -18,10 +18,11 @@ use tauri_plugin_fs::FsExt;
 
 #[cfg(target_os = "macos")]
 mod macos;
-mod transfer_file;
+mod file;
+
 use tauri::{command, Emitter, WebviewUrl, WebviewWindowBuilder, Window};
 use tauri_plugin_oauth::start;
-use transfer_file::{download_file, upload_file};
+use file::{download_file, upload_file};
 
 #[cfg(desktop)]
 fn allow_file_in_scopes(app: &AppHandle, files: Vec<PathBuf>) {
@@ -105,7 +106,7 @@ async fn start_server(window: Window) -> Result<u16, String> {
     .map_err(|err| err.to_string())
 }
 
-#[tauri::command]
+#[command]
 fn get_environment_variable(name: &str) -> String {
     std::env::var(String::from(name)).unwrap_or(String::from(""))
 }

@@ -14,9 +14,7 @@ use tokio::{
     io::{AsyncWriteExt, BufWriter},
 };
 use tokio_util::codec::{BytesCodec, FramedRead};
-
 use read_progress_stream::ReadProgressStream;
-
 use std::time::Instant;
 use std::{collections::HashMap, sync::Arc};
 

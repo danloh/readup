@@ -1,3 +1,4 @@
+import { fetch as tauriFetch } from '@tauri-apps/plugin-http';
 import { 
   AppPlatform, AppService, OsPlatform, FileSystem, BaseDir, DeleteAction 
 } from '@/types/system';
@@ -37,7 +38,6 @@ import {
   DEFAULT_SCREEN_CONFIG,
   DEFAULT_TRANSLATOR_CONFIG,
 } from './constants';
-import { fetch as tauriFetch } from '@tauri-apps/plugin-http';
 import { getOSPlatform, getTargetLang, isCJKEnv, isContentURI, isValidURL } from '@/utils/misc';
 import { deserializeConfig, serializeConfig } from '@/utils/serializer';
 import { downloadFile, uploadFile, deleteFile, createProgressHandler } from '@/libs/storage';
