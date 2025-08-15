@@ -161,7 +161,7 @@
   "{{time}} min": "{{time}} นาที",
   "{{count}} pages": "{{count}} หน้า",
   "Theme Mode": "โหมดธีม",
-  "Invert Image In Dark": "กลับสีรูปในโหมดมืด",
+  "Invert Image Colors": "สลับสีของภาพ",
   "Override Book Color": "เขียนทับสีหนังสือ",
   "Theme Color": "สีธีม",
   "Custom": "กำหนดเอง",

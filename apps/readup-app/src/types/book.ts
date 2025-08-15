@@ -115,7 +115,7 @@ export interface BookStyle {
   textIndent: number;
   fullJustification: boolean;
   hyphenation: boolean;
-  invertImgColorInDark: boolean;
+  invertImgColor: boolean;
   theme: string;
   overrideFont: boolean;
   overrideLayout: boolean;

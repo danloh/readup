@@ -33,8 +33,8 @@ const ColorPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset
   const { settings, setSettings } = useSettingsStore();
   const { getView, getViewSettings } = useReaderStore();
   const viewSettings = getViewSettings(bookKey)!;
-  const [invertImgColorInDark, setInvertImgColorInDark] = useState(
-    viewSettings.invertImgColorInDark,
+  const [invertImgColor, setInvertImgColor] = useState(
+    viewSettings.invertImgColor,
   );
 
   const iconSize16 = useResponsiveSize(16);
@@ -51,7 +51,7 @@ const ColorPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset
   const handleReset = () => {
     resetToDefaults({
       overrideColor: setOverrideColor,
-      invertImgColorInDark: setInvertImgColorInDark,
+      invertImgColor: setInvertImgColor,
       codeHighlighting: setcodeHighlighting,
       codeLanguage: setCodeLanguage,
     });
@@ -65,10 +65,10 @@ const ColorPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset
   }, []);
 
   useEffect(() => {
-    if (invertImgColorInDark === viewSettings.invertImgColorInDark) return;
-    saveViewSettings(envConfig, bookKey, 'invertImgColorInDark', invertImgColorInDark);
+    if (invertImgColor === viewSettings.invertImgColor) return;
+    saveViewSettings(envConfig, bookKey, 'invertImgColor', invertImgColor);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [invertImgColorInDark]);
+  }, [invertImgColor]);
 
   useEffect(() => {
     if (overrideColor === viewSettings.overrideColor) return;
@@ -176,13 +176,12 @@ const ColorPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset
           </div>
 
           <div className='flex items-center justify-between'>
-            <b className=''>{_('Invert Image In Dark')}</b>
+            <b className=''>{_('Invert Image Colors')}</b>
             <input
               type='checkbox'
               className='toggle toggle-success h-5'
-              checked={invertImgColorInDark}
-              disabled={!isDarkMode}
-              onChange={() => setInvertImgColorInDark(!invertImgColorInDark)}
+              checked={invertImgColor}
+              onChange={() => setInvertImgColor(!invertImgColor)}
             />
           </div>
 

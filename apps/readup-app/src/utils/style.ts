@@ -99,7 +99,7 @@ const getFontStyles = (
 
 const getColorStyles = (
   overrideColor: boolean,
-  invertImgColorInDark: boolean,
+  invertImgColor: boolean,
   themeCode: ThemeCode,
 ) => {
   const { bg, fg, primary, isDarkMode } = themeCode;
@@ -135,8 +135,8 @@ const getColorStyles = (
       ${isDarkMode ? `background-color: ${bg} !important;` : ''}
     }
     img {
-      ${isDarkMode && invertImgColorInDark ? 'filter: invert(100%);' : ''}
-      ${!isDarkMode && overrideColor ? 'mix-blend-mode: multiply;' : ''}
+      ${invertImgColor ? 'filter: invert(100%);' : ''}
+      ${overrideColor ? 'mix-blend-mode: multiply;' : ''}
     }
     /* horizontal rule */
     *:has(> hr[class]) {
@@ -463,7 +463,7 @@ export const getStyles = (viewSettings: ViewSettings, themeCode?: ThemeCode) => 
   );
   const colorStyles = getColorStyles(
     viewSettings.overrideColor!,
-    viewSettings.invertImgColorInDark!,
+    viewSettings.invertImgColor!,
     themeCode,
   );
   const translationStyles = getTranslationStyles(viewSettings.showTranslateSource!);
@@ -559,7 +559,7 @@ export const applyFixedlayoutStyles = (
   }
   const { bg, fg, primary, isDarkMode } = themeCode;
   const overrideColor = viewSettings.overrideColor!;
-  const invertImgColorInDark = viewSettings.invertImgColorInDark!;
+  const invertImgColor = viewSettings.invertImgColor!;
 
   const existingStyleId = 'fixed-layout-styles';
   let style = document.getElementById(existingStyleId) as HTMLStyleElement;
@@ -580,8 +580,8 @@ export const applyFixedlayoutStyles = (
       background-color: var(--theme-bg-color);
     }
     img, canvas {
-      ${isDarkMode && invertImgColorInDark ? 'filter: invert(100%);' : ''}
-      ${!isDarkMode && overrideColor ? 'mix-blend-mode: multiply;' : ''}
+      ${invertImgColor ? 'filter: invert(100%);' : ''}
+      ${overrideColor ? 'mix-blend-mode: multiply;' : ''}
     }
     img.singlePage {
       position: relative;

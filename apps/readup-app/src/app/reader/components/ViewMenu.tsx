@@ -40,11 +40,11 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
   const config = getConfig(bookKey)!;
   const viewSettings = getViewSettings(bookKey)!;
 
-  const { themeMode, isDarkMode, setThemeMode } = useThemeStore();
+  const { themeMode, setThemeMode } = useThemeStore();
   const [isScrolledMode, setScrolledMode] = useState(viewSettings!.scrolled);
   const [zoomLevel, setZoomLevel] = useState(viewSettings!.zoomLevel!);
-  const [invertImgColorInDark, setInvertImgColorInDark] = useState(
-    viewSettings!.invertImgColorInDark,
+  const [invertImgColor, setInvertImgColor] = useState(
+    viewSettings!.invertImgColor,
   );
 
   const zoomIn = () => setZoomLevel((prev) => Math.min(prev + ZOOM_STEP, MAX_ZOOM_LEVEL));
@@ -90,10 +90,10 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
   }, [zoomLevel]);
 
   useEffect(() => {
-    if (invertImgColorInDark === viewSettings.invertImgColorInDark) return;
-    saveViewSettings(envConfig, bookKey, 'invertImgColorInDark', invertImgColorInDark, true, true);
+    if (invertImgColor === viewSettings.invertImgColor) return;
+    saveViewSettings(envConfig, bookKey, 'invertImgColor', invertImgColor, true, true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [invertImgColorInDark]);
+  }, [invertImgColor]);
 
   const lastSyncTime = Math.max(config?.lastSyncedAtConfig || 0, config?.lastSyncedAtNotes || 0);
 
@@ -157,10 +157,9 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
         onClick={cycleThemeMode}
       />
       <MenuItem
-        label={_('Invert Image In Dark')}
-        disabled={!isDarkMode}
-        Icon={invertImgColorInDark ? BiCheckboxChecked : BiCheckbox}
-        onClick={() => setInvertImgColorInDark(!invertImgColorInDark)}
+        label={_('Invert Image Colors')}
+        Icon={invertImgColor ? BiCheckboxChecked : BiCheckbox}
+        onClick={() => setInvertImgColor(!invertImgColor)}
       />
       <MenuItem
         label={

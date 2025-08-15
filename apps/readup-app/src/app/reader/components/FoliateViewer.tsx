@@ -325,7 +325,7 @@ const FoliateViewer: React.FC<{
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [themeCode, isDarkMode, viewSettings?.overrideColor, viewSettings?.invertImgColorInDark]);
+  }, [themeCode, isDarkMode, viewSettings?.overrideColor, viewSettings?.invertImgColor]);
 
   useEffect(() => {
     if (viewRef.current && viewRef.current.renderer) {
