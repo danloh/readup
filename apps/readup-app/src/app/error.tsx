@@ -53,7 +53,7 @@ export default function Error({ error, reset }: ErrorPageProps) {
 
           <div className='alert alert-error mb-8'>
             <div className='flex-col items-start text-left'>
-              <h3 className='mb-2 font-bold'>{_('Error Details:')}</h3>
+              <h3 className='mb-2 font-bold'>{_('Error Details')}</h3>
               <p className='break-words font-mono text-sm'>{error.message}</p>
               {browserInfo && <p className='mt-2 font-mono text-sm'>Browser: {browserInfo}</p>}
               {error.stack && (
