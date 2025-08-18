@@ -29,7 +29,7 @@ const Library = () => {
         appService?.hasRoundedWindow && 'rounded-window',
       )}
     >
-      <div className='nav-tab'>
+      <div className='nav-bar'>
         <NavTab activeTab={activeTab} onTabChange={setActiveTab} />
       </div>
       {activeTab === 'library' ? (
@@ -81,7 +81,7 @@ const NavTab: React.FC<{
     <div
       ref={headerRef}
       className={clsx(
-        'navbar bg-base-200 z-10 flex flex-wrap w-full items-center justify-between py-1 px-2'
+        'nav-tab bg-base-200 z-50 flex w-full items-center justify-between py-1 px-2'
       )}
       style={{
         marginTop: appService?.hasSafeAreaInset
@@ -92,37 +92,39 @@ const NavTab: React.FC<{
       <div className='flex text-xl font-bold items-start mx-1'>
         {'Readup'}
       </div>
-      {tabs.map((tab) => (
-        <div
-          key={tab}
-          className='tooltip tooltip-bottom z-50 m-1 rounded-md p-1'
-          data-tip={
-            tab === 'library' ? _('Library') : tab === 'catalog' ? _('Catalog') : _('Streak')
-          }
-        >
-          <button 
-            type='button'
-            className='btn btn-ghost' 
-            onClick={() => onTabChange(tab)}
+      <div className='flex flex-wrap w-full items-center justify-end gap-1'>
+        {tabs.map((tab) => (
+          <div
+            key={tab}
+            className='tooltip tooltip-bottom m-1 rounded-md p-1 z-50'
+            data-tip={
+              tab === 'library' ? _('Library') : tab === 'catalog' ? _('Catalog') : _('Streak')
+            }
           >
-            {tab === 'library' ? (
-              <BiLibrary className={clsx('mx-auto', tab === activeTab && 'text-success')} />
-            ) : tab === 'catalog' ? (
-              <ImFeed className={clsx('mx-auto', tab === activeTab && 'text-success')} />
-            ) : (
-              <SiProgress className={clsx('mx-auto', tab === activeTab && 'text-success')} />
-            )}
-          </button>
-        </div>
-      ))}
-      {appService?.hasWindowBar && (
-        <WindowButtons
-          headerRef={headerRef}
-          showMinimize={windowButtonVisible}
-          showMaximize={windowButtonVisible}
-          showClose={windowButtonVisible}
-        />
-      )}
+            <button 
+              type='button'
+              className='btn btn-ghost' 
+              onClick={() => onTabChange(tab)}
+            >
+              {tab === 'library' ? (
+                <BiLibrary className={clsx('mx-auto', tab === activeTab && 'text-success')} />
+              ) : tab === 'catalog' ? (
+                <ImFeed className={clsx('mx-auto', tab === activeTab && 'text-success')} />
+              ) : (
+                <SiProgress className={clsx('mx-auto', tab === activeTab && 'text-success')} />
+              )}
+            </button>
+          </div>
+        ))}
+        {appService?.hasWindowBar && (
+          <WindowButtons
+            headerRef={headerRef}
+            showMinimize={windowButtonVisible}
+            showMaximize={windowButtonVisible}
+            showClose={windowButtonVisible}
+          />
+        )}
+      </div>
     </div>
   );
 };
