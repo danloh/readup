@@ -6,6 +6,7 @@ import { ArticleView } from './ArticleView';
 import { FeedManager } from './FeedManager';
 import * as dataAgent from './dataAgent';
 import { ArticleType, FeedType } from './CatalogPage';
+import clsx from 'clsx';
 
 export default function Feed() {
   // channel list
@@ -57,7 +58,7 @@ export default function Feed() {
 
   const loadArticleList = async (link: string) => {
     const articles = await dataAgent.getArticleList(link, null, null);
-    // console.log("current articles", articles, currentArticles);
+    // console.log('current articles', articles, currentArticles);
     setCurrentArticles(articles);
   };
 
@@ -103,7 +104,7 @@ export default function Feed() {
   const handleRefresh = async () => {
     setSyncing(true);
     if (currentChannel) {
-      // console.log("refresh current channel: ", currentChannel)
+      // console.log('refresh current channel: ', currentChannel)
       await dataAgent.addChannel(currentChannel.link, currentChannel.ty, currentChannel.title);
       await loadArticleList(currentChannel.link);
     }
@@ -141,8 +142,13 @@ export default function Feed() {
   }, [currentArticles, hideCol]);
 
   return (
-    <div className="flex flex-row overflow-y-auto h-full">
-      <div className={`w-48 p-1 border-r-2 border-gray-200 dark:border-gray-800 overflow-y-auto ${hideCol ? 'hidden' : ''}`}>
+    <div className='flex flex-row overflow-y-auto h-full'>
+      <div 
+        className={clsx(
+          'w-48 p-1 border-r-2 border-base-200 overflow-y-auto',
+          hideCol ? 'hidden' : '',
+        )}
+      >
         <ChannelList 
           channelList={channelList} 
           refreshList={refreshList} 
@@ -154,7 +160,7 @@ export default function Feed() {
         />
       </div>
       {showManager ? (
-        <div className="flex-1 m-1 p-2 overflow-y-auto">
+        <div className='flex-1 m-1 p-2 overflow-y-auto'>
           <FeedManager 
             channelList={channelList} 
             handleAddFeed={handleAddFeed}
@@ -175,7 +181,7 @@ export default function Feed() {
               syncing={syncing}
             />
           </div>
-          <div className="flex-1 overflow-y-auto border-l-2 border-gray-200 dark:border-gray-800">
+          <div className='flex-1 overflow-y-auto border-l-2 border-base-200'>
             <ArticleView 
               article={currentArticle} 
               starArticle={updateStarStatus} 

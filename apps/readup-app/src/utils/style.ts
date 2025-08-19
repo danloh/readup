@@ -82,17 +82,16 @@ const getFontStyles = (
     font[size="7"] {
       font-size: ${fontSize * 3}px;
     }
-    pre, code, kbd {
-      font-family: var(--monospace);
-    }
     /* hardcoded inline font size */
     [style*="font-size: 16px"], [style*="font-size:16px"] {
       font-size: 1rem !important;
     }
-    body * {
+    pre, code, kbd {
+      font-family: var(--monospace);
+    }
+    body *:not(pre):not(code):not(kbd):not(pre *):not(code *):not(kbd *) {
       ${overrideFont ? 'font-family: revert !important;' : ''}
     }
-    
   `;
   return fontStyles;
 };
@@ -494,14 +493,12 @@ export const transformStylesheet = (vw: number, vh: number, css: string) => {
     const hasTextAlignCenter = /text-align\s*:\s*center\s*[;$]/.test(block);
     const hasTextIndentZero = /text-indent\s*:\s*0(?:\.0+)?(?:px|em|rem|%)?\s*[;$]/.test(block);
 
-    if (hasTextAlignCenter) {
+    if (hasTextAlignCenter && hasTextIndentZero) {
       block = block.replace(/(text-align\s*:\s*center)(\s*;|\s*$)/g, '$1 !important$2');
-      if (hasTextIndentZero) {
-        block = block.replace(
-          /(text-indent\s*:\s*0(?:\.0+)?(?:px|em|rem|%)?)(\s*;|\s*$)/g,
-          '$1 !important$2',
-        );
-      }
+      block = block.replace(
+        /(text-indent\s*:\s*0(?:\.0+)?(?:px|em|rem|%)?)(\s*;|\s*$)/g,
+        '$1 !important$2',
+      );
       return selector + block;
     }
     return match;
