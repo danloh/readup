@@ -138,7 +138,7 @@ const getColorStyles = (
       ${overrideColor ? 'mix-blend-mode: multiply;' : ''}
     }
     /* horizontal rule */
-    *:has(> hr[class]) {
+    *:has(> hr[class]):not(body) {
       background-color: ${bg};
     }
     hr {

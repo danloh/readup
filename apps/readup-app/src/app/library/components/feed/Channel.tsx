@@ -1,5 +1,5 @@
 import React, { memo, useEffect, useState } from "react";
-import { ArticleType, dateCompare, FeedType, fmtDatetime } from "./CatalogPage";
+import { ArticleType, dateCompare, FeedType, fmtDatetime } from "./dataAgent";
 import { IoMdRefreshCircle } from "react-icons/io";
 
 

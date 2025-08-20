@@ -50,6 +50,7 @@ export interface AppService {
   getDefaultViewSettings(): ViewSettings;
   loadSettings(): Promise<SystemSettings>;
   saveSettings(settings: SystemSettings): Promise<void>;
+  // for book
   importBook(
     file: string | File,
     books: Book[],

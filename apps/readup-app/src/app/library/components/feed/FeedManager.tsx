@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { FaHeadphones, FaPlus, FaRss, FaTrashAlt } from 'react-icons/fa';
 import * as dataAgent from './dataAgent';
-import { FeedType } from './CatalogPage';
+import { FeedType } from './dataAgent';
 
 type Props = {
   channelList: FeedType[];

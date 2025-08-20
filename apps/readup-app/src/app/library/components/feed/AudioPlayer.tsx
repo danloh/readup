@@ -1,5 +1,5 @@
 import { TbPlaylist } from "react-icons/tb";
-import { PodType } from "./CatalogPage";
+import { PodType } from "./dataAgent";
 
 type Props = {
   currentPod: PodType | null;

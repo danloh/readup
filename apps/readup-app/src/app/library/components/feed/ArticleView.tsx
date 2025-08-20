@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ArticleType, fmtDatetime, getFavicon } from "./CatalogPage";
+import { ArticleType, fmtDatetime, getFavicon } from "./dataAgent";
 import { FaPodcast } from "react-icons/fa";
 import { IoLink } from "react-icons/io5";
 import { IoIosArrowBack } from "react-icons/io";

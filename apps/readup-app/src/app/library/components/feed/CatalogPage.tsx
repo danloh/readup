@@ -1,108 +1,195 @@
-import React, { JSX, useState } from "react";
-import Image from 'next/image';
+import { useEffect, useState } from 'react';
 
-export const getFavicon = (url: string) => {
-  const hostname = url ? new URL(url).hostname : "";
-  return "https://icons.duckduckgo.com/ip3/" + hostname + ".ico";
-};
+import { ChannelList } from './ChannelList';
+import { Channel } from './Channel';
+import { ArticleView } from './ArticleView';
+import { FeedManager } from './FeedManager';
+import * as dataAgent from './dataAgent';
+import { ArticleType, FeedType } from './dataAgent';
+import clsx from 'clsx';
 
-export function dateCompare(d1: string | Date, d2: string | Date) {
-  return new Date(d1).getTime() - new Date(d2).getTime();
-}
+export default function CatalogPage() {
+  // channel list
+  const [channelList, setChannelList] = useState<FeedType[]>([]);
+  const [currentChannel, setCurrentChannel] = useState<FeedType | null>(null);
+  const [currentArticles, setCurrentArticles] = useState<ArticleType[] | null>(null);
+  const [currentArticle, setCurrentArticle] = useState<ArticleType | null>(null);
+  const [starChannel, setStarChannel] = useState(false);
+  const [showManager, setShowManager] = useState(false);
 
-export function fmtDatetime(date: string | number | Date) {
-  const dt = typeof date === "number" ? date * 1000 : date;
-  return new Date(dt).toLocaleString(undefined, {
-    weekday: 'short',
-    year: 'numeric',
-    month: 'short',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
+  //const storeArticle = useStore(state => state.currentArticle);
 
-export interface FeedType {
-  ty: string; // podcast | rss
-  id: number;
-  title: string;
-  link: string;
-  description?: string;
-  published?: string; // iso date string
-}
+  const getList = () => {
+    Promise.all(
+      [dataAgent.getChannels(), dataAgent.getUnreadNum()]
+    ).then(([channels, unreadNum]) => {
+      // channels.forEach((item) => {
+      //   item.unread = unreadNum[item.link] || 0;
+      // });
 
-export interface ArticleType {
-  id: number;
-  title: string;
-  url: string;
-  feed_link: string;
-  audio_url: string;
-  description: string;
-  published?: Date;
-  read_status: number;
-  star_status: number;
-  content?: string;
-  author?: string;
-  image?: string;
-  source?: string;
-  links?: string[];
-  ttr?: number;
-}
-
-export interface PodType {
-  title: string;
-  url: string;
-  published?: Date;
-  article_url: string;
-  feed_link: string;
-}
-
-interface NavProps {
-  channelList: FeedType[];
-  onClickFeed: (link: string) => Promise<void>;
-};
-
-const CatalogPage: React.FC = () => {
-  const [highlighted, setHighlighted] = useState<FeedType>();
-  const channelList: FeedType[] = [];
-  const onClickFeed = (link: string) => { 
-    console.log('click', link);
-    /*TODO*/ 
+      setChannelList(channels);
+    })
   };
-  
-  const renderFeedList = (): JSX.Element => {
-    return (
-      <>
-        {channelList.map((channel: FeedType, idx: number) => {
-          const { title, ty, link } = channel;
-          const ico = getFavicon(link);
-          const activeClass = `${highlighted?.link === link ? 'border-l-2 border-green-500' : ''}`;
-          
-          return (
-            <div 
-              key={`${title}-${idx}`}
-              className={`m-1 flex flex-row items-center justify-between cursor-pointer ${activeClass}`}
-              onClick={() => {
-                onClickFeed(link);
-                setHighlighted(channel);
-              }}
-            >
-              <div className="flex flex-row items-center justify-start mr-1">
-                <Image src={ico} className="h-4 w-4 mx-1" alt=">" />
-                <span className="text-sm text-black dark:text-white">{title}</span>
-              </div>
-            </div>
-          );
-        })}
-      </>
-    );
+
+  useEffect(() => {
+    getList();
+  }, []);
+
+  const [refreshing, setRefreshing] = useState(false);
+  const [doneNum, setDoneNum] = useState(0);
+  const refreshChannel = async (link: string, ty: string, title: string) => {
+    const res = await dataAgent.addChannel(link, ty, title);
+    return res;
   };
+
+  const refreshList = async () => {
+    setRefreshing(true);
+    setDoneNum(0);
+    for (const channel of channelList) {
+      await refreshChannel(channel.link, channel.ty, channel.title);
+      setDoneNum(doneNum + 1);
+    }
+    setRefreshing(false);
+  };
+
+  const onShowManager = () => {
+    setShowManager(!showManager);
+  };
+
+  const loadArticleList = async (link: string) => {
+    const articles = await dataAgent.getArticleList(link, null, null);
+    // console.log('current articles', articles, currentArticles);
+    setCurrentArticles(articles);
+  };
+
+  const [loading, setLoading] = useState(false);
+  const onClickFeed = async (link: string) => {
+    setLoading(true);
+    const clickedChannel = channelList.find(c => c.link === link);
+    if (clickedChannel) {
+      setCurrentChannel(clickedChannel);
+      setShowManager(false);
+      await loadArticleList(clickedChannel.link);
+    } 
+    setLoading(false);
+  };
+
+  const onClickStar = async () => {
+    setLoading(true);
+    setCurrentChannel(null);
+    setCurrentArticles(null);
+    setStarChannel(true);
+    setShowManager(false);
+    const starArticles = await dataAgent.getArticleList(null, null, 1);
+    setCurrentArticles(starArticles);
+    setLoading(false);
+  };
+
+  const handleAddFeed = async (feedUrl: string, ty: string, title: string) => {
+    const res = await dataAgent.addChannel(feedUrl, ty, title)
+    if (res > 0) {
+      getList();
+    }
+  };
+
+  const handleDeleteFeed = async (channel: FeedType) => {
+    if (channel && channel.link) {
+      await dataAgent.deleteChannel(channel.link);
+      getList();
+    }
+  };
+
+  // currentChannel and it's article list
+  const [syncing, setSyncing] = useState(false);
+  const handleRefresh = async () => {
+    setSyncing(true);
+    if (currentChannel) {
+      // console.log('refresh current channel: ', currentChannel)
+      await dataAgent.addChannel(currentChannel.link, currentChannel.ty, currentChannel.title);
+      await loadArticleList(currentChannel.link);
+    }
+    setSyncing(false);
+  };
+
+  const updateAllReadStatus = async (feedLink: string, status: number) => {
+    const res = await dataAgent.updateAllReadStatus(feedLink, status);
+    if (res === 0) return;
+    getList();
+    await handleRefresh();
+  };
+
+  const onClickArticle = async (article: ArticleType) => {
+    setCurrentArticle(article);
+    // store.getState().setCurrentArticle(article);
+    if (article.read_status !== 0) return;
+    // update read_status to db
+    const res = await dataAgent.updateArticleReadStatus(article.url, 1);
+    if (res === 0) return;
+    getList();
+  };
+
+  const updateStarStatus = async (url: string, status: number) => {
+    await dataAgent.updateArticleStarStatus(url, status);
+  };
+
+  const [hideCol, setHideCol] = useState(false);
+  const hideChannelCol = () => {
+    setHideCol(!hideCol);
+  };
+  const [isHideChannel, setIsHideChannel] = useState(false);
+  useEffect(() => {
+    setIsHideChannel(hideCol || !(currentArticles && currentArticles.length > 0));
+  }, [currentArticles, hideCol]);
 
   return (
-    <div className="flex flex-col">
-      {renderFeedList()}
+    <div className='flex flex-row overflow-y-auto h-full'>
+      <div 
+        className={clsx(
+          'w-48 p-1 border-r-2 border-base-200 overflow-y-auto',
+          hideCol ? 'hidden' : '',
+        )}
+      >
+        <ChannelList 
+          channelList={channelList} 
+          refreshList={refreshList} 
+          onShowManager={onShowManager} 
+          onClickFeed={onClickFeed}
+          onClickStar={onClickStar} 
+          refreshing={refreshing}
+          doneNum={doneNum}
+        />
+      </div>
+      {showManager ? (
+        <div className='flex-1 m-1 p-2 overflow-y-auto'>
+          <FeedManager 
+            channelList={channelList} 
+            handleAddFeed={handleAddFeed}
+            handleDelete={handleDeleteFeed}
+          />
+        </div>
+      ) : (
+        <>
+          <div className={`w-72 p-1 overflow-y-auto ${isHideChannel ? 'hidden' : ''}`}>
+            <Channel 
+              channel={currentChannel} 
+              starChannel={starChannel} 
+              articles={currentArticles}
+              handleRefresh={handleRefresh}
+              updateAllReadStatus={updateAllReadStatus}
+              onClickArticle={onClickArticle}
+              loading={loading}
+              syncing={syncing}
+            />
+          </div>
+          <div className='flex-1 overflow-y-auto border-l-2 border-base-200'>
+            <ArticleView 
+              article={currentArticle} 
+              starArticle={updateStarStatus} 
+              hideChannelCol={hideChannelCol}
+            />
+          </div>
+        </>
+      )}
     </div>
   );
 }
-
-export default CatalogPage;

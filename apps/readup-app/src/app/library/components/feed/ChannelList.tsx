@@ -1,5 +1,5 @@
 import React, { JSX, useState } from "react";
-import { FeedType, getFavicon } from "./CatalogPage";
+import { FeedType, getFavicon } from "./dataAgent";
 import { IoIosSettings, IoMdRefresh } from "react-icons/io";
 
 type Props = {

@@ -13,9 +13,9 @@ import WindowButtons from '@/components/WindowButtons';
 import { useTrafficLightStore } from '@/store/trafficLightStore';
 import { useSafeAreaInsets } from '@/hooks/useSafeAreaInsets';
 import { useThemeStore } from '@/store/themeStore';
-import CatalogPage from './components/feed/CatalogPage';
 import LibraryPage from './components/LibraryPage';
 import StreakPage from './components/StreakPage';
+import CatalogPage from './components/feed/CatalogPage';
 
 const Library = () => {
   const { appService } = useEnv();
