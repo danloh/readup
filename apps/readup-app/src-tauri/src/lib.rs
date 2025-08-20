@@ -19,10 +19,10 @@ use tauri_plugin_fs::FsExt;
 #[cfg(target_os = "macos")]
 mod macos;
 mod file;
+mod feed;
 
 use tauri::{command, Emitter, WebviewUrl, WebviewWindowBuilder, Window};
 use tauri_plugin_oauth::start;
-use file::{download_file, upload_file};
 
 #[cfg(desktop)]
 fn allow_file_in_scopes(app: &AppHandle, files: Vec<PathBuf>) {
@@ -125,8 +125,20 @@ pub fn run() {
         .plugin(tauri_plugin_oauth::init())
         .invoke_handler(tauri::generate_handler![
             start_server,
-            download_file,
-            upload_file,
+            file::download_file,
+            file::upload_file,
+            feed::fetch_feed,
+            feed::add_channel,
+            feed::import_channels,
+            feed::get_channels,
+            feed::delete_channel,
+            //feed::add_articles_with_channel,
+            feed::get_articles,
+            feed::get_article_by_url,
+            feed::update_article_read_status,
+            feed::update_article_star_status,
+            //feed::get_unread_num,
+            feed::update_all_read_status,
             get_environment_variable,
             #[cfg(target_os = "macos")]
             macos::safari_auth::auth_with_safari,
