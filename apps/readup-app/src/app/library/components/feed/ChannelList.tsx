@@ -1,6 +1,6 @@
 import React, { JSX, useState } from "react";
+import { IoIosSettings, IoIosStar, IoMdRefresh } from "react-icons/io";
 import { FeedType, getFavicon } from "./dataAgent";
-import { IoIosSettings, IoMdRefresh } from "react-icons/io";
 
 type Props = {
   channelList: FeedType[];
@@ -21,9 +21,10 @@ export function ChannelList(props: Props) {
     return (
       <>
         {channelList.map((channel: FeedType, idx: number) => {
-          const { title, ty, link } = channel;
+          const { title, link } = channel;
           const ico = getFavicon(link);
-          const activeClass = `${highlighted?.link === link ? 'border-l-2 border-green-500' : ''}`;
+          const activeClass = 
+            `${highlighted?.link === link ? 'border-r-2 border-green-500' : ''}`;
           
           return (
             <div 
@@ -36,7 +37,7 @@ export function ChannelList(props: Props) {
             >
               <div className="flex flex-row items-center justify-start mr-1">
                 <img src={ico} className="h-4 w-4 mx-1" alt=">" />
-                <span className="text-sm text-black dark:text-white">{title}</span>
+                <span className="text-sm">{title}</span>
               </div>
             </div>
           );
@@ -47,15 +48,13 @@ export function ChannelList(props: Props) {
 
   return (
     <div className="flex flex-col">
-      <div className="flex items-center justify-end">
-        <div className="flex flex-end">
-          <button className="cursor-pointer" onClick={refreshList}>
-            <IoMdRefresh size={24} className="m-1 dark:text-white" />
-          </button>
-          <button className="cursor-pointer" onClick={onShowManager}>
-            <IoIosSettings size={24} className="m-1 dark:text-white" />
-          </button>
-        </div>
+      <div className="flex items-center justify-between gap-2 px-2">
+        <button className="btn btn-sm btn-ghost" onClick={refreshList}>
+          <IoMdRefresh size={24} className="m-1" />
+        </button>
+        <button className="btn btn-sm btn-ghost" onClick={onShowManager}>
+          <IoIosSettings size={24} className="m-1" />
+        </button>
       </div>
       {refreshing && (
         <div className="flex flex-col items-center justify-center">
@@ -63,6 +62,15 @@ export function ChannelList(props: Props) {
         </div>
       )}
       <div className="p-1">
+        <div 
+          className="flex flex-row items-center justify-between cursor-pointer"
+          onClick={onClickStar}
+        >
+          <div className="flex flex-row items-center justify-start">
+            <IoIosStar size={18} className="m-1 fill-yellow-500 text-yellow-500" />
+            <span className="m-1">Starred</span>
+          </div>
+        </div>
         {renderFeedList()}
       </div>
     </div>

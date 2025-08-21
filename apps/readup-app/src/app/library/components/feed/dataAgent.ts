@@ -22,8 +22,7 @@ export function fmtDatetime(date: string | number | Date) {
 }
 
 export interface FeedType {
-  ty: string; // podcast | rss
-  id: number;
+  ty: string; // podcast | rss | atom | opds
   title: string;
   link: string;
   description?: string;

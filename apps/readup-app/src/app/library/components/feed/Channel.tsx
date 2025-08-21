@@ -1,22 +1,19 @@
 import React, { memo, useEffect, useState } from "react";
+import { IoMdLink, IoMdRefreshCircle } from "react-icons/io";
 import { ArticleType, dateCompare, FeedType, fmtDatetime } from "./dataAgent";
-import { IoMdRefreshCircle } from "react-icons/io";
-
 
 type Props = {
   channel: FeedType | null;
   starChannel?: boolean;
   articles: ArticleType[] | null;
   handleRefresh: () => Promise<void>;
-  updateAllReadStatus: (feedLink: string, status: number) => Promise<void>;
-  onClickArticle: (article: ArticleType) => Promise<void>;
   loading: boolean;
   syncing: boolean;
 };
 
 export function Channel(props: Props) {
   const { 
-    channel, starChannel, articles, handleRefresh, updateAllReadStatus, onClickArticle, loading, syncing 
+    channel, starChannel, articles, handleRefresh, loading, syncing 
   } = props;
 
   if (loading) {
@@ -39,27 +36,17 @@ export function Channel(props: Props) {
           </div>
         )}
       </div>
-      <ArticleList
-        articles={articles}
-        onClickArticle={onClickArticle}
-      />
+      <ArticleList articles={articles} />
     </div>
   );
 }
 
 type ListProps = {
   articles: ArticleType[];
-  onClickArticle: (article: ArticleType) => Promise<void>;
 };
 
 function ArticleList(props: ListProps) {
-  const { articles, onClickArticle } = props;
-  const [highlighted, setHighlighted] = useState<ArticleType>();
-
-  const onArticleSelect = async (article: ArticleType) => {
-    setHighlighted(article);
-    await onClickArticle(article);
-  };
+  const { articles } = props;
 
   const sortedArticles = articles.length >= 2 
     ? articles.sort((n1, n2) => {
@@ -79,8 +66,6 @@ function ArticleList(props: ListProps) {
           <ArticleItem
             key={`${article.id}=${idx}`}
             article={article}
-            highlight={highlighted?.id === article.id}
-            onArticleSelect={onArticleSelect}
           />
         )}
       )}
@@ -90,39 +75,77 @@ function ArticleList(props: ListProps) {
 
 type ItemProps = {
   article: ArticleType;
-  onArticleSelect: (article: ArticleType) => Promise<void>;
-  highlight: boolean;
 };
 
 const ArticleItem = memo(function ArticleItm(props: ItemProps) {
-  const { article, onArticleSelect, highlight } = props;
-  const [readStatus, setReadStatus] = useState(article.read_status);
+  const { article } = props;
+  const [expanded, setExpanded] = useState(false);
 
-  const handleClick = async () => {
-    if (onArticleSelect) {
-      await onArticleSelect(article);
-      setReadStatus(1);
-    }
-  };
-
-  useEffect(() => { setReadStatus(article.read_status); }, [article.read_status])
-
-  const itemClass = `cursor-pointer flex flex-col items-start justify-center my-1 hover:bg-gray-200 dark:hover:bg-gray-800 ${highlight ? 'bg-blue-200 dark:bg-blue-800' : ''}`;
+  const itemClass = `cursor-pointer flex flex-col items-start justify-center my-1 hover:bg-gray-200 dark:hover:bg-gray-800`;
 
   return (
-    <div
-      className={itemClass}
-      onClick={handleClick}
-      aria-hidden="true"
-    >
-      <div className="flex flex-row items-center justify-start">
-        <div className="flex-1 font-bold m-1 dark:text-white">{article.title}</div>
+    <div className={itemClass} aria-hidden="true">
+      <div 
+        className="flex flex-row items-center justify-start" 
+        onClick={() => setExpanded(prev => !prev)}
+      >
+        <h2 className="flex-1 font-bold m-1 dark:text-white">{article.title}</h2>
       </div>
       <div className="flex flex-row items-center justify-center">
         <span className="m-1 pl-2 text-sm dark:text-slate-400">
           {fmtDatetime(article.published || '')}
         </span>
+        <a
+          className="m-1 dark:text-slate-400"
+          target="_blank"
+          rel="noreferrer"
+          href={article.url}
+        >
+          <IoMdLink size={20} />
+        </a>
       </div>
+      <ArticleView article={article} expanded={expanded} />
     </div>
   );
 });
+
+type ViewProps = {
+  article: ArticleType | null;
+  expanded?: Boolean;
+};
+
+function ArticleView(props: ViewProps) {
+  const { article, expanded = false } = props;
+  const [pageContent, setPageContent] = useState("");
+
+  useEffect(() => {
+    if (article) {
+      const content = (article.content || article.description || "").replace(
+        /<a[^>]+>/gi,
+        (a: string) => {
+          return (!/\starget\s*=/gi.test(a)) ? a.replace(/^<a\s/, '<a target="_blank"') : a;
+        }
+      );
+
+      setPageContent(content);
+    }
+  }, [article]);
+
+  if (!article || !expanded) {
+    return (
+      <div className=""></div>
+    );
+  }
+
+  return (
+    <div className="h-full ">
+      <div className="p-2">
+        <div
+          className="text-lg p-2 mt-2 content text-black dark:text-slate-400"
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{__html: pageContent}}
+        />
+      </div>
+    </div>
+  );
+}

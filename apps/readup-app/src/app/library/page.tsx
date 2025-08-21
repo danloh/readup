@@ -34,11 +34,11 @@ const Library = () => {
       </div>
       {activeTab === 'library' ? (
         <LibraryPage />
-      ) : activeTab === 'catalog' ? (
-        <CatalogPage />
-      ) : (
+      ) : activeTab === 'streak' ? (
         <StreakPage />
-      )}
+      ) : activeTab === 'catalog' && appService?.appPlatform !== 'web' ? (
+        <CatalogPage />
+      ) : null}
     </div>
   );
 };
@@ -73,7 +73,9 @@ const NavTab: React.FC<{
   }, []);
   const windowButtonVisible = appService?.hasWindowBar && !isTrafficLightVisible;
 
-  const tabs = ['library', 'catalog', 'streak'];
+  const tabs = appService?.appPlatform === 'web' 
+    ? ['library', 'streak']
+    : ['library', 'catalog', 'streak'];
 
   if (!insets) return null;
 

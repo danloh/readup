@@ -44,6 +44,7 @@ import { downloadFile, uploadFile, deleteFile, createProgressHandler } from '@/l
 import { ClosableFile } from '@/utils/file';
 import { ProgressHandler } from '@/utils/transfer';
 import { TxtToEpubConverter } from '@/utils/txt';
+import { FeedType } from '@/app/library/components/feed/dataAgent';
 import { BOOK_FILE_NOT_FOUND_ERROR } from './errors';
 
 export type ResolvedPath = {
@@ -542,9 +543,10 @@ export abstract class BaseAppService implements AppService {
 
   private async loadJSONFile(
     filename: string,
+    base: BaseDir,
   ): Promise<{ success: boolean; data?: unknown; error?: unknown }> {
     try {
-      const txt = await this.fs.readFile(filename, 'Books', 'text');
+      const txt = await this.fs.readFile(filename, base, 'text');
       if (!txt || typeof txt !== 'string' || txt.trim().length === 0) {
         return { success: false, error: 'File is empty or invalid' };
       }
@@ -565,11 +567,11 @@ export abstract class BaseAppService implements AppService {
     const libraryFilename = getLibraryFilename();
     const backupFilename = getLibraryBackupFilename();
 
-    const mainResult = await this.loadJSONFile(libraryFilename);
+    const mainResult = await this.loadJSONFile(libraryFilename, 'Books');
     if (mainResult.success) {
       books = mainResult.data as Book[];
     } else {
-      const backupResult = await this.loadJSONFile(backupFilename);
+      const backupResult = await this.loadJSONFile(backupFilename, 'Books');
       if (backupResult.success) {
         books = backupResult.data as Book[];
         console.warn('Loaded library from backup file:', backupFilename);
@@ -641,4 +643,30 @@ export abstract class BaseAppService implements AppService {
     const arrayBuffer = await this.imageToArrayBuffer(imageUrl, imageFile);
     await this.fs.writeFile(getCoverFilename(book), 'Books', arrayBuffer);
   }
+
+  async loadFeeds(): Promise<FeedType[]> {
+    console.log('Loading Catalogs...');
+    let feeds: FeedType[] = [];
+
+    const mainResult = await this.loadJSONFile('feeds.json', 'Books');
+    if (mainResult.success) {
+      feeds = mainResult.data as FeedType[];
+    } else {
+      console.error('Failed to Loaded feeds.json');
+    }
+
+    return feeds;
+  }
+
+  async saveFeeds(feeds: FeedType[]): Promise<void> {  
+    const jsonData = JSON.stringify(feeds, null, 2);
+    const saveResults = await Promise.allSettled([
+      this.fs.writeFile('feeds.json', 'Books', jsonData),
+    ]);
+    const mainSuccess = saveResults[0].status === 'fulfilled';
+    if (!mainSuccess) {
+      throw new Error('Failed to save feeds');
+    }
+  }
+  
 }

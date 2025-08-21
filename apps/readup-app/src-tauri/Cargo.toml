@@ -31,7 +31,7 @@ tokio = { version = "1", features = ["fs"] }
 tokio-util = { version = "0.7", features = ["codec"] }
 futures-util = "0.3"
 read-progress-stream = "1.0.0"
-reqwest = { version = "0.12", default-features = false, features = ["json","stream"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "stream"] }
 rss = { version = "2.0", features = ["serde"] }
 atom_syndication = "0.12"
 bytes = "1.10.1"

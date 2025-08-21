@@ -1,14 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 import { ChannelList } from './ChannelList';
 import { Channel } from './Channel';
-import { ArticleView } from './ArticleView';
 import { FeedManager } from './FeedManager';
 import * as dataAgent from './dataAgent';
 import { ArticleType, FeedType } from './dataAgent';
 import clsx from 'clsx';
+import { useEnv } from '@/context/EnvContext';
 
 export default function CatalogPage() {
+  const { envConfig, appService } = useEnv();
   // channel list
   const [channelList, setChannelList] = useState<FeedType[]>([]);
   const [currentChannel, setCurrentChannel] = useState<FeedType | null>(null);
@@ -16,23 +17,19 @@ export default function CatalogPage() {
   const [currentArticle, setCurrentArticle] = useState<ArticleType | null>(null);
   const [starChannel, setStarChannel] = useState(false);
   const [showManager, setShowManager] = useState(false);
-
-  //const storeArticle = useStore(state => state.currentArticle);
-
-  const getList = () => {
-    Promise.all(
-      [dataAgent.getChannels(), dataAgent.getUnreadNum()]
-    ).then(([channels, unreadNum]) => {
-      // channels.forEach((item) => {
-      //   item.unread = unreadNum[item.link] || 0;
-      // });
-
-      setChannelList(channels);
-    })
-  };
+  const isInitiating = useRef(false);
 
   useEffect(() => {
-    getList();
+    if (isInitiating.current) return;
+    isInitiating.current = true;
+    const initFeeds = async () => {
+      const appService = await envConfig.getAppService();
+      setChannelList(await appService.loadFeeds());
+      // setFeedLoaded(true);
+    };
+
+    initFeeds();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const [refreshing, setRefreshing] = useState(false);
@@ -74,6 +71,7 @@ export default function CatalogPage() {
     setLoading(false);
   };
 
+  // TODO: STAR FAVIRATE, save articles to `star.json`
   const onClickStar = async () => {
     setLoading(true);
     setCurrentChannel(null);
@@ -85,18 +83,21 @@ export default function CatalogPage() {
     setLoading(false);
   };
 
-  const handleAddFeed = async (feedUrl: string, ty: string, title: string) => {
-    const res = await dataAgent.addChannel(feedUrl, ty, title)
-    if (res > 0) {
-      getList();
-    }
+  const handleAddFeed = async (link: string, ty: string, title: string) => {
+    const feeds = channelList;
+    const newFeed: FeedType = {ty, title, link};
+    feeds.push(newFeed);
+    const appService = await envConfig.getAppService();
+    setChannelList(feeds);
+    await appService.saveFeeds(feeds);
   };
 
   const handleDeleteFeed = async (channel: FeedType) => {
-    if (channel && channel.link) {
-      await dataAgent.deleteChannel(channel.link);
-      getList();
-    }
+    const feeds = channelList;
+    feeds.filter(f => f.link !== channel.link);
+    const appService = await envConfig.getAppService();
+    setChannelList(feeds);
+    await appService.saveFeeds(feeds);
   };
 
   // currentChannel and it's article list
@@ -111,44 +112,9 @@ export default function CatalogPage() {
     setSyncing(false);
   };
 
-  const updateAllReadStatus = async (feedLink: string, status: number) => {
-    const res = await dataAgent.updateAllReadStatus(feedLink, status);
-    if (res === 0) return;
-    getList();
-    await handleRefresh();
-  };
-
-  const onClickArticle = async (article: ArticleType) => {
-    setCurrentArticle(article);
-    // store.getState().setCurrentArticle(article);
-    if (article.read_status !== 0) return;
-    // update read_status to db
-    const res = await dataAgent.updateArticleReadStatus(article.url, 1);
-    if (res === 0) return;
-    getList();
-  };
-
-  const updateStarStatus = async (url: string, status: number) => {
-    await dataAgent.updateArticleStarStatus(url, status);
-  };
-
-  const [hideCol, setHideCol] = useState(false);
-  const hideChannelCol = () => {
-    setHideCol(!hideCol);
-  };
-  const [isHideChannel, setIsHideChannel] = useState(false);
-  useEffect(() => {
-    setIsHideChannel(hideCol || !(currentArticles && currentArticles.length > 0));
-  }, [currentArticles, hideCol]);
-
   return (
-    <div className='flex flex-row overflow-y-auto h-full'>
-      <div 
-        className={clsx(
-          'w-48 p-1 border-r-2 border-base-200 overflow-y-auto',
-          hideCol ? 'hidden' : '',
-        )}
-      >
+    <div className='flex flex-row overflow-y-auto h-full border-t-2 border-base-300'>
+      <div className='w-52 p-1 bg-base-300 overflow-y-auto'>
         <ChannelList 
           channelList={channelList} 
           refreshList={refreshList} 
@@ -168,27 +134,16 @@ export default function CatalogPage() {
           />
         </div>
       ) : (
-        <>
-          <div className={`w-72 p-1 overflow-y-auto ${isHideChannel ? 'hidden' : ''}`}>
-            <Channel 
-              channel={currentChannel} 
-              starChannel={starChannel} 
-              articles={currentArticles}
-              handleRefresh={handleRefresh}
-              updateAllReadStatus={updateAllReadStatus}
-              onClickArticle={onClickArticle}
-              loading={loading}
-              syncing={syncing}
-            />
-          </div>
-          <div className='flex-1 overflow-y-auto border-l-2 border-base-200'>
-            <ArticleView 
-              article={currentArticle} 
-              starArticle={updateStarStatus} 
-              hideChannelCol={hideChannelCol}
-            />
-          </div>
-        </>
+        <div className={`flex-1 overflow-y-auto`}>
+          <Channel 
+            channel={currentChannel} 
+            starChannel={starChannel} 
+            articles={currentArticles}
+            handleRefresh={handleRefresh}
+            loading={loading}
+            syncing={syncing}
+          />
+        </div>
       )}
     </div>
   );
