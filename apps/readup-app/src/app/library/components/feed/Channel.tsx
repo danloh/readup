@@ -1,40 +1,30 @@
 import React, { memo, useEffect, useState } from "react";
-import { IoMdLink, IoMdRefreshCircle } from "react-icons/io";
+import { IoMdLink } from "react-icons/io";
 import { ArticleType, dateCompare, FeedType, fmtDatetime } from "./dataAgent";
 
 type Props = {
   channel: FeedType | null;
   starChannel?: boolean;
   articles: ArticleType[] | null;
-  handleRefresh: () => Promise<void>;
   loading: boolean;
-  syncing: boolean;
 };
 
 export function Channel(props: Props) {
-  const { 
-    channel, starChannel, articles, handleRefresh, loading, syncing 
-  } = props;
+  const { channel, starChannel, articles, loading } = props;
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center">'Loading'</div>
+      <div className="flex items-center justify-center">Loading...</div>
     );
   } else if (!articles) {
     return (<></>);
   }
 
   return (
-    <div className="flex flex-col items-between justify-center">
-      <div className="flex flex-row items-center justify-between p-2 bg-slate-500 rounded">
-        <div className="font-bold">{channel?.title || (starChannel ? 'Starred' : '')}</div>
-        {(channel) && (
-          <div className="flex flex-row items-center justify-end">
-            <button className="" onClick={handleRefresh}>
-              <IoMdRefreshCircle size={18} className="m-1 dark:text-white" />
-            </button>
-          </div>
-        )}
+    <div className="flex flex-col items-between justify-center p-2">
+      <div className="flex flex-row items-center justify-between p-1 bg-slate-500 rounded">
+        <b className="font-bold">{channel?.title || (starChannel ? 'Starred' : '')}</b>
+        <span className="text-info" >{articles.length}</span>
       </div>
       <ArticleList articles={articles} />
     </div>
@@ -81,22 +71,20 @@ const ArticleItem = memo(function ArticleItm(props: ItemProps) {
   const { article } = props;
   const [expanded, setExpanded] = useState(false);
 
-  const itemClass = `cursor-pointer flex flex-col items-start justify-center my-1 hover:bg-gray-200 dark:hover:bg-gray-800`;
-
   return (
-    <div className={itemClass} aria-hidden="true">
+    <div className='flex flex-col items-start justify-center my-1' aria-hidden="true">
       <div 
         className="flex flex-row items-center justify-start" 
         onClick={() => setExpanded(prev => !prev)}
       >
-        <h2 className="flex-1 font-bold m-1 dark:text-white">{article.title}</h2>
+        <h2 className="flex-1 font-bold m-1 text-xl cursor-pointer">{article.title}</h2>
       </div>
       <div className="flex flex-row items-center justify-center">
-        <span className="m-1 pl-2 text-sm dark:text-slate-400">
+        <span className="m-1 text-sm dark:text-slate-400">
           {fmtDatetime(article.published || '')}
         </span>
         <a
-          className="m-1 dark:text-slate-400"
+          className="m-1"
           target="_blank"
           rel="noreferrer"
           href={article.url}
@@ -138,14 +126,12 @@ function ArticleView(props: ViewProps) {
   }
 
   return (
-    <div className="h-full ">
-      <div className="p-2">
-        <div
-          className="text-lg p-2 mt-2 content text-black dark:text-slate-400"
-          // eslint-disable-next-line react/no-danger
-          dangerouslySetInnerHTML={{__html: pageContent}}
-        />
-      </div>
+    <div className="h-full p-2">
+      <div
+        className="content prose prose-sm"
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{__html: pageContent}}
+      />
     </div>
   );
 }

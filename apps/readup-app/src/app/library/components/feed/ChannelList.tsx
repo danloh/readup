@@ -1,19 +1,16 @@
 import React, { JSX, useState } from "react";
-import { IoIosSettings, IoIosStar, IoMdRefresh } from "react-icons/io";
+import { IoIosSettings, IoIosStar } from "react-icons/io";
 import { FeedType, getFavicon } from "./dataAgent";
 
 type Props = {
   channelList: FeedType[];
-  refreshList: () => Promise<void>;
   onShowManager: () => void;
-  refreshing: boolean;
-  doneNum: number;
   onClickFeed: (link: string) => Promise<void>;
   onClickStar: () => Promise<void>;
 };
 
 export function ChannelList(props: Props) {
-  const { channelList, refreshList, onShowManager, onClickFeed, onClickStar, refreshing, doneNum } = props;
+  const { channelList, onShowManager, onClickFeed, onClickStar } = props;
 
   const [highlighted, setHighlighted] = useState<FeedType>();
   
@@ -47,32 +44,26 @@ export function ChannelList(props: Props) {
   };
 
   return (
-    <div className="flex flex-col">
-      <div className="flex items-center justify-between gap-2 px-2">
-        <button className="btn btn-sm btn-ghost" onClick={refreshList}>
-          <IoMdRefresh size={24} className="m-1" />
-        </button>
-        <button className="btn btn-sm btn-ghost" onClick={onShowManager}>
-          <IoIosSettings size={24} className="m-1" />
-        </button>
-      </div>
-      {refreshing && (
-        <div className="flex flex-col items-center justify-center">
-          <span className="dark:text-white">{doneNum}/{channelList.length}</span>
+    <div className="flex flex-col p-1">
+      <div 
+        className="flex flex-row items-center justify-between cursor-pointer"
+        onClick={onShowManager}
+      >
+        <div className="flex flex-row items-center justify-start">
+          <IoIosSettings size={18} className="m-1" />
+          <span className="m-1">Manage Catalog</span>
         </div>
-      )}
-      <div className="p-1">
-        <div 
-          className="flex flex-row items-center justify-between cursor-pointer"
-          onClick={onClickStar}
-        >
-          <div className="flex flex-row items-center justify-start">
-            <IoIosStar size={18} className="m-1 fill-yellow-500 text-yellow-500" />
-            <span className="m-1">Starred</span>
-          </div>
-        </div>
-        {renderFeedList()}
       </div>
+      <div 
+        className="flex flex-row items-center justify-between cursor-pointer"
+        onClick={onClickStar}
+      >
+        <div className="flex flex-row items-center justify-start">
+          <IoIosStar size={18} className="m-1 fill-yellow-500 text-yellow-500" />
+          <span className="m-1">Starred</span>
+        </div>
+      </div>
+      {renderFeedList()}
     </div>
   );
 }

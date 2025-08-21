@@ -1,20 +1,18 @@
 import { useEffect, useState, useRef } from 'react';
-
+// import clsx from 'clsx';
+import { useEnv } from '@/context/EnvContext';
 import { ChannelList } from './ChannelList';
 import { Channel } from './Channel';
 import { FeedManager } from './FeedManager';
 import * as dataAgent from './dataAgent';
 import { ArticleType, FeedType } from './dataAgent';
-import clsx from 'clsx';
-import { useEnv } from '@/context/EnvContext';
 
 export default function CatalogPage() {
-  const { envConfig, appService } = useEnv();
+  const { envConfig } = useEnv();
   // channel list
   const [channelList, setChannelList] = useState<FeedType[]>([]);
   const [currentChannel, setCurrentChannel] = useState<FeedType | null>(null);
   const [currentArticles, setCurrentArticles] = useState<ArticleType[] | null>(null);
-  const [currentArticle, setCurrentArticle] = useState<ArticleType | null>(null);
   const [starChannel, setStarChannel] = useState(false);
   const [showManager, setShowManager] = useState(false);
   const isInitiating = useRef(false);
@@ -32,31 +30,10 @@ export default function CatalogPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const [refreshing, setRefreshing] = useState(false);
-  const [doneNum, setDoneNum] = useState(0);
-  const refreshChannel = async (link: string, ty: string, title: string) => {
-    const res = await dataAgent.addChannel(link, ty, title);
-    return res;
-  };
-
-  const refreshList = async () => {
-    setRefreshing(true);
-    setDoneNum(0);
-    for (const channel of channelList) {
-      await refreshChannel(channel.link, channel.ty, channel.title);
-      setDoneNum(doneNum + 1);
-    }
-    setRefreshing(false);
-  };
-
-  const onShowManager = () => {
-    setShowManager(!showManager);
-  };
-
-  const loadArticleList = async (link: string) => {
-    const articles = await dataAgent.getArticleList(link, null, null);
-    // console.log('current articles', articles, currentArticles);
-    setCurrentArticles(articles);
+  const loadFeed = async (link: string) => {
+    const res = await dataAgent.fetchFeed(link);
+    console.log('current articles', res, currentArticles);
+    setCurrentArticles(res.articles);
   };
 
   const [loading, setLoading] = useState(false);
@@ -66,7 +43,7 @@ export default function CatalogPage() {
     if (clickedChannel) {
       setCurrentChannel(clickedChannel);
       setShowManager(false);
-      await loadArticleList(clickedChannel.link);
+      await loadFeed(clickedChannel.link);
     } 
     setLoading(false);
   };
@@ -78,8 +55,9 @@ export default function CatalogPage() {
     setCurrentArticles(null);
     setStarChannel(true);
     setShowManager(false);
-    const starArticles = await dataAgent.getArticleList(null, null, 1);
-    setCurrentArticles(starArticles);
+    // TODO
+    // const starArticles = await dataAgent.getArticleList(null, null, 1);
+    // setCurrentArticles(starArticles);
     setLoading(false);
   };
 
@@ -100,29 +78,14 @@ export default function CatalogPage() {
     await appService.saveFeeds(feeds);
   };
 
-  // currentChannel and it's article list
-  const [syncing, setSyncing] = useState(false);
-  const handleRefresh = async () => {
-    setSyncing(true);
-    if (currentChannel) {
-      // console.log('refresh current channel: ', currentChannel)
-      await dataAgent.addChannel(currentChannel.link, currentChannel.ty, currentChannel.title);
-      await loadArticleList(currentChannel.link);
-    }
-    setSyncing(false);
-  };
-
   return (
     <div className='flex flex-row overflow-y-auto h-full border-t-2 border-base-300'>
       <div className='w-52 p-1 bg-base-300 overflow-y-auto'>
         <ChannelList 
           channelList={channelList} 
-          refreshList={refreshList} 
-          onShowManager={onShowManager} 
+          onShowManager={() => setShowManager(prev => !prev)} 
           onClickFeed={onClickFeed}
           onClickStar={onClickStar} 
-          refreshing={refreshing}
-          doneNum={doneNum}
         />
       </div>
       {showManager ? (
@@ -139,9 +102,7 @@ export default function CatalogPage() {
             channel={currentChannel} 
             starChannel={starChannel} 
             articles={currentArticles}
-            handleRefresh={handleRefresh}
             loading={loading}
-            syncing={syncing}
           />
         </div>
       )}
