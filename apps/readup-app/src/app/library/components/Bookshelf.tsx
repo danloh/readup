@@ -147,8 +147,8 @@ const Bookshelf: React.FC<BookshelfProps> = ({
         const bTitle = formatTitle(b.title);
         return aTitle.localeCompare(bTitle, uiLanguage || navigator.language);
       case 'author':
-        const aAuthors = formatAuthors(a.author);
-        const bAuthors = formatAuthors(b.author);
+        const aAuthors = formatAuthors(a.author, a?.primaryLanguage || 'en', true);
+        const bAuthors = formatAuthors(b.author, b?.primaryLanguage || 'en', true);
         return aAuthors.localeCompare(bAuthors, uiLanguage || navigator.language);
       case 'updated':
         return new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime();

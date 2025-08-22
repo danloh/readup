@@ -81,7 +81,7 @@ export default function CatalogPage() {
   };
 
   return (
-    <div className='flex flex-row overflow-y-auto h-full border-t-2 border-base-300'>
+    <div className='feed-view flex flex-row overflow-y-auto h-full border-t-2 border-base-300'>
       <div className='w-52 p-1 bg-base-300 overflow-y-auto'>
         <ChannelList 
           channelList={channelList} 

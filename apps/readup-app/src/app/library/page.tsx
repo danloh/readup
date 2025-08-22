@@ -87,7 +87,9 @@ const NavTab: React.FC<{
     <div
       ref={headerRef}
       className={clsx(
-        'nav-tab bg-base-200 z-50 flex w-full items-center justify-between py-1 px-2'
+        'nav-tab bg-base-200 z-50 flex w-full items-center justify-between py-1 px-2',
+        windowButtonVisible ? 'sm:pr-4' : 'sm:pr-6',
+        isTrafficLightVisible ? 'pl-16' : 'pl-0 sm:pl-2',
       )}
       style={{
         marginTop: appService?.hasSafeAreaInset
