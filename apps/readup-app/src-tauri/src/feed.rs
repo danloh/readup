@@ -10,9 +10,10 @@ pub struct Channel {
     pub link: String, // unique
     pub description: String,
     pub published: String,
+    pub articles: Vec<Article>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Article {
     pub title: String,
     pub url: String,  // unique
@@ -25,32 +26,17 @@ pub struct Article {
     pub image: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct FeedResult {
-    pub channel: Channel,
-    pub articles: Vec<Article>,
-}
-
 #[command]
-pub async fn fetch_feed(url: String) -> Option<FeedResult> {
-    match process_feed(&url, "rss", None).await {
-        Some(res) => {
-            let channel = res.0;
-            let articles = res.1;
-
-            Some(FeedResult { channel, articles })
-        }
-        None => None,
-    }
+pub async fn fetch_feed(url: String) -> Option<Channel> {
+    process_feed(&url, "rss", None).await 
 }
-
 
 // process: rss or atom typed
 pub async fn process_feed(
     url: &str,
     ty: &str,
     title: Option<String>,
-) -> Option<(Channel, Vec<Article>)> {
+) -> Option<Channel> {
     match process_rss(url, ty, title.clone()).await {
         Some(res) => Some(res),
         None => process_atom(url, ty, title).await,
@@ -91,7 +77,7 @@ async fn process_rss(
     url: &str,
     ty: &str,
     title: Option<String>,
-) -> Option<(Channel, Vec<Article>)> {
+) -> Option<Channel> {
     if let Some(content) = get_feed_content(url).await {
         match rss::Channel::read_from(&content[..]).map(|channel| channel) {
             Ok(channel) => {
@@ -103,14 +89,7 @@ async fn process_rss(
                     Some(t) if t.trim().len() > 0 => String::from(t.trim()),
                     _ => channel.title.to_string(),
                 };
-                let rss_channel = Channel {
-                    title: channel_title,
-                    link: url.to_string(),
-                    description: channel.description.to_string(),
-                    published: date,
-                    ty: ty.to_string(),
-                };
-
+                
                 let mut articles: Vec<Article> = Vec::new();
                 for item in channel.items() {
                     let title = item.title.clone().unwrap_or_else(|| String::from(""));
@@ -139,7 +118,16 @@ async fn process_rss(
 
                     articles.push(new_article);
                 }
-                Some((rss_channel, articles))
+                let rss_channel = Channel {
+                    title: channel_title,
+                    link: url.to_string(),
+                    description: channel.description.to_string(),
+                    published: date,
+                    ty: ty.to_string(),
+                    articles: articles,
+                };
+
+                Some(rss_channel)
             }
             Err(_e) => None,
         }
@@ -153,7 +141,7 @@ async fn process_atom(
     url: &str,
     ty: &str,
     title: Option<String>,
-) -> Option<(Channel, Vec<Article>)> {
+) -> Option<Channel> {
     if let Some(content) = get_feed_content(url).await {
         match atom_syndication::Feed::read_from(&content[..]) {
             Ok(atom) => {
@@ -161,15 +149,8 @@ async fn process_atom(
                     Some(t) if t.trim().len() > 0 => String::from(t.trim()),
                     _ => atom.title.to_string(),
                 };
-                let atom_channel = Channel {
-                    title: channel_title.clone(),
-                    link: url.to_string(),
-                    description: atom.subtitle.unwrap_or_default().to_string(),
-                    published: atom.updated.to_string(),
-                    ty: ty.to_string(),
-                };
-
-                let mut feeds: Vec<Article> = vec![];
+                
+                let mut articles: Vec<Article> = vec![];
                 for item in atom.entries {
                     let item_url = if let Some(link) = item.links.first() {
                         link.to_owned().href
@@ -195,9 +176,18 @@ async fn process_atom(
                         image: String::from(""),
                     };
 
-                    feeds.push(new_article);
+                    articles.push(new_article);
                 }
-                Some((atom_channel, feeds))
+                let atom_channel = Channel {
+                    title: channel_title.clone(),
+                    link: url.to_string(),
+                    description: atom.subtitle.unwrap_or_default().to_string(),
+                    published: atom.updated.to_string(),
+                    ty: ty.to_string(),
+                    articles: articles,
+                };
+
+                Some(atom_channel)
             }
             Err(_e) => None,
         }

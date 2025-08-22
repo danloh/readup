@@ -33,7 +33,7 @@ export default function CatalogPage() {
   const loadFeed = async (link: string) => {
     const res = await dataAgent.fetchFeed(link);
     console.log('current articles', res);
-    setCurrentArticles(res.articles);
+    setCurrentArticles(res.articles || []);
   };
 
   const [loading, setLoading] = useState(false);

@@ -46,7 +46,6 @@ function ArticleList(props: ListProps) {
           ? dateCompare(n2.published, n1.published)
           : 0;
       })
-      .sort((n1, n2) => n1.read_status - n2.read_status)
     : articles;
 
   // console.log("sorted: ", sortedArticles)
@@ -56,7 +55,7 @@ function ArticleList(props: ListProps) {
       {sortedArticles.map((article: ArticleType, idx: number) => {
         return (
           <ArticleItem
-            key={`${article.id}=${idx}`}
+            key={`${article.url}-${idx}`}
             article={article}
             isInStar={isInStar}
           />

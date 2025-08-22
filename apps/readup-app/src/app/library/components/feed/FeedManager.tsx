@@ -38,9 +38,8 @@ export function FeedManager(props: Props) {
       setDescription('Cannot find any feed, please check the URL');
       return;
     }
-    const { channel } = res;
-    setFeedTitle(channel.title);
-    setDescription(channel.description || '');
+    setFeedTitle(res.title);
+    setDescription(res.description || '');
     setLoading(false);
   };
 

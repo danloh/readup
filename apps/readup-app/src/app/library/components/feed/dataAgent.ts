@@ -27,19 +27,16 @@ export interface FeedType {
   link: string;
   description?: string;
   published?: string; // iso date string
-  articles?: ArticleType[]; // TODO, cache the articles
+  articles?: ArticleType[]; // cache the articles
 }
 
 export interface ArticleType {
-  id: number;
   title: string;
   url: string;
   feed_link: string;
   audio_url: string;
   description: string;
   published?: Date;
-  read_status: number;
-  star_status: number;
   content?: string;
   author?: string;
   image?: string;
@@ -56,11 +53,6 @@ export interface PodType {
   feed_link: string;
 }
 
-type FeedResult = {
-  channel: FeedType;
-  articles: ArticleType[];
-};
-
-export const fetchFeed = async (url: string): Promise<FeedResult> => {
+export const fetchFeed = async (url: string): Promise<FeedType> => {
   return await invoke('fetch_feed', { url })
 }
