@@ -6,9 +6,12 @@ import { useEffect, useRef, useState } from 'react';
 import { ImFeed } from "react-icons/im";
 import { BiLibrary } from 'react-icons/bi';
 import { SiProgress } from "react-icons/si";
-
+import { MdOutlineSettings } from 'react-icons/md';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useEnv } from '@/context/EnvContext';
+import Dropdown from '@/components/Dropdown';
+import { AboutWindow } from '@/components/AboutWindow';
+import { UpdaterWindow } from '@/components/UpdaterWindow';
 import WindowButtons from '@/components/WindowButtons';
 import { useTrafficLightStore } from '@/store/trafficLightStore';
 import { useSafeAreaInsets } from '@/hooks/useSafeAreaInsets';
@@ -16,6 +19,7 @@ import { useThemeStore } from '@/store/themeStore';
 import LibraryPage from './components/LibraryPage';
 import StreakPage from './components/StreakPage';
 import CatalogPage from './components/feed/CatalogPage';
+import SettingsMenu from './components/SettingsMenu';
 
 const Library = () => {
   const { appService } = useEnv();
@@ -118,6 +122,13 @@ const NavTab: React.FC<{
             </button>
           </div>
         ))}
+        <Dropdown
+          className='exclude-title-bar-mousedown dropdown-bottom dropdown-end z-50'
+          buttonClassName='btn btn-ghost'
+          toggleButton={<MdOutlineSettings />}
+        >
+          <SettingsMenu />
+        </Dropdown>
         {appService?.hasWindowBar && (
           <WindowButtons
             headerRef={headerRef}
@@ -127,6 +138,8 @@ const NavTab: React.FC<{
           />
         )}
       </div>
+      <AboutWindow />
+      <UpdaterWindow />
     </div>
   );
 };

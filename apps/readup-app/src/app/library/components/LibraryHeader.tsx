@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { FaSearch } from 'react-icons/fa';
 import { PiDotsThreeCircle } from 'react-icons/pi';
 import { LiaFileImportSolid } from 'react-icons/lia';
-import { MdOutlineSettings, MdArrowBackIosNew } from 'react-icons/md';
+import { MdArrowBackIosNew } from 'react-icons/md';
 import { IoMdCloseCircle } from 'react-icons/io';
 
 import { useTranslation } from '@/hooks/useTranslation';
@@ -13,7 +13,6 @@ import { useResponsiveSize } from '@/hooks/useResponsiveSize';
 import { navigateToLibrary } from '@/utils/nav';
 import { debounce } from '@/utils/debounce';
 import Dropdown from '@/components/Dropdown';
-import SettingsMenu from './SettingsMenu';
 import ViewMenu from './ViewMenu';
 
 interface LibraryHeaderProps {
@@ -129,13 +128,6 @@ const LibraryHeader: React.FC<LibraryHeaderProps> = ({onImportBooks}) => {
             toggleButton={<PiDotsThreeCircle size={iconSize18} />}
           >
             <ViewMenu />
-          </Dropdown>
-          <Dropdown
-            className='exclude-title-bar-mousedown dropdown-bottom dropdown-end'
-            buttonClassName='btn btn-ghost h-8 min-h-8 w-8 p-0'
-            toggleButton={<MdOutlineSettings size={iconSize18} />}
-          >
-            <SettingsMenu />
           </Dropdown>
         </div>
       </div>

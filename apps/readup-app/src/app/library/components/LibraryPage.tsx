@@ -37,8 +37,6 @@ import {
 } from '@/utils/window';
 
 import BookDetailModal from '@/app/library/components/BookDetailModal';
-import { AboutWindow } from '@/components/AboutWindow';
-import { UpdaterWindow } from '@/components/UpdaterWindow';
 import DropIndicator from '@/components/DropIndicator';
 import { Toast } from '@/components/Toast';
 import Spinner from '@/components/Spinner';
@@ -507,8 +505,6 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
           onClose={() => setShowDetailsBook(null)}
         />
       )}
-      <AboutWindow />
-      <UpdaterWindow />
       <Toast />
     </div>
   );
