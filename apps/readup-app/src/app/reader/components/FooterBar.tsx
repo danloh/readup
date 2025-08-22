@@ -100,8 +100,8 @@ const FooterBar: React.FC<FooterBarProps> = ({
     }
   };
   const handleRePopup = async () => {
-      eventDispatcher.dispatch('tts-popup');
-      setControlBtn(true);
+    eventDispatcher.dispatch('tts-popup');
+    setControlBtn(true);
   };
 
   const handleSetActionTab = (tab: string) => {

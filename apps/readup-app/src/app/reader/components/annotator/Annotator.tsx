@@ -387,6 +387,7 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
     if (!selection || !selection.text) return;
     setShowAnnotPopup(false);
     eventDispatcher.dispatch('tts-speak', { bookKey, range: selection.range });
+    eventDispatcher.dispatch('tts-popup');
   };
 
   const handleExportMarkdown = (event: CustomEvent) => {
