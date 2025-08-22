@@ -87,21 +87,17 @@ const FooterBar: React.FC<FooterBarProps> = ({
     view?.history.forward();
   };
 
-  const [controlBtn, setControlBtn] = React.useState(false);
   const handleSpeakText = async () => {
     if (!view || !progress || !viewState) return;
     if (viewState.ttsEnabled) {
       eventDispatcher.dispatch('tts-stop', { bookKey });
-      setControlBtn(false);
     } else {
       eventDispatcher.dispatch('tts-speak', { bookKey });
       eventDispatcher.dispatch('tts-popup');
-      setControlBtn(true);
     }
   };
   const handleRePopup = async () => {
     eventDispatcher.dispatch('tts-popup');
-    setControlBtn(true);
   };
 
   const handleSetActionTab = (tab: string) => {
@@ -253,7 +249,7 @@ const FooterBar: React.FC<FooterBarProps> = ({
           <div
             className={clsx(
               'flex items-center justify-center',
-              controlBtn && 'gap-x-1 bg-base-300 rounded-sm',
+              viewState?.ttsEnabled && 'gap-x-1 bg-base-300 rounded-sm',
             )}
           >
             <Button
@@ -262,7 +258,7 @@ const FooterBar: React.FC<FooterBarProps> = ({
               tooltip={_('Audio')}
               tooltipDirection='top'
             />
-            {controlBtn && (
+            {(viewState?.ttsEnabled) && (
               <Button
                 icon={<RiChatVoiceFill />}
                 onClick={handleRePopup}
