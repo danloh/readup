@@ -19,7 +19,6 @@ export function ChannelList(props: Props) {
       <>
         {channelList.map((channel: FeedType, idx: number) => {
           const { title, link } = channel;
-          const ico = getFavicon(link);
           const activeClass = 
             `${highlighted?.link === link ? 'border-r-2 border-green-500' : ''}`;
           
@@ -33,7 +32,7 @@ export function ChannelList(props: Props) {
               }}
             >
               <div className="flex flex-row items-center justify-start mr-1">
-                <img src={ico} className="h-4 w-4 mx-1" alt=">" />
+                <img src={getFavicon(link)} className="h-4 w-4 mx-1" alt=">" loading="lazy" />
                 <span className="text-sm">{title}</span>
               </div>
             </div>
@@ -56,7 +55,10 @@ export function ChannelList(props: Props) {
       </div>
       <div 
         className="flex flex-row items-center justify-between cursor-pointer"
-        onClick={onClickStar}
+        onClick={() => {
+          onClickStar();
+          setHighlighted(undefined);
+        }}
       >
         <div className="flex flex-row items-center justify-start">
           <IoIosStar size={18} className="m-1 fill-yellow-500 text-yellow-500" />

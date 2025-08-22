@@ -179,7 +179,7 @@ export function FeedManager(props: Props) {
                 {channel.ty === 'rss' 
                   ? <FaRss size={12} className='mr-1 text-orange-500' /> 
                   : channel.ty === 'opds' 
-                    ? <CgFeed size={12} className='mr-1 text-brown-500' />
+                    ? <CgFeed size={12} className='mr-1 text-teal-500' />
                     : <FaHeadphones size={12} className='mr-1 text-purple-500' />
                 }
                 <span className='text-sm'>{channel.title}</span>

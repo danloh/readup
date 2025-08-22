@@ -1,6 +1,6 @@
 import React, { memo, useEffect, useState } from "react";
 import { IoMdLink, IoMdStar, IoMdStarOutline } from "react-icons/io";
-import { ArticleType, dateCompare, FeedType, fmtDatetime } from "./dataAgent";
+import { ArticleType, dateCompare, FeedType, fmtDatetime, getFavicon } from "./dataAgent";
 import { useEnv } from "@/context/EnvContext";
 
 type Props = {
@@ -90,15 +90,16 @@ const ArticleItem = memo(function ArticleItm(props: ItemProps) {
   };
 
   return (
-    <div className='flex flex-col items-start justify-center my-1' aria-hidden="true">
+    <div className='flex flex-col items-start justify-center m-1'>
       <div 
         className="flex flex-row items-center justify-start" 
         onClick={() => setExpanded(prev => !prev)}
       >
-        <h2 className="flex-1 font-bold m-1 text-xl cursor-pointer">{article.title}</h2>
+        <h2 className="flex-1 text-xl text-info cursor-pointer">{article.title}</h2>
       </div>
       <div className="flex flex-row items-center justify-center">
-        <span className="m-1 text-sm text-info">
+        <img src={getFavicon(article.url)} className="h-4 w-4 m-1" alt=">" loading="lazy" />
+        <span className="m-1 text-sm">
           {fmtDatetime(article.published || '')}
         </span>
         <a
