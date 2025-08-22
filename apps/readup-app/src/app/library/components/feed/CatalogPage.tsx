@@ -13,7 +13,7 @@ export default function CatalogPage() {
   const [channelList, setChannelList] = useState<FeedType[]>([]);
   const [currentChannel, setCurrentChannel] = useState<FeedType | null>(null);
   const [currentArticles, setCurrentArticles] = useState<ArticleType[] | null>(null);
-  const [starChannel, setStarChannel] = useState(false);
+  const [isStarChannel, setIsStarChannel] = useState(false);
   const [showManager, setShowManager] = useState(false);
   const isInitiating = useRef(false);
 
@@ -32,7 +32,7 @@ export default function CatalogPage() {
 
   const loadFeed = async (link: string) => {
     const res = await dataAgent.fetchFeed(link);
-    console.log('current articles', res, currentArticles);
+    console.log('current articles', res);
     setCurrentArticles(res.articles);
   };
 
@@ -46,25 +46,27 @@ export default function CatalogPage() {
       await loadFeed(clickedChannel.link);
     } 
     setLoading(false);
+    setIsStarChannel(false);
   };
 
-  // TODO: STAR FAVIRATE, save articles to `star.json`
   const onClickStar = async () => {
     setLoading(true);
     setCurrentChannel(null);
     setCurrentArticles(null);
-    setStarChannel(true);
+    setIsStarChannel(true);
     setShowManager(false);
-    // TODO
-    // const starArticles = await dataAgent.getArticleList(null, null, 1);
-    // setCurrentArticles(starArticles);
+    // load star articles
+    const appService = await envConfig.getAppService();
+    setCurrentArticles(await appService.loadArticles());
     setLoading(false);
   };
 
   const handleAddFeed = async (link: string, ty: string, title: string) => {
     const feeds = channelList;
     const newFeed: FeedType = {ty, title, link};
-    feeds.push(newFeed);
+    if (feeds.findIndex(f => f.link === link) === -1) {
+      feeds.push(newFeed);
+    }
     const appService = await envConfig.getAppService();
     setChannelList(feeds);
     await appService.saveFeeds(feeds);
@@ -72,10 +74,10 @@ export default function CatalogPage() {
 
   const handleDeleteFeed = async (channel: FeedType) => {
     const feeds = channelList;
-    feeds.filter(f => f.link !== channel.link);
+    const newFeeds = feeds.filter(f => f.link !== channel.link);
     const appService = await envConfig.getAppService();
-    setChannelList(feeds);
-    await appService.saveFeeds(feeds);
+    setChannelList(newFeeds);
+    await appService.saveFeeds(newFeeds);
   };
 
   return (
@@ -100,7 +102,7 @@ export default function CatalogPage() {
         <div className={`flex-1 overflow-y-auto`}>
           <Channel 
             channel={currentChannel} 
-            starChannel={starChannel} 
+            isStarChannel={isStarChannel} 
             articles={currentArticles}
             loading={loading}
           />

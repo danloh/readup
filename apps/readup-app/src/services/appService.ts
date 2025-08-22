@@ -44,7 +44,7 @@ import { downloadFile, uploadFile, deleteFile, createProgressHandler } from '@/l
 import { ClosableFile } from '@/utils/file';
 import { ProgressHandler } from '@/utils/transfer';
 import { TxtToEpubConverter } from '@/utils/txt';
-import { FeedType } from '@/app/library/components/feed/dataAgent';
+import { ArticleType, FeedType } from '@/app/library/components/feed/dataAgent';
 import { BOOK_FILE_NOT_FOUND_ERROR } from './errors';
 
 export type ResolvedPath = {
@@ -666,6 +666,31 @@ export abstract class BaseAppService implements AppService {
     const mainSuccess = saveResults[0].status === 'fulfilled';
     if (!mainSuccess) {
       throw new Error('Failed to save feeds');
+    }
+  }
+
+  async loadArticles(): Promise<ArticleType[]> {
+    console.log('Loading starred articles...');
+    let articles: ArticleType[] = [];
+
+    const mainResult = await this.loadJSONFile('articles.json', 'Books');
+    if (mainResult.success) {
+      articles = mainResult.data as ArticleType[];
+    } else {
+      console.error('Failed to Loaded articles.json');
+    }
+
+    return articles;
+  }
+
+  async saveArticles(articles: ArticleType[]): Promise<void> {  
+    const jsonData = JSON.stringify(articles, null, 2);
+    const saveResults = await Promise.allSettled([
+      this.fs.writeFile('articles.json', 'Books', jsonData),
+    ]);
+    const mainSuccess = saveResults[0].status === 'fulfilled';
+    if (!mainSuccess) {
+      throw new Error('Failed to save articles');
     }
   }
   

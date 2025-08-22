@@ -27,6 +27,7 @@ export interface FeedType {
   link: string;
   description?: string;
   published?: string; // iso date string
+  articles?: ArticleType[]; // TODO, cache the articles
 }
 
 export interface ArticleType {

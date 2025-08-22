@@ -1,16 +1,17 @@
 import React, { memo, useEffect, useState } from "react";
-import { IoMdLink } from "react-icons/io";
+import { IoMdLink, IoMdStar, IoMdStarOutline } from "react-icons/io";
 import { ArticleType, dateCompare, FeedType, fmtDatetime } from "./dataAgent";
+import { useEnv } from "@/context/EnvContext";
 
 type Props = {
   channel: FeedType | null;
-  starChannel?: boolean;
+  isStarChannel?: boolean;
   articles: ArticleType[] | null;
   loading: boolean;
 };
 
 export function Channel(props: Props) {
-  const { channel, starChannel, articles, loading } = props;
+  const { channel, isStarChannel, articles, loading } = props;
 
   if (loading) {
     return (
@@ -23,20 +24,21 @@ export function Channel(props: Props) {
   return (
     <div className="flex flex-col items-between justify-center p-2">
       <div className="flex flex-row items-center justify-between p-1 bg-slate-500 rounded">
-        <b className="font-bold">{channel?.title || (starChannel ? 'Starred' : '')}</b>
+        <b className="font-bold">{channel?.title || (isStarChannel ? 'Starred' : '')}</b>
         <span className="text-info" >{articles.length}</span>
       </div>
-      <ArticleList articles={articles} />
+      <ArticleList articles={articles} isInStar={isStarChannel} />
     </div>
   );
 }
 
 type ListProps = {
   articles: ArticleType[];
+  isInStar?: Boolean;
 };
 
 function ArticleList(props: ListProps) {
-  const { articles } = props;
+  const { articles, isInStar } = props;
 
   const sortedArticles = articles.length >= 2 
     ? articles.sort((n1, n2) => {
@@ -56,6 +58,7 @@ function ArticleList(props: ListProps) {
           <ArticleItem
             key={`${article.id}=${idx}`}
             article={article}
+            isInStar={isInStar}
           />
         )}
       )}
@@ -65,11 +68,27 @@ function ArticleList(props: ListProps) {
 
 type ItemProps = {
   article: ArticleType;
+  isInStar?: Boolean;
 };
 
 const ArticleItem = memo(function ArticleItm(props: ItemProps) {
-  const { article } = props;
+  const { article, isInStar } = props;
+  const { envConfig } = useEnv();
+  const [isStar, setIsStar] = useState(isInStar);
   const [expanded, setExpanded] = useState(false);
+
+  const updateStar = async (article: ArticleType, toStar: Boolean) => {
+    const appService = await envConfig.getAppService();
+    let starArticles = await appService.loadArticles();
+    if (toStar) {
+      if (starArticles.findIndex(a => a.url === article.url) === -1) {
+        starArticles.push(article);
+      }
+    } else {
+      starArticles = starArticles.filter(a => a.url !== article.url);
+    }
+    await appService.saveArticles(starArticles);
+  };
 
   return (
     <div className='flex flex-col items-start justify-center my-1' aria-hidden="true">
@@ -80,7 +99,7 @@ const ArticleItem = memo(function ArticleItm(props: ItemProps) {
         <h2 className="flex-1 font-bold m-1 text-xl cursor-pointer">{article.title}</h2>
       </div>
       <div className="flex flex-row items-center justify-center">
-        <span className="m-1 text-sm dark:text-slate-400">
+        <span className="m-1 text-sm text-info">
           {fmtDatetime(article.published || '')}
         </span>
         <a
@@ -91,6 +110,18 @@ const ArticleItem = memo(function ArticleItm(props: ItemProps) {
         >
           <IoMdLink size={20} />
         </a>
+        <span 
+          className="m-1 cursor-pointer" 
+          onClick={async () => {
+            await updateStar(article, !isStar);
+            setIsStar(!isStar);
+          }}
+        >
+          {isInStar 
+            ? (<IoMdStar size={20} className={`${isStar ? 'text-success' : 'text-info'}`} />)
+            : (<IoMdStarOutline size={20} className={`${isStar ? 'text-success' : ''}`} />)
+          }
+        </span>
       </div>
       <ArticleView article={article} expanded={expanded} />
     </div>
