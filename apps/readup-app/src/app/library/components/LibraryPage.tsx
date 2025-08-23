@@ -357,7 +357,7 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
       try {
         await appService?.importBook(file, library);
         setLibrary([...library]);
-        // if (user && book && !book.uploadedAt && settings.autoUpload) {
+        // if (user && book && !book.uploadedAt) {
         //   console.log('Uploading book:', book.title);
         //   handleBookUpload(book);
         // }

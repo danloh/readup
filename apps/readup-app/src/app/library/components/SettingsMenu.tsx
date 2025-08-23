@@ -1,8 +1,7 @@
 import clsx from 'clsx';
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { PiUserCircle } from 'react-icons/pi';
-import { PiUserCircleCheck } from 'react-icons/pi';
+import { PiUserCircle, PiUserCircleCheck } from 'react-icons/pi';
 import { MdCheck } from 'react-icons/md';
 import { GrSystem } from "react-icons/gr";
 import { BiMoon, BiSun } from 'react-icons/bi';
@@ -34,7 +33,6 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
   const { user } = useAuth();
   const { themeMode, setThemeMode } = useThemeStore();
   const { settings, setSettings, saveSettings } = useSettingsStore();
-  const [isAutoUpload, setIsAutoUpload] = useState(settings.autoUpload);
   const [isAutoCheckUpdates, setIsAutoCheckUpdates] = useState(settings.autoCheckUpdates);
   const [isAlwaysOnTop, setIsAlwaysOnTop] = useState(settings.alwaysOnTop);
   const [isAlwaysShowStatusBar, setIsAlwaysShowStatusBar] = useState(settings.alwaysShowStatusBar);
@@ -103,17 +101,6 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
     saveSettings(envConfig, settings);
     setIsAlwaysShowStatusBar(settings.alwaysShowStatusBar);
     setIsDropdownOpen?.(false);
-  };
-
-  const toggleAutoUploadBooks = () => {
-    settings.autoUpload = !settings.autoUpload;
-    setSettings(settings);
-    saveSettings(envConfig, settings);
-    setIsAutoUpload(settings.autoUpload);
-
-    if (settings.autoUpload && !user) {
-      navigateToLogin(router);
-    }
   };
 
   const toggleAutoImportBooksOnOpen = () => {
@@ -192,15 +179,22 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
         <MenuItem label={_('Sign In')} Icon={PiUserCircle} onClick={handleUserLogin}></MenuItem>
       )}
       <MenuItem
-        label={_('Auto Upload Books to Cloud')}
-        Icon={isAutoUpload ? MdCheck : undefined}
-        onClick={toggleAutoUploadBooks}
+        label={
+          themeMode === 'dark'
+            ? _('Dark Mode')
+            : themeMode === 'light'
+              ? _('Light Mode')
+              : _('Auto Mode')
+        }
+        Icon={themeMode === 'dark' ? BiMoon : themeMode === 'light' ? BiSun : GrSystem}
+        onClick={cycleThemeMode}
       />
-      {isTauriAppPlatform() && !appService?.isMobile && (
+      <hr className='border-base-200 my-1' />
+      {appService?.hasWindow && (
         <MenuItem
-          label={_('Auto Import on File Open')}
-          Icon={isAutoImportBooksOnOpen ? MdCheck : undefined}
-          onClick={toggleAutoImportBooksOnOpen}
+          label={_('Open Book in New Window')}
+          Icon={settings.openBookInNewWindow ? MdCheck : undefined}
+          onClick={toggleOpenInNewWindow}
         />
       )}
       {isTauriAppPlatform() && (
@@ -210,19 +204,11 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
           onClick={toggleOpenLastBooks}
         />
       )}
-      {appService?.hasUpdater && (
+      {isTauriAppPlatform() && !appService?.isMobile && (
         <MenuItem
-          label={_('Check Updates on Start')}
-          Icon={isAutoCheckUpdates ? MdCheck : undefined}
-          onClick={toggleAutoCheckUpdates}
-        />
-      )}
-      <hr className='border-base-200 my-1' />
-      {appService?.hasWindow && (
-        <MenuItem
-          label={_('Open Book in New Window')}
-          Icon={settings.openBookInNewWindow ? MdCheck : undefined}
-          onClick={toggleOpenInNewWindow}
+          label={_('Auto Import on File Open')}
+          Icon={isAutoImportBooksOnOpen ? MdCheck : undefined}
+          onClick={toggleAutoImportBooksOnOpen}
         />
       )}
       {appService?.hasWindow && <MenuItem label={_('Fullscreen')} onClick={handleFullScreen} />}
@@ -246,19 +232,15 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
         onClick={toggleScreenWakeLock}
       />
       <MenuItem label={_('Reload Page')} onClick={handleReloadPage} />
-      <MenuItem
-        label={
-          themeMode === 'dark'
-            ? _('Dark Mode')
-            : themeMode === 'light'
-              ? _('Light Mode')
-              : _('Auto Mode')
-        }
-        Icon={themeMode === 'dark' ? BiMoon : themeMode === 'light' ? BiSun : GrSystem}
-        onClick={cycleThemeMode}
-      />
       <hr className='border-base-200 my-1' />
       {isWebAppPlatform() && <MenuItem label={_('Download Readup')} onClick={downloadReadup} />}
+      {appService?.hasUpdater && (
+        <MenuItem
+          label={_('Check Updates on Start')}
+          Icon={isAutoCheckUpdates ? MdCheck : undefined}
+          onClick={toggleAutoCheckUpdates}
+        />
+      )}
       <MenuItem label={_('About Readup')} onClick={showAboutReadup} />
       <MenuItem
         label={_('Help improve Readup')}
@@ -266,6 +248,7 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
         Icon={isTelemetryEnabled ? MdCheck : undefined}
         onClick={toggleTelemetry}
       />
+      <hr className='border-base-200 my-1' />
       <div className='flex items-end justify-between'>  
         <LangSelect />
       </div>

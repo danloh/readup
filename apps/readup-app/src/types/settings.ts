@@ -24,7 +24,6 @@ export interface SystemSettings {
   localBooksDir: string;
 
   keepLogin: boolean;
-  autoUpload: boolean;
   alwaysOnTop: boolean;
   autoCheckUpdates: boolean;
   screenWakeLock: boolean;
