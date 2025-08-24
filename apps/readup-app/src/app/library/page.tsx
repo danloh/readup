@@ -74,7 +74,8 @@ const NavTab: React.FC<{
       cleanupTrafficLightListeners();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [appService?.hasTrafficLight]);
+  
   const windowButtonVisible = appService?.hasWindowBar && !isTrafficLightVisible;
 
   const tabs = appService?.appPlatform === 'web' 
