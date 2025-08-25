@@ -138,7 +138,16 @@ const ReaderContent: React.FC<{ ids?: string; settings: SystemSettings }> = ({ i
 
   const handleCloseBooksToLibrary = () => {
     handleCloseBooks();
-    navigateToLibrary(router);
+    if (isTauriAppPlatform()) {
+      const currentWindow = getCurrentWindow();
+      if (currentWindow.label === 'main') {
+        navigateToLibrary(router);
+      } else {
+        currentWindow.close();
+      }
+    } else {
+      navigateToLibrary(router);
+    }
   };
 
   const handleCloseBook = async (bookKey: string) => {
