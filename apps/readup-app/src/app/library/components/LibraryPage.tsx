@@ -25,7 +25,7 @@ import { useSettingsStore } from '@/store/settingsStore';
 import { useTheme } from '@/hooks/useTheme';
 import { useUICSS } from '@/hooks/useUICSS';
 
-import { useSafeAreaInsets } from '@/hooks/useSafeAreaInsets';
+import { useThemeStore } from '@/store/themeStore';
 import { useScreenWakeLock } from '@/hooks/useScreenWakeLock';
 import { useOpenWithBooks } from '@/hooks/useOpenWithBooks';
 import useShortcuts from '@/hooks/useShortcuts';
@@ -42,6 +42,7 @@ import { Toast } from '@/components/Toast';
 import Spinner from '@/components/Spinner';
 import LibraryHeader from './LibraryHeader';
 import Bookshelf from './Bookshelf';
+
 
 const LibraryPageWithSearchParams = () => {
   const searchParams = useSearchParams();
@@ -61,7 +62,7 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
     setCheckLastOpenBooks,
   } = useLibraryStore();
   const _ = useTranslation();
-  const insets = useSafeAreaInsets();
+  const { safeAreaInsets: insets } = useThemeStore();
   const { settings, setSettings, saveSettings } = useSettingsStore();
   const [loading, setLoading] = useState(false);
   const isInitiating = useRef(false);

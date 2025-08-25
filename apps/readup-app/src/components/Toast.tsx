@@ -1,10 +1,12 @@
 import clsx from 'clsx';
 import React, { useEffect, useRef, useState } from 'react';
+import { useThemeStore } from '@/store/themeStore';
 import { eventDispatcher } from '@/utils/event';
 
 export type ToastType = 'info' | 'success' | 'warning' | 'error';
 
 export const Toast = () => {
+  const { safeAreaInsets } = useThemeStore();
   const [toastMessage, setToastMessage] = useState('');
   const toastType = useRef<ToastType>('info');
   const toastTimeout = useRef(5000);
@@ -12,9 +14,9 @@ export const Toast = () => {
   const toastDismissTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const toastClassMap = {
     info: 'toast-info toast-center toast-middle',
-    success: 'toast-success toast-top toast-end',
-    warning: 'toast-warning toast-top toast-end',
-    error: 'toast-error toast-top toast-end',
+    success: 'toast-success toast-top sm:toast-end toast-center',
+    warning: 'toast-warning toast-top sm:toast-end toast-center',
+    error: 'toast-error toast-top sm:toast-end toast-center',
   };
   const alertClassMap = {
     info: 'alert-primary border-base-300',
@@ -52,9 +54,12 @@ export const Toast = () => {
         className={clsx(
           'toast toast-center toast-middle z-50 w-auto max-w-screen-sm',
           toastClassMap[toastType.current],
-          toastClassMap[toastType.current].includes('toast-top') &&
-            'pt-[calc(44px+env(safe-area-inset-top))]',
         )}
+        style={{
+          top: toastClassMap[toastType.current].includes('toast-top')
+            ? `${(safeAreaInsets?.top || 0) + 44}px`
+            : undefined,
+        }}
       >
         <div
           className={clsx(
@@ -64,11 +69,11 @@ export const Toast = () => {
         >
           <span
             className={clsx(
-              'max-h-[50vh] min-w-32',
-              'overflow-y-auto text-center',
+              'max-h-[50vh] min-w-32 overflow-y-auto',
+              'text-center font-sans text-base font-normal sm:text-sm',
               toastType.current === 'info'
                 ? 'max-w-[80vw]'
-                : 'max-w-80 whitespace-normal break-words',
+                : 'min-w-[60vw] max-w-[80vw] whitespace-normal break-words sm:min-w-40 sm:max-w-80',
               messageClass.current,
             )}
           >

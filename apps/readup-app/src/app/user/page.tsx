@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useEnv } from '@/context/EnvContext';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/hooks/useTheme';
+import { useThemeStore } from '@/store/themeStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useSettingsStore } from '@/store/settingsStore';
 import { navigateToLibrary } from '@/utils/nav';
@@ -23,7 +24,7 @@ const ProfilePage = () => {
   const { envConfig, appService } = useEnv();
   const { token, user, logout } = useAuth();
   const { settings, setSettings, saveSettings } = useSettingsStore();
-
+  const { safeAreaInsets } = useThemeStore();
   const [showEmbeddedCheckout, setShowEmbeddedCheckout] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -90,10 +91,8 @@ const ProfilePage = () => {
       )}
     >
       <div
-        className={clsx(
-          'flex h-full w-full flex-col items-center overflow-y-auto',
-          appService?.hasSafeAreaInset && 'pt-[env(safe-area-inset-top)]',
-        )}
+        className={clsx('flex h-full w-full flex-col items-center overflow-y-auto')}
+        style={{paddingTop: `${safeAreaInsets?.top || 0}px`}}
       >
         <ProfileHeader onGoBack={handleGoBack} />
         <div className='w-full min-w-60 max-w-4xl py-10'>

@@ -7,11 +7,13 @@ import { useEnv } from '@/context/EnvContext';
 import { CSPostHogProvider } from '@/context/PHContext';
 import { SyncProvider } from '@/context/SyncContext';
 import { useDefaultIconSize } from '@/hooks/useResponsiveSize';
+import { useSafeAreaInsets } from '@/hooks/useSafeAreaInsets';
 import { initSystemThemeListener } from '@/store/themeStore';
 
 const Providers = ({ children }: { children: React.ReactNode }) => {
   const { appService } = useEnv();
   const iconSize = useDefaultIconSize();
+  useSafeAreaInsets(); // Initialize safe area insets
 
   useEffect(() => {
     if (appService) {

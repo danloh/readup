@@ -14,7 +14,6 @@ import { AboutWindow } from '@/components/AboutWindow';
 import { UpdaterWindow } from '@/components/UpdaterWindow';
 import WindowButtons from '@/components/WindowButtons';
 import { useTrafficLightStore } from '@/store/trafficLightStore';
-import { useSafeAreaInsets } from '@/hooks/useSafeAreaInsets';
 import { useThemeStore } from '@/store/themeStore';
 import LibraryPage from './components/LibraryPage';
 import StreakPage from './components/StreakPage';
@@ -54,7 +53,7 @@ const NavTab: React.FC<{
   const _ = useTranslation();
   const { appService } = useEnv();
   const headerRef = useRef<HTMLDivElement>(null);
-  const insets = useSafeAreaInsets();
+  const { safeAreaInsets: insets } = useThemeStore();
   const { systemUIVisible, statusBarHeight } = useThemeStore();
   const {
     isTrafficLightVisible,

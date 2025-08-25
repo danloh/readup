@@ -10,11 +10,12 @@ import {
 
 import { eventDispatcher } from '@/utils/event';
 import { useLibraryStore } from '@/store/libraryStore';
+import { useSettingsStore } from '@/store/settingsStore';
+import { useThemeStore } from '@/store/themeStore';
 import { navigateToLogin } from '@/utils/nav';
 import { Book } from '@/types/book';
 import { BookDoc } from '@/libs/document';
 import { useEnv } from '@/context/EnvContext';
-import { useSettingsStore } from '@/store/settingsStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import {
   formatAuthors,
@@ -40,6 +41,7 @@ interface DetailModalProps {
 
 const BookDetailModal = ({ book, isOpen, onClose, showBtns = true }: DetailModalProps) => {
   const _ = useTranslation();
+  const { safeAreaInsets } = useThemeStore();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
@@ -332,10 +334,8 @@ const BookDetailModal = ({ book, isOpen, onClose, showBtns = true }: DetailModal
       </Dialog>
       {showDeleteAlert && (
         <div
-          className={clsx(
-            'fixed bottom-0 left-0 right-0 z-50 flex justify-center',
-            'pb-[calc(env(safe-area-inset-bottom)+16px)]',
-          )}
+          className={clsx('fixed bottom-0 left-0 right-0 z-50 flex justify-center')}
+          style={{paddingBottom: `${(safeAreaInsets?.bottom || 0) + 16}px`}}
         >
           <Alert
             title={_('Confirm Deletion')}
@@ -349,10 +349,8 @@ const BookDetailModal = ({ book, isOpen, onClose, showBtns = true }: DetailModal
       )}
       {showDeleteCloudBackupAlert && (
         <div
-          className={clsx(
-            'fixed bottom-0 left-0 right-0 z-50 flex justify-center',
-            'pb-[calc(env(safe-area-inset-bottom)+16px)]',
-          )}
+          className={clsx('fixed bottom-0 left-0 right-0 z-50 flex justify-center')}
+          style={{paddingBottom: `${(safeAreaInsets?.bottom || 0) + 16}px`}}
         >
           <Alert
             title={_('Confirm Deletion')}
