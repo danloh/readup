@@ -68,7 +68,7 @@ export type BookMetadata = {
   publisher?: string;
   published?: string;
   description?: string;
-  subject?: string[];
+  subject?: string | string[] | Contributor;
   identifier?: string;
 
   subtitle?: string;
@@ -99,6 +99,8 @@ export const EXTS: Record<BookFormat, string> = {
   EPUB: 'epub',
   PDF: 'pdf',
   MOBI: 'mobi',
+  AZW: 'azw',
+  AZW3: 'azw3',
   CBZ: 'cbz',
   FB2: 'fb2',
   FBZ: 'fbz',
@@ -226,7 +228,17 @@ export class DocumentLoader {
       const fflate = await import('foliate-js/vendor/fflate.js');
       const { MOBI } = await import('foliate-js/mobi.js');
       book = await new MOBI({ unzlib: fflate.unzlibSync }).open(this.file);
-      format = 'MOBI';
+      const ext = this.file.name.split('.').pop()?.toLowerCase();
+      switch (ext) {
+        case 'azw':
+          format = 'AZW';
+          break;
+        case 'azw3':
+          format = 'AZW3';
+          break;
+        default:
+          format = 'MOBI';
+      }
     } else if (this.isFB2()) {
       const { makeFB2 } = await import('foliate-js/fb2.js');
       book = await makeFB2(this.file);

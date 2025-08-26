@@ -17,7 +17,7 @@ import { stubTranslation as _ } from '@/utils/misc';
 export const LOCAL_BOOKS_SUBDIR = 'Readup/Books';
 export const CLOUD_BOOKS_SUBDIR = 'Readup/Books';
 
-export const SUPPORTED_FILE_EXTS = [
+export const SUPPORTED_BOOK_EXTS = [
   'epub',
   'mobi',
   'azw',
@@ -28,7 +28,7 @@ export const SUPPORTED_FILE_EXTS = [
   'pdf',
   'txt',
 ];
-export const FILE_ACCEPT_FORMATS = SUPPORTED_FILE_EXTS.map((ext) => `.${ext}`).join(', ');
+export const BOOK_ACCEPT_FORMATS = SUPPORTED_BOOK_EXTS.map((ext) => `.${ext}`).join(', ');
 export const BOOK_UNGROUPED_NAME = '';
 export const BOOK_UNGROUPED_ID = '';
 

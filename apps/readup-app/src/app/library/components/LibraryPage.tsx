@@ -2,7 +2,9 @@ import clsx from 'clsx';
 import * as React from 'react';
 import { useState, useRef, useEffect, Suspense, useCallback } from 'react';
 import { ReadonlyURLSearchParams, useRouter, useSearchParams } from 'next/navigation';
-import { OverlayScrollbarsComponent, OverlayScrollbarsComponentRef } from 'overlayscrollbars-react';
+import { 
+  OverlayScrollbarsComponent, OverlayScrollbarsComponentRef 
+} from 'overlayscrollbars-react';
 import 'overlayscrollbars/overlayscrollbars.css';
 
 import { Book } from '@/types/book';
@@ -13,7 +15,7 @@ import { eventDispatcher } from '@/utils/event';
 import { parseOpenWithFiles } from '@/helpers/openWith';
 import { isTauriAppPlatform } from '@/services/environment';
 import { checkForAppUpdates, checkAppReleaseNotes } from '@/helpers/updater';
-import { FILE_ACCEPT_FORMATS, SUPPORTED_FILE_EXTS } from '@/services/constants';
+import { BOOK_ACCEPT_FORMATS } from '@/services/constants';
 import { impactFeedback } from '@tauri-apps/plugin-haptics';
 import { getCurrentWebview } from '@tauri-apps/api/webview';
 
@@ -27,6 +29,7 @@ import { useUICSS } from '@/hooks/useUICSS';
 
 import { useThemeStore } from '@/store/themeStore';
 import { useScreenWakeLock } from '@/hooks/useScreenWakeLock';
+import { FILE_SELECTION_PRESETS, SelectedFile, useFileSelector } from '@/hooks/useFileSelector';
 import { useOpenWithBooks } from '@/hooks/useOpenWithBooks';
 import useShortcuts from '@/hooks/useShortcuts';
 import { lockScreenOrientation } from '@/utils/bridge';
@@ -62,6 +65,7 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
     setCheckLastOpenBooks,
   } = useLibraryStore();
   const _ = useTranslation();
+  const { selectFiles } = useFileSelector(appService, _);
   const { safeAreaInsets: insets } = useThemeStore();
   const { settings, setSettings, saveSettings } = useSettingsStore();
   const [loading, setLoading] = useState(false);
@@ -125,12 +129,12 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
       } else {
         fileExt = file.name.split('.').pop()?.toLowerCase();
       }
-      return FILE_ACCEPT_FORMATS.includes(`.${fileExt}`);
+      return BOOK_ACCEPT_FORMATS.includes(`.${fileExt}`);
     });
     if (supportedFiles.length === 0) {
       eventDispatcher.dispatch('toast', {
         message: _('No supported files found. Supported formats: {{formats}}', {
-          formats: FILE_ACCEPT_FORMATS,
+          formats: BOOK_ACCEPT_FORMATS,
         }),
         type: 'error',
       });
@@ -141,7 +145,14 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
       impactFeedback('medium');
     }
 
-    await importBooks(supportedFiles);
+    const selectedFiles = supportedFiles.map(
+      (file) =>
+        ({
+          file: typeof file === 'string' ? undefined : file,
+          path: typeof file === 'string' ? file : undefined,
+        }) as SelectedFile,
+    );
+    await importBooks(selectedFiles);
   };
 
   const handleDragOver = (event: React.DragEvent<HTMLDivElement> | DragEvent) => {
@@ -345,7 +356,7 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
-  const importBooks = async (files: (string | File)[]) => {
+  const importBooks = async (files: SelectedFile[]) => {
     setLoading(true);
     const failedFiles = [];
     const errorMap: [string, string][] = [
@@ -354,11 +365,14 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
       ['Unsupported format.', _('This book format is not supported.')],
     ];
     const { library } = useLibraryStore.getState();
-    for (const file of files) {
+    for (const selectedFile of files) {
+      const file = selectedFile.file || selectedFile.path;
+      if (!file) continue;
       try {
-        await appService?.importBook(file, library);
+        // const book = 
+          await appService?.importBook(file, library);
         setLibrary([...library]);
-        // if (user && book && !book.uploadedAt) {
+        // if (user && book && !book.uploadedAt ) {
         //   console.log('Uploading book:', book.title);
         //   handleBookUpload(book);
         // }
@@ -384,43 +398,12 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
     setLoading(false);
   };
 
-  const selectFilesTauri = async () => {
-    const exts = appService?.isMobileApp ? [] : SUPPORTED_FILE_EXTS;
-    const files = (await appService?.selectFiles(_('Select Books'), exts)) || [];
-    if (appService?.isIOSApp) {
-      return files.filter((file) => {
-        const fileExt = file.split('.').pop()?.toLowerCase() || 'unknown';
-        return SUPPORTED_FILE_EXTS.includes(fileExt);
-      });
-    }
-    // Cannot filter out files on Android since some content providers may not return the file name
-    return files;
-  };
-
-  const selectFilesWeb = () => {
-    return new Promise((resolve) => {
-      const fileInput = document.createElement('input');
-      fileInput.type = 'file';
-      fileInput.accept = FILE_ACCEPT_FORMATS;
-      fileInput.multiple = true;
-      fileInput.click();
-
-      fileInput.onchange = () => {
-        resolve(fileInput.files);
-      };
-    });
-  };
-
   const handleImportBooks = async () => {
     console.log('Importing books...');
-    let files;
-
-    if (isTauriAppPlatform()) {
-      files = (await selectFilesTauri()) as [string];
-    } else {
-      files = (await selectFilesWeb()) as [File];
-    }
-    importBooks(files);
+    selectFiles({ ...FILE_SELECTION_PRESETS.books, multiple: true }).then((result) => {
+      if (result.files.length === 0 || result.error) return;
+      importBooks(result.files);
+    });
   };
 
   const handleShowDetailsBook = (book: Book) => {
