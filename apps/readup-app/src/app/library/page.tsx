@@ -7,6 +7,7 @@ import { ImFeed } from "react-icons/im";
 import { BiLibrary } from 'react-icons/bi';
 import { SiProgress } from "react-icons/si";
 import { MdOutlineSettings } from 'react-icons/md';
+import { PiNotebook } from 'react-icons/pi';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useEnv } from '@/context/EnvContext';
 import Dropdown from '@/components/Dropdown';
@@ -15,10 +16,11 @@ import { UpdaterWindow } from '@/components/UpdaterWindow';
 import WindowButtons from '@/components/WindowButtons';
 import { useTrafficLightStore } from '@/store/trafficLightStore';
 import { useThemeStore } from '@/store/themeStore';
-import LibraryPage from './components/LibraryPage';
-import StreakPage from './components/StreakPage';
-import CatalogPage from './components/feed/CatalogPage';
-import SettingsMenu from './components/SettingsMenu';
+import LibraryPage from './book/LibraryPage';
+import SettingsMenu from './book/SettingsMenu';
+import CatalogPage from './feed/CatalogPage';
+import NotePage from './note/NotePage';
+import StreakPage from './streak/StreakPage';
 
 const Library = () => {
   const { appService } = useEnv();
@@ -37,6 +39,8 @@ const Library = () => {
       </div>
       {activeTab === 'library' ? (
         <LibraryPage />
+      ) : activeTab === 'note' ? (
+        <NotePage />
       ) : activeTab === 'streak' ? (
         <StreakPage />
       ) : activeTab === 'catalog' && appService?.appPlatform !== 'web' ? (
@@ -78,8 +82,8 @@ const NavTab: React.FC<{
   const windowButtonVisible = appService?.hasWindowBar && !isTrafficLightVisible;
 
   const tabs = appService?.appPlatform === 'web' 
-    ? ['library', 'streak']
-    : ['library', 'catalog', 'streak'];
+    ? ['library', 'note', 'streak']
+    : ['library', 'catalog', 'note', 'streak'];
 
   if (!insets) return null;
 
@@ -104,20 +108,28 @@ const NavTab: React.FC<{
         {tabs.map((tab) => (
           <div
             key={tab}
-            className='tooltip tooltip-bottom m-1 rounded-md p-1 z-50'
+            className='tooltip tooltip-bottom m-1 rounded-md z-50'
             data-tip={
-              tab === 'library' ? _('Library') : tab === 'catalog' ? _('Catalog') : _('Streak')
+              tab === 'library' 
+                ? _('Library') 
+                : tab === 'catalog' 
+                  ? _('Catalog') 
+                  : tab === 'note' 
+                    ?  _('Note')
+                    :  _('Streak')
             }
           >
             <button 
               type='button'
-              className='btn btn-ghost' 
+              className='btn btn-ghost btn-sm' 
               onClick={() => onTabChange(tab)}
             >
               {tab === 'library' ? (
                 <BiLibrary className={clsx('mx-auto', tab === activeTab && 'text-success')} />
               ) : tab === 'catalog' ? (
                 <ImFeed className={clsx('mx-auto', tab === activeTab && 'text-success')} />
+              ) : tab === 'note' ? (
+                <PiNotebook className={clsx('mx-auto', tab === activeTab && 'text-success')} />  
               ) : (
                 <SiProgress className={clsx('mx-auto', tab === activeTab && 'text-success')} />
               )}
@@ -126,7 +138,7 @@ const NavTab: React.FC<{
         ))}
         <Dropdown
           className='exclude-title-bar-mousedown dropdown-bottom dropdown-end z-50'
-          buttonClassName='btn btn-ghost'
+          buttonClassName='btn btn-ghost btn-sm'
           toggleButton={<MdOutlineSettings />}
         >
           <SettingsMenu />

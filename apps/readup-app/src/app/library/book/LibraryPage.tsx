@@ -39,7 +39,7 @@ import {
   tauriQuitApp,
 } from '@/utils/window';
 
-import BookDetailModal from '@/app/library/components/BookDetailModal';
+import BookDetailModal from '@/app/library/book/BookDetailModal';
 import DropIndicator from '@/components/DropIndicator';
 import { Toast } from '@/components/Toast';
 import Spinner from '@/components/Spinner';

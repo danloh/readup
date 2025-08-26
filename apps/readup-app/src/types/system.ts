@@ -2,7 +2,7 @@ import { SystemSettings } from './settings';
 import { Book, BookConfig, BookContent, ViewSettings } from './book';
 import { BookMetadata } from '@/libs/document';
 import { ProgressHandler } from '@/utils/transfer';
-import { ArticleType, FeedType } from '@/app/library/components/feed/dataAgent';
+import { ArticleType, FeedType } from '@/app/library/feed/dataAgent';
 
 export type AppPlatform = 'web' | 'tauri';
 export type OsPlatform = 'android' | 'ios' | 'macos' | 'windows' | 'linux' | 'unknown';

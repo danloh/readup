@@ -1,7 +1,7 @@
 import clsx from 'clsx';
 import { useResponsiveSize } from '@/hooks/useResponsiveSize';
 import { BooksGroup } from '@/types/book';
-import BookCover from '@/app/library/components/BookCover';
+import BookCover from '@/app/library/book/BookCover';
 
 interface GroupItemProps {
   group: BooksGroup;
