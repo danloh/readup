@@ -5,7 +5,7 @@ import { useBookDataStore } from '@/store/bookDataStore';
 import { getOSPlatform } from '@/utils/misc';
 import { eventDispatcher } from '@/utils/event';
 import { getTextFromRange, TextSelection } from '@/utils/sel';
-import { transformContent } from '@/services/transformService';
+import { transformContent } from '../transformers/transformService';
 
 export const useTextSelector = (
   bookKey: string,

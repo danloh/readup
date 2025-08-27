@@ -1,5 +1,5 @@
-import { TbPlaylist } from "react-icons/tb";
-import { PodType } from "./dataAgent";
+import { TbPlaylist } from 'react-icons/tb';
+import { PodType } from './dataAgent';
 
 type Props = {
   currentPod: PodType | null;
@@ -8,7 +8,7 @@ type Props = {
 
 export default function AudioPlayer(props: Props) {
   const { currentPod, className = '' } = props;
-  // console.log("current pod: ", currentPod)
+  // console.log('current pod: ', currentPod)
   
   const TriggerPlaylist = () => {
     // store.getState().setIsSidebarOpen(true);
@@ -22,9 +22,9 @@ export default function AudioPlayer(props: Props) {
   return (
     <div className={`flex flex-row items-center justify-center ${className}`}>
       <button className='mx-1' onClick={TriggerPlaylist}>
-        <TbPlaylist size={24} className="dark:text-slate-300" />
+        <TbPlaylist size={24} className='dark:text-slate-300' />
       </button>
-      <audio className="ml-1 h-6" autoPlay controls src={currentPod.url} />
+      <audio className='ml-1 h-6' autoPlay controls src={currentPod.url} />
     </div>
   )
 }
