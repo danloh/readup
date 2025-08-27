@@ -321,6 +321,7 @@ export abstract class BaseAppService implements AppService {
     }
   }
 
+  // TODO
   async uploadBook(book: Book, onProgress?: ProgressHandler): Promise<void> {
     let uploaded = false;
     const completedFiles = { count: 0 };
