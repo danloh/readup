@@ -68,7 +68,7 @@ export type BookMetadata = {
   publisher?: string;
   published?: string;
   description?: string;
-  subject?: string | string[] | Contributor;
+  subject?: string | string[];
   identifier?: string;
 
   subtitle?: string;
