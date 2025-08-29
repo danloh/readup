@@ -22,6 +22,13 @@ import CatalogPage from './feed/CatalogPage';
 import NotePage from './note/NotePage';
 import StreakPage from './streak/StreakPage';
 
+function titleCase(str: string) {
+  return str.replace(
+    /\w\S*/g,
+    txt => txt.charAt(0).toUpperCase() + txt.substring(1).toLowerCase()
+  );
+}
+
 const Library = () => {
   const { appService } = useEnv();
   const [activeTab, setActiveTab] = useState('library');
@@ -101,23 +108,15 @@ const NavTab: React.FC<{
           : '0px',
       }}
     >
-      <div className='flex text-xl font-bold items-start mx-1'>
-        {'Readup'}
+      <div className='flex font-bold items-center justify-start mx-1'>
+        {_(titleCase(activeTab))}
       </div>
       <div className='flex flex-wrap w-full items-center justify-end gap-1'>
         {tabs.map((tab) => (
           <div
             key={tab}
             className='tooltip tooltip-bottom m-1 rounded-md z-50'
-            data-tip={
-              tab === 'library' 
-                ? _('Library') 
-                : tab === 'catalog' 
-                  ? _('Catalog') 
-                  : tab === 'note' 
-                    ?  _('Note')
-                    :  _('Streak')
-            }
+            data-tip={_(titleCase(tab))}
           >
             <button 
               type='button'
