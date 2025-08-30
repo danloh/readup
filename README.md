@@ -23,23 +23,7 @@ A fork of [Foliate](https://github.com/johnfactotum/foliate) and [Readest](https
 | **Code Syntax Highlighting**            | Read software manuals with rich coloring of code examples.                                     | ✅         |
 
 
-
-## Screenshots
-
-![Annotations](./data/screenshots/annotations.png)
-
-![TTS](./data/screenshots/tts_speak_aloud.png)
-
-![DeepL](./data/screenshots/deepl.png)
-
-![Footnote](./data/screenshots/footnote_popover.png)
-
-![Wikipedia](./data/screenshots/wikipedia_vertical.png)
-
-![Theming Dark Mode](./data/screenshots/theming_dark_mode.png)
-
 ---
-
 
 ## Requirements
 
