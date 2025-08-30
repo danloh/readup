@@ -1,7 +1,5 @@
 [workspace]
-members = [
-  "apps/readup-app/src-tauri",
-]
+members = ["src-tauri"]
 resolver = "2"
 
 [workspace.package]

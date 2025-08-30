@@ -1,7 +1,7 @@
 default_platform(:android)
 
 platform :android do
-  aab_file = "./apps/readup-app/src-tauri/gen/android/app/build/outputs/bundle/universalRelease/app-universal-release.aab"
+  aab_file = "./src-tauri/gen/android/app/build/outputs/bundle/universalRelease/app-universal-release.aab"
 
   desc "Upload AAB to Google Play Production"
   lane :upload_production do

@@ -71,7 +71,7 @@ git submodule update --init --recursive
 # might need to rerun this when code is updated
 pnpm install
 # copy pdfjs-dist to Next.js public directory
-pnpm --filter @readup/readup-app setup-pdfjs
+pnpm setup-pdfjs
 ```
 
 ### 3. Verify Dependencies Installation
@@ -88,7 +88,6 @@ For Windows targets, “Build Tools for Visual Studio 2022” (or a higher editi
 
 ### 4. Build for Development　
 
-In `/apps/readup-app`
 
 ```bash
 # Start development for the Tauri app

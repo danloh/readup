@@ -29,8 +29,21 @@ yarn-error.log*
 # local env files
 .env*.local
 
+# certs and keys
+/private_keys
+
+# plists
+Entitlements*.plist
+
+# local confs
+tauri.*.conf.json
+
 # vercel
 .vercel
+
+# open-next
+.open-next
+.wrangler
 
 # typescript
 *.tsbuildinfo
@@ -38,6 +51,19 @@ next-env.d.ts
 
 # Rust build
 target
+src-tauri/target
+
+#generated
+src-tauri/gen
+
+# vendor
+/public/vendor
+
+# Auto Generated PWA files
+/public/sw.js
+/public/workbox-*.js
+/public/fallback-*.js
+/public/swe-worker-*.js
 
 # dev
 devlog.md

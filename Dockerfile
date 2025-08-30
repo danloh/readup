@@ -29,9 +29,9 @@ WORKDIR /app
 
 RUN pnpm install
 
-RUN pnpm --filter @readup/readup-app setup-pdfjs
+RUN pnpm setup-pdfjs
 
-WORKDIR /app/apps/readup-app
+WORKDIR /
 
 RUN pnpm build-web
 
