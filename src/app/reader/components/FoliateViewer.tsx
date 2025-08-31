@@ -25,6 +25,7 @@ import { isTauriAppPlatform } from '@/services/environment';
 import { lockScreenOrientation } from '@/utils/bridge';
 import { manageSyntaxHighlighting } from '@/utils/highlightjs';
 import { getViewInsets } from '@/utils/insets';
+import Spinner from '@/components/Spinner';
 import { transformContent } from '../transformers/transformService';
 import { useMouseEvent, useTouchEvent } from '../hooks/useIframeEvents';
 import { usePagination } from '../hooks/usePagination';
@@ -68,6 +69,8 @@ const FoliateViewer: React.FC<{
   const isViewCreated = useRef(false);
   const doubleClickDisabled = useRef(!!viewSettings?.disableDoubleClick);
   const [toastMessage, setToastMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+  const docLoaded = useRef(false);
 
   useEffect(() => {
     const timer = setTimeout(() => setToastMessage(''), 2000);
@@ -119,6 +122,8 @@ const FoliateViewer: React.FC<{
   };
 
   const docLoadHandler = (event: Event) => {
+    setLoading(false);
+    docLoaded.current = true;
     const detail = (event as CustomEvent).detail;
     console.log('doc index loaded:', detail.index);
     if (detail.doc) {
@@ -215,6 +220,8 @@ const FoliateViewer: React.FC<{
   useEffect(() => {
     if (isViewCreated.current) return;
     isViewCreated.current = true;
+
+    setTimeout(() => setLoading(true), 200);
 
     const openBook = async () => {
       console.log('Opening book', bookKey);
@@ -349,12 +356,15 @@ const FoliateViewer: React.FC<{
   ]);
 
   return (
-    <div
-      ref={containerRef}
-      className='foliate-viewer h-[100%] w-[100%]'
-      {...mouseHandlers}
-      {...touchHandlers}
-    />
+    <>
+      <div
+        ref={containerRef}
+        className='foliate-viewer h-[100%] w-[100%]'
+        {...mouseHandlers}
+        {...touchHandlers}
+      />
+      {!docLoaded.current && loading && <Spinner loading={true} />}
+    </>
   );
 };
 

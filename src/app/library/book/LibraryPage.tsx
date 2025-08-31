@@ -411,8 +411,10 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
   };
 
   if (!appService || !insets || checkOpenWithBooks || checkLastOpenBooks) {
-    return <div className='bg-base-200 inset-0 flex h-[100vh] items-center justify-center'></div>;
+    return <div className='bg-base-200 h-[100vh]' />;
   }
+
+  const showBookshelf = libraryLoaded || libraryBooks.length > 0;
 
   return (
     <div
@@ -429,7 +431,7 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
           <Spinner loading />
         </div>
       )}
-      {libraryLoaded &&
+      {showBookshelf &&
         (libraryBooks.some((book) => !book.deletedAt) ? (
           <OverlayScrollbarsComponent
             defer
@@ -487,11 +489,7 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
 
 const LibraryPage = () => {
   return (
-    <Suspense
-      fallback={
-        <div className='bg-base-200 inset-0 flex h-[100vh] items-center justify-center'></div>
-      }
-    >
+    <Suspense fallback={<div className='bg-base-200 h-[100vh]' />}>
       <LibraryPageWithSearchParams />
     </Suspense>
   );

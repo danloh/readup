@@ -54,7 +54,7 @@ target
 src-tauri/target
 
 #generated
-src-tauri/gen
+#src-tauri/gen
 
 # vendor
 /public/vendor

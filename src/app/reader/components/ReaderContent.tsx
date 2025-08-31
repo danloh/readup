@@ -91,10 +91,12 @@ const ReaderContent: React.FC<{ ids?: string; settings: SystemSettings }> = ({ i
     }
     window.addEventListener('beforeunload', handleCloseBooks);
     eventDispatcher.on('beforereload', handleCloseBooks);
+    eventDispatcher.on('close-reader', handleCloseBooks);
     eventDispatcher.on('quit-app', handleCloseBooks);
     return () => {
       window.removeEventListener('beforeunload', handleCloseBooks);
       eventDispatcher.off('beforereload', handleCloseBooks);
+      eventDispatcher.off('close-reader', handleCloseBooks);
       eventDispatcher.off('quit-app', handleCloseBooks);
       unlistenOnCloseWindow?.then((fn) => fn());
     };
@@ -175,7 +177,7 @@ const ReaderContent: React.FC<{ ids?: string; settings: SystemSettings }> = ({ i
   const bookData = getBookData(bookKeys[0]!);
   const viewSettings = getViewSettings(bookKeys[0]!);
   if (!bookData || !bookData.book || !bookData.bookDoc || !viewSettings) {
-    setTimeout(() => setLoading(true), 300);
+    setTimeout(() => setLoading(true), 200);
     return (
       loading && (
         <div className={clsx('hero hero-content', appService?.isIOSApp ? 'h-[100vh]' : 'h-dvh')}>

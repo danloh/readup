@@ -9,7 +9,6 @@ import { useLongPress } from '@/hooks/useLongPress';
 import { Menu, MenuItem } from '@tauri-apps/api/menu';
 import { revealItemInDir } from '@tauri-apps/plugin-opener';
 import { getOSPlatform } from '@/utils/misc';
-import { getLocalBookFilename } from '@/utils/book';
 import { eventDispatcher } from '@/utils/event';
 import { LibraryViewModeType } from '@/types/settings';
 import { BOOK_UNGROUPED_ID, BOOK_UNGROUPED_NAME } from '@/services/constants';
@@ -168,7 +167,7 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
     const showBookInFinderMenuItem = await MenuItem.new({
       text: _(fileRevealLabel),
       action: async () => {
-        const folder = `${settings.localBooksDir}/${getLocalBookFilename(book)}`;
+        const folder = `${settings.localBooksDir}/${book.hash}`;
         revealItemInDir(folder);
       },
     });
