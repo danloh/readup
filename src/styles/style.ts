@@ -14,7 +14,7 @@ import {
   generateLightPalette,
   generateDarkPalette,
 } from '@/styles/themes';
-import { getOSPlatform } from './misc';
+import { getOSPlatform } from '@/utils/misc';
 
 const getFontStyles = (
   serif: string,

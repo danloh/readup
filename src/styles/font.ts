@@ -1,4 +1,4 @@
-import { isCJKEnv } from './misc';
+import { isCJKEnv } from "@/utils/misc";
 
 const basicGoogleFonts = [
   { family: 'Bitter', weights: 'ital,wght@0,100..900;1,100..900' },

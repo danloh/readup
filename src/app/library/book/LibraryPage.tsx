@@ -1,6 +1,8 @@
 import clsx from 'clsx';
 import * as React from 'react';
 import { useState, useRef, useEffect, Suspense, useCallback } from 'react';
+import { impactFeedback } from '@tauri-apps/plugin-haptics';
+import { getCurrentWebview } from '@tauri-apps/api/webview';
 import { ReadonlyURLSearchParams, useRouter, useSearchParams } from 'next/navigation';
 import { 
   OverlayScrollbarsComponent, OverlayScrollbarsComponentRef 
@@ -16,9 +18,6 @@ import { parseOpenWithFiles } from '@/helpers/openWith';
 import { isTauriAppPlatform } from '@/services/environment';
 import { checkForAppUpdates, checkAppReleaseNotes } from '@/helpers/updater';
 import { BOOK_ACCEPT_FORMATS } from '@/services/constants';
-import { impactFeedback } from '@tauri-apps/plugin-haptics';
-import { getCurrentWebview } from '@tauri-apps/api/webview';
-
 import { useEnv } from '@/context/EnvContext';
 import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -26,7 +25,6 @@ import { useLibraryStore } from '@/store/libraryStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useTheme } from '@/hooks/useTheme';
 import { useUICSS } from '@/hooks/useUICSS';
-
 import { useThemeStore } from '@/store/themeStore';
 import { useScreenWakeLock } from '@/hooks/useScreenWakeLock';
 import { SelectedFile, useFileSelector } from '@/hooks/useFileSelector';
@@ -38,7 +36,6 @@ import {
   tauriHandleToggleFullScreen,
   tauriQuitApp,
 } from '@/utils/window';
-
 import BookDetailModal from '@/app/library/book/BookDetailModal';
 import DropIndicator from '@/components/DropIndicator';
 import { Toast } from '@/components/Toast';

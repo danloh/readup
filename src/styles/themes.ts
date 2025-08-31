@@ -1,6 +1,6 @@
 import tinycolor from 'tinycolor2';
 import { stubTranslation as _ } from '../utils/misc';
-import { getContrastOklch, hexToOklch } from '../utils/color';
+import { getContrastOklch, hexToOklch } from './color';
 
 export type BaseColor = {
   bg: string;

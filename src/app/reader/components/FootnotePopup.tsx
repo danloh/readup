@@ -1,17 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { FootnoteHandler } from 'foliate-js/footnotes.js';
 
 import { BookDoc } from '@/libs/document';
 import { useReaderStore } from '@/store/readerStore';
 import { useBookDataStore } from '@/store/bookDataStore';
-import { useFoliateEvents } from '../hooks/useFoliateEvents';
-import { getFootnoteStyles, getStyles, getThemeCode } from '@/utils/style';
+import { getFootnoteStyles, getStyles, getThemeCode } from '@/styles/style';
 import { getPopupPosition, getPosition, Position } from '@/utils/sel';
-import { FootnoteHandler } from 'foliate-js/footnotes.js';
-import { mountAdditionalFonts } from '@/utils/font';
+import { mountAdditionalFonts } from '@/styles/font';
 import { eventDispatcher } from '@/utils/event';
 import { FoliateView } from '@/types/view';
 import { isCJKLang } from '@/utils/lang';
 import Popup from '@/components/Popup';
+import { useFoliateEvents } from '../hooks/useFoliateEvents';
 
 interface FootnotePopupProps {
   bookKey: string;

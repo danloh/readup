@@ -10,17 +10,17 @@ import { BiCheckboxChecked, BiCheckbox, BiMoon, BiSun } from "react-icons/bi";
 import { MAX_ZOOM_LEVEL, MIN_ZOOM_LEVEL, ZOOM_STEP } from '@/services/constants';
 import { useEnv } from '@/context/EnvContext';
 import { useAuth } from '@/context/AuthContext';
+import MenuItem from '@/components/MenuItem';
 import { useThemeStore } from '@/store/themeStore';
 import { useReaderStore } from '@/store/readerStore';
 import { useBookDataStore } from '@/store/bookDataStore';
 import { useTranslation } from '@/hooks/useTranslation';
-import { getStyles } from '@/utils/style';
+import { getStyles } from '@/styles/style';
 import { navigateToLogin } from '@/utils/nav';
 import { eventDispatcher } from '@/utils/event';
 import { getMaxInlineSize } from '@/utils/config';
 import { tauriHandleToggleFullScreen } from '@/utils/window';
 import { saveViewSettings } from '../utils/viewSettingsHelper';
-import MenuItem from '@/components/MenuItem';
 
 interface ViewMenuProps {
   bookKey: string;

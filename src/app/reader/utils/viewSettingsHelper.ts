@@ -3,7 +3,7 @@ import { EnvConfigType } from '@/services/environment';
 import { useBookDataStore } from '@/store/bookDataStore';
 import { useReaderStore } from '@/store/readerStore';
 import { useSettingsStore } from '@/store/settingsStore';
-import { getStyles } from '@/utils/style';
+import { getStyles } from '@/styles/style';
 
 export const saveViewSettings = async <K extends keyof ViewSettings>(
   envConfig: EnvConfigType,

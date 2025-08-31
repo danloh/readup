@@ -14,8 +14,8 @@ import {
   applyTranslationStyle,
   getStyles,
   transformStylesheet,
-} from '@/utils/style';
-import { mountAdditionalFonts } from '@/utils/font';
+} from '@/styles/style';
+import { mountAdditionalFonts } from '@/styles/font';
 import { getBookDirFromLanguage, getBookDirFromWritingMode } from '@/utils/book';
 import { useUICSS } from '@/hooks/useUICSS';
 import { getMaxInlineSize } from '@/utils/config';

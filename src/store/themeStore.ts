@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { AppService } from '@/types/system';
 import { SystemSettings } from '@/types/settings';
 import { Insets } from '@/types/misc';
-import { getThemeCode, ThemeCode } from '@/utils/style';
+import { getThemeCode, ThemeCode } from '@/styles/style';
 import { initDayjs } from '@/utils/time';
 import { getSystemColorScheme } from '@/utils/bridge';
 import i18n from '@/i18n/i18n';

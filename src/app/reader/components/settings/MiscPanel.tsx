@@ -8,8 +8,8 @@ import { useSettingsStore } from '@/store/settingsStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useResetViewSettings } from '../../hooks/useResetSettings';
 import { SettingsPanelPanelProp } from './SettingsDialog';
-import { getStyles } from '@/utils/style';
-import cssValidate from '@/utils/css';
+import { getStyles } from '@/styles/style';
+import cssValidate from '@/styles/css';
 
 type CSSType = 'book' | 'reader';
 
@@ -119,7 +119,7 @@ const MiscPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
     e.nativeEvent.stopImmediatePropagation();
   };
 
-  const handleInputFocus = (textareaRef: React.RefObject<HTMLTextAreaElement>) => {
+  const handleInputFocus = (textareaRef: React.RefObject<HTMLTextAreaElement | null>) => {
     if (appService?.isAndroidApp) {
       setInputFocusInAndroid(true);
     }
@@ -146,7 +146,7 @@ const MiscPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
     value: string,
     error: string | null,
     saved: boolean,
-    textareaRef: React.RefObject<HTMLTextAreaElement>,
+    textareaRef: React.RefObject<HTMLTextAreaElement | null>,
   ) => (
     <div className='w-full'>
       <h2 className='mb-2 font-medium'>{_(title)}</h2>

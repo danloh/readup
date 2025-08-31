@@ -1,5 +1,5 @@
-import { OsPlatform } from '@/types/system';
 import { md5 } from 'js-md5';
+import { OsPlatform } from '@/types/system';
 
 export const uniqueId = () => Math.random().toString(36).substring(2, 9);
 
