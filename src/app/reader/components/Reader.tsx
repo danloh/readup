@@ -49,11 +49,6 @@ const Reader: React.FC<{ ids?: string }> = ({ ids }) => {
       setTimeout(getSysFontsList, 3000);
     }
     initDayjs(getLocale());
-
-    acquireBackKeyInterception();
-    return () => {
-      releaseBackKeyInterception();
-    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -71,6 +66,15 @@ const Reader: React.FC<{ ids?: string }> = ({ ids }) => {
     }
     return false;
   };
+
+  useEffect(() => {
+    if (!appService?.isAndroidApp) return;
+    acquireBackKeyInterception();
+    return () => {
+      releaseBackKeyInterception();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [appService?.isAndroidApp]);
 
   useEffect(() => {
     if (!appService?.isAndroidApp) return;
