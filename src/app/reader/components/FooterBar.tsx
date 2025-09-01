@@ -154,7 +154,7 @@ const FooterBar: React.FC<FooterBarProps> = ({
       />
       <div
         className={clsx(
-          'footer-bar shadow-xs absolute bottom-0 z-50 flex w-full flex-col',
+          'footer-bar shadow-xs absolute bottom-0 z-30 flex w-full flex-col',
           'sm:h-[52px] sm:justify-center',
           'sm:bg-base-100 border-base-300/50 border-t sm:border-none',
           'transition-[opacity,transform] duration-300',
@@ -179,7 +179,7 @@ const FooterBar: React.FC<FooterBarProps> = ({
               ? 'pointer-events-auto translate-y-0 pb-4 pt-8 ease-out'
               : 'pointer-events-none invisible translate-y-full overflow-hidden p-0 ease-in',
           )}
-          style={{ bottom: `${gridInsets.bottom + 52}px` }}
+          style={{ bottom: `${gridInsets.bottom * 0.33 + 52}px` }}
         >
           <div className='flex w-full items-center justify-center gap-x-4'>
             <Button
@@ -225,9 +225,9 @@ const FooterBar: React.FC<FooterBarProps> = ({
         <div
           ref={iconRef}
           className={clsx(
-            'bg-base-200 z-50 mt-auto flex w-full items-center gap-x-4 justify-center p-2',
+            'bg-base-200 z-30 mt-auto flex w-full items-center gap-x-4 justify-center p-2',
           )}
-          style={{ paddingBottom: `${gridInsets.bottom + 16}px` }}
+          style={{ paddingBottom: `${gridInsets.bottom * 0.33 + 16}px` }}
         >
           {!isSideBarVisible && (
             <>
