@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import clsx from 'clsx';
 import { MdOutlineScreenRotation } from 'react-icons/md';
 import { MdOutlineTextRotationNone, MdTextRotateVertical } from 'react-icons/md';
 import { IoPhoneLandscapeOutline, IoPhonePortraitOutline } from 'react-icons/io5';
@@ -354,33 +355,45 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
         <div className='flex items-center justify-between'>
           <b className=''>{_('Writing Mode')}</b>
           <div className='flex gap-4'>
-            <div className='lg:tooltip lg:tooltip-bottom' data-tip={_('Default')}>
+            <div className='tooltip tooltip-bottom' data-tip={_('Default')}>
               <button
-                className={`btn btn-ghost btn-circle btn-sm ${writingMode === 'auto' ? 'btn-active bg-base-300' : ''}`}
+                className={clsx(
+                  'btn btn-ghost btn-circle btn-sm',
+                  writingMode === 'auto' ? 'btn-active bg-base-300' : '',
+                )}
                 onClick={() => setWritingMode('auto')}
               >
                 <TfiLayoutWidthDefault />
               </button>
             </div>
-            <div className='lg:tooltip lg:tooltip-bottom' data-tip={_('Horizontal Direction')}>
+            <div className='tooltip tooltip-bottom' data-tip={_('Horizontal Direction')}>
               <button
-                className={`btn btn-ghost btn-circle btn-sm ${writingMode === 'horizontal-tb' ? 'btn-active bg-base-300' : ''}`}
+                className={clsx(
+                  'btn btn-ghost btn-circle btn-sm',
+                  writingMode === 'horizontal-tb' ? 'btn-active bg-base-300' : '',
+                )}
                 onClick={() => setWritingMode('horizontal-tb')}
               >
                 <MdOutlineTextRotationNone />
               </button>
             </div>
-            <div className='lg:tooltip lg:tooltip-bottom' data-tip={_('Vertical Direction')}>
+            <div className='tooltip tooltip-bottom' data-tip={_('Vertical Direction')}>
               <button
-                className={`btn btn-ghost btn-circle btn-sm ${writingMode === 'vertical-rl' ? 'btn-active bg-base-300' : ''}`}
+                className={clsx(
+                  'btn btn-ghost btn-circle btn-sm',
+                  writingMode === 'vertical-rl' ? 'btn-active bg-base-300' : '',
+                )}
                 onClick={() => setWritingMode('vertical-rl')}
               >
                 <MdTextRotateVertical />
               </button>
             </div>
-            <div className='lg:tooltip lg:tooltip-bottom' data-tip={_('RTL Direction')}>
+            <div className='tooltip tooltip-bottom' data-tip={_('RTL Direction')}>
               <button
-                className={`btn btn-ghost btn-circle btn-sm ${writingMode === 'horizontal-rl' ? 'btn-active bg-base-300' : ''}`}
+                className={clsx(
+                  'btn btn-ghost btn-circle btn-sm',
+                  writingMode === 'horizontal-rl' ? 'btn-active bg-base-300' : '',
+                )}
                 onClick={() => setWritingMode('horizontal-rl')}
               >
                 <TbTextDirectionRtl />
@@ -394,25 +407,34 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
         <div className='flex items-center justify-between'>
           <b className=''>{_('Orientation')}</b>
           <div className='flex gap-4'>
-            <div className='lg:tooltip lg:tooltip-bottom' data-tip={_('Auto')}>
+            <div className='tooltip tooltip-bottom' data-tip={_('Auto')}>
               <button
-                className={`btn btn-ghost btn-circle btn-sm ${screenOrientation === 'auto' ? 'btn-active bg-base-300' : ''}`}
+                className={clsx(
+                  'btn btn-ghost btn-circle btn-sm',
+                  screenOrientation === 'auto' ? 'btn-active bg-base-300' : '',
+                )}
                 onClick={() => setScreenOrientation('auto')}
               >
                 <MdOutlineScreenRotation />
               </button>
             </div>
-            <div className='lg:tooltip lg:tooltip-bottom' data-tip={_('Portrait')}>
+            <div className='tooltip tooltip-bottom' data-tip={_('Portrait')}>
               <button
-                className={`btn btn-ghost btn-circle btn-sm ${screenOrientation === 'portrait' ? 'btn-active bg-base-300' : ''}`}
+                className={clsx(
+                  'btn btn-ghost btn-circle btn-sm',
+                  screenOrientation === 'portrait' && 'btn-active bg-base-300',
+                )}
                 onClick={() => setScreenOrientation('portrait')}
               >
                 <IoPhonePortraitOutline />
               </button>
             </div>
-            <div className='lg:tooltip lg:tooltip-bottom' data-tip={_('Landscape')}>
+            <div className='tooltip tooltip-bottom' data-tip={_('Landscape')}>
               <button
-                className={`btn btn-ghost btn-circle btn-sm ${screenOrientation === 'landscape' ? 'btn-active bg-base-300' : ''}`}
+                className={clsx(
+                  'btn btn-ghost btn-circle btn-sm',
+                  screenOrientation === 'landscape' && 'btn-active bg-base-300',
+                )}
                 onClick={() => setScreenOrientation('landscape')}
               >
                 <IoPhoneLandscapeOutline />

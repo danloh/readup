@@ -148,7 +148,7 @@ const ColorPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset
           <div className='flex items-center justify-between'>
             <b className='font-medium'>{_('Theme Mode')}</b>
             <div className='flex gap-4'>
-              <div className='lg:tooltip lg:tooltip-bottom' data-tip={_('Light Mode')}>
+              <div className='tooltip tooltip-bottom' data-tip={_('Light Mode')}>
                 <button
                   className={`btn btn-ghost btn-circle btn-sm ${themeMode === 'light' ? 'btn-active bg-base-300' : ''}`}
                   onClick={() => setThemeMode('light')}
@@ -156,7 +156,7 @@ const ColorPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset
                   <MdOutlineLightMode />
                 </button>
               </div>
-              <div className='lg:tooltip lg:tooltip-bottom' data-tip={_('Dark Mode')}>
+              <div className='tooltip tooltip-bottom' data-tip={_('Dark Mode')}>
                 <button
                   className={`btn btn-ghost btn-circle btn-sm ${themeMode === 'dark' ? 'btn-active bg-base-300' : ''}`}
                   onClick={() => setThemeMode('dark')}
@@ -164,7 +164,7 @@ const ColorPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset
                   <MdOutlineDarkMode />
                 </button>
               </div>
-              <div className='lg:tooltip lg:tooltip-bottom' data-tip={_('Auto Mode')}>
+              <div className='tooltip tooltip-bottom' data-tip={_('Auto Mode')}>
                 <button
                   className={`btn btn-ghost btn-circle btn-sm ${themeMode === 'auto' ? 'btn-active bg-base-300' : ''}`}
                   onClick={() => setThemeMode('auto')}

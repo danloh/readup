@@ -67,7 +67,7 @@ const LibraryHeader: React.FC<LibraryHeaderProps> = ({onImportBooks}) => {
               }}
               className='ml-[-6px] mr-4 flex h-7 min-h-7 w-7 items-center p-0'
             >
-              <div className='lg:tooltip lg:tooltip-bottom' data-tip={_('Go Back')}>
+              <div className='tooltip tooltip-bottom' data-tip={_('Go Back')}>
                 <MdArrowBackIosNew size={iconSize20} />
               </div>
             </button>

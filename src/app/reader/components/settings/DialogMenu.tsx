@@ -40,7 +40,7 @@ const DialogMenu: React.FC<DialogMenuProps> = ({ setIsDropdownOpen, onReset, res
       <MenuItem
         label={_('Global Settings')}
         tooltip={isFontLayoutSettingsGlobal ? _('Apply to All Books') : _('Apply to This Book')}
-        buttonClass='lg:tooltip'
+        buttonClass='tooltip'
         Icon={
           isFontLayoutSettingsGlobal ? (
             <MdCheck size={iconSize} className='text-base-content' />

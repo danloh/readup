@@ -15,7 +15,7 @@ const PopupButton: React.FC<PopupButtonProps> = ({ showTooltip, tooltipText, Ico
   };
   return (
     <div
-      className='lg:tooltip lg:tooltip-bottom'
+      className='tooltip tooltip-bottom'
       data-tip={!buttonClicked && showTooltip ? tooltipText : null}
     >
       <button

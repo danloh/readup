@@ -66,7 +66,7 @@ const BookMenu: React.FC<BookMenuProps> = ({ menuClassName, setIsDropdownOpen })
     >
       <MenuItem
         label={_('Parallel Read')}
-        buttonClass={bookKeys.length > 1 ? 'lg:tooltip lg:tooltip-bottom' : ''}
+        buttonClass={bookKeys.length > 1 ? 'tooltip tooltip-bottom' : ''}
         tooltip={parallelViews.length > 0 ? _('Disable') : bookKeys.length > 1 ? _('Enable') : ''}
         Icon={parallelViews.length > 0 && bookKeys.length > 1 ? MdCheck : undefined}
         onClick={
