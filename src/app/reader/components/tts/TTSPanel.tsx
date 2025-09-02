@@ -1,9 +1,8 @@
 import clsx from 'clsx';
 import React, { useState, ChangeEvent, useEffect } from 'react';
 import { MdPlayCircle, MdPauseCircle, MdFastRewind, MdFastForward } from 'react-icons/md';
-import { RiVoiceAiFill } from 'react-icons/ri';
+import { RiVoiceAiFill, RiTimerLine } from 'react-icons/ri';
 import { MdCheck, MdSpeed } from 'react-icons/md';
-import { GiNightSleep } from "react-icons/gi";
 import { TTSVoicesGroup } from '@/services/tts';
 import { useEnv } from '@/context/EnvContext';
 import { useReaderStore } from '@/store/readerStore';
@@ -82,7 +81,7 @@ const TTSPanel = ({
 
   const defaultIconSize = useDefaultIconSize();
   const iconSize24 = useResponsiveSize(24);
-  const iconSize32 = useResponsiveSize(32);
+  const iconSize22 = useResponsiveSize(22);
 
   const handleSetRate = (e: ChangeEvent<HTMLInputElement>) => {
     let newRate = parseFloat(e.target.value);
@@ -158,7 +157,7 @@ const TTSPanel = ({
   }, [ttsLang]);
 
   return (
-    <div className='flex w-full flex-col items-center justify-center gap-2 rounded-2xl p-4'>
+    <div className='flex w-full flex-col items-center justify-center gap-2 rounded-xl p-2'>
       {showRate && (
         <div className='flex w-full flex-col items-center gap-0.5'>
           <input
@@ -227,12 +226,12 @@ const TTSPanel = ({
             onClick={() => showSetting('rate')}
             className='flex flex-col items-center justify-center rounded-full p-1'
           >
-            <MdSpeed size={iconSize24} className={clsx(showRate && 'fill-success')} />
+            <MdSpeed size={iconSize22} className={clsx(showRate && 'fill-success')} />
             {rate && (
               <span
                 className={clsx(
                   'absolute bottom-0 left-1/2 w-8 translate-x-[-50%] translate-y-[80%] px-1',
-                  'bg-primary/80 text-base-100 rounded-full text-center text-xs',
+                  'bg-primary/80 text-base-100 rounded-full text-center text-[8px]',
                 )}
               >
                 {`${rate}X`}
@@ -241,29 +240,29 @@ const TTSPanel = ({
           </button>
         </div>
         <button onClick={onBackward} className='rounded-full p-1'>
-          <MdFastRewind size={iconSize24} />
+          <MdFastRewind size={iconSize22} />
         </button>
         <button onClick={onTogglePlay} className='rounded-full p-1'>
           {isPlaying ? (
-            <MdPauseCircle size={iconSize32} className='fill-primary' />
+            <MdPauseCircle size={iconSize24} className='fill-primary' />
           ) : (
-            <MdPlayCircle size={iconSize32} className='fill-primary' />
+            <MdPlayCircle size={iconSize24} className='fill-primary' />
           )}
         </button>
         <button onClick={onForward} className='rounded-full p-1'>
-          <MdFastForward size={iconSize24} />
+          <MdFastForward size={iconSize22} />
         </button>
         <div className='dropdown'>
           <button
             onClick={() => showSetting('timer')}
             className='flex flex-col items-center justify-center rounded-full p-1'
           >
-            <GiNightSleep size={iconSize24} className={clsx(showTimer && 'fill-success')} />
+            <RiTimerLine size={iconSize22} className={clsx(showTimer && 'fill-success')} />
             {timeoutCountdown && (
               <span
                 className={clsx(
                   'absolute bottom-0 left-1/2 w-12 translate-x-[-50%] translate-y-[80%] px-1',
-                  'bg-primary/80 text-base-100 rounded-full text-center text-xs',
+                  'bg-primary/80 text-base-100 rounded-full text-center text-[8px]',
                 )}
               >
                 {timeoutCountdown}
@@ -273,7 +272,7 @@ const TTSPanel = ({
         </div>
         <div className='dropdown dropdown-top'>
           <button tabIndex={0} className='rounded-full p-1'>
-            <RiVoiceAiFill size={iconSize24} />
+            <RiVoiceAiFill size={iconSize22} />
           </button>
           <ul
             tabIndex={0}

@@ -4,7 +4,6 @@ import { RiArrowLeftSLine, RiArrowRightSLine, RiChatVoiceFill } from 'react-icon
 import { RiArrowGoBackLine, RiArrowGoForwardLine, RiSpeakAiLine } from 'react-icons/ri';
 import { RiArrowLeftDoubleLine, RiArrowRightDoubleLine } from 'react-icons/ri';
 import { IoIosList as TOCIcon } from 'react-icons/io';
-import { PiFeatherDuotone as NoteIcon } from 'react-icons/pi';
 import { RxSlider as SliderIcon } from 'react-icons/rx';
 
 import { useEnv } from '@/context/EnvContext';
@@ -48,7 +47,7 @@ const FooterBar: React.FC<FooterBarProps> = ({
   const { isSideBarVisible, setSideBarVisible } = useSidebarStore();
   const [actionTab, setActionTab] = React.useState('progress');
   const sliderHeight = useResponsiveSize(28);
-  const tocIconSize = useResponsiveSize(23);
+  const tocIconSize = useResponsiveSize(22);
 
   const view = getView(bookKey);
   const progress = getProgress(bookKey);
@@ -176,12 +175,12 @@ const FooterBar: React.FC<FooterBarProps> = ({
           className={clsx(
             'footerbar-progress bg-base-200 absolute bottom-16 flex w-full items-center px-4 transition-all',
             actionTab === 'progress'
-              ? 'pointer-events-auto translate-y-0 pb-4 pt-8 ease-out'
+              ? 'pointer-events-auto translate-y-0 py-2 ease-out'
               : 'pointer-events-none invisible translate-y-full overflow-hidden p-0 ease-in',
           )}
           style={{ bottom: `${gridInsets.bottom * 0.33 + 52}px` }}
         >
-          <div className='flex w-full items-center justify-center gap-x-4'>
+          <div className='flex w-full items-center justify-center gap-x-2'>
             <Button
               icon={viewSettings?.rtl ? <RiArrowGoForwardLine /> : <RiArrowGoBackLine />}
               onClick={handleGoBack}
@@ -225,27 +224,26 @@ const FooterBar: React.FC<FooterBarProps> = ({
         <div
           ref={iconRef}
           className={clsx(
-            'bg-base-200 z-30 mt-auto flex w-full items-center gap-x-4 justify-center p-2',
+            'bg-base-200 z-30 mt-auto flex w-full items-center gap-x-2 justify-center p-1',
           )}
           style={{ paddingBottom: `${gridInsets.bottom * 0.33 + 16}px` }}
         >
           {!isSideBarVisible && (
-            <>
-              <Button
-                icon={<TOCIcon size={tocIconSize} className='' />}
-                onClick={() => handleSetActionTab('toc')}
-                tooltip={_('TOC')}
-                tooltipDirection='top'
-              />
-              <Button
-                icon={<NoteIcon className='' />}
-                onClick={() => handleSetActionTab('note')}
-                tooltip={_('Annotate')}
-                tooltipDirection='top'
-              />
-            </>
+            <Button
+              icon={<TOCIcon size={tocIconSize} className='' />}
+              onClick={() => handleSetActionTab('toc')}
+              tooltip={_('TOC')}
+              tooltipDirection='top'
+            />
           )}
           <BookmarkToggler bookKey={bookKey} />
+          <Button
+            icon={<SliderIcon className={clsx(actionTab === 'progress' && 'text-blue-500')} />}
+            onClick={() => handleSetActionTab('progress')}
+            tooltip={_('Progress')}
+            tooltipDirection='top'
+          />
+          <TranslationToggler bookKey={bookKey} />
           <div
             className={clsx(
               'flex items-center justify-center',
@@ -267,13 +265,6 @@ const FooterBar: React.FC<FooterBarProps> = ({
               />
             )}
           </div>
-          <TranslationToggler bookKey={bookKey} />
-          <Button
-            icon={<SliderIcon className={clsx(actionTab === 'progress' && 'text-blue-500')} />}
-            onClick={() => handleSetActionTab('progress')}
-            tooltip={_('Progress')}
-            tooltipDirection='top'
-          />
         </div>
       </div>
       <TTSControl bookKey={bookKey} iconRef={iconRef} />
