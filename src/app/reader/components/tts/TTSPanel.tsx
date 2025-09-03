@@ -157,7 +157,7 @@ const TTSPanel = ({
   }, [ttsLang]);
 
   return (
-    <div className='flex w-full flex-col items-center justify-center gap-2 rounded-xl p-2'>
+    <div className='flex w-full flex-col items-center justify-center gap-1 rounded-xl p-2'>
       {showRate && (
         <div className='flex w-full flex-col items-center gap-0.5'>
           <input
