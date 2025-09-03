@@ -58,11 +58,6 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey, iconRef }) => {
     unblockerAudioRef.current.addEventListener('play', () => {
       if ('mediaSession' in navigator) {
         navigator.mediaSession.metadata = null;
-        navigator.mediaSession.setActionHandler('play', null);
-        navigator.mediaSession.setActionHandler('pause', null);
-        navigator.mediaSession.setActionHandler('stop', null);
-        navigator.mediaSession.setActionHandler('seekbackward', null);
-        navigator.mediaSession.setActionHandler('seekforward', null);
       }
     });
     unblockerAudioRef.current.preload = 'auto';
@@ -117,7 +112,7 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey, iconRef }) => {
       const mark = (e as CustomEvent<TTSMark>).detail;
       if (appService?.isMobileApp && 'mediaSession' in navigator) {
         navigator.mediaSession.metadata = new MediaMetadata({
-          title: mark.text,
+          title: mark?.text || '',
           artist: sectionLabel || title,
           album: author,
           artwork: [{ src: coverImageUrl || '/icon.png', sizes: '512x512', type: 'image/png' }],
@@ -233,7 +228,7 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey, iconRef }) => {
     }
   };
 
-  const handleTogglePlay = async () => {
+  const handleTogglePlay = useCallback(async () => {
     const ttsController = ttsControllerRef.current;
     if (!ttsController) return;
 
@@ -252,23 +247,32 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey, iconRef }) => {
         await ttsController.start();
       }
     }
-  };
+  }, [isPlaying, isPaused]);
 
-  const handleBackward = async () => {
+  const handleBackward = useCallback(async () => {
     const ttsController = ttsControllerRef.current;
     if (ttsController) {
       await ttsController.backward();
     }
-  };
+  }, []);
 
-  const handleForward = async () => {
+  const handleForward = useCallback(async () => {
     const ttsController = ttsControllerRef.current;
     if (ttsController) {
       await ttsController.forward();
     }
-  };
+  }, []);
 
-  const handleStop = async (bookKey: string) => {
+  const handlePause = useCallback(async () => {
+    const ttsController = ttsControllerRef.current;
+    if (ttsController) {
+      setIsPlaying(false);
+      setIsPaused(true);
+      await ttsController.pause();
+    }
+  }, []);
+
+  const handleStop = useCallback(async (bookKey: string) => {
     const ttsController = ttsControllerRef.current;
     if (ttsController) {
       await ttsController.shutdown();
@@ -285,7 +289,7 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey, iconRef }) => {
       releaseUnblockAudio();
     }
     setTTSEnabled(bookKey, false);
-  };
+  }, [appService]);
 
   // rate range: 0.5 - 3, 1.0 is normal speed
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -394,6 +398,30 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey, iconRef }) => {
   const handleDismissPopup = () => {
     setShowPanel((prev) => !prev);
   };
+
+  useEffect(() => {
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.setActionHandler('play', () => {
+        handleTogglePlay();
+      });
+
+      navigator.mediaSession.setActionHandler('pause', () => {
+        handleTogglePlay();
+      });
+
+      navigator.mediaSession.setActionHandler('stop', () => {
+        handlePause();
+      });
+
+      navigator.mediaSession.setActionHandler('seekforward', () => {
+        handleForward();
+      });
+
+      navigator.mediaSession.setActionHandler('seekbackward', () => {
+        handleBackward();
+      });
+    }
+  }, [handleTogglePlay, handlePause, handleForward, handleBackward]);
 
   useEffect(() => {
     if (!iconRef.current || !showPanel) return;
