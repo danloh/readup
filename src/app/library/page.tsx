@@ -19,7 +19,7 @@ import { useThemeStore } from '@/store/themeStore';
 import LibraryPage from './book/LibraryPage';
 import SettingsMenu from './book/SettingsMenu';
 import CatalogPage from './feed/CatalogPage';
-import NotePage from './note/NotePage';
+import NotePage from '../note/page';
 import StreakPage from './streak/StreakPage';
 
 function titleCase(str: string) {

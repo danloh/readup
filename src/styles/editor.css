@@ -1,0 +1,21 @@
+@reference "./globals.css";
+
+.crepe {
+  .cm-editor {
+    @apply h-full font-mono md:text-xs lg:text-sm xl:text-base;
+  }
+
+  .cm-scroller {
+    @apply overscroll-auto;
+  }
+
+  div[data-show="false"] {
+    @apply hidden;
+  }
+}
+
+.editor-cm {
+  .ͼo .cm-content {
+    caret-color: #000 !important;
+  }
+}

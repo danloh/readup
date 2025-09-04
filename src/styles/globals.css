@@ -340,3 +340,11 @@ foliate-view {
   -ms-user-select: text !important;
   user-select: text !important;
 }
+
+div[data-milkdown-root="true"] {
+  @apply h-full;
+}
+
+.milkdown {
+  @apply h-full;
+}
