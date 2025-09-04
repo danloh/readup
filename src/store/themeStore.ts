@@ -18,8 +18,8 @@ interface ThemeState {
   systemUIVisible: boolean;
   uiLang: string;
   statusBarHeight: number;
-  systemUIAlwaysHidden: boolean;
   safeAreaInsets: Insets | null;
+  systemUIAlwaysHidden: boolean;
   setSystemUIAlwaysHidden: (hidden: boolean) => void;
   setStatusBarHeight: (height: number) => void;
   showSystemUI: () => void;
@@ -71,8 +71,8 @@ export const useThemeStore = create<ThemeState>((set, get) => {
     systemUIVisible: false,
     uiLang: '',
     statusBarHeight: 24,
+    safeAreaInsets: { top: 0, right: 0, bottom: 0, left: 0 },
     systemUIAlwaysHidden: false,
-    safeAreaInsets: null,
     showSystemUI: () => set({ systemUIVisible: true }),
     dismissSystemUI: () => set({ systemUIVisible: false }),
     setUILang: (lang) => {
