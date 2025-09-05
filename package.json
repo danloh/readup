@@ -66,7 +66,8 @@
     "cssbeautify": "^0.3.1",
     "dayjs": "^1.11.13",
     "foliate-js": "workspace:*",
-
+    "mdsmirror": "workspace:*",
+    "codemirror": "6.0.2",
     "@codemirror/autocomplete": "^6.18.0",
     "@codemirror/commands": "^6.6.0",
     "@codemirror/lang-markdown": "^6.2.5",
@@ -77,12 +78,7 @@
     "@codemirror/search": "^6.5.6",
     "@codemirror/state": "^6.4.1",
     "@codemirror/view": "^6.32.0",
-    "@milkdown/crepe": "7.15.5",
-    "@milkdown/kit": "7.15.5",
-    "@milkdown/react": "7.15.5",
-    "@uiw/codemirror-theme-eclipse": "^4.23.0",
-    "@uiw/codemirror-theme-nord": "^4.23.12",
-
+    "@lezer/highlight": "1.2.1",
     "franc-min": "^6.2.0",
     "highlight.js": "^11.11.1",
     "i18next": "^24.2.0",
@@ -146,5 +142,6 @@
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.2.4",
     "wrangler": "4.31.0"
-  }
+  },
+  "packageManager": "pnpm@10.15.0+sha512.486ebc259d3e999a4e8691ce03b5cac4a71cbeca39372a9b762cb500cfdf0873e2cb16abe3d951b1ee2cf012503f027b98b6584e4df22524e0c7450d9ec7aa7b"
 }

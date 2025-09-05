@@ -1,10 +1,10 @@
 // MODIFIED FORM: https://github.com/codemirror/theme-one-dark/blob/main/src/one-dark.ts 
 // LICENSE: MIT License Copyright (C) 2018-2021 by Marijn Haverbeke <marijnh@gmail.com> and others
 
-import {EditorView} from "@codemirror/view"
-import {Extension} from "@codemirror/state"
-import {HighlightStyle, syntaxHighlighting} from "@codemirror/language"
-import {tags as t} from "@lezer/highlight"
+import {EditorView} from "@codemirror/view";
+import {Extension} from "@codemirror/state";
+import {HighlightStyle, syntaxHighlighting} from "@codemirror/language";
+import {tags as t} from "@lezer/highlight";
 
 // Using https://github.com/one-dark/vscode-one-dark-theme/ as reference for the colors
 
