@@ -6,6 +6,8 @@ import { GrSystem } from "react-icons/gr";
 import { MdZoomOut, MdZoomIn, MdSync, MdSyncProblem } from 'react-icons/md';
 import { PiScrollLight, PiBookOpenLight } from "react-icons/pi";
 import { BiCheckboxChecked, BiCheckbox, BiMoon, BiSun } from "react-icons/bi";
+import { IoMdExpand } from 'react-icons/io';
+import { TbArrowAutofitWidth, TbColumns1, TbColumns2 } from 'react-icons/tb';
 
 import { MAX_ZOOM_LEVEL, MIN_ZOOM_LEVEL, ZOOM_STEP } from '@/services/constants';
 import { useEnv } from '@/context/EnvContext';
@@ -35,14 +37,18 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
   const router = useRouter();
   const { user } = useAuth();
   const { envConfig, appService } = useEnv();
-  const { getConfig } = useBookDataStore();
+  const { getConfig, getBookData } = useBookDataStore();
   const { getView, getViewSettings, setViewSettings } = useReaderStore();
   const config = getConfig(bookKey)!;
+  const bookData = getBookData(bookKey)!;
   const viewSettings = getViewSettings(bookKey)!;
 
   const { themeMode, setThemeMode } = useThemeStore();
   const [isScrolledMode, setScrolledMode] = useState(viewSettings!.scrolled);
   const [zoomLevel, setZoomLevel] = useState(viewSettings!.zoomLevel!);
+  const [zoomMode, setZoomMode] = useState(viewSettings!.zoomMode!);
+  const [spreadMode, setSpreadMode] = useState(viewSettings!.spreadMode!);
+  const [keepCoverSpread, setKeepCoverSpread] = useState(viewSettings!.keepCoverSpread!);
   const [invertImgColor, setInvertImgColor] = useState(
     viewSettings!.invertImgColor,
   );
@@ -86,6 +92,9 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
 
   useEffect(() => {
     saveViewSettings(envConfig, bookKey, 'zoomLevel', zoomLevel, true, true);
+    if (bookData.bookDoc?.rendition?.layout === 'pre-paginated') {
+      getView(bookKey)?.renderer.setAttribute('scale-factor', zoomLevel);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [zoomLevel]);
 
@@ -94,6 +103,36 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
     saveViewSettings(envConfig, bookKey, 'invertImgColor', invertImgColor, true, true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [invertImgColor]);
+
+  useEffect(() => {
+    if (zoomMode === viewSettings.zoomMode) return;
+    viewSettings.zoomMode = zoomMode;
+    getView(bookKey)?.renderer.setAttribute('zoom', zoomMode);
+    setViewSettings(bookKey, viewSettings);
+    saveViewSettings(envConfig, bookKey, 'zoomMode', zoomMode, true, false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [zoomMode]);
+
+  useEffect(() => {
+    if (spreadMode === viewSettings.spreadMode) return;
+    viewSettings.spreadMode = spreadMode;
+    getView(bookKey)?.renderer.setAttribute('spread', spreadMode);
+    setViewSettings(bookKey, viewSettings);
+    saveViewSettings(envConfig, bookKey, 'spreadMode', spreadMode, true, false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [spreadMode]);
+
+  useEffect(() => {
+    if (keepCoverSpread === viewSettings.keepCoverSpread) return;
+    if (!bookData?.bookDoc?.sections?.length) return;
+    viewSettings.keepCoverSpread = keepCoverSpread;
+    const coverSide = bookData.bookDoc.dir === 'rtl' ? 'right' : 'left';
+    bookData.bookDoc.sections[0]!.pageSpread = keepCoverSpread ? '' : coverSide;
+    getView(bookKey)?.renderer.setAttribute('spread', spreadMode);
+    setViewSettings(bookKey, viewSettings);
+    saveViewSettings(envConfig, bookKey, 'keepCoverSpread', keepCoverSpread, true, false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [keepCoverSpread]);
 
   const lastSyncTime = Math.max(config?.lastSyncedAtConfig || 0, config?.lastSyncedAtNotes || 0);
 
@@ -137,12 +176,67 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
           <MdZoomIn />
         </button>
       </div>
+      {bookData.bookDoc?.rendition?.layout === 'pre-paginated' && (
+        <>
+          <div className={clsx('my-2 flex items-center justify-between rounded-md')}>
+            <button
+              onClick={setSpreadMode.bind(null, 'none')}
+              title={_('None Spread')}
+              className={clsx(
+                'hover:bg-base-300 text-base-content rounded-full p-2',
+                spreadMode === 'none' && 'bg-base-300/75',
+              )}
+            >
+              <TbColumns1 />
+            </button>
+            <button
+              onClick={setSpreadMode.bind(null, 'auto')}
+              title={_('Auto Spread')}
+              className={clsx(
+                'hover:bg-base-300 text-base-content rounded-full p-2',
+                spreadMode === 'auto' && 'bg-base-300/75',
+              )}
+            >
+              <TbColumns2 />
+            </button>
+            <div className='bg-base-300 mx-2 h-6 w-[1px]' />
+            <button
+              title={_('Fit Page')}
+              onClick={setZoomMode.bind(null, 'fit-page')}
+              className={clsx(
+                'hover:bg-base-300 text-base-content rounded-full p-2',
+                zoomMode === 'fit-page' && 'bg-base-300/75',
+              )}
+            >
+              <IoMdExpand />
+            </button>
+            <button
+              title={_('Fit Width')}
+              onClick={setZoomMode.bind(null, 'fit-width')}
+              className={clsx(
+                'hover:bg-base-300 text-base-content rounded-full p-2',
+                zoomMode === 'fit-width' && 'bg-base-300/75',
+              )}
+            >
+              <TbArrowAutofitWidth />
+            </button>
+          </div>
+
+          <MenuItem
+            label={_('Separate Cover Page')}
+            Icon={keepCoverSpread ? BiCheckboxChecked : BiCheckbox}
+            onClick={() => setKeepCoverSpread(!keepCoverSpread)}
+            disabled={spreadMode === 'none'}
+          />
+        </>
+      )}
       <hr className='border-base-300 my-1' />
       <MenuItem
         label={isScrolledMode ? _('Scrolled Mode') : _('Page Mode')}
         shortcut='Shift+J'
         Icon={isScrolledMode ? PiScrollLight : PiBookOpenLight}
         onClick={toggleScrolledMode}
+        disabled={bookData.bookDoc?.rendition?.layout === 'pre-paginated'}
       />
       {appService?.hasWindow && <MenuItem label={_('Fullscreen')} onClick={handleFullScreen} />}
       <MenuItem

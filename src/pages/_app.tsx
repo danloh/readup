@@ -1,13 +1,8 @@
-import "@milkdown/crepe/theme/common/style.css";
 import { AppProps } from 'next/app';
 import Head from 'next/head';
 import { EnvProvider } from '@/context/EnvContext';
 import Providers from '@/components/Providers';
-// import "@milkdown/crepe/theme/frame.css";
 import '../styles/globals.css';
-// import '../styles/crepe.css';
-// import '../styles/editor.css';
-// import '../styles/prosemirror.css';
 
 function MyApp({ Component, pageProps }: AppProps) {
   return (
