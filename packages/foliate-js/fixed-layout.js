@@ -32,8 +32,8 @@ const getViewport = (doc, viewport) => {
 }
 
 export class FixedLayout extends HTMLElement {
-    static observedAttributes = ['zoom']
-    #root = this.attachShadow({ mode: 'closed' })
+    static observedAttributes = ['zoom', 'scale-factor', 'spread']
+    #root = this.attachShadow({ mode: 'open' })
     #observer = new ResizeObserver(() => this.#render())
     #spreads
     #index = -1
@@ -45,6 +45,7 @@ export class FixedLayout extends HTMLElement {
     #center
     #side
     #zoom
+    #scaleFactor = 1.0
     constructor() {
         super()
 
@@ -68,11 +69,19 @@ export class FixedLayout extends HTMLElement {
                     ? parseFloat(value) : value
                 this.#render()
                 break
+            case 'scale-factor':
+                this.#scaleFactor = parseFloat(value) / 100
+                this.#render()
+                break
+            case 'spread':
+                this.#respread(value)
+                break
         }
     }
     async #createFrame({ index, src: srcOption }) {
         const srcOptionIsString = typeof srcOption === 'string'
         const src = srcOptionIsString ? srcOption : srcOption?.src
+        const data = srcOptionIsString ? null : srcOption?.data
         const onZoom = srcOptionIsString ? null : srcOption?.onZoom
         const element = document.createElement('div')
         element.setAttribute('dir', 'ltr')
@@ -102,7 +111,11 @@ export class FixedLayout extends HTMLElement {
                     onZoom,
                 })
             }, { once: true })
-            iframe.src = src
+            if (data) {
+                iframe.srcdoc = data
+            } else {
+                iframe.src = src
+            }
         })
     }
     #render(side = this.#side) {
@@ -117,7 +130,7 @@ export class FixedLayout extends HTMLElement {
         const blankWidth = left.width ?? right.width ?? 0
         const blankHeight = left.height ?? right.height ?? 0
 
-        const scale = typeof this.#zoom === 'number' && !isNaN(this.#zoom)
+        let scale = typeof this.#zoom === 'number' && !isNaN(this.#zoom)
             ? this.#zoom
             : (this.#zoom === 'fit-width'
                 ? (portrait || this.#center
@@ -133,6 +146,7 @@ export class FixedLayout extends HTMLElement {
                             left.height ?? blankHeight,
                             right.height ?? blankHeight)))
             ) || 1
+        scale *= this.#scaleFactor
 
         const transform = frame => {
             let { element, iframe, width, height, blank, onZoom } = frame
@@ -202,15 +216,19 @@ export class FixedLayout extends HTMLElement {
     }
     open(book) {
         this.book = book
+        this.defaultViewport = book.rendition?.viewport
+        this.rtl = book.dir === 'rtl'
+
+        this.#spread()
+    }
+    #spread(mode) {
+        const book = this.book
         const { rendition } = book
-        this.spread = rendition?.spread
-        this.defaultViewport = rendition?.viewport
-
-        const rtl = book.dir === 'rtl'
+        const rtl = this.rtl
         const ltr = !rtl
-        this.rtl = rtl
+        this.spread = mode || rendition?.spread
 
-        if (rendition?.spread === 'none')
+        if (this.spread === 'none')
             this.#spreads = book.sections.map(section => ({ center: section }))
         else this.#spreads = book.sections.reduce((arr, section, i) => {
             const last = arr[arr.length - 1]
@@ -244,6 +262,14 @@ export class FixedLayout extends HTMLElement {
             }
             return arr
         }, [{}])
+    }
+    #respread(spreadMode) {
+        if (this.#index === -1) return
+        const section = this.book.sections[this.index]
+        this.#spread(spreadMode)
+        const { index } = this.getSpreadOf(section)
+        this.#index = -1
+        this.goToSpread(index, this.rtl ? 'right' : 'left', 'page')
     }
     get index() {
         const spread = this.#spreads[this.#index]

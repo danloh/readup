@@ -265,6 +265,7 @@ class MsEditor extends React.PureComponent<Props, State> {
       node: ProsemirrorNode,
       view: EditorView,
       getPos: () => number,
+      // @ts-ignore
       decorations: Decoration<{
         [key: string]: any;
       }>[]
@@ -516,6 +517,7 @@ class MsEditor extends React.PureComponent<Props, State> {
           node: ProsemirrorNode,
           view: EditorView,
           getPos: () => number,
+          // @ts-ignore
           decorations: Decoration<{
             [key: string]: any;
           }>[]
@@ -618,6 +620,7 @@ class MsEditor extends React.PureComponent<Props, State> {
     const view = new EditorView(this.element, {
       state: this.createState(this.props.value),
       editable: () => !this.props.readOnly,
+      // @ts-ignore
       nodeViews: this.nodeViews,
       handleDOMEvents: this.props.handleDOMEvents,
       dispatchTransaction: function(transaction) {
@@ -744,6 +747,7 @@ class MsEditor extends React.PureComponent<Props, State> {
       //   this.view.state.selection.from
       // );
       // this.view.dispatch(transaction0);
+      // @ts-ignore
       const transaction1 = this.view.state.tr.split(
         this.view.state.selection.to
       );
