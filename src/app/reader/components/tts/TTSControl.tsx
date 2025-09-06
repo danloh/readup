@@ -14,7 +14,7 @@ import { CFI } from '@/libs/document';
 import Popup from '@/components/Popup';
 import TTSPanel from './TTSPanel';
 
-const POPUP_WIDTH = 280;
+const POPUP_WIDTH = 320;
 const POPUP_HEIGHT = 60;
 const POPUP_PADDING = 10;
 
@@ -249,17 +249,17 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey, iconRef }) => {
     }
   }, [isPlaying, isPaused]);
 
-  const handleBackward = useCallback(async () => {
+  const handleBackward = useCallback(async (byMark = false) => {
     const ttsController = ttsControllerRef.current;
     if (ttsController) {
-      await ttsController.backward();
+      await ttsController.backward(byMark);
     }
   }, []);
 
-  const handleForward = useCallback(async () => {
+  const handleForward = useCallback(async (byMark = false) => {
     const ttsController = ttsControllerRef.current;
     if (ttsController) {
-      await ttsController.forward();
+      await ttsController.forward(byMark);
     }
   }, []);
 

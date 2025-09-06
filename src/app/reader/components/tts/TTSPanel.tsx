@@ -1,8 +1,8 @@
 import clsx from 'clsx';
 import React, { useState, ChangeEvent, useEffect } from 'react';
-import { MdPlayCircle, MdPauseCircle, MdFastRewind, MdFastForward } from 'react-icons/md';
 import { RiVoiceAiFill, RiTimerLine } from 'react-icons/ri';
-import { MdCheck, MdSpeed } from 'react-icons/md';
+import { FaBackward, FaFastBackward, FaFastForward, FaForward } from 'react-icons/fa';
+import { MdCheck, MdSpeed, MdPlayCircle, MdPauseCircle } from 'react-icons/md';
 import { TTSVoicesGroup } from '@/services/tts';
 import { useEnv } from '@/context/EnvContext';
 import { useReaderStore } from '@/store/readerStore';
@@ -18,8 +18,8 @@ type TTSPanelProps = {
   timeoutOption: number;
   timeoutTimestamp: number;
   onTogglePlay: () => void;
-  onBackward: () => void;
-  onForward: () => void;
+  onBackward: (byMark: boolean) => void;
+  onForward: (byMark: boolean) => void;
   onSetRate: (rate: number) => void;
   onGetVoices: (lang: string) => Promise<TTSVoicesGroup[]>;
   onSetVoice: (voice: string, lang: string) => void;
@@ -220,7 +220,7 @@ const TTSPanel = ({
           </div>
         </div>
       )}
-      <div className='flex items-center justify-between gap-x-2'>
+      <div className='flex items-center justify-between gap-x-1.5'>
         <div className='dropdown'>
           <button
             onClick={() => showSetting('rate')}
@@ -239,18 +239,47 @@ const TTSPanel = ({
             )}
           </button>
         </div>
-        <button onClick={onBackward} className='rounded-full p-1'>
-          <MdFastRewind size={iconSize22} />
+        <button 
+          onClick={onBackward.bind(null, false)} 
+          className='rounded-full p-1 transition-transform duration-200 hover:scale-105' 
+          title={_('Previous Paragraph')}
+          aria-label={_('Previous Paragraph')}
+        >
+          <FaFastBackward size={iconSize22} />
         </button>
-        <button onClick={onTogglePlay} className='rounded-full p-1'>
+        <button 
+          onClick={onBackward.bind(null, true)} 
+          className='rounded-full p-1 transition-transform duration-200 hover:scale-105' 
+          title={_('Previous Sentence')}
+          aria-label={_('Previous Sentence')}
+        >
+          <FaBackward size={iconSize22} />
+        </button>
+        <button 
+          onClick={onTogglePlay} 
+          className='rounded-full p-1 transition-transform duration-200 hover:scale-110'
+        >
           {isPlaying ? (
             <MdPauseCircle size={iconSize24} className='fill-primary' />
           ) : (
             <MdPlayCircle size={iconSize24} className='fill-primary' />
           )}
         </button>
-        <button onClick={onForward} className='rounded-full p-1'>
-          <MdFastForward size={iconSize22} />
+        <button 
+          onClick={onForward.bind(null, true)} 
+          className='rounded-full p-1 transition-transform duration-200 hover:scale-105' 
+          title={_('Next Sentence')}
+          aria-label={_('Next Sentence')}
+        >
+          <FaForward size={iconSize22} />
+        </button>
+        <button 
+          onClick={onForward.bind(null, false)} 
+          className='rounded-full p-1 transition-transform duration-200 hover:scale-105' 
+          title={_('Next Paragraph')}
+          aria-label={_('Next Paragraph')}
+        >
+          <FaFastForward size={iconSize22} />
         </button>
         <div className='dropdown'>
           <button
