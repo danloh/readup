@@ -152,6 +152,10 @@ export const DEFAULT_CJK_VIEW_SETTINGS: Partial<ViewSettings> = {
   textIndent: 2,
 };
 
+export const DEFAULT_FIXED_LAYOUT_VIEW_SETTINGS: Partial<ViewSettings> = {
+  overrideColor: true,
+};
+
 export const DEFAULT_VIEW_CONFIG: ViewConfig = {
   sideBarTab: 'toc',
   sortedTOC: false,

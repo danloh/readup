@@ -3,7 +3,9 @@ import {
   AppPlatform, AppService, OsPlatform, FileSystem, BaseDir, DeleteAction 
 } from '@/types/system';
 import { SystemSettings } from '@/types/settings';
-import { Book, BookConfig, BookContent, BookFormat, ViewSettings } from '@/types/book';
+import { 
+  Book, BookConfig, BookContent, BookFormat, ViewSettings, FIXED_LAYOUT_FORMATS 
+} from '@/types/book';
 import {
   getDir,
   getLocalBookFilename,
@@ -26,6 +28,7 @@ import {
   DEFAULT_BOOK_STYLE,
   DEFAULT_BOOK_FONT,
   DEFAULT_VIEW_CONFIG,
+  DEFAULT_FIXED_LAYOUT_VIEW_SETTINGS,
   DEFAULT_READSETTINGS,
   SYSTEM_SETTINGS_VERSION,
   DEFAULT_BOOK_SEARCH_CONFIG,
@@ -500,7 +503,10 @@ export abstract class BaseAppService implements AppService {
   }
 
   async loadBookConfig(book: Book, settings: SystemSettings): Promise<BookConfig> {
-    const { globalViewSettings } = settings;
+    const globalViewSettings = {
+      ...settings.globalViewSettings,
+      ...(FIXED_LAYOUT_FORMATS.has(book.format) ? DEFAULT_FIXED_LAYOUT_VIEW_SETTINGS : {}),
+    };
     try {
       let str = '{}';
       if (await this.fs.exists(getConfigFilename(book), 'Books')) {
@@ -529,7 +535,10 @@ export abstract class BaseAppService implements AppService {
   async saveBookConfig(book: Book, config: BookConfig, settings?: SystemSettings) {
     let serializedConfig: string;
     if (settings) {
-      const { globalViewSettings } = settings;
+      const globalViewSettings = {
+        ...settings.globalViewSettings,
+        ...(FIXED_LAYOUT_FORMATS.has(book.format) ? DEFAULT_FIXED_LAYOUT_VIEW_SETTINGS : {}),
+      };
       serializedConfig = serializeConfig(config, globalViewSettings, DEFAULT_BOOK_SEARCH_CONFIG);
     } else {
       serializedConfig = JSON.stringify(config);
