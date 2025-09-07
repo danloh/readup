@@ -1,4 +1,4 @@
-import isMarkdown from "./isMarkdown";
+import isMarkdown from "./core/queries/isMarkdown";
 
 test("returns false for an empty string", () => {
   expect(isMarkdown("")).toBe(false);

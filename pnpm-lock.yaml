@@ -338,7 +338,7 @@ importers:
   packages/mdsmirror:
     dependencies:
       '@juggle/resize-observer':
-        specifier: ^3.3.1
+        specifier: ^3.4.0
         version: 3.4.0
       abcjs:
         specifier: 6.2.2
@@ -350,17 +350,17 @@ importers:
         specifier: 5.4.3
         version: 5.4.3
       katex:
-        specifier: ^0.15.6
-        version: 0.15.6
+        specifier: ^0.16.22
+        version: 0.16.22
       lodash:
         specifier: ^4.17.21
         version: 4.17.21
       markdown-it:
-        specifier: ^12.3.2
-        version: 12.3.2
+        specifier: ^14.1.0
+        version: 14.1.0
       markdown-it-container:
-        specifier: ^3.0.0
-        version: 3.0.0
+        specifier: ^4.0.0
+        version: 4.0.0
       markdown-it-mathjax:
         specifier: ^2.0.0
         version: 2.0.0
@@ -371,46 +371,46 @@ importers:
         specifier: 4.1.1
         version: 4.1.1
       prosemirror-commands:
-        specifier: ^1.2.2
+        specifier: ^1.7.1
         version: 1.7.1
       prosemirror-dropcursor:
-        specifier: ^1.4.0
+        specifier: ^1.8.2
         version: 1.8.2
       prosemirror-gapcursor:
-        specifier: ^1.2.2
+        specifier: ^1.3.2
         version: 1.3.2
       prosemirror-history:
-        specifier: ^1.2.0
+        specifier: ^1.4.1
         version: 1.4.1
       prosemirror-inputrules:
-        specifier: ^1.1.3
+        specifier: ^1.5.0
         version: 1.5.0
       prosemirror-keymap:
-        specifier: ^1.1.5
+        specifier: ^1.2.3
         version: 1.2.3
       prosemirror-markdown:
-        specifier: ^1.8.0
+        specifier: ^1.13.2
         version: 1.13.2
       prosemirror-model:
-        specifier: ^1.16.1
+        specifier: ^1.25.3
         version: 1.25.3
       prosemirror-schema-list:
-        specifier: ^1.1.6
+        specifier: ^1.5.1
         version: 1.5.1
       prosemirror-state:
-        specifier: ^1.3.4
+        specifier: ^1.4.3
         version: 1.4.3
       prosemirror-tables:
-        specifier: ^1.1.1
+        specifier: ^1.8.1
         version: 1.8.1
       prosemirror-transform:
-        specifier: 1.4.2
-        version: 1.4.2
+        specifier: 1.10.4
+        version: 1.10.4
       prosemirror-utils:
-        specifier: ^0.9.6
-        version: 0.9.6(prosemirror-model@1.25.3)(prosemirror-state@1.4.3)(prosemirror-tables@1.8.1)
+        specifier: ^1.2.2
+        version: 1.2.2(prosemirror-model@1.25.3)(prosemirror-state@1.4.3)
       prosemirror-view:
-        specifier: ^1.23.12
+        specifier: ^1.40.1
         version: 1.40.1
       react:
         specifier: ^19.1.1
@@ -437,18 +437,6 @@ importers:
         specifier: ^4.3.6
         version: 4.3.6
     devDependencies:
-      '@babel/core':
-        specifier: ^7.17.9
-        version: 7.28.0
-      '@babel/preset-env':
-        specifier: ^7.16.11
-        version: 7.28.0(@babel/core@7.28.0)
-      '@babel/preset-react':
-        specifier: ^7.16.7
-        version: 7.27.1(@babel/core@7.28.0)
-      '@babel/preset-typescript':
-        specifier: ^7.16.7
-        version: 7.27.1(@babel/core@7.28.0)
       '@storybook/addon-a11y':
         specifier: ^9.1.4
         version: 9.1.4(storybook@9.1.4(@testing-library/dom@10.4.1)(prettier@2.8.8)(vite@7.0.6(@types/node@22.16.2)(jiti@1.21.7)(terser@5.43.1)(yaml@2.8.0)))
@@ -460,7 +448,7 @@ importers:
         version: 4.0.1(storybook@9.1.4(@testing-library/dom@10.4.1)(prettier@2.8.8)(vite@7.0.6(@types/node@22.16.2)(jiti@1.21.7)(terser@5.43.1)(yaml@2.8.0)))(webpack@5.100.0(@swc/core@1.13.5)(esbuild@0.25.4))
       '@storybook/react-webpack5':
         specifier: ^9.1.4
-        version: 9.1.4(@swc/core@1.13.5)(esbuild@0.25.4)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(storybook@9.1.4(@testing-library/dom@10.4.1)(prettier@2.8.8)(vite@7.0.6(@types/node@22.16.2)(jiti@1.21.7)(terser@5.43.1)(yaml@2.8.0)))(typescript@4.9.5)
+        version: 9.1.4(@swc/core@1.13.5)(esbuild@0.25.4)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(storybook@9.1.4(@testing-library/dom@10.4.1)(prettier@2.8.8)(vite@7.0.6(@types/node@22.16.2)(jiti@1.21.7)(terser@5.43.1)(yaml@2.8.0)))(typescript@5.9.2)
       '@storybook/test-runner':
         specifier: ^0.23.0
         version: 0.23.0(@types/node@22.16.2)(babel-plugin-macros@3.1.0)(storybook@9.1.4(@testing-library/dom@10.4.1)(prettier@2.8.8)(vite@7.0.6(@types/node@22.16.2)(jiti@1.21.7)(terser@5.43.1)(yaml@2.8.0)))
@@ -471,53 +459,20 @@ importers:
         specifier: ^27.4.1
         version: 27.5.2
       '@types/katex':
-        specifier: ^0.14.0
-        version: 0.14.0
+        specifier: ^0.16.7
+        version: 0.16.7
       '@types/lodash':
         specifier: ^4.14.181
         version: 4.17.20
       '@types/markdown-it':
-        specifier: ^12.2.3
-        version: 12.2.3
+        specifier: ^14.1.2
+        version: 14.1.2
       '@types/markdown-it-container':
-        specifier: ^2.0.5
+        specifier: 2.0.10
         version: 2.0.10
       '@types/mermaid':
         specifier: ^9.1.0
         version: 9.2.0
-      '@types/prosemirror-commands':
-        specifier: ^1.0.4
-        version: 1.3.0
-      '@types/prosemirror-dropcursor':
-        specifier: ^1.0.3
-        version: 1.5.0
-      '@types/prosemirror-gapcursor':
-        specifier: ^1.0.4
-        version: 1.3.0
-      '@types/prosemirror-history':
-        specifier: ^1.0.3
-        version: 1.3.0
-      '@types/prosemirror-inputrules':
-        specifier: ^1.0.4
-        version: 1.2.0
-      '@types/prosemirror-keymap':
-        specifier: ^1.0.4
-        version: 1.2.0
-      '@types/prosemirror-markdown':
-        specifier: ^1.5.6
-        version: 1.9.0
-      '@types/prosemirror-model':
-        specifier: ^1.16.1
-        version: 1.17.0
-      '@types/prosemirror-schema-list':
-        specifier: ^1.0.3
-        version: 1.2.0
-      '@types/prosemirror-state':
-        specifier: ^1.2.8
-        version: 1.4.0
-      '@types/prosemirror-view':
-        specifier: ^1.23.1
-        version: 1.24.0
       '@types/react':
         specifier: ^19.1.12
         version: 19.1.12
@@ -529,16 +484,10 @@ importers:
         version: 3.4.1
       '@typescript-eslint/eslint-plugin':
         specifier: ^5.17.0
-        version: 5.62.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@4.9.5))(eslint@8.57.1)(typescript@4.9.5)
+        version: 5.62.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@5.9.2))(eslint@8.57.1)(typescript@5.9.2)
       '@typescript-eslint/parser':
         specifier: ^5.17.0
-        version: 5.62.0(eslint@8.57.1)(typescript@4.9.5)
-      babel-jest:
-        specifier: ^27.5.1
-        version: 27.5.1(@babel/core@7.28.0)
-      babel-loader:
-        specifier: ^8.2.4
-        version: 8.4.1(@babel/core@7.28.0)(webpack@5.100.0(@swc/core@1.13.5)(esbuild@0.25.4))
+        version: 5.62.0(eslint@8.57.1)(typescript@5.9.2)
       eslint:
         specifier: ^8.12.0
         version: 8.57.1
@@ -547,10 +496,10 @@ importers:
         version: 8.10.2(eslint@8.57.1)
       eslint-config-react-app:
         specifier: ^7.0.0
-        version: 7.0.1(@babel/plugin-syntax-flow@7.27.1(@babel/core@7.28.0))(@babel/plugin-transform-react-jsx@7.27.1(@babel/core@7.28.0))(eslint@8.57.1)(jest@27.5.1)(typescript@4.9.5)
+        version: 7.0.1(@babel/plugin-syntax-flow@7.27.1(@babel/core@7.28.0))(@babel/plugin-transform-react-jsx@7.27.1(@babel/core@7.28.0))(eslint@8.57.1)(jest@27.5.1)(typescript@5.9.2)
       eslint-plugin-import:
         specifier: ^2.25.4
-        version: 2.32.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@4.9.5))(eslint@8.57.1)
+        version: 2.32.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@5.9.2))(eslint@8.57.1)
       eslint-plugin-jsx-a11y:
         specifier: ^6.5.1
         version: 6.10.2(eslint@8.57.1)
@@ -569,21 +518,12 @@ importers:
       prettier:
         specifier: ^2.6.2
         version: 2.8.8
-      source-map-loader:
-        specifier: ^3.0.1
-        version: 3.0.2(webpack@5.100.0(@swc/core@1.13.5)(esbuild@0.25.4))
       storybook:
         specifier: ^9.1.4
         version: 9.1.4(@testing-library/dom@10.4.1)(prettier@2.8.8)(vite@7.0.6(@types/node@22.16.2)(jiti@1.21.7)(terser@5.43.1)(yaml@2.8.0))
-      ts-loader:
-        specifier: ^9.2.8
-        version: 9.5.4(typescript@4.9.5)(webpack@5.100.0(@swc/core@1.13.5)(esbuild@0.25.4))
-      tsc-watch:
-        specifier: ^4.6.2
-        version: 4.6.2(typescript@4.9.5)
       typescript:
-        specifier: 4.9.5
-        version: 4.9.5
+        specifier: 5.9.2
+        version: 5.9.2
 
 packages:
 
@@ -3799,8 +3739,8 @@ packages:
   '@types/json5@0.0.29':
     resolution: {integrity: sha512-dRLjCWHYg4oaA77cxO64oO+7JwCwnIzkZPdrrC71jQmQtlhM556pwKo5bUzqvZndkVbeFLIIi+9TC40JNF5hNQ==}
 
-  '@types/katex@0.14.0':
-    resolution: {integrity: sha512-+2FW2CcT0K3P+JMR8YG846bmDwplKUTsWgT2ENwdQ1UdVfRk3GQrh6Mi4sTopy30gI8Uau5CEqHTDZ6YvWIUPA==}
+  '@types/katex@0.16.7':
+    resolution: {integrity: sha512-HMwFiRujE5PjrgwHQ25+bsLJgowjGjm5Z8FVSf0N6PwgJrwxH0QxzHYDcKsTfV3wva0vzrpqMTJS2jXPr5BMEQ==}
 
   '@types/linkify-it@5.0.0':
     resolution: {integrity: sha512-sVDA58zAw4eWAffKOaQH5/5j3XeayukzDk+ewSsnv3p4yJEZHCCzMDiZM8e0OUrRvmpGZ85jf4yDHkHsgBNr9Q==}
@@ -3810,9 +3750,6 @@ packages:
 
   '@types/markdown-it-container@2.0.10':
     resolution: {integrity: sha512-zv+YxrlSYRq51e9kzm3orv4OvF4U79Ll1OyplNXr00o4ZC/8PukJk/jEWH7CnsMtrSWZlyv0czhz42jm9J4uLw==}
-
-  '@types/markdown-it@12.2.3':
-    resolution: {integrity: sha512-GKMHFfv3458yYy+v/N8gjufHO6MSZKCOXpZc5GXIWWy8uldwfmPn98vp81gZ5f9SVw8YYBctgfJ22a2d7AOMeQ==}
 
   '@types/markdown-it@14.1.2':
     resolution: {integrity: sha512-promo4eFwuiW+TfGxhi+0x3czqTYJkG8qB17ZUJiVF10Xm7NLVRSLUsfRTU/6h1e24VvRnXCx+hG7li58lkzog==}
@@ -3850,50 +3787,6 @@ packages:
 
   '@types/prismjs@1.26.5':
     resolution: {integrity: sha512-AUZTa7hQ2KY5L7AmtSiqxlhWxb4ina0yd8hNbl4TWuqnv/pFP0nDMb3YrfSBf4hJVGLh2YEIBfKaBW/9UEl6IQ==}
-
-  '@types/prosemirror-commands@1.3.0':
-    resolution: {integrity: sha512-3UV4Pk4WRhrU7sGI5q/DAFS0DDIWYdaJwFqgrCblYRSOrJDLU8GIaZK5GmUaZtYF07E29XMKo9D2cDDh5pZBGg==}
-    deprecated: This is a stub types definition. prosemirror-commands provides its own type definitions, so you do not need this installed.
-
-  '@types/prosemirror-dropcursor@1.5.0':
-    resolution: {integrity: sha512-Xa13THoY0YkvYP/peH995ahT79w3ErdsmFUIaTY21nshxxnn5mdSgG+RTpkqXwZ85v+n28MvNfLF2gm+c8RZ1A==}
-    deprecated: This is a stub types definition. prosemirror-dropcursor provides its own type definitions, so you do not need this installed.
-
-  '@types/prosemirror-gapcursor@1.3.0':
-    resolution: {integrity: sha512-KbZbwrr2i6+AAOtTTQhbgXlAL1ZTY+FE8PsGz4vqRLeS4ow7sppdI3oHGMn0xmCgqXI+ajEDYENKHUQ2WZkXew==}
-    deprecated: This is a stub types definition. prosemirror-gapcursor provides its own type definitions, so you do not need this installed.
-
-  '@types/prosemirror-history@1.3.0':
-    resolution: {integrity: sha512-Cs3jtZvk+9N5ygsry2gEwkgMq11YwSFaChoxIRq75nGbDp8ZVAiYEqF6iAunsrExQC3zh0ojmf+XxP5X3j2Ztw==}
-    deprecated: This is a stub types definition. prosemirror-history provides its own type definitions, so you do not need this installed.
-
-  '@types/prosemirror-inputrules@1.2.0':
-    resolution: {integrity: sha512-N30wadmd6uVnGR97JvX2mEOEoqsLr/nv96SkTb3JKfTLqtdLW6UHjDf3fiOPPQkj2hMqhS9ENnsIbDKfsYrSdw==}
-    deprecated: This is a stub types definition. prosemirror-inputrules provides its own type definitions, so you do not need this installed.
-
-  '@types/prosemirror-keymap@1.2.0':
-    resolution: {integrity: sha512-Vv/hOlNsDBOkqmxWUjgK7Ch5mFNRnvG88mfl2WhLFp4awdg3oQiZeTPN0wosWSO4mpK9aAWtZEhvJ/639HTLTQ==}
-    deprecated: This is a stub types definition. prosemirror-keymap provides its own type definitions, so you do not need this installed.
-
-  '@types/prosemirror-markdown@1.9.0':
-    resolution: {integrity: sha512-6ghbzhx/JshByvYfqQmknSkth03Pf+78TGLB555kTnL6AxuJeL2zOx1EAg6kVRSFv6eckLt1dZs984ioWeD9Bg==}
-    deprecated: This is a stub types definition. prosemirror-markdown provides its own type definitions, so you do not need this installed.
-
-  '@types/prosemirror-model@1.17.0':
-    resolution: {integrity: sha512-lG5xEMkE8r8Soa80KdWPTbCLUaSHBHVHpTIEsQiebfONpvmS5061IMGzHUdb1oWjgrwh8EJq0GgMNwXHUx5mVg==}
-    deprecated: This is a stub types definition. prosemirror-model provides its own type definitions, so you do not need this installed.
-
-  '@types/prosemirror-schema-list@1.2.0':
-    resolution: {integrity: sha512-njvba73mgBanQOt2/piYMeP+nsu8lzomA350Lh7/sdr6NPsRvYPggwJDIZEG0Cb/MB0fnv4PdRaTi93PoLHArw==}
-    deprecated: This is a stub types definition. prosemirror-schema-list provides its own type definitions, so you do not need this installed.
-
-  '@types/prosemirror-state@1.4.0':
-    resolution: {integrity: sha512-71epLy1HD2H7Qn6iOoQrFdbdFP32Cg5U7OvlCXMuYO8ygUdz07dfqA1lNj1y+KLf3HkRCXVkfvi3OnNa/tFZ3A==}
-    deprecated: This is a stub types definition. prosemirror-state provides its own type definitions, so you do not need this installed.
-
-  '@types/prosemirror-view@1.24.0':
-    resolution: {integrity: sha512-Swn08/O+QIOKOSfFFa+KKF19eeHetwA+pBMAHZ7wbF0wPrMS3zJ+G9wbOGqSkUv6JOVpuhlOP8Xg5nA3MyIXgQ==}
-    deprecated: This is a stub types definition. prosemirror-view provides its own type definitions, so you do not need this installed.
 
   '@types/react-color@3.0.13':
     resolution: {integrity: sha512-2c/9FZ4ixC5T3JzN0LP5Cke2Mf0MKOP2Eh0NPDPWmuVH3NjPyhEjqNMQpN1Phr5m74egAy+p2lYNAFrX1z9Yrg==}
@@ -4585,13 +4478,6 @@ packages:
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
     peerDependencies:
       '@babel/core': ^7.8.0
-
-  babel-loader@8.4.1:
-    resolution: {integrity: sha512-nXzRChX+Z1GoE6yWavBQg6jDslyFF3SDjl2paADuoQtQW10JqShJt62R6eJQ5m/pjJFDT8xgKIWSP85OY8eXeA==}
-    engines: {node: '>= 8.9'}
-    peerDependencies:
-      '@babel/core': ^7.0.0
-      webpack: '>=2'
 
   babel-plugin-istanbul@6.1.1:
     resolution: {integrity: sha512-Y1IQok9821cC9onCx5otgFfRm7Lm+I+wwxOx738M/WLPZ9Q42m4IG5W0FNX8WLL2gYMZo3JkuXIH2DOpWM+qwA==}
@@ -5614,9 +5500,6 @@ packages:
   entities@1.1.2:
     resolution: {integrity: sha512-f2LZMYl1Fzu7YSBKg+RoROelpOaNrcGmE9AZubeDfrCEia483oW4MI4VyFd5VNHIgQ/7qm1I0wUHK1eJnn2y2w==}
 
-  entities@2.1.0:
-    resolution: {integrity: sha512-hCx1oky9PFrJ611mf0ifBLBRW8lUUVRlFolb5gWRfIELabBlbp9xZvrqZLZAs+NxFnbfQoeGd8wDkygjg7U85w==}
-
   entities@2.2.0:
     resolution: {integrity: sha512-p92if5Nz619I0w+akJrLZH0MX0Pb5DX39XOwQTtXSdQQOaYH03S1uIQp4mhOZtAXrxq4ViO67YTiLBo2638o9A==}
 
@@ -5934,9 +5817,6 @@ packages:
     resolution: {integrity: sha512-aIL5Fx7mawVa300al2BnEE4iNvo1qETxLrPI/o05L7z6go7fCw1J6EQmbK4FmJ2AS7kgVF/KEZWufBfdClMcPg==}
     engines: {node: '>= 0.6'}
 
-  event-stream@3.3.4:
-    resolution: {integrity: sha512-QHpkERcGsR0T7Qm3HNJSyXKEEj8AHNxkY3PK8TS2KJvQ7NiSHe3DDpwVKKtoYprL/AreyzFBeIkBIWChAqn60g==}
-
   event-target-shim@5.0.1:
     resolution: {integrity: sha512-i/2XbnSz/uxRCU6+NdVJgKWDTM427+MqYbkQzD321DuCQJUqOuJKIA0IM2+W2xtYHdKOmZ4dR6fExsd4SXL+WQ==}
     engines: {node: '>=6'}
@@ -6164,9 +6044,6 @@ packages:
   fresh@2.0.0:
     resolution: {integrity: sha512-Rx/WycZ60HOaqLKAi6cHRKKI7zxWbJ31MhntmtwMoaTeF7XFH9hhBp8vITaMidfljRQ6eYWCKkaTK+ykVJHP2A==}
     engines: {node: '>= 0.8'}
-
-  from@0.1.7:
-    resolution: {integrity: sha512-twe20eF1OxVxp/ML/kq2p1uc6KvFK/+vs8WjEbeKmV2He22MKm7YF2ANIt+EOqhJ5L3K/SuuPhk0hWQDjOM23g==}
 
   fromentries@1.3.2:
     resolution: {integrity: sha512-cHEpEQHUg0f8XdtZCc2ZAhrHzKzT0MrFUTcvx+hfxYu7rGMDc5SKoXFh+n4YigxsHXRzc6OrCshdR1bWH6HHyg==}
@@ -7210,8 +7087,8 @@ packages:
     resolution: {integrity: sha512-+KJGIyHgkGuIq3IEBNftfhW/LfWhXUIY6OmyVWjliu5KH1y0fw7VQ8YndE2O4qZdMSd9SqbnC8GOcZEy0Om7sA==}
     engines: {node: '>=18'}
 
-  katex@0.15.6:
-    resolution: {integrity: sha512-UpzJy4yrnqnhXvRPhjEuLA4lcPn6eRngixW7Q3TJErjg3Aw2PuLFBzTkdUb89UtumxjhHTqL3a5GDGETMSwgJA==}
+  katex@0.16.22:
+    resolution: {integrity: sha512-XCHRdUw4lf3SKBaJe4EvgqIuWwkPSo9XoeO8GjQW94Bp7TWv9hNhzZjZ+OH9yf1UmLygb7DIT5GSFQiyt16zYg==}
     hasBin: true
 
   keyv@4.5.4:
@@ -7257,9 +7134,6 @@ packages:
 
   lines-and-columns@1.2.4:
     resolution: {integrity: sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==}
-
-  linkify-it@3.0.3:
-    resolution: {integrity: sha512-ynTsyrFSdE5oZ/O9GEf00kPngmOfVwazR5GKDq6EYfhlpFug3J2zybX56a2PRRpc9P+FuSoGNAwjlbDs9jJBPQ==}
 
   linkify-it@5.0.0:
     resolution: {integrity: sha512-5aHCbzQRADcdP+ATqnDuhhJ/MRIqDkZX5pyjFHRRysS8vZ5AbqGEoFIb6pYHPZ+L/OC2Lc+xT8uHVVR5CAK/wQ==}
@@ -7353,18 +7227,11 @@ packages:
   makeerror@1.0.12:
     resolution: {integrity: sha512-JmqCvUhmt43madlpFzG4BQzG2Z3m6tvQDNKdClZnO3VbIudJYmxsT0FNJMeiB2+JTSlTQTSbU8QdesVmwJcmLg==}
 
-  map-stream@0.1.0:
-    resolution: {integrity: sha512-CkYQrPYZfWnu/DAmVCpTSX/xHpKZ80eKh2lAkyA6AJTef6bW+6JpbQZN5rofum7da+SyN1bi5ctTm+lTfcCW3g==}
-
-  markdown-it-container@3.0.0:
-    resolution: {integrity: sha512-y6oKTq4BB9OQuY/KLfk/O3ysFhB3IMYoIWhGJEidXt1NQFocFK2sA2t0NYZAMyMShAGL6x5OPIbrmXPIqaN9rw==}
+  markdown-it-container@4.0.0:
+    resolution: {integrity: sha512-HaNccxUH0l7BNGYbFbjmGpf5aLHAMTinqRZQAEQbMr2cdD3z91Q6kIo1oUn1CQndkT03jat6ckrdRYuwwqLlQw==}
 
   markdown-it-mathjax@2.0.0:
     resolution: {integrity: sha512-Fafv7TnMENccWYTNjMZzV4BzONPxpK9Mknr1iMEK6m7PI5a5UTCOFctPzx7Nhv81fFzYEY8WHDkSu9n43fTV9g==}
-
-  markdown-it@12.3.2:
-    resolution: {integrity: sha512-TchMembfxfNVpHkbtriWltGWc+m3xszaRD0CZup7GFFhzIgQqxIfn3eGj1yZpfuflzPvfkt611B2Q/Bsk1YnGg==}
-    hasBin: true
 
   markdown-it@14.1.0:
     resolution: {integrity: sha512-a54IwgWPaeBCAAsv13YgmALOF1elABB08FxO9i+r4VFk5Vl4pKokRPeX8u5TCgSsPi6ec1otfLjdOpVcgbpshg==}
@@ -7384,9 +7251,6 @@ packages:
   math-intrinsics@1.1.0:
     resolution: {integrity: sha512-/IXtbwEk5HTPyEwyKX6hGkYXxM9nbj64B+ilVJnC/R6B0pH5G4V3b0pVbL7DBj4tkhBAppbQUlf6F6Xl9LHu1g==}
     engines: {node: '>= 0.4'}
-
-  mdurl@1.0.1:
-    resolution: {integrity: sha512-/sKlQJCBYVY9Ers9hqzKou4H6V5UWc/M59TH2dvkt+84itfnq7uFOMLpOiOS4ujvHP4etln18fmIxA5R5fll0g==}
 
   mdurl@2.0.0:
     resolution: {integrity: sha512-Lf+9+2r+Tdp5wXDXC4PcIBjTDtq4UKjCPMQhKIuzpJNW0b96kVqSwW0bT7FhRSfmAiFYgP+SCRvdrDozfh0U5w==}
@@ -7572,9 +7436,6 @@ packages:
 
   node-abort-controller@3.1.1:
     resolution: {integrity: sha512-AGK2yQKIjRuqnc6VkX2Xj5d+QW8xZ87pa1UK6yA6ouUyuxfHuMP6umE5QK7UmTeOAymo+Zx1Fxiuw9rVx8taHQ==}
-
-  node-cleanup@2.1.2:
-    resolution: {integrity: sha512-qN8v/s2PAJwGUtr1/hYTpNKlD6Y9rc4p8KSmJXyGdYGZsDGKXrGThikLFP9OCHFeLeEpQzPwiAtdIvBLqm//Hw==}
 
   node-domexception@1.0.0:
     resolution: {integrity: sha512-/jKZoMpw0F8GRwl4/eLROPA3cfcXtLApP0QzLmUT/HuPCZWyB7IY9ZrMeKw2O/nFIqPQB3PVM9aYm0F312AXDQ==}
@@ -7841,9 +7702,6 @@ packages:
   pathval@2.0.1:
     resolution: {integrity: sha512-//nshmD55c46FuFw26xV/xFAaB5HF9Xdap7HJBBnrKdAd6/GxDBaNA1870O79+9ueg61cZLSVc+OaFlfmObYVQ==}
     engines: {node: '>= 14.16'}
-
-  pause-stream@0.0.11:
-    resolution: {integrity: sha512-e3FBlXLmN/D1S+zHzanP4E/4Z60oFAa3O051qt1pxa7DEJWKAyil6upYVXCWadEnuoqa4Pkc9oUx9zsxYeRv8A==}
 
   pdfjs-dist@4.10.38:
     resolution: {integrity: sha512-/Y3fcFrXEAsMjJXeL9J8+ZG9U01LbuWaYypvDW2ycW1jL269L3js3DVBjDJ0Up9Np1uqDXsDrRihHANhZOlwdQ==}
@@ -8112,15 +7970,11 @@ packages:
   prosemirror-transform@1.10.4:
     resolution: {integrity: sha512-pwDy22nAnGqNR1feOQKHxoFkkUtepoFAd3r2hbEDsnf4wp57kKA36hXsB3njA9FtONBEwSDnDeCiJe+ItD+ykw==}
 
-  prosemirror-transform@1.4.2:
-    resolution: {integrity: sha512-bcIsf3uRZhfab0xRfyyxOEh6eqSszq/hJbDbmUumFnbHBoWhB/uXbpz6vvUxfk0XiEvrZDJ+5pXRrNDc1Hu3vQ==}
-
-  prosemirror-utils@0.9.6:
-    resolution: {integrity: sha512-UC+j9hQQ1POYfMc5p7UFxBTptRiGPR7Kkmbl3jVvU8VgQbkI89tR/GK+3QYC8n+VvBZrtAoCrJItNhWSxX3slA==}
+  prosemirror-utils@1.2.2:
+    resolution: {integrity: sha512-7a2MPf99oCW8/587rQYI1/snX71Ban40+apr1hLkY8TmU9YXd7JeR6QsmktcTisJURO3WRjxIia4lTMsYgZVOw==}
     peerDependencies:
-      prosemirror-model: ^1.0.0
-      prosemirror-state: ^1.0.1
-      prosemirror-tables: ^0.9.1
+      prosemirror-model: ^1.19.2
+      prosemirror-state: ^1.4.3
 
   prosemirror-view@1.40.1:
     resolution: {integrity: sha512-pbwUjt3G7TlsQQHDiYSupWBhJswpLVB09xXm1YiJPdkjkh9Pe7Y51XdLh5VWIZmROLY8UpUpG03lkdhm9lzIBA==}
@@ -8131,11 +7985,6 @@ packages:
 
   proxy-from-env@1.1.0:
     resolution: {integrity: sha512-D+zkORCbA9f1tdWRK0RaCR3GPv50cMxcrz4X8k5LTSUD1Dkw47mKJEZQNunItRTkWwgtaUSo1RVFRIG9ZXiFYg==}
-
-  ps-tree@1.2.0:
-    resolution: {integrity: sha512-0VnamPPYHl4uaU/nSFeZZpR21QAWRz+sRv4iW9+v/GS/J5U5iZB5BNN6J0RMoOvdx2gWM2+ZFMIm58q24e4UYA==}
-    engines: {node: '>= 0.10'}
-    hasBin: true
 
   psl@1.15.0:
     resolution: {integrity: sha512-JZd3gMVBAVQkSs6HdNZo9Sdo0LNcQeMNP3CozBJb3JYC/QUYZTnKxP+f8oWRX4rHP5EurWxqAHTSwUCjlNKa1w==}
@@ -8458,10 +8307,6 @@ packages:
   scheduler@0.26.0:
     resolution: {integrity: sha512-NlHwttCI/l5gCPR3D1nNXtWABUmBwvZpEQiD4IXSbIDq8BzLIK/7Ir5gTFSGZDUu37K5cMNp0hFtzO38sC7gWA==}
 
-  schema-utils@2.7.1:
-    resolution: {integrity: sha512-SHiNtMOUGWBQJwzISiVYKu82GiV4QYGePp3odlY1tuKO7gPtphAT5R/py0fA6xtbgLL/RvtJZnU9b8s0F1q0Xg==}
-    engines: {node: '>= 8.9.0'}
-
   schema-utils@3.3.0:
     resolution: {integrity: sha512-pN/yOAvcC+5rQ5nERGuwrjLlYvLTbCibnZ1I7B1LaiAz9BRBlE9GMgE/eqV30P7aJQUf7Ddimy/RsbYO/GrVGg==}
     engines: {node: '>= 10.13.0'}
@@ -8608,12 +8453,6 @@ packages:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
     engines: {node: '>=0.10.0'}
 
-  source-map-loader@3.0.2:
-    resolution: {integrity: sha512-BokxPoLjyl3iOrgkWaakaxqnelAJSS+0V+De0kKIq6lyWrXuiPgYTGp6z3iHmqljKAaLXwZa+ctD8GccRJeVvg==}
-    engines: {node: '>= 12.13.0'}
-    peerDependencies:
-      webpack: ^5.0.0
-
   source-map-support@0.5.13:
     resolution: {integrity: sha512-SHSKFHadjVA5oR4PPqhtAVdcBWwRYVd6g6cAXnIbRiIwc2EhPrTuKUBdSLvlEKyIP3GCf89fltvcZiP9MMFA1w==}
 
@@ -8646,9 +8485,6 @@ packages:
 
   spawnd@5.0.0:
     resolution: {integrity: sha512-28+AJr82moMVWolQvlAIv3JcYDkjkFTEmfDc503wxrF5l2rQ3dFz6DpbXp3kD4zmgGGldfM4xM4v1sFj/ZaIOA==}
-
-  split@0.3.3:
-    resolution: {integrity: sha512-wD2AeVmxXRBoX44wAycgjVpMhvbwdI2aZjCkvfNcH1YqHQvJVa1duWc73OyVGJUc05fhFaTZeQ/PYsrmyH0JVA==}
 
   sprintf-js@1.0.3:
     resolution: {integrity: sha512-D9cPgkvLlV3t3IzL0D0YLvGA9Ahk4PcvVwUbN0dSGr1aP0Nrt4AEnTUbuGvquEC0mA64Gqt1fzirlRs5ibXx8g==}
@@ -8687,18 +8523,11 @@ packages:
       prettier:
         optional: true
 
-  stream-combiner@0.0.4:
-    resolution: {integrity: sha512-rT00SPnTVyRsaSz5zgSPma/aHSOic5U1prhYdRy5HS2kTZviFpmDgzilbtsJsxiroqACmayynDN/9VzIbX5DOw==}
-
   stream-composer@1.0.2:
     resolution: {integrity: sha512-bnBselmwfX5K10AH6L4c8+S5lgZMWI7ZYrz2rvYjCPB2DIMC4Ig8OpxGpNJSxRZ58oti7y1IcNvjBAz9vW5m4w==}
 
   streamx@2.22.1:
     resolution: {integrity: sha512-znKXEBxfatz2GBNK02kRnCXjV+AA4kjZIUxeWSr3UGirZMJfTE9uiwKHobnbgxWyL/JWro8tTq+vOqAK1/qbSA==}
-
-  string-argv@0.1.2:
-    resolution: {integrity: sha512-mBqPGEOMNJKXRo7z0keX0wlAhbBAjilUdPW13nN0PecVryZxdHIeM7TqbsSUA7VYuS00HGC6mojP7DlQzfa9ZA==}
-    engines: {node: '>=0.6.19'}
 
   string-length@4.0.2:
     resolution: {integrity: sha512-+l6rNN5fYHNhZZy41RXsYptCjA2Igmq4EG7kZAYFQI1E1VTXarr6ZPXBg6eq7Y6eK4FEhY6AJlyuFIb/v/S0VQ==}
@@ -8965,9 +8794,6 @@ packages:
   through2@4.0.2:
     resolution: {integrity: sha512-iOqSav00cVxEEICeD7TjLB1sueEL+81Wpzp2bY17uZjZN0pWZPuo4suZ/61VujxmqSGFfgOcNuTZ85QJwNZQpw==}
 
-  through@2.3.8:
-    resolution: {integrity: sha512-w89qg7PI8wAdvX60bMDP+bFoD5Dvhm9oLheFp5O4a2QF0cSBGsBX4qZmadPMvVqlLJBBci+WqGGOAPvcDeNSVg==}
-
   tiny-invariant@1.3.3:
     resolution: {integrity: sha512-+FbBPE1o9QAYvviau/qC5SE3caw21q3xkvWKBtja5vgqOWIHHJ3ioaq1VPfn/Szqctz2bU/oYeKd9/z5BL+PVg==}
 
@@ -9067,22 +8893,8 @@ packages:
   ts-interface-checker@0.1.13:
     resolution: {integrity: sha512-Y/arvbn+rrz3JCKl9C4kVNfTfSm2/mEp5FSz5EsZSANGPSlQrpRI5M4PKF+mJnE52jOO90PnPSc3Ur3bTQw0gA==}
 
-  ts-loader@9.5.4:
-    resolution: {integrity: sha512-nCz0rEwunlTZiy6rXFByQU1kVVpCIgUpc/psFiKVrUwrizdnIbRFu8w7bxhUF0X613DYwT4XzrZHpVyMe758hQ==}
-    engines: {node: '>=12.0.0'}
-    peerDependencies:
-      typescript: '*'
-      webpack: ^5.0.0
-
   ts-tqdm@0.8.6:
     resolution: {integrity: sha512-3X3M1PZcHtgQbnwizL+xU8CAgbYbeLHrrDwL9xxcZZrV5J+e7loJm1XrXozHjSkl44J0Zg0SgA8rXbh83kCkcQ==}
-
-  tsc-watch@4.6.2:
-    resolution: {integrity: sha512-eHWzZGkPmzXVGQKbqQgf3BFpGiZZw1jQ29ZOJeaSe8JfyUvphbd221NfXmmsJUGGPGA/nnaSS01tXipUcyxAxg==}
-    engines: {node: '>=8.17.0'}
-    hasBin: true
-    peerDependencies:
-      typescript: '*'
 
   tsconfck@3.1.6:
     resolution: {integrity: sha512-ks6Vjr/jEw0P1gmOVwutM3B7fWxoWBL2KRDb1JfqGVawBmO5UsvmWOQFGHBPl5yxYz4eERr19E6L7NMv+Fej4w==}
@@ -9166,18 +8978,15 @@ packages:
   typedarray-to-buffer@3.1.5:
     resolution: {integrity: sha512-zdu8XMNEDepKKR+XYOXAVPtWui0ly0NtohUscw+UmaHiAWT8hrV1rr//H6V+0DvJ3OQ19S979M0laLfX8rm82Q==}
 
-  typescript@4.9.5:
-    resolution: {integrity: sha512-1FXk9E2Hm+QzZQ7z+McJiHL4NW1F2EzMu9Nq9i3zAaGqibafqYwCVU6WyWAuyQRRzOlxou8xZSyXLEN8oKj24g==}
-    engines: {node: '>=4.2.0'}
-    hasBin: true
-
   typescript@5.8.3:
     resolution: {integrity: sha512-p1diW6TqL9L07nNxvRMM7hMMw4c5XOo/1ibL4aAIGmSAt9slTE1Xgw5KWuof2uTOvCg9BY7ZRi+GaF+7sfgPeQ==}
     engines: {node: '>=14.17'}
     hasBin: true
 
-  uc.micro@1.0.6:
-    resolution: {integrity: sha512-8Y75pvTYkLJW2hWQHXxoqRgV7qb9B+9vFEtidML+7koHUFapnVJAZ6cKs+Qjz5Aw3aZWHMC6u0wJE3At+nSGwA==}
+  typescript@5.9.2:
+    resolution: {integrity: sha512-CWBzXQrc/qOkhidw1OzBTQuYRbfyxDXJMVJ1XNwUHGROVmuaeiEm3OslpZ1RV96d7SKKjZKrSJu3+t/xlw3R9A==}
+    engines: {node: '>=14.17'}
+    hasBin: true
 
   uc.micro@2.1.0:
     resolution: {integrity: sha512-ARDJmphmdvUk6Glw7y9DQ2bFkKBHwQHLi2lsaH6PPmz/Ka9sFOBsBluozhDltWmnv9u/cF6Rt87znRTPV+yp/A==}
@@ -14094,14 +13903,14 @@ snapshots:
       - '@swc/helpers'
       - webpack
 
-  '@storybook/builder-webpack5@9.1.4(@swc/core@1.13.5)(esbuild@0.25.4)(storybook@9.1.4(@testing-library/dom@10.4.1)(prettier@2.8.8)(vite@7.0.6(@types/node@22.16.2)(jiti@1.21.7)(terser@5.43.1)(yaml@2.8.0)))(typescript@4.9.5)':
+  '@storybook/builder-webpack5@9.1.4(@swc/core@1.13.5)(esbuild@0.25.4)(storybook@9.1.4(@testing-library/dom@10.4.1)(prettier@2.8.8)(vite@7.0.6(@types/node@22.16.2)(jiti@1.21.7)(terser@5.43.1)(yaml@2.8.0)))(typescript@5.9.2)':
     dependencies:
       '@storybook/core-webpack': 9.1.4(storybook@9.1.4(@testing-library/dom@10.4.1)(prettier@2.8.8)(vite@7.0.6(@types/node@22.16.2)(jiti@1.21.7)(terser@5.43.1)(yaml@2.8.0)))
       case-sensitive-paths-webpack-plugin: 2.4.0
       cjs-module-lexer: 1.4.3
       css-loader: 6.11.0(webpack@5.100.0(@swc/core@1.13.5)(esbuild@0.25.4))
       es-module-lexer: 1.7.0
-      fork-ts-checker-webpack-plugin: 8.0.0(typescript@4.9.5)(webpack@5.100.0(@swc/core@1.13.5)(esbuild@0.25.4))
+      fork-ts-checker-webpack-plugin: 8.0.0(typescript@5.9.2)(webpack@5.100.0(@swc/core@1.13.5)(esbuild@0.25.4))
       html-webpack-plugin: 5.6.4(webpack@5.100.0(@swc/core@1.13.5)(esbuild@0.25.4))
       magic-string: 0.30.17
       storybook: 9.1.4(@testing-library/dom@10.4.1)(prettier@2.8.8)(vite@7.0.6(@types/node@22.16.2)(jiti@1.21.7)(terser@5.43.1)(yaml@2.8.0))
@@ -14113,7 +13922,7 @@ snapshots:
       webpack-hot-middleware: 2.26.1
       webpack-virtual-modules: 0.6.2
     optionalDependencies:
-      typescript: 4.9.5
+      typescript: 5.9.2
     transitivePeerDependencies:
       - '@rspack/core'
       - '@swc/core'
@@ -14138,10 +13947,10 @@ snapshots:
       react: 19.1.1
       react-dom: 19.1.1(react@19.1.1)
 
-  '@storybook/preset-react-webpack@9.1.4(@swc/core@1.13.5)(esbuild@0.25.4)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(storybook@9.1.4(@testing-library/dom@10.4.1)(prettier@2.8.8)(vite@7.0.6(@types/node@22.16.2)(jiti@1.21.7)(terser@5.43.1)(yaml@2.8.0)))(typescript@4.9.5)':
+  '@storybook/preset-react-webpack@9.1.4(@swc/core@1.13.5)(esbuild@0.25.4)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(storybook@9.1.4(@testing-library/dom@10.4.1)(prettier@2.8.8)(vite@7.0.6(@types/node@22.16.2)(jiti@1.21.7)(terser@5.43.1)(yaml@2.8.0)))(typescript@5.9.2)':
     dependencies:
       '@storybook/core-webpack': 9.1.4(storybook@9.1.4(@testing-library/dom@10.4.1)(prettier@2.8.8)(vite@7.0.6(@types/node@22.16.2)(jiti@1.21.7)(terser@5.43.1)(yaml@2.8.0)))
-      '@storybook/react-docgen-typescript-plugin': 1.0.6--canary.9.0c3f3b7.0(typescript@4.9.5)(webpack@5.100.0(@swc/core@1.13.5)(esbuild@0.25.4))
+      '@storybook/react-docgen-typescript-plugin': 1.0.6--canary.9.0c3f3b7.0(typescript@5.9.2)(webpack@5.100.0(@swc/core@1.13.5)(esbuild@0.25.4))
       '@types/semver': 7.7.0
       find-up: 7.0.0
       magic-string: 0.30.17
@@ -14154,7 +13963,7 @@ snapshots:
       tsconfig-paths: 4.2.0
       webpack: 5.100.0(@swc/core@1.13.5)(esbuild@0.25.4)
     optionalDependencies:
-      typescript: 4.9.5
+      typescript: 5.9.2
     transitivePeerDependencies:
       - '@swc/core'
       - esbuild
@@ -14162,16 +13971,16 @@ snapshots:
       - uglify-js
       - webpack-cli
 
-  '@storybook/react-docgen-typescript-plugin@1.0.6--canary.9.0c3f3b7.0(typescript@4.9.5)(webpack@5.100.0(@swc/core@1.13.5)(esbuild@0.25.4))':
+  '@storybook/react-docgen-typescript-plugin@1.0.6--canary.9.0c3f3b7.0(typescript@5.9.2)(webpack@5.100.0(@swc/core@1.13.5)(esbuild@0.25.4))':
     dependencies:
       debug: 4.4.1
       endent: 2.1.0
       find-cache-dir: 3.3.2
       flat-cache: 3.2.0
       micromatch: 4.0.8
-      react-docgen-typescript: 2.4.0(typescript@4.9.5)
+      react-docgen-typescript: 2.4.0(typescript@5.9.2)
       tslib: 2.8.1
-      typescript: 4.9.5
+      typescript: 5.9.2
       webpack: 5.100.0(@swc/core@1.13.5)(esbuild@0.25.4)
     transitivePeerDependencies:
       - supports-color
@@ -14182,16 +13991,16 @@ snapshots:
       react-dom: 19.1.1(react@19.1.1)
       storybook: 9.1.4(@testing-library/dom@10.4.1)(prettier@2.8.8)(vite@7.0.6(@types/node@22.16.2)(jiti@1.21.7)(terser@5.43.1)(yaml@2.8.0))
 
-  '@storybook/react-webpack5@9.1.4(@swc/core@1.13.5)(esbuild@0.25.4)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(storybook@9.1.4(@testing-library/dom@10.4.1)(prettier@2.8.8)(vite@7.0.6(@types/node@22.16.2)(jiti@1.21.7)(terser@5.43.1)(yaml@2.8.0)))(typescript@4.9.5)':
+  '@storybook/react-webpack5@9.1.4(@swc/core@1.13.5)(esbuild@0.25.4)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(storybook@9.1.4(@testing-library/dom@10.4.1)(prettier@2.8.8)(vite@7.0.6(@types/node@22.16.2)(jiti@1.21.7)(terser@5.43.1)(yaml@2.8.0)))(typescript@5.9.2)':
     dependencies:
-      '@storybook/builder-webpack5': 9.1.4(@swc/core@1.13.5)(esbuild@0.25.4)(storybook@9.1.4(@testing-library/dom@10.4.1)(prettier@2.8.8)(vite@7.0.6(@types/node@22.16.2)(jiti@1.21.7)(terser@5.43.1)(yaml@2.8.0)))(typescript@4.9.5)
-      '@storybook/preset-react-webpack': 9.1.4(@swc/core@1.13.5)(esbuild@0.25.4)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(storybook@9.1.4(@testing-library/dom@10.4.1)(prettier@2.8.8)(vite@7.0.6(@types/node@22.16.2)(jiti@1.21.7)(terser@5.43.1)(yaml@2.8.0)))(typescript@4.9.5)
-      '@storybook/react': 9.1.4(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(storybook@9.1.4(@testing-library/dom@10.4.1)(prettier@2.8.8)(vite@7.0.6(@types/node@22.16.2)(jiti@1.21.7)(terser@5.43.1)(yaml@2.8.0)))(typescript@4.9.5)
+      '@storybook/builder-webpack5': 9.1.4(@swc/core@1.13.5)(esbuild@0.25.4)(storybook@9.1.4(@testing-library/dom@10.4.1)(prettier@2.8.8)(vite@7.0.6(@types/node@22.16.2)(jiti@1.21.7)(terser@5.43.1)(yaml@2.8.0)))(typescript@5.9.2)
+      '@storybook/preset-react-webpack': 9.1.4(@swc/core@1.13.5)(esbuild@0.25.4)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(storybook@9.1.4(@testing-library/dom@10.4.1)(prettier@2.8.8)(vite@7.0.6(@types/node@22.16.2)(jiti@1.21.7)(terser@5.43.1)(yaml@2.8.0)))(typescript@5.9.2)
+      '@storybook/react': 9.1.4(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(storybook@9.1.4(@testing-library/dom@10.4.1)(prettier@2.8.8)(vite@7.0.6(@types/node@22.16.2)(jiti@1.21.7)(terser@5.43.1)(yaml@2.8.0)))(typescript@5.9.2)
       react: 19.1.1
       react-dom: 19.1.1(react@19.1.1)
       storybook: 9.1.4(@testing-library/dom@10.4.1)(prettier@2.8.8)(vite@7.0.6(@types/node@22.16.2)(jiti@1.21.7)(terser@5.43.1)(yaml@2.8.0))
     optionalDependencies:
-      typescript: 4.9.5
+      typescript: 5.9.2
     transitivePeerDependencies:
       - '@rspack/core'
       - '@swc/core'
@@ -14200,7 +14009,7 @@ snapshots:
       - uglify-js
       - webpack-cli
 
-  '@storybook/react@9.1.4(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(storybook@9.1.4(@testing-library/dom@10.4.1)(prettier@2.8.8)(vite@7.0.6(@types/node@22.16.2)(jiti@1.21.7)(terser@5.43.1)(yaml@2.8.0)))(typescript@4.9.5)':
+  '@storybook/react@9.1.4(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(storybook@9.1.4(@testing-library/dom@10.4.1)(prettier@2.8.8)(vite@7.0.6(@types/node@22.16.2)(jiti@1.21.7)(terser@5.43.1)(yaml@2.8.0)))(typescript@5.9.2)':
     dependencies:
       '@storybook/global': 5.0.0
       '@storybook/react-dom-shim': 9.1.4(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(storybook@9.1.4(@testing-library/dom@10.4.1)(prettier@2.8.8)(vite@7.0.6(@types/node@22.16.2)(jiti@1.21.7)(terser@5.43.1)(yaml@2.8.0)))
@@ -14208,7 +14017,7 @@ snapshots:
       react-dom: 19.1.1(react@19.1.1)
       storybook: 9.1.4(@testing-library/dom@10.4.1)(prettier@2.8.8)(vite@7.0.6(@types/node@22.16.2)(jiti@1.21.7)(terser@5.43.1)(yaml@2.8.0))
     optionalDependencies:
-      typescript: 4.9.5
+      typescript: 5.9.2
 
   '@storybook/test-runner@0.23.0(@types/node@22.16.2)(babel-plugin-macros@3.1.0)(storybook@9.1.4(@testing-library/dom@10.4.1)(prettier@2.8.8)(vite@7.0.6(@types/node@22.16.2)(jiti@1.21.7)(terser@5.43.1)(yaml@2.8.0)))':
     dependencies:
@@ -14548,7 +14357,7 @@ snapshots:
 
   '@types/json5@0.0.29': {}
 
-  '@types/katex@0.14.0': {}
+  '@types/katex@0.16.7': {}
 
   '@types/linkify-it@5.0.0': {}
 
@@ -14556,12 +14365,7 @@ snapshots:
 
   '@types/markdown-it-container@2.0.10':
     dependencies:
-      '@types/markdown-it': 12.2.3
-
-  '@types/markdown-it@12.2.3':
-    dependencies:
-      '@types/linkify-it': 5.0.0
-      '@types/mdurl': 2.0.0
+      '@types/markdown-it': 14.1.2
 
   '@types/markdown-it@14.1.2':
     dependencies:
@@ -14598,50 +14402,6 @@ snapshots:
   '@types/prettier@2.7.3': {}
 
   '@types/prismjs@1.26.5': {}
-
-  '@types/prosemirror-commands@1.3.0':
-    dependencies:
-      prosemirror-commands: 1.7.1
-
-  '@types/prosemirror-dropcursor@1.5.0':
-    dependencies:
-      prosemirror-dropcursor: 1.8.2
-
-  '@types/prosemirror-gapcursor@1.3.0':
-    dependencies:
-      prosemirror-gapcursor: 1.3.2
-
-  '@types/prosemirror-history@1.3.0':
-    dependencies:
-      prosemirror-history: 1.4.1
-
-  '@types/prosemirror-inputrules@1.2.0':
-    dependencies:
-      prosemirror-inputrules: 1.5.0
-
-  '@types/prosemirror-keymap@1.2.0':
-    dependencies:
-      prosemirror-keymap: 1.2.3
-
-  '@types/prosemirror-markdown@1.9.0':
-    dependencies:
-      prosemirror-markdown: 1.13.2
-
-  '@types/prosemirror-model@1.17.0':
-    dependencies:
-      prosemirror-model: 1.25.3
-
-  '@types/prosemirror-schema-list@1.2.0':
-    dependencies:
-      prosemirror-schema-list: 1.5.1
-
-  '@types/prosemirror-state@1.4.0':
-    dependencies:
-      prosemirror-state: 1.4.3
-
-  '@types/prosemirror-view@1.24.0':
-    dependencies:
-      prosemirror-view: 1.40.1
 
   '@types/react-color@3.0.13(@types/react@19.1.10)':
     dependencies:
@@ -14714,22 +14474,22 @@ snapshots:
     dependencies:
       zrender: 6.0.0
 
-  '@typescript-eslint/eslint-plugin@5.62.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@4.9.5))(eslint@8.57.1)(typescript@4.9.5)':
+  '@typescript-eslint/eslint-plugin@5.62.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@5.9.2))(eslint@8.57.1)(typescript@5.9.2)':
     dependencies:
       '@eslint-community/regexpp': 4.12.1
-      '@typescript-eslint/parser': 5.62.0(eslint@8.57.1)(typescript@4.9.5)
+      '@typescript-eslint/parser': 5.62.0(eslint@8.57.1)(typescript@5.9.2)
       '@typescript-eslint/scope-manager': 5.62.0
-      '@typescript-eslint/type-utils': 5.62.0(eslint@8.57.1)(typescript@4.9.5)
-      '@typescript-eslint/utils': 5.62.0(eslint@8.57.1)(typescript@4.9.5)
+      '@typescript-eslint/type-utils': 5.62.0(eslint@8.57.1)(typescript@5.9.2)
+      '@typescript-eslint/utils': 5.62.0(eslint@8.57.1)(typescript@5.9.2)
       debug: 4.4.1
       eslint: 8.57.1
       graphemer: 1.4.0
       ignore: 5.3.2
       natural-compare-lite: 1.4.0
       semver: 7.7.2
-      tsutils: 3.21.0(typescript@4.9.5)
+      tsutils: 3.21.0(typescript@5.9.2)
     optionalDependencies:
-      typescript: 4.9.5
+      typescript: 5.9.2
     transitivePeerDependencies:
       - supports-color
 
@@ -14750,23 +14510,23 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/experimental-utils@5.62.0(eslint@8.57.1)(typescript@4.9.5)':
+  '@typescript-eslint/experimental-utils@5.62.0(eslint@8.57.1)(typescript@5.9.2)':
     dependencies:
-      '@typescript-eslint/utils': 5.62.0(eslint@8.57.1)(typescript@4.9.5)
+      '@typescript-eslint/utils': 5.62.0(eslint@8.57.1)(typescript@5.9.2)
       eslint: 8.57.1
     transitivePeerDependencies:
       - supports-color
       - typescript
 
-  '@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@4.9.5)':
+  '@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@5.9.2)':
     dependencies:
       '@typescript-eslint/scope-manager': 5.62.0
       '@typescript-eslint/types': 5.62.0
-      '@typescript-eslint/typescript-estree': 5.62.0(typescript@4.9.5)
+      '@typescript-eslint/typescript-estree': 5.62.0(typescript@5.9.2)
       debug: 4.4.1
       eslint: 8.57.1
     optionalDependencies:
-      typescript: 4.9.5
+      typescript: 5.9.2
     transitivePeerDependencies:
       - supports-color
 
@@ -14805,15 +14565,15 @@ snapshots:
     dependencies:
       typescript: 5.8.3
 
-  '@typescript-eslint/type-utils@5.62.0(eslint@8.57.1)(typescript@4.9.5)':
+  '@typescript-eslint/type-utils@5.62.0(eslint@8.57.1)(typescript@5.9.2)':
     dependencies:
-      '@typescript-eslint/typescript-estree': 5.62.0(typescript@4.9.5)
-      '@typescript-eslint/utils': 5.62.0(eslint@8.57.1)(typescript@4.9.5)
+      '@typescript-eslint/typescript-estree': 5.62.0(typescript@5.9.2)
+      '@typescript-eslint/utils': 5.62.0(eslint@8.57.1)(typescript@5.9.2)
       debug: 4.4.1
       eslint: 8.57.1
-      tsutils: 3.21.0(typescript@4.9.5)
+      tsutils: 3.21.0(typescript@5.9.2)
     optionalDependencies:
-      typescript: 4.9.5
+      typescript: 5.9.2
     transitivePeerDependencies:
       - supports-color
 
@@ -14832,7 +14592,7 @@ snapshots:
 
   '@typescript-eslint/types@8.36.0': {}
 
-  '@typescript-eslint/typescript-estree@5.62.0(typescript@4.9.5)':
+  '@typescript-eslint/typescript-estree@5.62.0(typescript@5.9.2)':
     dependencies:
       '@typescript-eslint/types': 5.62.0
       '@typescript-eslint/visitor-keys': 5.62.0
@@ -14840,9 +14600,9 @@ snapshots:
       globby: 11.1.0
       is-glob: 4.0.3
       semver: 7.7.2
-      tsutils: 3.21.0(typescript@4.9.5)
+      tsutils: 3.21.0(typescript@5.9.2)
     optionalDependencies:
-      typescript: 4.9.5
+      typescript: 5.9.2
     transitivePeerDependencies:
       - supports-color
 
@@ -14862,14 +14622,14 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/utils@5.62.0(eslint@8.57.1)(typescript@4.9.5)':
+  '@typescript-eslint/utils@5.62.0(eslint@8.57.1)(typescript@5.9.2)':
     dependencies:
       '@eslint-community/eslint-utils': 4.7.0(eslint@8.57.1)
       '@types/json-schema': 7.0.15
       '@types/semver': 7.7.0
       '@typescript-eslint/scope-manager': 5.62.0
       '@typescript-eslint/types': 5.62.0
-      '@typescript-eslint/typescript-estree': 5.62.0(typescript@4.9.5)
+      '@typescript-eslint/typescript-estree': 5.62.0(typescript@5.9.2)
       eslint: 8.57.1
       eslint-scope: 5.1.1
       semver: 7.7.2
@@ -15405,15 +15165,6 @@ snapshots:
       slash: 3.0.0
     transitivePeerDependencies:
       - supports-color
-
-  babel-loader@8.4.1(@babel/core@7.28.0)(webpack@5.100.0(@swc/core@1.13.5)(esbuild@0.25.4)):
-    dependencies:
-      '@babel/core': 7.28.0
-      find-cache-dir: 3.3.2
-      loader-utils: 2.0.4
-      make-dir: 3.1.0
-      schema-utils: 2.7.1
-      webpack: 5.100.0(@swc/core@1.13.5)(esbuild@0.25.4)
 
   babel-plugin-istanbul@6.1.1:
     dependencies:
@@ -16560,8 +16311,6 @@ snapshots:
 
   entities@1.1.2: {}
 
-  entities@2.1.0: {}
-
   entities@2.2.0: {}
 
   entities@4.5.0: {}
@@ -16758,25 +16507,25 @@ snapshots:
     dependencies:
       eslint: 8.57.1
 
-  eslint-config-react-app@7.0.1(@babel/plugin-syntax-flow@7.27.1(@babel/core@7.28.0))(@babel/plugin-transform-react-jsx@7.27.1(@babel/core@7.28.0))(eslint@8.57.1)(jest@27.5.1)(typescript@4.9.5):
+  eslint-config-react-app@7.0.1(@babel/plugin-syntax-flow@7.27.1(@babel/core@7.28.0))(@babel/plugin-transform-react-jsx@7.27.1(@babel/core@7.28.0))(eslint@8.57.1)(jest@27.5.1)(typescript@5.9.2):
     dependencies:
       '@babel/core': 7.28.0
       '@babel/eslint-parser': 7.28.0(@babel/core@7.28.0)(eslint@8.57.1)
       '@rushstack/eslint-patch': 1.12.0
-      '@typescript-eslint/eslint-plugin': 5.62.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@4.9.5))(eslint@8.57.1)(typescript@4.9.5)
-      '@typescript-eslint/parser': 5.62.0(eslint@8.57.1)(typescript@4.9.5)
+      '@typescript-eslint/eslint-plugin': 5.62.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@5.9.2))(eslint@8.57.1)(typescript@5.9.2)
+      '@typescript-eslint/parser': 5.62.0(eslint@8.57.1)(typescript@5.9.2)
       babel-preset-react-app: 10.1.0
       confusing-browser-globals: 1.0.11
       eslint: 8.57.1
       eslint-plugin-flowtype: 8.0.3(@babel/plugin-syntax-flow@7.27.1(@babel/core@7.28.0))(@babel/plugin-transform-react-jsx@7.27.1(@babel/core@7.28.0))(eslint@8.57.1)
-      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@4.9.5))(eslint@8.57.1)
-      eslint-plugin-jest: 25.7.0(@typescript-eslint/eslint-plugin@5.62.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@4.9.5))(eslint@8.57.1)(typescript@4.9.5))(eslint@8.57.1)(jest@27.5.1)(typescript@4.9.5)
+      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@5.9.2))(eslint@8.57.1)
+      eslint-plugin-jest: 25.7.0(@typescript-eslint/eslint-plugin@5.62.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@5.9.2))(eslint@8.57.1)(typescript@5.9.2))(eslint@8.57.1)(jest@27.5.1)(typescript@5.9.2)
       eslint-plugin-jsx-a11y: 6.10.2(eslint@8.57.1)
       eslint-plugin-react: 7.37.5(eslint@8.57.1)
       eslint-plugin-react-hooks: 4.6.2(eslint@8.57.1)
-      eslint-plugin-testing-library: 5.11.1(eslint@8.57.1)(typescript@4.9.5)
+      eslint-plugin-testing-library: 5.11.1(eslint@8.57.1)(typescript@5.9.2)
     optionalDependencies:
-      typescript: 4.9.5
+      typescript: 5.9.2
     transitivePeerDependencies:
       - '@babel/plugin-syntax-flow'
       - '@babel/plugin-transform-react-jsx'
@@ -16808,11 +16557,11 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-module-utils@2.12.1(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@4.9.5))(eslint-import-resolver-node@0.3.9)(eslint@8.57.1):
+  eslint-module-utils@2.12.1(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@5.9.2))(eslint-import-resolver-node@0.3.9)(eslint@8.57.1):
     dependencies:
       debug: 3.2.7
     optionalDependencies:
-      '@typescript-eslint/parser': 5.62.0(eslint@8.57.1)(typescript@4.9.5)
+      '@typescript-eslint/parser': 5.62.0(eslint@8.57.1)(typescript@5.9.2)
       eslint: 8.57.1
       eslint-import-resolver-node: 0.3.9
     transitivePeerDependencies:
@@ -16837,7 +16586,7 @@ snapshots:
       lodash: 4.17.21
       string-natural-compare: 3.0.1
 
-  eslint-plugin-import@2.32.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@4.9.5))(eslint@8.57.1):
+  eslint-plugin-import@2.32.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@5.9.2))(eslint@8.57.1):
     dependencies:
       '@rtsao/scc': 1.1.0
       array-includes: 3.1.9
@@ -16848,7 +16597,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 8.57.1
       eslint-import-resolver-node: 0.3.9
-      eslint-module-utils: 2.12.1(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@4.9.5))(eslint-import-resolver-node@0.3.9)(eslint@8.57.1)
+      eslint-module-utils: 2.12.1(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@5.9.2))(eslint-import-resolver-node@0.3.9)(eslint@8.57.1)
       hasown: 2.0.2
       is-core-module: 2.16.1
       is-glob: 4.0.3
@@ -16860,7 +16609,7 @@ snapshots:
       string.prototype.trimend: 1.0.9
       tsconfig-paths: 3.15.0
     optionalDependencies:
-      '@typescript-eslint/parser': 5.62.0(eslint@8.57.1)(typescript@4.9.5)
+      '@typescript-eslint/parser': 5.62.0(eslint@8.57.1)(typescript@5.9.2)
     transitivePeerDependencies:
       - eslint-import-resolver-typescript
       - eslint-import-resolver-webpack
@@ -16895,12 +16644,12 @@ snapshots:
       - eslint-import-resolver-webpack
       - supports-color
 
-  eslint-plugin-jest@25.7.0(@typescript-eslint/eslint-plugin@5.62.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@4.9.5))(eslint@8.57.1)(typescript@4.9.5))(eslint@8.57.1)(jest@27.5.1)(typescript@4.9.5):
+  eslint-plugin-jest@25.7.0(@typescript-eslint/eslint-plugin@5.62.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@5.9.2))(eslint@8.57.1)(typescript@5.9.2))(eslint@8.57.1)(jest@27.5.1)(typescript@5.9.2):
     dependencies:
-      '@typescript-eslint/experimental-utils': 5.62.0(eslint@8.57.1)(typescript@4.9.5)
+      '@typescript-eslint/experimental-utils': 5.62.0(eslint@8.57.1)(typescript@5.9.2)
       eslint: 8.57.1
     optionalDependencies:
-      '@typescript-eslint/eslint-plugin': 5.62.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@4.9.5))(eslint@8.57.1)(typescript@4.9.5)
+      '@typescript-eslint/eslint-plugin': 5.62.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@5.9.2))(eslint@8.57.1)(typescript@5.9.2)
       jest: 27.5.1
     transitivePeerDependencies:
       - supports-color
@@ -17004,9 +16753,9 @@ snapshots:
       string.prototype.matchall: 4.0.12
       string.prototype.repeat: 1.0.0
 
-  eslint-plugin-testing-library@5.11.1(eslint@8.57.1)(typescript@4.9.5):
+  eslint-plugin-testing-library@5.11.1(eslint@8.57.1)(typescript@5.9.2):
     dependencies:
-      '@typescript-eslint/utils': 5.62.0(eslint@8.57.1)(typescript@4.9.5)
+      '@typescript-eslint/utils': 5.62.0(eslint@8.57.1)(typescript@5.9.2)
       eslint: 8.57.1
     transitivePeerDependencies:
       - supports-color
@@ -17157,16 +16906,6 @@ snapshots:
   esutils@2.0.3: {}
 
   etag@1.8.1: {}
-
-  event-stream@3.3.4:
-    dependencies:
-      duplexer: 0.1.2
-      from: 0.1.7
-      map-stream: 0.1.0
-      pause-stream: 0.0.11
-      split: 0.3.3
-      stream-combiner: 0.0.4
-      through: 2.3.8
 
   event-target-shim@5.0.1: {}
 
@@ -17409,7 +17148,7 @@ snapshots:
       cross-spawn: 7.0.6
       signal-exit: 4.1.0
 
-  fork-ts-checker-webpack-plugin@8.0.0(typescript@4.9.5)(webpack@5.100.0(@swc/core@1.13.5)(esbuild@0.25.4)):
+  fork-ts-checker-webpack-plugin@8.0.0(typescript@5.9.2)(webpack@5.100.0(@swc/core@1.13.5)(esbuild@0.25.4)):
     dependencies:
       '@babel/code-frame': 7.27.1
       chalk: 4.1.2
@@ -17423,7 +17162,7 @@ snapshots:
       schema-utils: 3.3.0
       semver: 7.7.2
       tapable: 2.2.2
-      typescript: 4.9.5
+      typescript: 5.9.2
       webpack: 5.100.0(@swc/core@1.13.5)(esbuild@0.25.4)
 
   form-data-encoder@1.7.2: {}
@@ -17458,8 +17197,6 @@ snapshots:
       trigram-utils: 2.0.1
 
   fresh@2.0.0: {}
-
-  from@0.1.7: {}
 
   fromentries@1.3.2: {}
 
@@ -19027,7 +18764,7 @@ snapshots:
 
   jwt-decode@4.0.0: {}
 
-  katex@0.15.6:
+  katex@0.16.22:
     dependencies:
       commander: 8.3.0
 
@@ -19061,10 +18798,6 @@ snapshots:
   lilconfig@3.1.3: {}
 
   lines-and-columns@1.2.4: {}
-
-  linkify-it@3.0.3:
-    dependencies:
-      uc.micro: 1.0.6
 
   linkify-it@5.0.0:
     dependencies:
@@ -19148,19 +18881,9 @@ snapshots:
     dependencies:
       tmpl: 1.0.5
 
-  map-stream@0.1.0: {}
-
-  markdown-it-container@3.0.0: {}
+  markdown-it-container@4.0.0: {}
 
   markdown-it-mathjax@2.0.0: {}
-
-  markdown-it@12.3.2:
-    dependencies:
-      argparse: 2.0.1
-      entities: 2.1.0
-      linkify-it: 3.0.3
-      mdurl: 1.0.1
-      uc.micro: 1.0.6
 
   markdown-it@14.1.0:
     dependencies:
@@ -19180,8 +18903,6 @@ snapshots:
   material-colors@1.2.6: {}
 
   math-intrinsics@1.1.0: {}
-
-  mdurl@1.0.1: {}
 
   mdurl@2.0.0: {}
 
@@ -19347,8 +19068,6 @@ snapshots:
       tslib: 2.8.1
 
   node-abort-controller@3.1.1: {}
-
-  node-cleanup@2.1.2: {}
 
   node-domexception@1.0.0: {}
 
@@ -19639,10 +19358,6 @@ snapshots:
 
   pathval@2.0.1: {}
 
-  pause-stream@0.0.11:
-    dependencies:
-      through: 2.3.8
-
   pdfjs-dist@4.10.38:
     optionalDependencies:
       '@napi-rs/canvas': 0.1.73
@@ -19862,7 +19577,7 @@ snapshots:
   prosemirror-dropcursor@1.8.2:
     dependencies:
       prosemirror-state: 1.4.3
-      prosemirror-transform: 1.4.2
+      prosemirror-transform: 1.10.4
       prosemirror-view: 1.40.1
 
   prosemirror-gapcursor@1.3.2:
@@ -19875,14 +19590,14 @@ snapshots:
   prosemirror-history@1.4.1:
     dependencies:
       prosemirror-state: 1.4.3
-      prosemirror-transform: 1.4.2
+      prosemirror-transform: 1.10.4
       prosemirror-view: 1.40.1
       rope-sequence: 1.3.4
 
   prosemirror-inputrules@1.5.0:
     dependencies:
       prosemirror-state: 1.4.3
-      prosemirror-transform: 1.4.2
+      prosemirror-transform: 1.10.4
 
   prosemirror-keymap@1.2.3:
     dependencies:
@@ -19908,7 +19623,7 @@ snapshots:
   prosemirror-state@1.4.3:
     dependencies:
       prosemirror-model: 1.25.3
-      prosemirror-transform: 1.4.2
+      prosemirror-transform: 1.10.4
       prosemirror-view: 1.40.1
 
   prosemirror-tables@1.8.1:
@@ -19923,21 +19638,16 @@ snapshots:
     dependencies:
       prosemirror-model: 1.25.3
 
-  prosemirror-transform@1.4.2:
-    dependencies:
-      prosemirror-model: 1.25.3
-
-  prosemirror-utils@0.9.6(prosemirror-model@1.25.3)(prosemirror-state@1.4.3)(prosemirror-tables@1.8.1):
+  prosemirror-utils@1.2.2(prosemirror-model@1.25.3)(prosemirror-state@1.4.3):
     dependencies:
       prosemirror-model: 1.25.3
       prosemirror-state: 1.4.3
-      prosemirror-tables: 1.8.1
 
   prosemirror-view@1.40.1:
     dependencies:
       prosemirror-model: 1.25.3
       prosemirror-state: 1.4.3
-      prosemirror-transform: 1.4.2
+      prosemirror-transform: 1.10.4
 
   proxy-addr@2.0.7:
     dependencies:
@@ -19945,10 +19655,6 @@ snapshots:
       ipaddr.js: 1.9.1
 
   proxy-from-env@1.1.0: {}
-
-  ps-tree@1.2.0:
-    dependencies:
-      event-stream: 3.3.4
 
   psl@1.15.0:
     dependencies:
@@ -20002,9 +19708,9 @@ snapshots:
       reactcss: 1.2.3(react@19.1.1)
       tinycolor2: 1.6.0
 
-  react-docgen-typescript@2.4.0(typescript@4.9.5):
+  react-docgen-typescript@2.4.0(typescript@5.9.2):
     dependencies:
-      typescript: 4.9.5
+      typescript: 5.9.2
 
   react-docgen@7.1.1:
     dependencies:
@@ -20316,12 +20022,6 @@ snapshots:
 
   scheduler@0.26.0: {}
 
-  schema-utils@2.7.1:
-    dependencies:
-      '@types/json-schema': 7.0.15
-      ajv: 6.12.6
-      ajv-keywords: 3.5.2(ajv@6.12.6)
-
   schema-utils@3.3.0:
     dependencies:
       '@types/json-schema': 7.0.15
@@ -20532,13 +20232,6 @@ snapshots:
 
   source-map-js@1.2.1: {}
 
-  source-map-loader@3.0.2(webpack@5.100.0(@swc/core@1.13.5)(esbuild@0.25.4)):
-    dependencies:
-      abab: 2.0.6
-      iconv-lite: 0.6.3
-      source-map-js: 1.2.1
-      webpack: 5.100.0(@swc/core@1.13.5)(esbuild@0.25.4)
-
   source-map-support@0.5.13:
     dependencies:
       buffer-from: 1.1.2
@@ -20578,10 +20271,6 @@ snapshots:
       wait-port: 0.2.14
     transitivePeerDependencies:
       - supports-color
-
-  split@0.3.3:
-    dependencies:
-      through: 2.3.8
 
   sprintf-js@1.0.3: {}
 
@@ -20628,10 +20317,6 @@ snapshots:
       - utf-8-validate
       - vite
 
-  stream-combiner@0.0.4:
-    dependencies:
-      duplexer: 0.1.2
-
   stream-composer@1.0.2:
     dependencies:
       streamx: 2.22.1
@@ -20642,8 +20327,6 @@ snapshots:
       text-decoder: 1.2.3
     optionalDependencies:
       bare-events: 2.6.0
-
-  string-argv@0.1.2: {}
 
   string-length@4.0.2:
     dependencies:
@@ -20968,8 +20651,6 @@ snapshots:
     dependencies:
       readable-stream: 3.6.2
 
-  through@2.3.8: {}
-
   tiny-invariant@1.3.3: {}
 
   tinybench@2.9.0: {}
@@ -21051,26 +20732,7 @@ snapshots:
 
   ts-interface-checker@0.1.13: {}
 
-  ts-loader@9.5.4(typescript@4.9.5)(webpack@5.100.0(@swc/core@1.13.5)(esbuild@0.25.4)):
-    dependencies:
-      chalk: 4.1.2
-      enhanced-resolve: 5.18.2
-      micromatch: 4.0.8
-      semver: 7.7.2
-      source-map: 0.7.6
-      typescript: 4.9.5
-      webpack: 5.100.0(@swc/core@1.13.5)(esbuild@0.25.4)
-
   ts-tqdm@0.8.6: {}
-
-  tsc-watch@4.6.2(typescript@4.9.5):
-    dependencies:
-      cross-spawn: 7.0.6
-      node-cleanup: 2.1.2
-      ps-tree: 1.2.0
-      string-argv: 0.1.2
-      strip-ansi: 6.0.1
-      typescript: 4.9.5
 
   tsconfck@3.1.6(typescript@5.8.3):
     optionalDependencies:
@@ -21097,10 +20759,10 @@ snapshots:
 
   tslib@2.8.1: {}
 
-  tsutils@3.21.0(typescript@4.9.5):
+  tsutils@3.21.0(typescript@5.9.2):
     dependencies:
       tslib: 1.14.1
-      typescript: 4.9.5
+      typescript: 5.9.2
 
   type-check@0.4.0:
     dependencies:
@@ -21159,11 +20821,9 @@ snapshots:
     dependencies:
       is-typedarray: 1.0.0
 
-  typescript@4.9.5: {}
-
   typescript@5.8.3: {}
 
-  uc.micro@1.0.6: {}
+  typescript@5.9.2: {}
 
   uc.micro@2.1.0: {}
 

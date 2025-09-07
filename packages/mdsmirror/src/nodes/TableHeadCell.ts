@@ -1,9 +1,12 @@
-import Token from "markdown-it/lib/token";
+import { Token } from "markdown-it";
 import { NodeSpec } from "prosemirror-model";
 import { Plugin } from "prosemirror-state";
-import { isColumnSelected, getCellsInRow } from "prosemirror-utils";
-import { DecorationSet, Decoration } from "prosemirror-view";
+import { DecorationSet, Decoration, EditorView } from "prosemirror-view";
 import Node from "./Node";
+import { addColumnBefore, selectColumn } from "../core/commands/table";
+import { getCellAttrs, setCellAttrs } from "../core/rules/tables";
+import { getCellsInRow, isColumnSelected } from "../core/queries/table";
+import { combineClass } from "../core/helper";
 
 export default class TableHeadCell extends Node {
   get name() {
@@ -12,23 +15,18 @@ export default class TableHeadCell extends Node {
 
   get schema(): NodeSpec {
     return {
-      content: "paragraph+",
+      content: "block+",
       tableRole: "header_cell",
       isolating: true,
-      parseDOM: [{ tag: "th" }],
+      parseDOM: [{ tag: "th", getAttrs: getCellAttrs }],
       toDOM(node) {
-        return [
-          "th",
-          node.attrs.alignment
-            ? { style: `text-align: ${node.attrs.alignment}` }
-            : {},
-          0,
-        ];
+        return ["th", setCellAttrs(node), 0];
       },
       attrs: {
         colspan: { default: 1 },
         rowspan: { default: 1 },
         alignment: { default: null },
+        colwidth: { default: null },
       },
     };
   }
@@ -45,38 +43,101 @@ export default class TableHeadCell extends Node {
   }
 
   get plugins() {
+    function buildAddColumnDecoration(pos: number, index: number) {
+      const className = combineClass('table-add-column', {first: index === 0});
+
+      return Decoration.widget(
+        pos + 1,
+        () => {
+          const plus = document.createElement("a");
+          plus.role = "button";
+          plus.className = className;
+          plus.dataset.index = index.toString();
+          return plus;
+        },
+        {
+          key: combineClass(className, index),
+        }
+      );
+    }
+
     return [
       new Plugin({
         props: {
-          decorations: (state) => {
-            const { doc, selection } = state;
-            const decorations: Decoration[] = [];
-            const cells = getCellsInRow(0)(selection);
+          handleDOMEvents: {
+            mousedown: (view: EditorView, event: MouseEvent) => {
+              if (!(event.target instanceof HTMLElement)) {
+                return false;
+              }
 
-            if (cells) {
-              cells.forEach(({ pos }, index) => {
-                decorations.push(
-                  Decoration.widget(pos + 1, () => {
-                    const colSelected = isColumnSelected(index)(selection);
-                    let className = "grip-column";
-                    if (colSelected) {
-                      className += " selected";
-                    }
-                    if (index === 0) {
-                      className += " first";
-                    } else if (index === cells.length - 1) {
-                      className += " last";
-                    }
-                    const grip = document.createElement("a");
-                    grip.className = className;
-                    grip.addEventListener("mousedown", (event) => {
-                      event.preventDefault();
-                      event.stopImmediatePropagation();
-                      this.options.onSelectColumn(index, state);
-                    });
-                    return grip;
-                  })
+              const targetAddColumn = event.target.closest(
+                `.table-add-column`
+              );
+              if (targetAddColumn) {
+                event.preventDefault();
+                event.stopImmediatePropagation();
+                const index = Number(
+                  targetAddColumn.getAttribute("data-index")
                 );
+                addColumnBefore({ index })(view.state, view.dispatch);
+                return true;
+              }
+
+              const targetGripColumn = event.target.closest(
+                `.table-grip-column`
+              );
+              if (targetGripColumn) {
+                event.preventDefault();
+                event.stopImmediatePropagation();
+
+                selectColumn(
+                  Number(targetGripColumn.getAttribute("data-index")),
+                  event.metaKey || event.shiftKey
+                )(view.state, view.dispatch);
+                return true;
+              }
+
+              return false;
+            },
+          },
+          decorations: (state) => {
+            if (!this.editor.view?.editable) {
+              return;
+            }
+
+            const { doc } = state;
+            const decorations: Decoration[] = [];
+            const cols = getCellsInRow(0)(state);
+
+            if (cols) {
+              cols.forEach((pos, index) => {
+                const className = combineClass('table-grip-column', {
+                  selected: isColumnSelected(index)(state),
+                  first: index === 0,
+                  last: index === cols.length - 1,
+                });
+
+                decorations.push(
+                  Decoration.widget(
+                    pos + 1,
+                    () => {
+                      const grip = document.createElement("a");
+                      grip.role = "button";
+                      grip.className = className;
+                      grip.dataset.index = index.toString();
+                      return grip;
+                    },
+                    {
+                      key: combineClass(className, index),
+                    }
+                  )
+                );
+
+                if (index === 0) {
+                  decorations.push(buildAddColumnDecoration(pos, index));
+                }
+
+                decorations.push(buildAddColumnDecoration(pos, index + 1));
               });
             }
 

@@ -1,13 +1,13 @@
-import MarkdownIt from "markdown-it";
+import MarkdownIt, { Token } from "markdown-it";
 import customFence from "markdown-it-container";
-import Token from "markdown-it/lib/token";
 
-export default function notice(md: MarkdownIt) {
+export default function notice(md: MarkdownIt): void {
+  // @ts-ignore
   return customFence(md, "notice", {
     marker: ":",
     validate: () => true,
-    render: function (tokens: Token[], idx: number) {
-      const info = tokens[idx].info.trim();
+    render(tokens: Token[], idx: number) {
+      const { info } = tokens[idx];
 
       if (tokens[idx].nesting === 1) {
         // opening tag

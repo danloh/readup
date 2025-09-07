@@ -5,12 +5,11 @@ import { EditorState, Selection, Plugin } from "prosemirror-state";
 import { dropCursor } from "prosemirror-dropcursor";
 import { gapCursor } from "prosemirror-gapcursor";
 import { MarkdownParser } from "prosemirror-markdown";
-import { Decoration, EditorView } from "prosemirror-view";
-import { Schema, NodeSpec, MarkSpec, Slice, Node as ProsemirrorNode } from "prosemirror-model";
+import { Decoration, EditorView, NodeViewConstructor } from "prosemirror-view";
+import { Schema, NodeSpec, MarkSpec, Slice, Node as PmNode } from "prosemirror-model";
 import { inputRules, InputRule } from "prosemirror-inputrules";
 import { keymap } from "prosemirror-keymap";
 import { baseKeymap } from "prosemirror-commands";
-import { selectColumn, selectRow, selectTable } from "prosemirror-utils";
 import { PluginSimple } from "markdown-it";
 import { ThemeProvider } from "styled-components";
 import { lightTheme, darkTheme } from "./styles/theme";
@@ -251,7 +250,8 @@ class MsEditor extends React.PureComponent<Props, State> {
 
   isBlurred: boolean;
   extensionManager: ExtensionManager;
-  element?: HTMLElement | null;
+  // element?: HTMLElement | null;
+  elementRef = React.createRef<HTMLDivElement>();
   view: EditorView;
   schema: Schema;
   serializer: MarkdownSerializer;
@@ -260,17 +260,7 @@ class MsEditor extends React.PureComponent<Props, State> {
   plugins: Plugin[];
   keymaps: Plugin[];
   inputRules: InputRule[];
-  nodeViews: {
-    [name: string]: (
-      node: ProsemirrorNode,
-      view: EditorView,
-      getPos: () => number,
-      // @ts-ignore
-      decorations: Decoration<{
-        [key: string]: any;
-      }>[]
-    ) => ComponentView;
-  };
+  nodeViews: { [name: string]: NodeViewConstructor };
   nodes: { [name: string]: NodeSpec };
   marks: { [name: string]: MarkSpec };
   commands: Record<string, any>;
@@ -410,15 +400,10 @@ class MsEditor extends React.PureComponent<Props, State> {
             onFileUploadStop: this.props.onFileUploadStop,
             onShowToast: this.props.onShowToast,
           }),
-          new Table(),
-          new TableCell({
-            onSelectTable: this.handleSelectTable,
-            onSelectRow: this.handleSelectRow,
-          }),
-          new TableHeadCell({
-            onSelectColumn: this.handleSelectColumn,
-          }),
+          new TableCell(),
+          new TableHeadCell(),
           new TableRow(),
+          new Table(),
           new MathInline(),
           new MathDisplay(),
           new Bold(),
@@ -514,13 +499,10 @@ class MsEditor extends React.PureComponent<Props, State> {
       .filter((extension: ReactNode) => extension.component)
       .reduce((nodeViews, extension: ReactNode) => {
         const nodeView = (
-          node: ProsemirrorNode,
+          node: PmNode,
           view: EditorView,
           getPos: () => number,
-          // @ts-ignore
-          decorations: Decoration<{
-            [key: string]: any;
-          }>[]
+          decorations: Decoration[]
         ) => {
           return new ComponentView(extension.component, {
             editor: this,
@@ -604,7 +586,7 @@ class MsEditor extends React.PureComponent<Props, State> {
   }
 
   createView() {
-    if (!this.element) {
+    if (!this.elementRef.current) {
       throw new Error("createView called before ref available");
     }
 
@@ -617,10 +599,9 @@ class MsEditor extends React.PureComponent<Props, State> {
     };
 
     const self = this; // eslint-disable-line
-    const view = new EditorView(this.element, {
+    const view = new EditorView(this.elementRef.current, {
       state: this.createState(this.props.value),
       editable: () => !this.props.readOnly,
-      // @ts-ignore
       nodeViews: this.nodeViews,
       handleDOMEvents: this.props.handleDOMEvents,
       dispatchTransaction: function(transaction) {
@@ -672,11 +653,11 @@ class MsEditor extends React.PureComponent<Props, State> {
   }
 
   calculateDir = () => {
-    if (!this.element) return;
+    if (!this.elementRef.current) return;
 
     const isRTL =
       this.props.dir === "rtl" ||
-      getComputedStyle(this.element).direction === "rtl";
+      getComputedStyle(this.elementRef.current).direction === "rtl";
 
     if (this.state.isRTL !== isRTL) {
       this.setState({ isRTL });
@@ -747,7 +728,6 @@ class MsEditor extends React.PureComponent<Props, State> {
       //   this.view.state.selection.from
       // );
       // this.view.dispatch(transaction0);
-      // @ts-ignore
       const transaction1 = this.view.state.tr.split(
         this.view.state.selection.to
       );
@@ -760,18 +740,6 @@ class MsEditor extends React.PureComponent<Props, State> {
   handleCloseSlashMenu = () => {
     if (!this.state.slashMenuOpen) return;
     this.setState({ slashMenuOpen: false });
-  };
-
-  handleSelectRow = (index: number, state: EditorState) => {
-    this.view.dispatch(selectRow(index)(state.tr));
-  };
-
-  handleSelectColumn = (index: number, state: EditorState) => {
-    this.view.dispatch(selectColumn(index)(state.tr));
-  };
-
-  handleSelectTable = (state: EditorState) => {
-    this.view.dispatch(selectTable(state.tr));
   };
 
   // for relative image src
@@ -847,7 +815,7 @@ class MsEditor extends React.PureComponent<Props, State> {
               rtl={isRTL}
               readOnly={readOnly}
               readOnlyWriteCheckboxes={readOnlyWriteCheckboxes}
-              ref={ref => { this.element = ref; }}
+              ref={this.elementRef}
             />
             {!readOnly && this.view && (
               <React.Fragment>

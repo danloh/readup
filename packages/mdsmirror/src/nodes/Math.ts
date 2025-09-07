@@ -62,7 +62,7 @@ export default class Math extends Node {
   }
 
   get plugins() {
-    return [mathPlugin({enableBlockPreview: true})];
+    return [mathPlugin];
   }
 
   toMarkdown(state: MarkdownSerializerState, node: ProsemirrorNode) {
@@ -77,7 +77,7 @@ export default class Math extends Node {
     return {
       node: "math_inline",
       block: "math_inline",
-      noCloseToken: "math_inline",
+      noCloseToken: true,
     };
   }
 }

@@ -2,10 +2,10 @@ import { NodeType } from "prosemirror-model";
 import { wrapInList, liftListItem } from "prosemirror-schema-list";
 import { EditorState } from "prosemirror-state";
 import { findParentNode } from "prosemirror-utils";
-import chainTransactions from "../chainTransactions";
+import clearNodes from "./clearNodes";
+import { chainTransactions } from "../helper";
 import isList from "../queries/isList";
 import { Dispatch } from "../../types";
-import clearNodes from "./clearNodes";
 
 export default function toggleList(listType: NodeType, itemType: NodeType) {
   return (state: EditorState, dispatch?: Dispatch) => {

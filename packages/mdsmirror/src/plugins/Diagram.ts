@@ -290,7 +290,7 @@ export default function Diagram({ pluginKey, name, dark, onSave }: PluginProps) 
   return new Plugin({
     key: new PluginKey(pluginKey),
     state: {
-      init: (_: Plugin, { doc }) => {
+      init: (_, { doc }) => {
         const pluginState: PluginState = {
           decorationSet: DecorationSet.create(doc, []),
           diagramVisibility: {},
@@ -352,7 +352,7 @@ export default function Diagram({ pluginKey, name, dark, onSave }: PluginProps) 
     },
     props: {
       decorations(state) {
-        return this.getState(state).decorationSet;
+        return this.getState(state)?.decorationSet;
       },
     },
   });

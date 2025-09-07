@@ -1,8 +1,8 @@
-import Token from "markdown-it/lib/token";
+import { Token } from "markdown-it";
 import { wrappingInputRule } from "prosemirror-inputrules";
 import { NodeSpec, Node as ProsemirrorNode, NodeType } from "prosemirror-model";
 import * as React from "react";
-import ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 import { TbAlertTriangle, TbInfoCircle, TbBulb } from "react-icons/tb";
 import toggleWrap from "../../core/commands/toggleWrap";
 import { MarkdownSerializerState } from "../../core/mdSerializer";
@@ -75,9 +75,8 @@ export default class Notice extends Node {
 
         const icon = document.createElement("div");
         icon.className = "icon";
-        // Use ReactDOM.createRoot for React 18+
-        // @ts-ignore
-        (ReactDOM.createRoot(icon) as any).render(component);
+        // Use createRoot from react-dom/client for React 18+
+        createRoot(icon).render(component);
 
         return [
           "div",

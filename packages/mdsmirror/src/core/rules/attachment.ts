@@ -1,5 +1,4 @@
-import MarkdownIt from "markdown-it";
-import Token from "markdown-it/lib/token";
+import MarkdownIt, { Token } from "markdown-it";
 
 function isParagraph(token: Token) {
   return token.type === "paragraph_open";
@@ -50,13 +49,12 @@ export default function linksToAttachments(md: MarkdownIt) {
             continue;
           }
 
-          // of hey, we found a link – lets check to see if it should be
-          // converted to a file attachment
+          // convert link to a file attachment if it should be
           if (insideLink && isAttachment(insideLink)) {
             const { content } = current;
 
             // convert to attachment token
-            const token = new Token("attachment", "a", 0);
+            const token = new state.Token("attachment", "a", 0);
             token.attrSet("href", insideLink.attrGet("href") || "");
 
             const parts = content.split(" ");

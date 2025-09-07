@@ -1,10 +1,9 @@
 import { textblockTypeInputRule } from "prosemirror-inputrules";
 import { Node as PmNode, NodeSpec, NodeType, Schema } from "prosemirror-model";
-import { Selection } from "prosemirror-state";
+import { Command, Selection } from "prosemirror-state";
 import backspaceToParagraph from "../core/commands/backspaceToParagraph";
 import splitHeading from "../core/commands/splitHeading";
 import toggleBlockType from "../core/commands/toggleBlockType";
-import { Command } from "../core/Extension";
 import { MarkdownSerializerState } from "../core/mdSerializer";
 import Anchor, { copyAnchor } from "../plugins/Anchor";
 import Node from "./Node";

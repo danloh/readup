@@ -1,12 +1,13 @@
 import { GapCursor } from "prosemirror-gapcursor";
 import {
+  Command,
   Plugin,
   Selection,
   AllSelection,
   TextSelection,
   EditorState,
 } from "prosemirror-state";
-import Extension, { Command } from "../core/Extension";
+import Extension from "../core/Extension";
 import isInCode from "../core/queries/isInCode";
 
 export default class Keys extends Extension {

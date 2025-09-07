@@ -1,11 +1,6 @@
-import Token from "markdown-it/lib/token";
+import { Token } from "markdown-it";
 import { wrappingInputRule } from "prosemirror-inputrules";
-import {
-  NodeSpec,
-  NodeType,
-  Schema,
-  Node as ProsemirrorNode,
-} from "prosemirror-model";
+import { NodeSpec, NodeType, Schema, Node as PmNode } from "prosemirror-model";
 import toggleList from "../core/commands/toggleList";
 import { MarkdownSerializerState } from "../core/mdSerializer";
 import Node from "./Node";
@@ -62,7 +57,7 @@ export default class OrderedList extends Node {
     ];
   }
 
-  toMarkdown(state: MarkdownSerializerState, node: ProsemirrorNode) {
+  toMarkdown(state: MarkdownSerializerState, node: PmNode) {
     state.write("\n");
 
     const start = node.attrs.order !== undefined ? node.attrs.order : 1;

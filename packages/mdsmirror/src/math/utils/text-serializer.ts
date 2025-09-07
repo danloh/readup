@@ -4,20 +4,20 @@ import { SchemaMarkT, SchemaNodeT } from "./types";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-type TypedNode<T extends string, S extends Schema<T,any>> = ProseNode<S> & { type: NodeType<S> & { name: T } };
-type TypedMark<T extends string, S extends Schema<T,any>> = Mark<S>      & { type: MarkType<S> & { name: T } };
+type TypedNode<T extends string> = ProseNode & { type: NodeType & { name: T } };
+type TypedMark<T extends string> = Mark      & { type: MarkType & { name: T } };
 
-type NodeSerializer<T extends string, S extends Schema<T,any>> = (node: TypedNode<T, S>) => string;
-type MarkSerializer<T extends string, S extends Schema<T,any>> = (mark: TypedMark<T, S>) => string;
+type NodeSerializer<T extends string> = (node: TypedNode<T>) => string;
+type MarkSerializer<T extends string> = (mark: TypedMark<T>) => string;
 
 class ProseMirrorTextSerializer<S extends Schema<any, any>> {
 
-	public nodes: { [name: string] : NodeSerializer<string, S>|undefined };
-	public marks: { [name: string] : NodeSerializer<string, S>|undefined };
+	public nodes: { [name: string] : NodeSerializer<string>|undefined };
+	public marks: { [name: string] : NodeSerializer<string>|undefined };
 
 	constructor(fns: {
-			nodes?: { [name in SchemaNodeT<S>]? : NodeSerializer<name, S> },
-			marks?: { [name in SchemaMarkT<S>]? : MarkSerializer<name, S> },
+			nodes?: { [name in SchemaNodeT<S>]? : NodeSerializer<name> },
+			marks?: { [name in SchemaMarkT<S>]? : MarkSerializer<name> },
 		}, base?: ProseMirrorTextSerializer<S>
 	) {
 		// use base serializer as a fallback
@@ -25,7 +25,7 @@ class ProseMirrorTextSerializer<S extends Schema<any, any>> {
 		this.marks = { ...base?.marks, ...fns.marks };
 	}
 
-	serializeFragment(fragment: Fragment<S>): string {
+	serializeFragment(fragment: Fragment): string {
 		// adapted from the undocumented `Fragment.textBetween` function
 		// https://github.com/ProseMirror/prosemirror-model/blob/eef20c8c6dbf841b1d70859df5d59c21b5108a4f/src/fragment.js#L46
 		let blockSeparator = "\n\n";
@@ -59,11 +59,11 @@ class ProseMirrorTextSerializer<S extends Schema<any, any>> {
 		return text;
 	}
 
-	serializeSlice(slice: Slice<S>): string {
+	serializeSlice(slice: Slice): string {
 		return this.serializeFragment(slice.content);
 	}
 
-	serializeNode(node: ProseNode<S>): string|null {
+	serializeNode(node: ProseNode): string|null {
 		// check if one of our custom serializers handles this node
 		let nodeSerializer = this.nodes[node.type.name];
 		if(nodeSerializer !== undefined) {

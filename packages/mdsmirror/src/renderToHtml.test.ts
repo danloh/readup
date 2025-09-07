@@ -1,4 +1,4 @@
-import renderToHtml from "./renderToHtml";
+import renderToHtml from "./components/renderToHtml";
 
 test("renders an empty string", () => {
   expect(renderToHtml("")).toBe("");

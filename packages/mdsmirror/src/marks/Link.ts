@@ -1,13 +1,8 @@
-import Token from "markdown-it/lib/token";
+import { Token } from "markdown-it";
 import { toggleMark } from "prosemirror-commands";
 import { InputRule } from "prosemirror-inputrules";
 import { MarkdownSerializerState } from "prosemirror-markdown";
-import {
-  MarkSpec,
-  MarkType,
-  Node,
-  Mark as ProsemirrorMark,
-} from "prosemirror-model";
+import { MarkSpec, MarkType, Node, Mark as PmMark } from "prosemirror-model";
 import { EditorState, Plugin } from "prosemirror-state";
 import { Dispatch } from "../types";
 import Mark from "./Mark";
@@ -15,7 +10,7 @@ import Mark from "./Mark";
 const LINK_INPUT_REGEX = /\[([^[]+)]\((\S+)\)$/;
 
 function isPlainURL(
-  link: ProsemirrorMark,
+  link: PmMark,
   parent: Node,
   index: number,
   side: -1 | 1
@@ -166,7 +161,7 @@ export default class Link extends Mark {
     return {
       open(
         _state: MarkdownSerializerState,
-        mark: ProsemirrorMark,
+        mark: PmMark,
         parent: Node,
         index: number
       ) {
@@ -174,7 +169,7 @@ export default class Link extends Mark {
       },
       close(
         state: MarkdownSerializerState,
-        mark: ProsemirrorMark,
+        mark: PmMark,
         parent: Node,
         index: number
       ) {
@@ -182,7 +177,7 @@ export default class Link extends Mark {
           ? ">"
           : "](" +
               state.esc(mark.attrs.href) +
-              (mark.attrs.title ? " " + state.quote(mark.attrs.title) : "") +
+              (mark.attrs.title ? " " + quote(mark.attrs.title) : "") +
               ")";
       },
     };
@@ -197,4 +192,10 @@ export default class Link extends Mark {
       }),
     };
   }
+}
+
+function quote(str: string) {
+  const wrap =
+    str.indexOf('"') === -1 ? '""' : str.indexOf("'") === -1 ? "''" : "()";
+  return wrap[0] + str + wrap[1];
 }

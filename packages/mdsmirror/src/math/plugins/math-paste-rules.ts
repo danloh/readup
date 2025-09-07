@@ -9,7 +9,7 @@
  * the default set of note attributes should be used.
  */
 
-import { Node as ProseNode, Fragment, ParseRule, Schema, NodeType } from "prosemirror-model";
+import { Node as ProseNode, Fragment, ParseRule, Schema, TagParseRule } from "prosemirror-model";
 
 ////////////////////////////////////////////////////////////
 
@@ -21,8 +21,8 @@ function getFirstMatch(root: Element, rules: ((root:Element) => false|string)[])
 	return false;
 }
 
-function makeTextFragment<S extends Schema<any, any>>(text: string, schema: S): Fragment<S> {
-	return Fragment.from(schema.text(text) as ProseNode<S>);
+function makeTextFragment(text: string, schema: Schema): Fragment {
+	return Fragment.from(schema.text(text) as ProseNode);
 }
 
 ////////////////////////////////////////////////////////////
@@ -117,7 +117,7 @@ export const wikipediaBlockMathParseRule: ParseRule = {
 		// success!  proceed to `getContent` for further processing
 		return null;
 	},
-	getContent<S extends Schema<any, any>>(p: Node, schema: S): Fragment<S> {
+	getContent(p: Node, schema: Schema): Fragment {
 		// search the matched element for a TeX string
 		let match: false|string = matchWikipedia(p as Element);
 		// return a fragment representing the math node's children
@@ -153,7 +153,7 @@ export const wikipediaInlineMathParseRule: ParseRule = {
 		// success!  proceed to `getContent` for further processing
 		return null;
 	},
-	getContent<S extends Schema<any, any>>(p: Node, schema: S): Fragment<S> {
+	getContent(p: Node, schema: Schema): Fragment {
 		// search the matched element for a TeX string
 		let match: false|string = matchWikipedia(p as Element);
 		// return a fragment representing the math node's children
@@ -166,10 +166,10 @@ export const wikipediaInlineMathParseRule: ParseRule = {
 
 ////////////////////////////////////////////////////////////
 
-export const defaultInlineMathParseRules: ParseRule[] = [
+export const defaultInlineMathParseRules: TagParseRule[] = [
 	wikipediaInlineMathParseRule,
 ]
 
-export const defaultBlockMathParseRules: ParseRule[] = [
+export const defaultBlockMathParseRules: TagParseRule[] = [
 	wikipediaBlockMathParseRule,
 ]

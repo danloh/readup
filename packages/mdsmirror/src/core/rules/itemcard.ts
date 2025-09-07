@@ -1,5 +1,4 @@
-import MarkdownIt from "markdown-it";
-import Token from "markdown-it/lib/token";
+import MarkdownIt, { Token } from "markdown-it";
 import isUrl from "../queries/isUrl";
 
 function isParagraph(token: Token) {
@@ -57,7 +56,7 @@ export default function linksToItemcards(md: MarkdownIt) {
             const { content } = current;
 
             // convert to itemcard token
-            const token = new Token("itemcard", "a", 0);
+            const token = new state.Token("itemcard", "a", 0);
             token.attrSet("href", insideLink.attrGet("href") || "");
 
             const parts = content.split("|");

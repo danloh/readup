@@ -11,10 +11,7 @@ for rendering output.
 /*jslint node: true */
 "use strict";
 
-import MarkdownIt from "markdown-it";
-import StateInline from "markdown-it/lib/rules_inline/state_inline";
-import StateBlock from "markdown-it/lib/rules_block/state_block";
-import Token from "markdown-it/lib/token";
+import MarkdownIt, { StateBlock, StateInline, Token } from "markdown-it";
 import katex, { KatexOptions } from "katex";
 
 // Test if potential opening or closing delimieter

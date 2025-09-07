@@ -1,10 +1,5 @@
-/*---------------------------------------------------------
- *  Author: Benjamin R. Bray
- *  License: MIT (see LICENSE in project root for details)
- *--------------------------------------------------------*/
-
 // prosemirror imports
-import { Node as ProseNode, Fragment, MarkSpec, NodeSpec, Schema, SchemaSpec, NodeType } from "prosemirror-model";
+import { MarkSpec, NodeSpec, Schema, SchemaSpec } from "prosemirror-model";
 import { defaultBlockMathParseRules, defaultInlineMathParseRules } from "./plugins/math-paste-rules";
 import { SchemaSpecMarkT, SchemaSpecNodeT } from "./utils/types";
 
@@ -25,9 +20,9 @@ import { SchemaSpecMarkT, SchemaSpecNodeT } from "./utils/types";
  * @see https://github.com/microsoft/TypeScript/issues/10727
  */
 interface SchemaSpecJson<N extends string = any, M extends string = any> extends SchemaSpec<N,M> {
-	nodes: { [name in N]: NodeSpec };
-	marks: { [name in M]: MarkSpec };
-	topNode?: string | null;
+    nodes: { [name in N]: NodeSpec };
+    marks: { [name in M]: MarkSpec };
+    topNode?: string;
 }
 
 type MathSpecNodeT = SchemaSpecNodeT<typeof mathSchemaSpec>;

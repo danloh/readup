@@ -1,11 +1,9 @@
 // TODO: use codemirror
 import copy from "copy-to-clipboard";
-import Token from "markdown-it/lib/token";
+import { Token } from "markdown-it";
 import { textblockTypeInputRule } from "prosemirror-inputrules";
 import { NodeSpec, NodeType, Schema, Node as ProsemirrorNode } from "prosemirror-model";
-import { 
-  EditorState, Selection, TextSelection, Transaction, Plugin, PluginKey 
-} from "prosemirror-state";
+import { Command, EditorState, Selection, TextSelection, Transaction } from "prosemirror-state";
 import refractor from "refractor/core";
 import bash from "refractor/lang/bash";
 import cpp from "refractor/lang/cpp";
@@ -189,20 +187,14 @@ export default class CodeFence extends Node {
         if (!isInCode(state)) {
           return false;
         }
-        const {
-          tr,
-          selection,
-        }: { tr: Transaction; selection: TextSelection } = state;
+        const { tr, selection } = state;
         const text = selection?.$anchor?.nodeBefore?.text;
-
         let newText = "\n";
 
         if (text) {
           const splitByNewLine = text.split("\n");
-          const numOfSpaces = splitByNewLine[splitByNewLine.length - 1].search(
-            /\S|$/
-          );
-          newText += " ".repeat(numOfSpaces);
+          const offset = splitByNewLine[splitByNewLine.length - 1].search(/\S|$/);
+          newText += " ".repeat(offset);
         }
 
         dispatch(tr.insertText(newText, selection.from, selection.to));

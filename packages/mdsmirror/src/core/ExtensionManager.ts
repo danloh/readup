@@ -1,6 +1,6 @@
 import { PluginSimple } from "markdown-it";
 import { keymap } from "prosemirror-keymap";
-import { MarkdownParser, TokenConfig } from "prosemirror-markdown";
+import { MarkdownParser } from "prosemirror-markdown";
 import { Schema } from "prosemirror-model";
 import { EditorView } from "prosemirror-view";
 import Mark from "../marks/Mark";
@@ -187,7 +187,7 @@ export default class ExtensionManager {
     rules?: Record<string, any>;
     plugins?: PluginSimple[];
   }): MarkdownParser {
-    const tokens: Record<string, TokenConfig> = this.extensions
+    const tokens = this.extensions
       .filter(
         (extension) => extension.type === "mark" || extension.type === "node"
       )

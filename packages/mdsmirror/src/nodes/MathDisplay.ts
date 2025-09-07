@@ -53,7 +53,7 @@ export default class MathDisplay extends Node {
     return {
       node: "math_display",
       block: "math_display",
-      noCloseToken: "math_display"
+      noCloseToken: true,
     };
   }
 }
