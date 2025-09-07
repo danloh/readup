@@ -2,6 +2,7 @@ import { NodeSpec, Node as ProsemirrorNode, Schema } from "prosemirror-model";
 import { Plugin, TextSelection } from "prosemirror-state";
 import { Decoration, DecorationSet } from "prosemirror-view";
 import { chainCommands } from "prosemirror-commands";
+import { InputRule } from "prosemirror-inputrules";
 import {
   addColumnAfter,
   addRowAfter,
@@ -32,9 +33,11 @@ import {
   mergeCellsAndCollapse,
 } from "../core/commands/table";
 import Node from "./Node";
+import { TableView } from "./TableView";
 import { MarkdownSerializerState } from "../core/mdSerializer";
 import tablesRule from "../core/rules/tables";
-import { InputRule } from "prosemirror-inputrules";
+import { FixTablesPlugin } from "../plugins/FixTables";
+import { TableLayoutPlugin } from "../plugins/TableLayoutPlugin";
 
 export default class Table extends Node {
   get name() {
@@ -48,15 +51,17 @@ export default class Table extends Node {
       isolating: true,
       group: "block",
       parseDOM: [{ tag: "table" }],
+      attrs: {
+        layout: {
+          default: null,
+        },
+      },
       toDOM() {
+        // Note: This is overridden by TableView
         return [
           "div",
-          { class: "scrollable-wrapper" },
-          [
-            "div",
-            { class: "scrollable" },
-            ["table", { class: "rme-table" }, ["tbody", 0]],
-          ],
+          { class: 'table-wrapper' },
+          ["table", {}, ["tbody", 0]],
         ];
       },
     };
@@ -66,7 +71,7 @@ export default class Table extends Node {
     return [tablesRule];
   }
 
-  commands({ schema }: { schema: Schema }) {
+  commands() {
     return {
       createTable,
       setColumnAttr,
@@ -132,46 +137,13 @@ export default class Table extends Node {
 
   get plugins() {
     return [
-      tableEditing(),
-      new Plugin({
-        props: {
-          decorations: (state) => {
-            const { doc } = state;
-            const decorations: Decoration[] = [];
-            let index = 0;
-
-            doc.descendants((node, pos) => {
-              if (node.type.name !== this.name) {
-                return;
-              }
-
-              const elements = document.getElementsByClassName("rme-table");
-              const table = elements[index];
-              if (!table) {
-                return;
-              }
-
-              const element = table.parentElement;
-              const shadowRight = !!(
-                element && element.scrollWidth > element.clientWidth
-              );
-
-              if (shadowRight) {
-                decorations.push(
-                  Decoration.widget(pos + 1, () => {
-                    const shadow = document.createElement("div");
-                    shadow.className = "scrollable-shadow right";
-                    return shadow;
-                  })
-                );
-              }
-              index++;
-            });
-
-            return DecorationSet.create(doc, decorations);
-          },
-        },
+      // Note: Important to register columnResizing before tableEditing
+      columnResizing({
+        View: TableView,
       }),
+      tableEditing(),
+      new FixTablesPlugin(),
+      new TableLayoutPlugin(),
     ];
   }
 }

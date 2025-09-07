@@ -112,6 +112,26 @@ export const StyledEditor = styled("div")<{
     pointer-events: none;
   }
 
+  .caption {
+    border: 0;
+    display: block;
+    font-style: italic;
+    font-weight: normal;
+    font-size: 13px;
+    color: ${props => props.theme.textSecondary};
+    padding: 8px 0 4px;
+    line-height: 16px;
+    text-align: center;
+    min-height: 1em;
+    outline: none;
+    background: none;
+    resize: none;
+    user-select: text;
+    margin: 0 auto !important;
+    width: 100%;
+    max-width: 100vw;
+  }
+
   .ProseMirror[contenteditable="false"] {
     .caption {
       pointer-events: none;
@@ -823,6 +843,19 @@ export const StyledEditor = styled("div")<{
     cursor: help;
   }
 
+  .table-full-width {
+    transform: translateX(calc(50% + 32px + var(--container-width) * -0.5 + var(--full-width-transform-offset)));
+
+    .table-scrollable,
+    table {
+      width: calc(var(--container-width) - ${32 * 2}px);
+    }
+
+    &.table-shadow-right::after {
+      left: calc(var(--container-width) - ${32 * 3}px);
+    }
+  }
+
   table {
     width: 100%;
     border-collapse: collapse;
@@ -836,106 +869,246 @@ export const StyledEditor = styled("div")<{
 
     tr {
       position: relative;
-      border-bottom: 1px solid ${props => props.theme.tableDivider};
-    }
-
-    th {
-      background: ${props => props.theme.tableHeaderBackground};
+      border-bottom: 1px solid ${props => props.theme.divider};
     }
 
     td,
     th {
       position: relative;
       vertical-align: top;
-      border: 1px solid ${props => props.theme.tableDivider};
+      border: 1px solid ${props => props.theme.divider};
       position: relative;
       padding: 4px 8px;
-      text-align: ${props => (props.rtl ? "right" : "left")};
+      text-align: start;
       min-width: 100px;
+      font-weight: normal;
+    }
+
+    th {
+      background: ${props => props.theme.background};
+      color: ${props => props.theme.textSecondary};
+      font-weight: 500;
+    }
+
+    td .component-embed {
+      padding: 4px 0;
     }
 
     .selectedCell {
-      background: ${props => props.readOnly ? "inherit" : props.theme.tableSelectedBackground};
+      background: ${
+        props => props.readOnly ? "inherit" : props.theme.tableSelectedBackground
+      };
 
       /* fixes Firefox background color painting over border:
-       * https://bugzilla.mozilla.org/show_bug.cgi?id=688556 */
+      * https://bugzilla.mozilla.org/show_bug.cgi?id=688556 */
       background-clip: padding-box;
     }
 
-    .grip-column {
-      /* usage of ::after for all of the table grips works around a bug in
-       * prosemirror-tables that causes Safari to hang when selecting a cell
-       * in an empty table:
-       * https://github.com/ProseMirror/prosemirror/issues/947 */
+    .table-add-row,
+    .table-add-column,
+    .table-grip,
+    .table-grip-column,
+    .table-grip-row {
+      @media print {
+        display: none;
+      }
+    }
+
+    .table-add-row,
+    .table-add-column {
+      display: block;
+      position: absolute;
+      background: ${props => props.theme.accent};
+      cursor: var(--pointer);
+
+      &:hover::after {
+        width: 16px;
+        height: 16px;
+        z-index: 20;
+        background-color: ${props => props.theme.accent};
+        background-size: 16px 16px;
+        background-position: 50% 50%;
+        background-image: url("data:image/svg+xml;base64,${btoa(
+          '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 5C11.4477 5 11 5.44772 11 6V11H6C5.44772 11 5 11.4477 5 12C5 12.5523 5.44772 13 6 13H11V18C11 18.5523 11.4477 19 12 19C12.5523 19 13 18.5523 13 18V13H18C18.5523 13 19 12.5523 19 12C19 11.4477 18.5523 11 18 11H13V6C13 5.44772 12.5523 5 12 5Z" fill="white"/></svg>'
+        )}")
+      }
+
+      // extra clickable area
+      &::before {
+        content: "";
+        display: block;
+        cursor: var(--pointer);
+        position: absolute;
+        width: 24px;
+        height: 24px;
+      }
+    }
+
+    .table-add-row {
+      bottom: -1px;
+      left: -16px;
+      width: 0;
+      height: 2px;
+
       &::after {
         content: "";
-        cursor: pointer;
+        position: absolute;
+        bottom: -1px;
+        left: -10px;
+        width: 4px;
+        height: 4px;
+        display: ${props => props.readOnly ? "none" : "block"};
+        border-radius: 100%;
+        background-color: ${props => props.theme.divider};
+      }
+
+      &:hover {
+        width: calc(var(--table-width) - ${32 * 1.5}px);
+      }
+
+      &:hover::after {
+        bottom: -7.5px;
+        left: -16px;
+      }
+
+      // extra clickable area
+      &::before {
+        bottom: -12px;
+        left: -18px;
+      }
+
+      &.first {
+        bottom: auto;
+        top: -1px;
+
+        &::before {
+          bottom: auto;
+          top: -12px;
+        }
+      }
+    }
+
+    .table-add-column {
+      top: -16px;
+      right: -1px;
+      width: 2px;
+      height: 0;
+
+      &::after {
+        content: "";
+        position: absolute;
+        top: -10px;
+        right: -1px;
+        width: 4px;
+        height: 4px;
+        display: ${props => props.readOnly ? "none" : "block"};
+        border-radius: 100%;
+        background-color: ${props => props.theme.divider};
+      }
+
+      &:hover {
+        height: calc(var(--table-height) - 32px + 6px);
+      }
+
+      &:hover::after {
+        top: -16px;
+        right: -7px;
+      }
+
+      // extra clickable area
+      &::before {
+        top: -16px;
+        right: -12px;
+      }
+
+      &.first {
+        right: auto;
+        left: -1px;
+
+        &::before {
+          right: auto;
+          left: -12px;
+        }
+      }
+    }
+
+    .table-grip-column {
+      /* usage of ::after for all of the table grips works around a bug in
+      * prosemirror-tables that causes Safari to hang when selecting a cell
+      * in an empty table:
+      * https://github.com/ProseMirror/prosemirror/issues/947 */
+      &::after {
+        content: "";
+        cursor: var(--pointer);
         position: absolute;
         top: -16px;
-        ${props => (props.rtl ? "right" : "left")}: 0;
+        left: 0;
         width: 100%;
         height: 12px;
-        background: ${props => props.theme.tableDivider};
-        border-bottom: 3px solid ${props => props.theme.background};
-        display: ${props => (props.readOnly ? "none" : "block")};
+        background: ${props => props.theme.divider};
+        display: ${props => props.readOnly ? "none" : "block"};
       }
 
       &:hover::after {
         background: ${props => props.theme.text};
       }
       &.first::after {
-        border-top-${props => (props.rtl ? "right" : "left")}-radius: 3px;
+        border-top-left-radius: 3px;
+        border-bottom-left-radius: 3px;
       }
       &.last::after {
-        border-top-${props => (props.rtl ? "left" : "right")}-radius: 3px;
+        border-top-right-radius: 3px;
+        border-bottom-right-radius: 3px;
       }
       &.selected::after {
         background: ${props => props.theme.tableSelected};
       }
     }
 
-    .grip-row {
+    .table-grip-row {
       &::after {
         content: "";
-        cursor: pointer;
+        cursor: var(--pointer);
         position: absolute;
-        ${props => (props.rtl ? "right" : "left")}: -16px;
+        left: -16px;
         top: 0;
         height: 100%;
         width: 12px;
-        background: ${props => props.theme.tableDivider};
-        border-${props => (props.rtl ? "left" : "right")}: 3px solid;
+        background: ${props => props.theme.divider};
         border-color: ${props => props.theme.background};
-        display: ${props => (props.readOnly ? "none" : "block")};
+        display: ${props => props.readOnly ? "none" : "block"};
       }
 
       &:hover::after {
         background: ${props => props.theme.text};
       }
       &.first::after {
-        border-top-${props => (props.rtl ? "right" : "left")}-radius: 3px;
+        border-top-left-radius: 3px;
+        border-top-right-radius: 3px;
       }
       &.last::after {
-        border-bottom-${props => (props.rtl ? "right" : "left")}-radius: 3px;
+        border-bottom-left-radius: 3px;
+        border-bottom-right-radius: 3px;
       }
       &.selected::after {
         background: ${props => props.theme.tableSelected};
       }
     }
 
-    .grip-table {
+    .table-grip {
       &::after {
         content: "";
-        cursor: pointer;
-        background: ${props => props.theme.tableDivider};
+        cursor: var(--pointer);
+        background: ${props => props.theme.divider};
         width: 13px;
         height: 13px;
         border-radius: 13px;
         border: 2px solid ${props => props.theme.background};
         position: absolute;
         top: -18px;
-        ${props => (props.rtl ? "right" : "left")}: -18px;
-        display: ${props => (props.readOnly ? "none" : "block")};
+        left: -18px;
+        display: ${props => props.readOnly ? "none" : "block"};
+        z-index: 10;
       }
 
       &:hover::after {
@@ -945,6 +1118,82 @@ export const StyledEditor = styled("div")<{
         background: ${props => props.theme.tableSelected};
       }
     }
+  }
+
+  .table-wrapper {
+    position: relative;
+  }
+
+  .table-scrollable {
+    position: relative;
+    margin: -1em -32px -0.5em;
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+    overflow-y: hidden;
+    overflow-x: auto;
+    padding-top: 1em;
+    padding-bottom: .5em;
+    padding-left: 32px;
+    padding-right: 32px;
+    transition: border 250ms ease-in-out 0s;
+
+    &:hover {
+      scrollbar-color: ${props => props.theme.scrollbarThumb} ${
+        props => props.theme.scrollbarBackground
+      };
+    }
+
+    & ::-webkit-scrollbar {
+      height: 14px;
+      background-color: transparent;
+    }
+
+    &:hover ::-webkit-scrollbar {
+      background-color: ${props => props.theme.scrollbarBackground};
+    }
+
+    & ::-webkit-scrollbar-thumb {
+      background-color: transparent;
+      border: 3px solid transparent;
+      border-radius: 7px;
+    }
+
+    &:hover ::-webkit-scrollbar-thumb {
+      background-color: ${props => props.theme.scrollbarThumb};
+      border-color: ${props => props.theme.scrollbarBackground};
+    }
+  }
+
+  .table-shadow-left::before,
+  .table-shadow-right::after {
+    content: "";
+    position: absolute;
+    top: 1px;
+    bottom: 0;
+    left: -1em;
+    width: 32px;
+    z-index: 20;
+    transition: box-shadow 250ms ease-in-out;
+    border: 0px solid transparent;
+    pointer-events: none;
+  }
+
+  .table-shadow-left::before {
+    left: -32px;
+    right: auto;
+    box-shadow: 16px 0 16px -16px inset rgba(0, 0, 0, ${
+      props => props.theme.isDark ? 1 : 0.25
+    });
+    border-left: 32px solid ${props => props.theme.background};
+  }
+
+  .table-shadow-right::after {
+    right: -32px;
+    left: auto;
+    box-shadow: -16px 0 16px -16px inset rgba(0, 0, 0, ${
+      props => props.theme.isDark ? 1 : 0.25
+    });
+    border-right: 32px solid ${props => props.theme.background};
   }
 
   .scrollable-wrapper {
@@ -1001,14 +1250,18 @@ export const StyledEditor = styled("div")<{
     pointer-events: none;
 
     &.left {
-      box-shadow: 16px 0 16px -16px inset rgba(0, 0, 0, 0.25);
+      box-shadow: 16px 0 16px -16px inset rgba(0, 0, 0, ${
+        props => props.theme.isDark ? 1 : 0.25
+      });
       border-left: 1em solid ${props => props.theme.background};
     }
 
     &.right {
       right: 0;
       left: auto;
-      box-shadow: -16px 0 16px -16px inset rgba(0, 0, 0, 0.25);
+      box-shadow: -16px 0 16px -16px inset rgba(0, 0, 0, ${
+        props => props.theme.isDark ? 1 : 0.25
+      });
     }
   }
 

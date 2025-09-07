@@ -135,6 +135,10 @@ flowchart TD
   - 🔀 Powerful Editor: Markdown, Mind Map...  
   - 📝 Markdown and extensions: Math Equation, Diagram, Hashtag... 
   - ✨ Collaborative writing, support Markdown, mermaid, music notation, mindmap and more.
+
+## Image
+
+![scense](https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/Ecuador_cajas_national_park.jpg/500px-Ecuador_cajas_national_park.jpg)
 `;
 
 

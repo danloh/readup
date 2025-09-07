@@ -14,6 +14,13 @@ const themeColors = {
   grey: "#E8EBED",
   greyMid: "#C5CCD3",
   greyDark: "#DAE1E9",
+  accent: "#0366d6",
+  yellow: "#EDBA07",
+  warmGrey: "#EDF2F7",
+  danger: "#ed2651",
+  warning: "#f08a24",
+  success: "#2f3336",
+  info: "#a0d3e8",
 };
 
 export const baseTheme = {
@@ -71,6 +78,7 @@ export const baseTheme = {
 
 export const lightTheme = {
   ...baseTheme,
+  isDark: false,
   background: themeColors.white,
   text: themeColors.almostBlack,
   code: themeColors.lightBlack,
@@ -98,6 +106,7 @@ export const lightTheme = {
 
 export const darkTheme = {
   ...baseTheme,
+  isDark: true,
   background: themeColors.black,
   text: themeColors.almostWhite,
   code: themeColors.almostWhite,

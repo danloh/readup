@@ -3,6 +3,8 @@
 // https://raw.githubusercontent.com/ProseMirror/prosemirror-markdown/master/src/to_markdown.js
 // forked for table support
 
+type Options = { tightLists?: boolean; softBreak?: boolean };
+
 // ::- A specification for serializing a ProseMirror document as
 // Markdown/CommonMark text.
 export class MarkdownSerializer {
@@ -50,7 +52,7 @@ export class MarkdownSerializer {
   // :: (Node, ?Object) → string
   // Serialize the content of the given node to
   // [CommonMark](http://commonmark.org/).
-  serialize(content, options?: { tightLists?: boolean }) {
+  serialize(content, options?: Options): string {
     const state = new MarkdownSerializerState(this.nodes, this.marks, options);
     state.renderContent(content);
     return state.out;
@@ -62,9 +64,11 @@ export class MarkdownSerializer {
 // node and mark serialization methods (see `toMarkdown`).
 export class MarkdownSerializerState {
   inTable = false;
+  inList = false;
   inTightList = false;
   closed = false;
   delim = "";
+  options: Options;
 
   constructor(nodes, marks, options) {
     this.nodes = nodes;
@@ -221,7 +225,7 @@ export class MarkdownSerializerState {
         })
       ) {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
-        const [_, lead, inner, trail] = /^(\s*)(.*?)(\s*)$/m.exec(node.text);
+        const [, lead, inner, trail] = /^(\s*)(.*?)(\s*)$/m.exec(node.text);
         leading += lead;
         trailing = trail;
         if (lead || trail) {
@@ -296,12 +300,16 @@ export class MarkdownSerializerState {
           this.text(this.markString(add, true, parent, index), false);
         }
 
-        // Render the node. Special case code marks, since their content
-        // may not be escaped.
+        // Render the node. Special case code marks, since their content is not
+        // escaped, apart from pipes in tables.
         if (noEsc && node.isText) {
+          const text = this.inTable
+            ? node.text.replace(/\|/gi, "\\$&")
+            : node.text;
+
           this.text(
             this.markString(inner, true, parent, index) +
-              node.text +
+              text +
               this.markString(inner, false, parent, index + 1),
             false
           );
@@ -362,16 +370,20 @@ export class MarkdownSerializerState {
       row.forEach((cell, _, j) => {
         this.out += j === 0 ? "| " : " | ";
 
-        cell.forEach((para) => {
+        cell.forEach((cellNode) => {
           // just padding the output so that empty cells take up the same space
           // as headings.
           // TODO: Ideally we'd calc the longest cell length and use that
           // to pad all the others.
-          if (para.textContent === "" && para.content.size === 0) {
+          if (
+            cellNode.textContent === "" &&
+            cellNode.content.size === 0 &&
+            cellNode.type.name === "paragraph"
+          ) {
             this.out += "  ";
           } else {
             this.closed = false;
-            this.render(para, row, j);
+            this.render(cellNode, row, j);
           }
         });
 

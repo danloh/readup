@@ -5,9 +5,8 @@ import { EditorView } from "prosemirror-view";
 import * as React from "react";
 import createAndInsertLink from "../core/commands/createAndInsertLink";
 import { CommandFactory } from "../core/Extension";
-import getColumnIndex from "../core/queries/getColumnIndex";
+import { getColumnIndex, getRowIndex } from "../core/queries/table";
 import getMarkRange from "../core/queries/getMarkRange";
-import getRowIndex from "../core/queries/getRowIndex";
 import isMarkActive from "../core/queries/isMarkActive";
 import isNodeActive from "../core/queries/isNodeActive";
 import { MenuItem } from "./types";
@@ -175,7 +174,7 @@ export default class SelectionToolbar extends React.Component<Props> {
     } = this.props;
     const { view } = rest;
     const { state } = view;
-    const { selection }: { selection: any } = state;
+    const { selection } = state;
 
     const isCodeSelection = isNodeActive(state.schema.nodes.code_block)(state);
     // toolbar is disabled in code blocks, no bold / italic etc
@@ -183,27 +182,30 @@ export default class SelectionToolbar extends React.Component<Props> {
       return null;
     }
 
-    const colIndex = getColumnIndex(
-      (state.selection as unknown) as CellSelection
-    );
-    const rowIndex = getRowIndex((state.selection as unknown) as CellSelection);
+    const colIndex = getColumnIndex(state);
+    const rowIndex = getRowIndex(state);
     const isTableSelection = colIndex !== undefined && rowIndex !== undefined;
 
     const isLink = isMarkActive(state.schema.marks.link)(state);
     const linkRange = getMarkRange(selection.$from, state.schema.marks.link);
-    const isImageSelection = selection.node?.type?.name === "image";
+    const isImageSelection = 
+      selection instanceof NodeSelection && selection.node.type.name === "image";
     const isDividerSelection = isNodeActive(state.schema.nodes.hr)(state);
 
     let isTextSelection = false;
 
     let items: MenuItem[] = [];
     if (isTableSelection) {
+      console.log("table selected");
       items = getTableMenuItems(dictionary);
     } else if (colIndex !== undefined) {
+      console.log("table col selected");
       items = getTableColMenuItems(state, colIndex, rtl, dictionary);
     } else if (rowIndex !== undefined) {
+      console.log("table row selected");
       items = getTableRowMenuItems(state, rowIndex, dictionary);
     } else if (isImageSelection) {
+      console.log("image is selected");
       items = getImageMenuItems(state, dictionary);
     } else if (isDividerSelection) {
       items = getDividerMenuItems(state, dictionary);
