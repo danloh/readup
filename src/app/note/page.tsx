@@ -120,6 +120,16 @@ $$
 \\mathcal{L}(V \\otimes W, Z) \\cong \\big\\{ \\substack{\\text{bilinear maps}\\\\{V \\times W \\rightarrow Z}} \\big\\}
 $$
 
+## Mermaid Chart
+
+\`\`\`mermaid
+flowchart TD
+        A(["Start"])
+        A --> B{"Decision"}
+        B --> C["Option A"]
+        B --> D["Option B"]
+\`\`\`
+
 ## Features  
   - ➰ I/O: Feed reader & Podcast client and Personal Wiki; 
   - 🔀 Powerful Editor: Markdown, Mind Map...  

@@ -1,3 +1,7 @@
+/*---------------------------------------------------------
+ *  Add support for chemical equations
+ *--------------------------------------------------------*/
+
 // prosemirror imports
 import { Node as ProseNode } from "prosemirror-model";
 import { EditorState, Transaction, TextSelection, PluginKey } from "prosemirror-state";
@@ -8,6 +12,8 @@ import { newlineInCode, chainCommands, deleteSelection } from "prosemirror-comma
 
 // katex
 import katex, { KatexOptions } from "katex";
+// For chemical equation to Katex
+import { mhchemParser } from "mhchemparser";
 
 // prosemirror-math
 import { collapseMathCmd } from "./commands/collapse-math-cmd";
@@ -194,7 +200,9 @@ export class MathView implements NodeView {
 
 		// render katex, but fail gracefully
 		try {
-			katex.render(texString, this._mathRenderElt, this._katexOptions);
+			// convert mhchem syntax to LaTeX syntax
+			const tex = mhchemParser.toTex(texString, "tex");
+			katex.render(tex, this._mathRenderElt, this._katexOptions);
 			this._mathRenderElt.classList.remove("parse-error");
 			this.dom.setAttribute("title", "");
 		} catch (err) {
