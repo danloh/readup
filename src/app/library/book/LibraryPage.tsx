@@ -72,7 +72,7 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
   const [pendingNavigationBookIds, setPendingNavigationBookIds] = useState<string[] | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const osRef = useRef<OverlayScrollbarsComponentRef>(null);
-  const containerRef: React.MutableRefObject<HTMLDivElement | null> = useRef(null);
+  const containerRef: React.RefObject<HTMLDivElement | null> = useRef(null);
   const pageRef = useRef<HTMLDivElement>(null);
 
   useTheme({ systemUIVisible: true, appThemeColor: 'base-200' });
@@ -408,7 +408,7 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
   };
 
   if (!appService || !insets || checkOpenWithBooks || checkLastOpenBooks) {
-    return <div className='bg-base-200 h-[100vh]' />;
+    return <div className={clsx('h-[100vh]', !appService?.isLinuxApp && 'bg-base-200')} />;
   }
 
   const showBookshelf = libraryLoaded || libraryBooks.length > 0;
@@ -486,7 +486,7 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
 
 const LibraryPage = () => {
   return (
-    <Suspense fallback={<div className='bg-base-200 h-[100vh]' />}>
+    <Suspense fallback={<div className='h-[100vh]' />}>
       <LibraryPageWithSearchParams />
     </Suspense>
   );

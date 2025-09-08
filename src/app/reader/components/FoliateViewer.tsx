@@ -56,7 +56,7 @@ const FoliateViewer: React.FC<{
   config: BookConfig;
   contentInsets: Insets;
 }> = ({ bookKey, bookDoc, config, contentInsets: insets }) => {
-  const { getView, setView: setFoliateView, setProgress } = useReaderStore();
+  const { getView, setView: setFoliateView, setViewInited, setProgress } = useReaderStore();
   const { getViewSettings, setViewSettings } = useReaderStore();
   const { getParallels } = useParallelViewStore();
   const { getBookData } = useBookDataStore();
@@ -209,7 +209,7 @@ const FoliateViewer: React.FC<{
 
   const { handlePageFlip, handleContinuousScroll } = usePagination(bookKey, viewRef, containerRef);
   const mouseHandlers = useMouseEvent(bookKey, handlePageFlip, handleContinuousScroll);
-  const touchHandlers = useTouchEvent(bookKey, handleContinuousScroll);
+  const touchHandlers = useTouchEvent(bookKey, handlePageFlip, handleContinuousScroll);
 
   useFoliateEvents(viewRef.current, {
     onLoad: docLoadHandler,
@@ -287,6 +287,7 @@ const FoliateViewer: React.FC<{
       if (bookDoc?.rendition?.layout === 'pre-paginated') {
         view.renderer.setAttribute('zoom', viewSettings.zoomMode);
         view.renderer.setAttribute('spread', viewSettings.spreadMode);
+        view.renderer.setAttribute('scale-factor', viewSettings.zoomLevel);
       } else {
         view.renderer.setAttribute('max-column-count', maxColumnCount);
         view.renderer.setAttribute('max-inline-size', `${maxInlineSize}px`);
@@ -300,6 +301,7 @@ const FoliateViewer: React.FC<{
       } else {
         await view.goToFraction(0);
       }
+      setViewInited(bookKey, true);
     };
 
     openBook();
