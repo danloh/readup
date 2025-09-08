@@ -26,7 +26,6 @@ export function isRowSelection(state: EditorState): boolean {
 }
 
 export function getColumnIndex(state: EditorState): number | undefined {
-  console.log("table col state:", state);
   if (state.selection instanceof CellSelection) {
     if (state.selection.isColSelection()) {
       const rect = selectedRect(state);
@@ -38,7 +37,6 @@ export function getColumnIndex(state: EditorState): number | undefined {
 }
 
 export function getRowIndex(state: EditorState): number | undefined {
-  console.log("table row state:", state);
   if (state.selection instanceof CellSelection) {
     if (state.selection.isRowSelection()) {
       const rect = selectedRect(state);

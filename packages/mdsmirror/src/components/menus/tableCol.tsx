@@ -6,8 +6,13 @@ import {
   TbColumnInsertLeft,
   TbColumnInsertRight,
 } from "react-icons/tb";
+import { FaTableColumns } from "react-icons/fa6";
+import { FaSortAmountDown, FaSortAmountUp } from "react-icons/fa";
+import { AiOutlineMergeCells, AiOutlineSplitCells } from "react-icons/ai";
 import { EditorState } from "prosemirror-state";
+import { CellSelection } from "prosemirror-tables";
 import isNodeActive from "../../core/queries/isNodeActive";
+import { isMergedCellSelection, isMultipleCellSelection } from "../../core/queries/table";
 import { MenuItem } from "../types";
 import baseDictionary from "../../dictionary";
 
@@ -17,7 +22,11 @@ export default function tableColMenuItems(
   rtl: boolean,
   dictionary: typeof baseDictionary
 ): MenuItem[] {
-  const { schema } = state;
+  const { schema, selection } = state;
+
+  if (!(selection instanceof CellSelection)) {
+    return [];
+  }
 
   return [
     {
@@ -57,15 +66,50 @@ export default function tableColMenuItems(
       name: "separator",
     },
     {
+      name: "sortTable",
+      tooltip: dictionary.sortAsc,
+      attrs: { index, direction: "asc" },
+      icon: FaSortAmountDown,
+    },
+    {
+      name: "sortTable",
+      tooltip: dictionary.sortDesc,
+      attrs: { index, direction: "desc" },
+      icon: FaSortAmountUp,
+    },
+    {
+      name: "separator",
+    },
+    {
+      name: "toggleHeaderColumn",
+      tooltip: dictionary.toggleHeader,
+      icon: FaTableColumns,
+      visible: index === 0,
+    },
+    {
+      name: "mergeCells",
+      tooltip: dictionary.mergeCells,
+      icon: AiOutlineMergeCells,
+      visible: isMultipleCellSelection(state),
+    },
+    {
+      name: "splitCell",
+      tooltip: dictionary.splitCell,
+      icon: AiOutlineSplitCells,
+      visible: isMergedCellSelection(state),
+    },
+    {
       name: rtl ? "addColumnAfter" : "addColumnBefore",
       tooltip: rtl ? dictionary.addColumnAfter : dictionary.addColumnBefore,
       icon: TbColumnInsertLeft,
+      visible: rtl,
       active: () => false,
     },
     {
       name: rtl ? "addColumnBefore" : "addColumnAfter",
       tooltip: rtl ? dictionary.addColumnBefore : dictionary.addColumnAfter,
       icon: TbColumnInsertRight,
+      visible: !rtl,
       active: () => false,
     },
     {

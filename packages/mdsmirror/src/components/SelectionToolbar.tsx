@@ -1,7 +1,7 @@
 import { some } from "lodash";
 import { NodeSelection, TextSelection } from "prosemirror-state";
-import { CellSelection } from "prosemirror-tables";
 import { EditorView } from "prosemirror-view";
+import { CellSelection } from "prosemirror-tables";
 import * as React from "react";
 import createAndInsertLink from "../core/commands/createAndInsertLink";
 import { CommandFactory } from "../core/Extension";
@@ -18,6 +18,7 @@ import getImageMenuItems from "./menus/image";
 import getTableMenuItems from "./menus/table";
 import getTableColMenuItems from "./menus/tableCol";
 import getTableRowMenuItems from "./menus/tableRow";
+import getTableCellMenuItems from "./menus/tableCell";
 import FloatingToolbar from "./FloatingToolbar";
 import LinkEditor, { SearchResult } from "./LinkEditor";
 import ToolbarMenu from "./ToolbarMenu";
@@ -185,7 +186,7 @@ export default class SelectionToolbar extends React.Component<Props> {
     const colIndex = getColumnIndex(state);
     const rowIndex = getRowIndex(state);
     const isTableSelection = colIndex !== undefined && rowIndex !== undefined;
-
+    const isCellSelection = selection instanceof CellSelection;
     const isLink = isMarkActive(state.schema.marks.link)(state);
     const linkRange = getMarkRange(selection.$from, state.schema.marks.link);
     const isImageSelection = 
@@ -196,16 +197,14 @@ export default class SelectionToolbar extends React.Component<Props> {
 
     let items: MenuItem[] = [];
     if (isTableSelection) {
-      console.log("table selected");
-      items = getTableMenuItems(dictionary);
+      items = getTableMenuItems(state, dictionary);
     } else if (colIndex !== undefined) {
-      console.log("table col selected");
       items = getTableColMenuItems(state, colIndex, rtl, dictionary);
     } else if (rowIndex !== undefined) {
-      console.log("table row selected");
       items = getTableRowMenuItems(state, rowIndex, dictionary);
+    } else if (isCellSelection) {
+      items = getTableCellMenuItems(state, dictionary);
     } else if (isImageSelection) {
-      console.log("image is selected");
       items = getImageMenuItems(state, dictionary);
     } else if (isDividerSelection) {
       items = getDividerMenuItems(state, dictionary);

@@ -1,11 +1,6 @@
 import { GapCursor } from "prosemirror-gapcursor";
 import { Node, NodeType, Slice } from "prosemirror-model";
-import {
-  Command,
-  EditorState,
-  TextSelection,
-  Transaction,
-} from "prosemirror-state";
+import { Command, EditorState, TextSelection, Transaction } from "prosemirror-state";
 import {
   CellSelection,
   addRow,
