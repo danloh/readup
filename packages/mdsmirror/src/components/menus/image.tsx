@@ -9,7 +9,7 @@ import {
 import { EditorState } from "prosemirror-state";
 import isNodeActive from "../../core/queries/isNodeActive";
 import { MenuItem } from "../types";
-import baseDictionary from "../../dictionary";
+import { baseDictionary } from "../../dictionary";
 
 export default function imageMenuItems(
   state: EditorState,

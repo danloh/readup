@@ -1,7 +1,7 @@
 import { EditorState } from "prosemirror-state";
 import { CellSelection } from "prosemirror-tables";
 import { AiOutlineMergeCells, AiOutlineSplitCells } from "react-icons/ai";
-import baseDictionary from "../../dictionary";
+import { baseDictionary } from "../../dictionary";
 import { isMergedCellSelection, isMultipleCellSelection } from "../../core/queries/table";
 import { MenuItem } from "../types";
 

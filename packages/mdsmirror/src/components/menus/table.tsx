@@ -2,7 +2,7 @@ import { EditorState } from "prosemirror-state";
 import { TbTrash } from "react-icons/tb";
 import { AiOutlineColumnWidth } from "react-icons/ai";
 import { MenuItem } from "../types";
-import baseDictionary from "../../dictionary";
+import { baseDictionary } from "../../dictionary";
 import isNodeActive from "../../core/queries/isNodeActive";
 import { TableLayout } from "../../core/rules/tables";
 

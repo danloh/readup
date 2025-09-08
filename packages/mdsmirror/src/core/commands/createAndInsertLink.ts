@@ -1,6 +1,6 @@
 import { Node } from "prosemirror-model";
 import { EditorView } from "prosemirror-view";
-import baseDictionary from "../../dictionary";
+import { baseDictionary } from "../../dictionary";
 import { ToastType } from "../../types";
 
 function findPlaceholderLink(doc: Node, href: string) {

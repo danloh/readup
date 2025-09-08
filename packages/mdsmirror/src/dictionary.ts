@@ -1,4 +1,4 @@
-export const baseDict = {
+export const baseDictionary = {
   addColumnAfter: "Insert column after",
   addColumnBefore: "Insert column before",
   addRowAfter: "Insert row after",
@@ -76,5 +76,3 @@ export const baseDict = {
   insertTime: "Time",
   insertDateTime: "Now",
 };
-
-export default baseDict;

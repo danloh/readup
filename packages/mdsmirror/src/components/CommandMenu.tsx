@@ -11,7 +11,7 @@ import attachFiles, { Attach } from "../core/commands/attachFiles";
 import filterExcessSeparators from "./filterExcessSeparators";
 import { EmbedDescriptor, MenuItem } from "./types";
 import { ToastType } from "../types";
-import baseDictionary from "../dictionary";
+import { baseDictionary } from "../dictionary";
 import Input from "./Input";
 import VisuallyHidden from "./VisuallyHidden";
 

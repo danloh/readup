@@ -22,7 +22,7 @@ import {
   TbAlarm,
 } from "react-icons/tb";
 import { MenuItem } from "../types";
-import baseDictionary from "../../dictionary";
+import { baseDictionary } from "../../dictionary";
 
 const SSR = typeof window === "undefined";
 const isMac = !SSR && window.navigator.platform === "MacIntel";

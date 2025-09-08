@@ -2,9 +2,9 @@ import {
   TbBold, TbCode, TbItalic, TbLink, TbPaint, TbSearch, TbStrikethrough, TbUnderline, TbWriting 
 } from "react-icons/tb";
 import { EditorState } from "prosemirror-state";
-import isMarkActive from "../../core/queries/isMarkActive";
+import { isMarkActive } from "../../core/queries/isMarkActive";
 import { MenuItem } from "../types";
-import baseDictionary from "../../dictionary";
+import { baseDictionary} from "../../dictionary";
 
 export default function formattingMenuItems(
   state: EditorState,

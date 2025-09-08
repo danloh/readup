@@ -5,7 +5,7 @@ import { EditorState } from "prosemirror-state";
 import { CellSelection } from "prosemirror-tables";
 import { isMergedCellSelection, isMultipleCellSelection } from "../../core/queries/table";
 import { MenuItem } from "../types";
-import baseDictionary from "../../dictionary";
+import { baseDictionary } from "../../dictionary";
 
 export default function tableRowMenuItems(
   state: EditorState,

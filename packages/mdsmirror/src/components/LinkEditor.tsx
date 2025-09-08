@@ -6,7 +6,7 @@ import * as React from "react";
 import styled from "styled-components";
 import isUrl from "../core/queries/isUrl";
 import Flex from "./Flex";
-import baseDictionary from "../dictionary";
+import { baseDictionary } from "../dictionary";
 import Input from "./Input";
 import LinkSearchResult from "./LinkSearchResult";
 import ToolbarButton from "./ToolbarButton";

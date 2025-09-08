@@ -13,7 +13,7 @@ import { baseKeymap } from "prosemirror-commands";
 import { PluginSimple } from "markdown-it";
 import { ThemeProvider } from "styled-components";
 import { lightTheme, darkTheme } from "./styles/theme";
-import baseDictionary from "./dictionary";
+import { baseDictionary } from "./dictionary";
 import Flex from "./components/Flex";
 import { SearchResult } from "./components/LinkEditor";
 import { EmbedDescriptor } from "./components/types";

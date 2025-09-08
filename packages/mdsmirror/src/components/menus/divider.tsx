@@ -2,7 +2,7 @@ import { EditorState } from "prosemirror-state";
 import { TbPageBreak, TbSeparator } from "react-icons/tb";
 import isNodeActive from "../../core/queries/isNodeActive";
 import { MenuItem } from "../types";
-import baseDictionary from "../../dictionary";
+import { baseDictionary } from "../../dictionary";
 
 export default function dividerMenuItems(
   state: EditorState,
