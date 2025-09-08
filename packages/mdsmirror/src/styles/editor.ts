@@ -141,6 +141,19 @@ export const StyledEditor = styled("div")<{
     }
   }
 
+  h1 {
+    font-size: xx-large;
+  }
+  h2 {
+    font-size: x-large;
+  }
+  h3 {
+    font-size: large;
+  }
+  h4 {
+    font-size: medium;
+  }
+
   h1,
   h2,
   h3,

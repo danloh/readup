@@ -87,3 +87,8 @@ export const navigateToLibrary = (
 export const redirectToLibrary = () => {
   redirect('/library');
 };
+
+export const navigateToNote = (router: ReturnType<typeof useRouter>) => {
+  router.push('/note');
+};
+

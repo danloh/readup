@@ -1,9 +1,12 @@
 'use client';
 
+import clsx from "clsx";
 import { useCallback, useRef, useState } from "react";
 import MsEditor, { JSONContent, embeds } from "mdsmirror/src";
+import { useThemeStore } from "@/store/themeStore";
 
 export default function Note() {
+  const { isDarkMode } = useThemeStore();
   const mdContent = defaultMD;
   const editorInstance = useRef<MsEditor>(null);
 
@@ -60,11 +63,9 @@ export default function Note() {
   const onCopyHash = useCallback(
     (hash: string) => { console.log("on copy hash: ", hash); }, []
   );
-
-  const noteContainerClassName = 'flex flex-col w-full bg-white dark:bg-black dark:text-gray-200';
   
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col overflow-auto">
       <div className="flex items-center">
         <button className="btn" onClick={() => setDarkMode(!darkMode)}>
           Dark
@@ -76,14 +77,16 @@ export default function Note() {
           Read Only
         </button>
       </div>
-      <h1 className="text-green-600 m-2 px-8">Hello Demo</h1>
-      <div id="demo" className={`${noteContainerClassName} px-8`}>
+      <div className={clsx(
+        'flex flex-col w-full px-8',
+        isDarkMode ? 'bg-black text-gray-200' : 'bg-white',
+      )}>
         <div className="flex-1 p-2 pb-8" id="note-content">
           <MsEditor 
             key={`wys-1`}
             ref={editorInstance}
             value={mdContent}
-            dark={darkMode}
+            dark={isDarkMode}
             dir={isRTL ? 'rtl' : 'ltr'}
             onChange={onContentChange}
             onSearchLink={onSearchNote}
