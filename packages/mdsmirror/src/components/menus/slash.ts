@@ -28,7 +28,7 @@ const SSR = typeof window === "undefined";
 const isMac = !SSR && window.navigator.platform === "MacIntel";
 const mod = isMac ? "⌘" : "ctrl";
 
-export default function slashMenuItems(
+export function slashMenuItems(
   dictionary: typeof baseDictionary,
   isSlash = true,
 ): MenuItem[] {

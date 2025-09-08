@@ -1,7 +1,7 @@
 import { findParentNode } from "prosemirror-utils";
 import React from "react";
-import slashMenuItems from "./menus/slash";
-import SlashMenuItem from "./SlashMenuItem";
+import { slashMenuItems } from "./menus/slash";
+import { SlashMenuItem } from "./SlashMenuItem";
 import CommandMenu, { Props } from "./CommandMenu";
 
 type SlashMenuProps = Omit<
@@ -10,7 +10,7 @@ type SlashMenuProps = Omit<
 > &
   Required<Pick<Props, "onLinkToolbarOpen" | "embeds">>;
 
-function SlashMenu(props: SlashMenuProps) {
+export function SlashMenu(props: SlashMenuProps) {
   const clearSearch = () => {
     const { state, dispatch } = props.view;
     const parent = findParentNode((node) => !!node)(state.selection);
@@ -31,7 +31,7 @@ function SlashMenu(props: SlashMenuProps) {
       renderMenuItem={(item, _index, options) => {
         return (
           <SlashMenuItem
-            onClick={options.onClick}
+            onClick={options.onClick} // src/components/CommandMenu.tsx#L546
             selected={options.selected}
             icon={item.icon}
             title={item.title}
@@ -43,5 +43,3 @@ function SlashMenu(props: SlashMenuProps) {
     />
   );
 }
-
-export default SlashMenu;

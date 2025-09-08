@@ -13,7 +13,7 @@ export type Props = {
   containerId?: string;
 };
 
-function SlashMenuItem({
+export function SlashMenuItem({
   selected,
   disabled,
   onClick,
@@ -105,5 +105,3 @@ const MenuItem = styled.button<{
     }
   }
 `;
-
-export default SlashMenuItem;

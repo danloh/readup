@@ -19,7 +19,7 @@ import { SearchResult } from "./components/LinkEditor";
 import { EmbedDescriptor } from "./components/types";
 import { ToastType } from "./types";
 import SelectionToolbar from "./components/SelectionToolbar";
-import SlashMenu from "./components/SlashMenu";
+import { SlashMenu } from "./components/SlashMenu";
 import LinkToolbar from "./components/LinkToolbar";
 import ComponentView from "./components/ComponentView";
 import Extension from "./core/Extension";

@@ -1,4 +1,5 @@
 import { NodeSpec, Node as ProsemirrorNode, NodeType, Schema } from "prosemirror-model";
+import { Command } from "prosemirror-state";
 import {
   chainCommands,
   deleteSelection,
@@ -37,7 +38,10 @@ export default class Math extends Node {
   }
 
   commands({ type }: { type: NodeType }) {
-    return () => insertMathCmd(type);
+    return (): Command => (state, dispatch) => {
+      dispatch?.(state.tr.replaceSelectionWith(type.create()).scrollIntoView());
+      return true;
+    };
   }
 
   inputRules({ schema }: { schema: Schema }) {

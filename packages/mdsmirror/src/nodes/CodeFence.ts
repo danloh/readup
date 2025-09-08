@@ -173,11 +173,14 @@ export default class CodeFence extends Node {
   }
 
   commands({ type, schema }: { type: NodeType; schema: Schema }) {
-    return (attrs: Record<string, any>) => toggleBlockType(
-      type, 
-      schema.nodes.paragraph, 
-      { language: DEFAULT_LANGUAGE, ...attrs }
-    );
+    return {
+      code_block: (attrs: Record<string, any>) => {
+        return toggleBlockType(type, schema.nodes.paragraph, {
+          language: DEFAULT_LANGUAGE,
+          ...attrs,
+        });
+      },
+    };
   }
 
   keys({ type, schema }: { type: NodeType; schema: Schema }) {
