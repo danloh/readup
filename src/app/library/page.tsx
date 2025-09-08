@@ -31,14 +31,14 @@ function titleCase(str: string) {
 
 const Library = () => {
   const { appService } = useEnv();
+  const { isRoundedWindow } = useThemeStore();
   const [activeTab, setActiveTab] = useState('library');
   return (
     <div 
       className={clsx(
         'nav-page bg-base-200 text-base-content flex select-none flex-col overflow-hidden',
         appService?.isIOSApp ? 'h-[100vh]' : 'h-dvh',
-        appService?.isLinuxApp && 'window-border',
-        appService?.hasRoundedWindow && 'rounded-window',
+        appService?.hasRoundedWindow && isRoundedWindow && 'window-border rounded-window',
       )}
     >
       <div className='nav-bar'>

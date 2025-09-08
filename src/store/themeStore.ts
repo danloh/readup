@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { getCurrentWindow } from '@tauri-apps/api/window';
 import { AppService } from '@/types/system';
 import { SystemSettings } from '@/types/settings';
 import { Insets } from '@/types/misc';
@@ -19,6 +20,7 @@ interface ThemeState {
   uiLang: string;
   statusBarHeight: number;
   safeAreaInsets: Insets | null;
+  isRoundedWindow: boolean;
   systemUIAlwaysHidden: boolean;
   setSystemUIAlwaysHidden: (hidden: boolean) => void;
   setStatusBarHeight: (height: number) => void;
@@ -72,6 +74,7 @@ export const useThemeStore = create<ThemeState>((set, get) => {
     uiLang: '',
     statusBarHeight: 24,
     safeAreaInsets: { top: 0, right: 0, bottom: 0, left: 0 },
+    isRoundedWindow: true,
     systemUIAlwaysHidden: false,
     showSystemUI: () => set({ systemUIVisible: true }),
     dismissSystemUI: () => set({ systemUIVisible: false }),
@@ -147,7 +150,7 @@ export const initSystemThemeListener = (appService: AppService) => {
   if (typeof window === 'undefined' || !appService) return;
 
   const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-  const update = async () => {
+  const updateColorTheme = async () => {
     let systemIsDarkMode;
     if (appService.isIOSApp) {
       const res = await getSystemColorScheme();
@@ -158,7 +161,16 @@ export const initSystemThemeListener = (appService: AppService) => {
     useThemeStore.getState().handleSystemThemeChange(systemIsDarkMode);
   };
 
-  mediaQuery?.addEventListener('change', update);
-  document.addEventListener('visibilitychange', update);
-  update();
+  const updateWindowTheme = async () => {
+    if (!appService.hasWindow || !appService.isLinuxApp) return;
+    const currentWindow = getCurrentWindow();
+    const isFullscreen = await currentWindow.isFullscreen();
+    const isMaximized = await currentWindow.isMaximized();
+    useThemeStore.setState({ isRoundedWindow: !isMaximized && !isFullscreen });
+  };
+
+  mediaQuery?.addEventListener('change', updateColorTheme);
+  document.addEventListener('visibilitychange', updateColorTheme);
+  window.addEventListener('resize', updateWindowTheme);
+  updateColorTheme();
 };
