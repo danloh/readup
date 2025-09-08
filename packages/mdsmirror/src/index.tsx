@@ -248,6 +248,7 @@ class MsEditor extends React.PureComponent<Props, State> {
     isHashTagSearch: false,
   };
 
+  isInited = false;
   isBlurred: boolean;
   extensionManager: ExtensionManager;
   // element?: HTMLElement | null;
@@ -339,6 +340,7 @@ class MsEditor extends React.PureComponent<Props, State> {
   }
 
   init() {
+    console.log(">> start to init", this.isInited);
     this.extensionManager = this.createExtensions();
     this.nodes = this.createNodes();
     this.marks = this.createMarks();
@@ -351,8 +353,10 @@ class MsEditor extends React.PureComponent<Props, State> {
     this.pasteParser = this.createPasteParser();
     this.inputRules = this.createInputRules();
     this.nodeViews = this.createNodeViews();
-    this.view = this.createView();
     this.commands = this.createCommands();
+    this.view = this.createView()!;
+    this.isInited = true;
+    console.log(">> end of init", this.isInited);
   }
 
   createExtensions() {
@@ -586,8 +590,14 @@ class MsEditor extends React.PureComponent<Props, State> {
   }
 
   createView() {
+    console.log(">> start to create view", this.isInited);
+    
     if (!this.elementRef.current) {
       throw new Error("createView called before ref available");
+    }
+    if (this.isInited) {
+      console.log("inited");
+      return this.view;
     }
 
     const isEditingCheckbox = tr => {

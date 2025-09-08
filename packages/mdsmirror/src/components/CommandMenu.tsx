@@ -19,7 +19,7 @@ const defaultPosition = {
   left: -1000,
   top: 0,
   bottom: undefined,
-  isAbove: false,
+  isabove: false,
 };
 
 export type Props<T extends MenuItem = MenuItem> = {
@@ -58,8 +58,8 @@ type State = {
   left?: number;
   top?: number;
   bottom?: number;
-  isAbove: boolean;
-  selectedIndex: number;
+  isabove: boolean;
+  selectedindex: number;
 };
 
 class CommandMenu<T extends MenuItem = MenuItem> extends React.Component<Props<T>, State> {
@@ -70,8 +70,8 @@ class CommandMenu<T extends MenuItem = MenuItem> extends React.Component<Props<T
     left: -1000,
     top: 0,
     bottom: undefined,
-    isAbove: false,
-    selectedIndex: 0,
+    isabove: false,
+    selectedindex: 0,
     insertEmbed: undefined,
   };
 
@@ -98,11 +98,11 @@ class CommandMenu<T extends MenuItem = MenuItem> extends React.Component<Props<T
 
       this.setState({
         insertEmbed: undefined,
-        selectedIndex: 0,
+        selectedindex: 0,
         ...position,
       });
     } else if (prevProps.search !== this.props.search) {
-      this.setState({ selectedIndex: 0 });
+      this.setState({ selectedindex: 0 });
     }
   }
 
@@ -119,7 +119,7 @@ class CommandMenu<T extends MenuItem = MenuItem> extends React.Component<Props<T
       event.preventDefault();
       event.stopPropagation();
 
-      const item = this.filtered[this.state.selectedIndex];
+      const item = this.filtered[this.state.selectedindex];
 
       if (item) {
         this.insertItem(item);
@@ -137,11 +137,11 @@ class CommandMenu<T extends MenuItem = MenuItem> extends React.Component<Props<T
       event.stopPropagation();
 
       if (this.filtered.length) {
-        const prevIndex = this.state.selectedIndex - 1;
+        const prevIndex = this.state.selectedindex - 1;
         const prev = this.filtered[prevIndex];
 
         this.setState({
-          selectedIndex: Math.max(
+          selectedindex: Math.max(
             0,
             prev?.name === "separator" ? prevIndex - 1 : prevIndex
           ),
@@ -161,11 +161,11 @@ class CommandMenu<T extends MenuItem = MenuItem> extends React.Component<Props<T
 
       if (this.filtered.length) {
         const total = this.filtered.length - 1;
-        const nextIndex = this.state.selectedIndex + 1;
+        const nextIndex = this.state.selectedindex + 1;
         const next = this.filtered[nextIndex];
 
         this.setState({
-          selectedIndex: Math.min(
+          selectedindex: Math.min(
             next?.name === "separator" ? nextIndex + 1 : nextIndex,
             total
           ),
@@ -414,14 +414,14 @@ class CommandMenu<T extends MenuItem = MenuItem> extends React.Component<Props<T
         left: leftPos,
         top: undefined,
         bottom: window.innerHeight - top - window.scrollY,
-        isAbove: false,
+        isabove: false,
       };
     } else {
       return {
         left: leftPos,
         top: bottom + window.scrollY,
         bottom: undefined,
-        isAbove: true,
+        isabove: true,
       };
     }
   }
@@ -529,8 +529,8 @@ class CommandMenu<T extends MenuItem = MenuItem> extends React.Component<Props<T
                 }
 
                 const handlePointer = () => {
-                  if (this.state.selectedIndex !== index) {
-                    this.setState({ selectedIndex: index });
+                  if (this.state.selectedindex !== index) {
+                    this.setState({ selectedindex: index });
                   }
                 };
 
@@ -541,7 +541,7 @@ class CommandMenu<T extends MenuItem = MenuItem> extends React.Component<Props<T
                     onPointerDown={handlePointer}
                   >
                     {this.props.renderMenuItem(item as any, index, {
-                      selected: index === this.state.selectedIndex,
+                      selected: index === this.state.selectedindex,
                       onClick: () => this.insertItem(item),
                     })}
                   </ListItem>
@@ -609,7 +609,7 @@ export const Wrapper = styled.div<{
   top?: number;
   bottom?: number;
   left?: number;
-  isAbove: boolean;
+  isabove: boolean;
 }>`
   color: ${(props) => props.theme.text};
   font-family: ${(props) => props.theme.fontFamily};
@@ -646,10 +646,10 @@ export const Wrapper = styled.div<{
     border-top: 1px solid ${(props) => props.theme.blockToolbarDivider};
   }
 
-  ${({ active, isAbove }) =>
+  ${({ active, isabove }) =>
     active &&
     `
-    transform: translateY(${isAbove ? "6px" : "-6px"}) scale(1);
+    transform: translateY(${isabove ? "6px" : "-6px"}) scale(1);
     pointer-events: all;
     opacity: 1;
   `};
