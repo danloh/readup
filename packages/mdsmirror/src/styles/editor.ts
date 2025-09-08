@@ -1,7 +1,7 @@
 import styled from "styled-components";
 
 export const StyledEditor = styled("div")<{
-  rtl?: boolean;
+  rtl: 0 | 1; // workround of Warning: Received `false` for a non-boolean attribute
   readOnly?: boolean;
   readOnlyWriteCheckboxes?: boolean;
 }>`

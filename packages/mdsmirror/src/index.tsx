@@ -816,13 +816,12 @@ class MsEditor extends React.PureComponent<Props, State> {
         className={className}
         align="flex-start"
         justify="center"
-        column
       >
         <ThemeProvider theme={this.theme()}>
           <React.Fragment>
             <StyledEditor
               dir={dir}
-              rtl={isRTL}
+              rtl={isRTL ? 1 : 0}
               readOnly={readOnly}
               readOnlyWriteCheckboxes={readOnlyWriteCheckboxes}
               ref={this.elementRef}

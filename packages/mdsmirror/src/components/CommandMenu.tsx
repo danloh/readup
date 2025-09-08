@@ -490,13 +490,14 @@ class CommandMenu<T extends MenuItem = MenuItem> extends React.Component<Props<T
   render() {
     const { dictionary, isActive, uploadFile } = this.props;
     const items = this.filtered;
-    const { insertEmbed, ...positioning } = this.state;
+    const { insertEmbed, isabove, ...positioning } = this.state;
 
     return (
       createPortal(
         <Wrapper
           id={this.props.id || "slash-menu-container"}
-          active={isActive}
+          active={isActive ? 1 : 0}
+          isabove={isabove ? 1 : 0}
           ref={this.menuRef}
           {...positioning}
         >
@@ -605,11 +606,11 @@ const Empty = styled.div`
 `;
 
 export const Wrapper = styled.div<{
-  active: boolean;
+  active: 0 | 1;
+  isabove: 0 | 1;
   top?: number;
   bottom?: number;
   left?: number;
-  isabove: boolean;
 }>`
   color: ${(props) => props.theme.text};
   font-family: ${(props) => props.theme.fontFamily};
@@ -647,9 +648,9 @@ export const Wrapper = styled.div<{
   }
 
   ${({ active, isabove }) =>
-    active &&
+    Boolean(active) &&
     `
-    transform: translateY(${isabove ? "6px" : "-6px"}) scale(1);
+    transform: translateY(${Boolean(isabove) ? "6px" : "-6px"}) scale(1);
     pointer-events: all;
     opacity: 1;
   `};

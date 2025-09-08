@@ -186,7 +186,7 @@ const FloatingToolbar = React.forwardRef(
     return (
       createPortal(
         <Wrapper
-          active={props.active && position.visible}
+          active={props.active && position.visible ? 1 : 0}
           ref={menuRef}
           offset={position.offset}
           style={{
@@ -203,7 +203,7 @@ const FloatingToolbar = React.forwardRef(
 );
 
 const Wrapper = styled.div<{
-  active?: boolean;
+  active?: 0 | 1; // workaround: Received `false` for a non-boolean attribute `active`
   offset: number;
 }>`
   will-change: opacity, transform;
@@ -243,7 +243,7 @@ const Wrapper = styled.div<{
   }
 
   ${({ active }) =>
-    active &&
+    Boolean(active) &&
     `
     transform: translateY(-6px) scale(1);
     opacity: 1;

@@ -17,10 +17,9 @@ type AlignValues =
 
 type Props = {
   style?: React.CSSProperties;
-  column?: boolean;
   align?: AlignValues;
   justify?: JustifyValues;
-  auto?: boolean;
+  auto?: 0 | 1;
   className?: string;
   children?: React.ReactNode;
 };
@@ -28,7 +27,7 @@ type Props = {
 const Flex = styled.div<Props>`
   display: flex;
   flex: ${({ auto }: Props) => (auto ? "1 1 auto" : "initial")};
-  flex-direction: ${({ column }: Props) => (column ? "column" : "row")};
+  flex-direction: column;
   align-items: ${({ align }: Props) => align};
   justify-content: ${({ justify }: Props) => justify};
 `;
