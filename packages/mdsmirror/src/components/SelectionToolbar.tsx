@@ -199,7 +199,7 @@ export default class SelectionToolbar extends React.Component<Props> {
     if (isTableSelection) {
       items = getTableMenuItems(state, dictionary);
     } else if (colIndex !== undefined) {
-      items = getTableColMenuItems(state, colIndex, rtl, dictionary);
+      items = getTableColMenuItems(state, colIndex, dictionary);
     } else if (rowIndex !== undefined) {
       items = getTableRowMenuItems(state, rowIndex, dictionary);
     } else if (isCellSelection) {

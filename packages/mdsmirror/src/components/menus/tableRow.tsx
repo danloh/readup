@@ -1,4 +1,4 @@
-import { TbTrash, TbRowInsertTop, TbRowInsertBottom } from "react-icons/tb";
+import { TbTrash } from "react-icons/tb";
 import { AiOutlineMergeCells, AiOutlineSplitCells } from "react-icons/ai";
 import { FaTableColumns } from "react-icons/fa6";
 import { EditorState } from "prosemirror-state";
@@ -35,21 +35,6 @@ export default function tableRowMenuItems(
       tooltip: dictionary.splitCell,
       icon: AiOutlineSplitCells,
       visible: isMergedCellSelection(state),
-    },
-    {
-      name: "addRowBefore",
-      tooltip: dictionary.addRowBefore,
-      icon: TbRowInsertTop,
-      attrs: { index },
-      active: () => false,
-      visible: index !== 0,
-    },
-    {
-      name: "addRowAfter",
-      tooltip: dictionary.addRowAfter,
-      icon: TbRowInsertBottom,
-      attrs: { index },
-      active: () => false,
     },
     {
       name: "deleteRow",

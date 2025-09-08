@@ -1,10 +1,10 @@
 import { EditorState } from "prosemirror-state";
-import { TbColumnInsertLeft, TbColumnInsertRight, TbTrash } from "react-icons/tb";
+import { TbTrash } from "react-icons/tb";
+import { AiOutlineColumnWidth } from "react-icons/ai";
 import { MenuItem } from "../types";
 import baseDictionary from "../../dictionary";
 import isNodeActive from "../../core/queries/isNodeActive";
 import { TableLayout } from "../../core/rules/tables";
-import { AiOutlineColumnWidth } from "react-icons/ai";
 
 export default function tableMenuItems(
   state: EditorState,
@@ -23,13 +23,7 @@ export default function tableMenuItems(
         : dictionary.fullWidth,
       icon: AiOutlineColumnWidth,
       attrs: isFullWidth ? { layout: null } : { layout: TableLayout.fullWidth },
-      active: () => isFullWidth,
-    },
-    {
-      name: "addColumnAfter",
-      tooltip: dictionary.addColumnAfter,
-      icon: TbColumnInsertRight,
-      active: () => false,
+      active: () => !isFullWidth,
     },
     {
       name: "deleteTable",
