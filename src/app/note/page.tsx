@@ -4,6 +4,7 @@ import clsx from "clsx";
 import { useCallback, useRef, useState } from "react";
 import MsEditor, { JSONContent, embeds } from "mdsmirror/src";
 import { useThemeStore } from "@/store/themeStore";
+import { Mindmap } from "./mindmap/mindmap";
 
 export default function Note() {
   const { isDarkMode } = useThemeStore();
@@ -100,6 +101,7 @@ export default function Note() {
             disables={['sub']}
           />
         </div>
+        <Mindmap mdValue={mdContent} />
       </div>
     </div>
   );
