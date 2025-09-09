@@ -18,7 +18,7 @@ const Spinner: React.FC<{
       }}
       role='status'
     >
-      <span className='loading loading-dots loading-lg'></span>
+      <span className='loading loading-lg loading-dots text-success'></span>
       <span className='hidden'>{_('Loading...')}</span>
     </div>
   );

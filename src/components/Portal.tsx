@@ -1,13 +1,14 @@
 import clsx from 'clsx';
-import React, { ReactNode } from 'react';
+import { ReactNode } from 'react';
 import ReactDOM from 'react-dom';
 
-interface ModalPortalProps {
+interface PortalProps {
   children: ReactNode;
+  selector?: string;
   showOverlay?: boolean;
 }
 
-const ModalPortal: React.FC<ModalPortalProps> = ({ children, showOverlay = true }) => {
+export function Portal({ children, selector, showOverlay = true }: PortalProps) {
   return ReactDOM.createPortal(
     <div
       className={clsx(
@@ -18,8 +19,6 @@ const ModalPortal: React.FC<ModalPortalProps> = ({ children, showOverlay = true 
     >
       {children}
     </div>,
-    document.body,
+    selector ? document.querySelector(selector) || document.body : document.body,
   );
 };
-
-export default ModalPortal;
