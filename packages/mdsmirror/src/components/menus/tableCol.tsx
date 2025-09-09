@@ -1,6 +1,6 @@
 import {TbTrash, TbAlignLeft, TbAlignRight, TbAlignCenter } from "react-icons/tb";
 import { FaTableColumns } from "react-icons/fa6";
-import { FaSortAmountDown, FaSortAmountUp } from "react-icons/fa";
+import { ImSortAmountAsc, ImSortAmountDesc } from "react-icons/im";
 import { AiOutlineMergeCells, AiOutlineSplitCells } from "react-icons/ai";
 import { EditorState } from "prosemirror-state";
 import { CellSelection } from "prosemirror-tables";
@@ -58,13 +58,13 @@ export default function tableColMenuItems(
       name: "sortTable",
       tooltip: dictionary.sortAsc,
       attrs: { index, direction: "asc" },
-      icon: FaSortAmountDown,
+      icon: ImSortAmountAsc,
     },
     {
       name: "sortTable",
       tooltip: dictionary.sortDesc,
       attrs: { index, direction: "desc" },
-      icon: FaSortAmountUp,
+      icon: ImSortAmountDesc,
     },
     {
       name: "toggleHeaderColumn",
