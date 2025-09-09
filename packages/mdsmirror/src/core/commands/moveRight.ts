@@ -18,7 +18,7 @@ limitations under the License.
 // https://bitbucket.org/atlassian/design-system-mirror/src/master/editor/editor-core/src/plugins/text-formatting/commands/text-formatting.ts
 
 import { EditorState, TextSelection } from "prosemirror-state";
-import isMarkActive from "../queries/isMarkActive";
+import { isMarkActive } from "../queries/isMarkActive";
 import { Dispatch } from "../../types";
 
 export default function moveRight() {
