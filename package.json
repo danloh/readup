@@ -86,6 +86,7 @@
     "markmap-lib": "0.18.12",
     "markmap-toolbar": "0.18.12",
     "markmap-view": "0.18.12",
+    "copy-to-clipboard": "3.3.3",
     
     "franc-min": "^6.2.0",
     "highlight.js": "^11.11.1",
