@@ -1,4 +1,5 @@
 import clsx from 'clsx';
+import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { navigateToLibrary, navigateToReader, showReaderWindow } from '@/utils/nav';
 import { useEnv } from '@/context/EnvContext';
@@ -90,6 +91,8 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
   const { settings } = useSettingsStore();
   const { updateBook } = useLibraryStore();
 
+  const [keyboardFocused, setKeyboardFocused] = useState(false);
+
   const showBookDetailsModal = async (book: Book) => {
     if (await makeBookAvailable(book)) {
       handleShowDetailsBook(book);
@@ -177,7 +180,7 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
     menu.popup();
   };
 
-  const { pressing, handlers } = useLongPress({
+  const { pressing, hasPointerEventsRef, handlers } = useLongPress({
     onTap: () => {
       if ('format' in item) {
         handleBookClick(item as Book);
@@ -190,7 +193,17 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
         bookContextMenuHandler(item as Book);
       }
     },
-  });
+  }, []);
+
+  const handleFocus = () => {
+    if (!hasPointerEventsRef.current) {
+      setKeyboardFocused(true);
+    }
+  };
+
+  const handleBlur = () => {
+    setKeyboardFocused(false);
+  };
 
   return (
     <div className={clsx(mode === 'list' && 'sm:hover:bg-base-300/50 px-4 sm:px-6')}>
@@ -199,11 +212,14 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
           'group',
           mode === 'grid' && 'sm:hover:bg-base-300/50 flex h-full flex-col px-0 py-4 sm:px-4',
           mode === 'list' && 'border-base-300 flex flex-col border-b py-2',
+          keyboardFocused && 'focus-inset-2',
           pressing ? (mode === 'grid' ? 'scale-95' : 'scale-98') : 'scale-100',
         )}
         style={{
           transition: 'transform 0.2s',
         }}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
         {...handlers}
       >
         <div className='flex-grow'>
