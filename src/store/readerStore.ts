@@ -95,7 +95,7 @@ export const useReaderStore = create<ReaderStore>((set, get) => ({
   getViewsById: (id: string) => {
     const { viewStates } = get();
     return Object.values(viewStates)
-      .filter((state) => state.key.startsWith(id))
+      .filter((state) => state.key && state.key.startsWith(id))
       .map((state) => state.view!);
   },
 

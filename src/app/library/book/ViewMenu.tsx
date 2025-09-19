@@ -6,6 +6,7 @@ import { useSettingsStore } from '@/store/settingsStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { LibrarySortByType, LibraryViewModeType } from '@/types/settings';
 import { navigateToLibrary } from '@/utils/nav';
+import Menu from '@/components/Menu';
 import MenuItem from '@/components/MenuItem';
 
 interface ViewMenuProps {
@@ -75,9 +76,9 @@ const ViewMenu: React.FC<ViewMenuProps> = ({ setIsDropdownOpen }) => {
   };
 
   return (
-    <div
-      tabIndex={0}
-      className='settings-menu dropdown-content no-triangle border-base-100 z-20 mt-2 shadow-2xl max-h-[240px] overflow-auto'
+    <Menu
+      label={_('View Menu')}
+      className='view-menu dropdown-content no-triangle border-base-100 z-20 mt-2 shadow-2xl'
     >
       {viewOptions.map((option) => (
         <MenuItem
@@ -114,7 +115,7 @@ const ViewMenu: React.FC<ViewMenuProps> = ({ setIsDropdownOpen }) => {
           onClick={() => handleSetSortAscending(option.value)}
         />
       ))}
-    </div>
+    </Menu>
   );
 };
 

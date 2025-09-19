@@ -8,6 +8,7 @@ import { BiMoon, BiSun } from 'react-icons/bi';
 
 import { setAboutDialogVisible } from '@/components/AboutWindow';
 import UserAvatar from '@/components/UserAvatar';
+import Menu from '@/components/Menu';
 import MenuItem from '@/components/MenuItem';
 import { LangSelect } from '@/components/Select';
 import { isTauriAppPlatform, isWebAppPlatform } from '@/services/environment';
@@ -148,11 +149,11 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
   const userDisplayName = userFullName ? userFullName.split(' ')[0] : null;
 
   return (
-    <div
-      tabIndex={0}
+    <Menu
+      label={_('Settings Menu')}
       className={clsx(
         'settings-menu dropdown-content no-triangle border-base-100',
-        'z-20 mt-2 max-w-[90vw] shadow-2xl max-h-[240px] overflow-auto',
+        'z-20 mt-2 max-w-[90vw] shadow-2xl',
       )}
     >
       {user ? (
@@ -252,7 +253,7 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
       <div className='flex items-end justify-between'>  
         <LangSelect />
       </div>
-    </div>
+    </Menu>
   );
 };
 
