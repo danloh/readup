@@ -11,7 +11,10 @@ export interface Book {
   url?: string;
   // if Book is a transient local book we can load the book content via filePath
   filePath?: string;
+  // Partial md5 hash of the book file, used as the unique identifier
   hash: string;
+  // Metadata md5 hash, used to aggregate different versions of the same book
+  metaHash?: string;
   format: BookFormat;
   title: string; // editable title from metadata
   sourceTitle?: string; // parsed when the book is imported and used to locate the file

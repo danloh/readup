@@ -1,5 +1,5 @@
 import { BookFormat } from '@/types/book';
-import { Contributor, LanguageMap } from '@/utils/book';
+import { Contributor, Identifier, LanguageMap } from '@/utils/book';
 import * as epubcfi from 'foliate-js/epubcfi.js';
 
 // A groupBy polyfill for foliate-js
@@ -69,8 +69,9 @@ export type BookMetadata = {
   publisher?: string;
   published?: string;
   description?: string;
-  subject?: string | string[];
+  subject?: string | string[] | Contributor;
   identifier?: string;
+  altIdentifier?: string | string[] | Identifier;
 
   subtitle?: string;
   series?: string;

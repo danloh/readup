@@ -7,13 +7,14 @@ import {
   BookProgress,
   ViewSettings,
   TimeInfo,
+  FIXED_LAYOUT_FORMATS,
 } from '@/types/book';
 import { Insets } from '@/types/misc';
 import { EnvConfigType } from '@/services/environment';
 import { FoliateView } from '@/types/view';
 import { DocumentLoader, TOCItem } from '@/libs/document';
 import { updateToc } from '@/utils/toc';
-import { formatTitle, getBaseFilename, getPrimaryLanguage } from '@/utils/book';
+import { formatTitle, getBaseFilename, getMetadataHash, getPrimaryLanguage } from '@/utils/book';
 import { SUPPORTED_LANGNAMES } from '@/services/constants';
 import { useSettingsStore } from './settingsStore';
 import { useBookDataStore } from './bookDataStore';
@@ -155,10 +156,15 @@ export const useReaderStore = create<ReaderStore>((set, get) => ({
         const primaryLanguage = getPrimaryLanguage(bookDoc.metadata.language);
         book.primaryLanguage = book.primaryLanguage ?? primaryLanguage;
         book.metadata = book.metadata ?? bookDoc.metadata;
+        // TODO: uncomment this when we can ensure metaHash is correctly generated for all books
+        // book.metaHash = book.metaHash ?? getMetadataHash(bookDoc.metadata);
+        book.metaHash = getMetadataHash(bookDoc.metadata);
+
+        const isFixedLayout = FIXED_LAYOUT_FORMATS.has(book.format);
         useBookDataStore.setState((state) => ({
           booksData: {
             ...state.booksData,
-            [id]: { id, book, file, config, bookDoc },
+            [id]: { id, book, file, config, bookDoc, isFixedLayout },
           },
         }));
       }
