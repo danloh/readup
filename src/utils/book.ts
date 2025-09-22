@@ -2,7 +2,7 @@ import { md5 } from 'js-md5';
 import { BookMetadata, EXTS } from '@/libs/document';
 import { Book, BookConfig, BookProgress, WritingMode } from '@/types/book';
 import { SUPPORTED_LANGS } from '@/services/constants';
-import { getUserLang, isContentURI, isFileURI, isValidURL, makeSafeFilename } from './misc';
+import { getUserLang, makeSafeFilename } from './misc';
 import { getDirFromLanguage } from './rtl';
 import { code6392to6391, isValidLang, normalizedLangCode } from './lang';
 
@@ -29,20 +29,6 @@ export const getConfigFilename = (book: Book) => {
 };
 export const isBookFile = (filename: string) => {
   return Object.values(EXTS).includes(filename.split('.').pop()!);
-};
-export const getFilename = (fileOrUri: string) => {
-  if (isValidURL(fileOrUri) || isContentURI(fileOrUri) || isFileURI(fileOrUri)) {
-    fileOrUri = decodeURI(fileOrUri);
-  }
-  const normalizedPath = fileOrUri.replace(/\\/g, '/');
-  const parts = normalizedPath.split('/');
-  const lastPart = parts.pop()!;
-  return lastPart.split('?')[0]!;
-};
-export const getBaseFilename = (filename: string) => {
-  const normalizedPath = filename.replace(/\\/g, '/');
-  const baseName = normalizedPath.split('/').pop()?.split('.').slice(0, -1).join('.') || '';
-  return baseName;
 };
 
 export const INIT_BOOK_CONFIG: BookConfig = {

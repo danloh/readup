@@ -9,7 +9,15 @@ export type OsPlatform = 'android' | 'ios' | 'macos' | 'windows' | 'linux' | 'un
 export type BaseDir = 'Books' | 'Settings' | 'Data' | 'Log' | 'Cache' | 'None';
 export type DeleteAction = 'cloud' | 'local' | 'both';
 
+export type ResolvedPath = {
+  baseDir: number;
+  basePrefix: () => Promise<string>;
+  fp: string;
+  base: BaseDir;
+};
+
 export interface FileSystem {
+  resolvePath(path: string, base: BaseDir): ResolvedPath;
   getURL(path: string): string;
   getBlobURL(path: string, base: BaseDir): Promise<string>;
   openFile(path: string, base: BaseDir, filename?: string): Promise<File>;
@@ -25,7 +33,6 @@ export interface FileSystem {
 }
 
 export interface AppService {
-  fs: FileSystem;
   osPlatform: OsPlatform;
   appPlatform: AppPlatform;
   hasTrafficLight: boolean;
@@ -44,8 +51,13 @@ export interface AppService {
   isIOSApp: boolean;
   isMacOSApp: boolean;
   isLinuxApp: boolean;
+  isPortableApp: boolean;
   distChannel: string;
 
+  init(): Promise<void>;
+  openFile(path: string, base: BaseDir): Promise<File>;
+  resolveFilePath(path: string, base: BaseDir): Promise<string>;
+  getCachedImageUrl(pathOrUrl: string): Promise<string>;
   selectDirectory(): Promise<string>;
   selectFiles(name: string, extensions: string[]): Promise<string[]>;
   getDefaultViewSettings(): ViewSettings;

@@ -16,6 +16,9 @@ import { stubTranslation as _ } from '@/utils/misc';
 
 export const LOCAL_BOOKS_SUBDIR = 'Readup/Books';
 export const CLOUD_BOOKS_SUBDIR = 'Readup/Books';
+export const LOCAL_DATA_SUBDIR = 'Readup/Data';
+
+export const SETTINGS_FILENAME = 'settings.json';
 
 export const SUPPORTED_BOOK_EXTS = [
   'epub',

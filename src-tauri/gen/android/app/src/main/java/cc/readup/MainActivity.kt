@@ -12,7 +12,7 @@ import android.content.res.Configuration
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
-import com.readest.native_bridge.KeyDownInterceptor
+import cc.readup.native_bridge.KeyDownInterceptor
 
 class MainActivity : TauriActivity(), KeyDownInterceptor {
     private lateinit var wv: WebView

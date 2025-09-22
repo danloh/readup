@@ -1,6 +1,6 @@
 import { fetch as tauriFetch } from '@tauri-apps/plugin-http';
 import { 
-  AppPlatform, AppService, OsPlatform, FileSystem, BaseDir, DeleteAction 
+  AppPlatform, AppService, OsPlatform, FileSystem, BaseDir, DeleteAction, ResolvedPath 
 } from '@/types/system';
 import { SystemSettings } from '@/types/settings';
 import { 
@@ -10,18 +10,17 @@ import {
   getDir,
   getLocalBookFilename,
   getRemoteBookFilename,
-  getBaseFilename,
   getCoverFilename,
   getConfigFilename,
   getLibraryFilename,
   INIT_BOOK_CONFIG,
   formatTitle,
   formatAuthors,
-  getFilename,
   getPrimaryLanguage,
   getLibraryBackupFilename,
 } from '@/utils/book';
-import { partialMD5 } from '@/utils/md5';
+import { md5, partialMD5 } from '@/utils/md5';
+import { getBaseFilename, getFilename } from '@/utils/path';
 import { BookDoc, DocumentLoader, EXTS } from '@/libs/document';
 import {
   DEFAULT_BOOK_LAYOUT,
@@ -40,6 +39,7 @@ import {
   DEFAULT_MOBILE_READSETTINGS,
   DEFAULT_SCREEN_CONFIG,
   DEFAULT_TRANSLATOR_CONFIG,
+  SETTINGS_FILENAME,
 } from './constants';
 import { getOSPlatform, getTargetLang, isCJKEnv, isContentURI, isValidURL } from '@/utils/misc';
 import { deserializeConfig, serializeConfig } from '@/utils/serializer';
@@ -49,13 +49,6 @@ import { ProgressHandler } from '@/utils/transfer';
 import { TxtToEpubConverter } from '@/utils/txt';
 import { ArticleType, FeedType } from '@/app/library/feed/dataAgent';
 import { BOOK_FILE_NOT_FOUND_ERROR } from './errors';
-
-export type ResolvedPath = {
-  baseDir: number;
-  basePrefix: () => Promise<string>;
-  fp: string;
-  base: BaseDir;
-};
 
 export abstract class BaseAppService implements AppService {
   osPlatform: OsPlatform = getOSPlatform();
@@ -68,6 +61,7 @@ export abstract class BaseAppService implements AppService {
   isAndroidApp = false;
   isIOSApp = false;
   isMobileApp = false;
+  isPortableApp = false;
   hasTrafficLight = false;
   hasWindow = false;
   hasWindowBar = false;
@@ -77,15 +71,48 @@ export abstract class BaseAppService implements AppService {
   hasHaptics = false;
   hasUpdater = false;
   hasOrientationLock = false;
+  canCustomRootDir = false;
   distChannel = 'readup';
 
-  abstract fs: FileSystem;
+  protected abstract fs: FileSystem;
+  protected abstract resolvePath(fp: string, base: BaseDir): ResolvedPath;
 
-  abstract resolvePath(fp: string, base: BaseDir): ResolvedPath;
-  abstract getCoverImageUrl(book: Book): string;
-  abstract getCoverImageBlobUrl(book: Book): Promise<string>;
   abstract selectDirectory(): Promise<string>;
   abstract selectFiles(name: string, extensions: string[]): Promise<string[]>;
+
+  async init() {
+    this.localBooksDir = await this.fs.getPrefix('Books');
+  }
+
+  async openFile(path: string, base: BaseDir): Promise<File> {
+    return await this.fs.openFile(path, base);
+  }
+
+  async resolveFilePath(path: string, base: BaseDir): Promise<string> {
+    const prefix = await this.fs.getPrefix(base);
+    return `${prefix}/${path}`;
+  }
+
+  getCoverImageUrl = (book: Book): string => {
+    return this.fs.getURL(`${this.localBooksDir}/${getCoverFilename(book)}`);
+  };
+
+  getCoverImageBlobUrl = async (book: Book): Promise<string> => {
+    return this.fs.getBlobURL(`${this.localBooksDir}/${getCoverFilename(book)}`, 'None');
+  };
+
+  async getCachedImageUrl(pathOrUrl: string): Promise<string> {
+    const cachedKey = `img_${md5(pathOrUrl)}`;
+    const cachePrefix = await this.fs.getPrefix('Cache');
+    const cachedPath = `${cachePrefix}/${cachedKey}`;
+    if (await this.fs.exists(cachedPath, 'None')) {
+      return this.fs.getURL(cachedPath);
+    } else {
+      const file = await this.fs.openFile(pathOrUrl, 'None');
+      await this.fs.writeFile(cachedKey, 'Cache', await file.arrayBuffer());
+      return this.fs.getURL(cachedPath);
+    }
+  }
 
   getDefaultViewSettings(): ViewSettings {
     return {
@@ -103,15 +130,13 @@ export abstract class BaseAppService implements AppService {
 
   async loadSettings(): Promise<SystemSettings> {
     let settings: SystemSettings;
-    const { fp, base } = this.resolvePath('settings.json', 'Settings');
 
     try {
-      await this.fs.exists(fp, base);
-      const txt = await this.fs.readFile(fp, base, 'text');
+      await this.fs.exists(SETTINGS_FILENAME, 'Settings');
+      const txt = await this.fs.readFile(SETTINGS_FILENAME, 'Settings', 'text');
       settings = JSON.parse(txt as string);
       const version = settings.version ?? 0;
       if (this.isAppDataSandbox || version < SYSTEM_SETTINGS_VERSION) {
-        settings.localBooksDir = await this.fs.getPrefix('Books');
         settings.version = SYSTEM_SETTINGS_VERSION;
       }
       settings = { ...DEFAULT_SYSTEM_SETTINGS, ...settings };
@@ -120,6 +145,8 @@ export abstract class BaseAppService implements AppService {
         ...this.getDefaultViewSettings(),
         ...settings.globalViewSettings,
       };
+
+      settings.localBooksDir = await this.fs.getPrefix('Books');
     } catch {
       settings = {
         ...DEFAULT_SYSTEM_SETTINGS,
@@ -131,10 +158,7 @@ export abstract class BaseAppService implements AppService {
         },
         globalViewSettings: this.getDefaultViewSettings(),
       } as SystemSettings;
-
-      await this.fs.createDir('', 'Books', true);
-      await this.fs.createDir('', base, true);
-      await this.fs.writeFile(fp, base, JSON.stringify(settings));
+      await this.saveSettings(settings);
     }
 
     this.localBooksDir = settings.localBooksDir;
@@ -142,9 +166,7 @@ export abstract class BaseAppService implements AppService {
   }
 
   async saveSettings(settings: SystemSettings): Promise<void> {
-    const { fp, base } = this.resolvePath('settings.json', 'Settings');
-    await this.fs.createDir('', base, true);
-    await this.fs.writeFile(fp, base, JSON.stringify(settings));
+    await this.fs.writeFile(SETTINGS_FILENAME, 'Settings', JSON.stringify(settings));
   }
 
   async importBook(
@@ -437,7 +459,7 @@ export abstract class BaseAppService implements AppService {
       const cfp = `${CLOUD_BOOKS_SUBDIR}/${getRemoteBookFilename(book)}`;
       await this.downloadCloudFile(lfp, cfp, handleProgress);
       const localFullpath = `${this.localBooksDir}/${lfp}`;
-      bookDownloaded = await this.fs.exists(localFullpath, 'Books');
+      bookDownloaded = await this.fs.exists(localFullpath, 'None');
       completedFiles.count++;
     }
     // some books may not have cover image, so we need to check if the book is downloaded
@@ -555,11 +577,11 @@ export abstract class BaseAppService implements AppService {
   }
 
   private async loadJSONFile(
-    filename: string,
+    path: string,
     base: BaseDir,
   ): Promise<{ success: boolean; data?: unknown; error?: unknown }> {
     try {
-      const txt = await this.fs.readFile(filename, base, 'text');
+      const txt = await this.fs.readFile(path, base, 'text');
       if (!txt || typeof txt !== 'string' || txt.trim().length === 0) {
         return { success: false, error: 'File is empty or invalid' };
       }
@@ -580,6 +602,10 @@ export abstract class BaseAppService implements AppService {
     const libraryFilename = getLibraryFilename();
     const backupFilename = getLibraryBackupFilename();
 
+    if (!(await this.fs.exists('', 'Books'))) {
+      await this.fs.createDir('', 'Books', true);
+    }
+
     const mainResult = await this.loadJSONFile(libraryFilename, 'Books');
     if (mainResult.success) {
       books = mainResult.data as Book[];
@@ -589,7 +615,6 @@ export abstract class BaseAppService implements AppService {
         books = backupResult.data as Book[];
         console.warn('Loaded library from backup file:', backupFilename);
       } else {
-        await this.fs.createDir('', 'Books', true);
         await this.fs.writeFile(libraryFilename, 'Books', '[]');
         await this.fs.writeFile(backupFilename, 'Books', '[]');
       }

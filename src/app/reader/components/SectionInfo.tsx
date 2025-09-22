@@ -50,6 +50,7 @@ const SectionInfo: React.FC<SectionInfoProps> = ({
       <div
         className={clsx(
           'sectioninfo absolute flex items-center overflow-hidden',
+          'text-neutral-content font-sans text-xs font-light',
           isVertical ? 'writing-vertical-rl max-h-[85%]' : 'top-0 h-[44px]',
           isScrolled && !isVertical && 'bg-base-100',
         )}
@@ -72,7 +73,7 @@ const SectionInfo: React.FC<SectionInfoProps> = ({
       >
         <h2
           className={clsx(
-            'text-neutral-content text-center font-sans text-xs font-light',
+            'text-center',
             isVertical ? '' : 'line-clamp-1',
             !isVertical && hoveredBookKey == bookKey && 'hidden',
           )}
