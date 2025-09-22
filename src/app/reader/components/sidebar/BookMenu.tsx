@@ -9,8 +9,9 @@ import { useSidebarStore } from '@/store/sidebarStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useParallelViewStore } from '@/store/parallelViewStore';
 import { eventDispatcher } from '@/utils/event';
-import useBooksManager from '../../hooks/useBooksManager';
 import MenuItem from '@/components/MenuItem';
+import Menu from '@/components/Menu';
+import useBooksManager from '../../hooks/useBooksManager';
 
 interface BookMenuProps {
   menuClassName?: string;
@@ -60,8 +61,7 @@ const BookMenu: React.FC<BookMenuProps> = ({ menuClassName, setIsDropdownOpen })
   };
 
   return (
-    <div
-      tabIndex={0}
+    <Menu
       className={clsx('book-menu dropdown-content border-base-100 z-20 shadow-2xl', menuClassName)}
     >
       <MenuItem
@@ -103,6 +103,13 @@ const BookMenu: React.FC<BookMenuProps> = ({ menuClassName, setIsDropdownOpen })
             ))}
         </ul>
       </MenuItem>
+      {bookKeys.length > 1 &&
+        (parallelViews.length > 0 ? (
+          <MenuItem label={_('Exit Parallel Read')} onClick={handleUnsetParallel} />
+        ) : (
+          <MenuItem label={_('Enter Parallel Read')} onClick={handleSetParallel} />
+        ))
+      }
       <hr className='border-base-200 my-1' />
       <MenuItem label={_('Export Annotations')} onClick={handleExportAnnotations} />
       <MenuItem
@@ -111,7 +118,7 @@ const BookMenu: React.FC<BookMenuProps> = ({ menuClassName, setIsDropdownOpen })
         onClick={handleToggleSortTOC}
       />
       <MenuItem label={_('Reload Page')} shortcut='Shift+R' onClick={handleReloadPage} />
-    </div>
+    </Menu>
   );
 };
 

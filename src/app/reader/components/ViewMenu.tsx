@@ -13,6 +13,7 @@ import { MAX_ZOOM_LEVEL, MIN_ZOOM_LEVEL, ZOOM_STEP } from '@/services/constants'
 import { useEnv } from '@/context/EnvContext';
 import { useAuth } from '@/context/AuthContext';
 import MenuItem from '@/components/MenuItem';
+import Menu from '@/components/Menu';
 import { useThemeStore } from '@/store/themeStore';
 import { useReaderStore } from '@/store/readerStore';
 import { useBookDataStore } from '@/store/bookDataStore';
@@ -137,8 +138,7 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
   const lastSyncTime = Math.max(config?.lastSyncedAtConfig || 0, config?.lastSyncedAtNotes || 0);
 
   return (
-    <div
-      tabIndex={0}
+    <Menu
       className={clsx(
         'view-menu dropdown-content dropdown-right no-triangle z-20 mt-1 border',
         'bgcolor-base-200 border-base-200 shadow-2xl',
@@ -148,89 +148,102 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
         marginRight: window.innerWidth < 640 ? '-36px' : '0px',
       }}
     >
-      <div className={clsx('flex items-center justify-between rounded-md')}>
-        <button
-          onClick={zoomOut}
-          className={clsx(
-            'hover:bg-base-300 text-base-content rounded-full p-2',
-            zoomLevel <= MIN_ZOOM_LEVEL && 'btn-disabled text-gray-400',
-          )}
-        >
-          <MdZoomOut />
-        </button>
-        <button
-          className={clsx(
-            'hover:bg-base-300 text-base-content h-8 min-h-8 w-[50%] rounded-md p-1 text-center',
-          )}
-          onClick={resetZoom}
-        >
-          {zoomLevel}%
-        </button>
-        <button
-          onClick={zoomIn}
-          className={clsx(
-            'hover:bg-base-300 text-base-content rounded-full p-2',
-            zoomLevel >= MAX_ZOOM_LEVEL && 'btn-disabled text-gray-400',
-          )}
-        >
-          <MdZoomIn />
-        </button>
-      </div>
       {bookData.bookDoc?.rendition?.layout === 'pre-paginated' && (
         <>
-          <div className={clsx('my-2 flex items-center justify-between rounded-md')}>
+          <div 
+            title={_('Zoom Level')} 
+            className={clsx('flex items-center justify-between rounded-md')}
+          >
             <button
-              onClick={setSpreadMode.bind(null, 'none')}
-              title={_('None Spread')}
+              title={_('Zoom Out')}
+              onClick={zoomOut}
               className={clsx(
                 'hover:bg-base-300 text-base-content rounded-full p-2',
-                spreadMode === 'none' && 'bg-base-300/75',
+                zoomLevel <= MIN_ZOOM_LEVEL && 'btn-disabled text-gray-400',
               )}
             >
-              <TbColumns1 />
+              <MdZoomOut />
             </button>
             <button
-              onClick={setSpreadMode.bind(null, 'auto')}
-              title={_('Auto Spread')}
+              title={_('Reset Zoom')}
               className={clsx(
-                'hover:bg-base-300 text-base-content rounded-full p-2',
-                spreadMode === 'auto' && 'bg-base-300/75',
+                'hover:bg-base-300 text-base-content h-8 min-h-8 w-[50%] rounded-md p-1 text-center',
               )}
+              onClick={resetZoom}
             >
-              <TbColumns2 />
-            </button>
-            <div className='bg-base-300 mx-2 h-6 w-[1px]' />
-            <button
-              title={_('Fit Page')}
-              onClick={setZoomMode.bind(null, 'fit-page')}
-              className={clsx(
-                'hover:bg-base-300 text-base-content rounded-full p-2',
-                zoomMode === 'fit-page' && 'bg-base-300/75',
-              )}
-            >
-              <IoMdExpand />
+              {zoomLevel}%
             </button>
             <button
-              title={_('Fit Width')}
-              onClick={setZoomMode.bind(null, 'fit-width')}
+              title={_('Zoom In')}
+              onClick={zoomIn}
               className={clsx(
                 'hover:bg-base-300 text-base-content rounded-full p-2',
-                zoomMode === 'fit-width' && 'bg-base-300/75',
+                zoomLevel >= MAX_ZOOM_LEVEL && 'btn-disabled text-gray-400',
               )}
             >
-              <TbArrowAutofitWidth />
+              <MdZoomIn />
             </button>
           </div>
+        
+          <>
+            <div 
+              title={_('Zoom Mode')} 
+              className={clsx('my-2 flex items-center justify-between rounded-md')}
+            >
+              <button
+                onClick={setSpreadMode.bind(null, 'none')}
+                title={_('Single Page')}
+                className={clsx(
+                  'hover:bg-base-300 text-base-content rounded-full p-2',
+                  spreadMode === 'none' && 'bg-base-300/75',
+                )}
+              >
+                <TbColumns1 />
+              </button>
+              <button
+                onClick={setSpreadMode.bind(null, 'auto')}
+                title={_('Auto Spread')}
+                className={clsx(
+                  'hover:bg-base-300 text-base-content rounded-full p-2',
+                  spreadMode === 'auto' && 'bg-base-300/75',
+                )}
+              >
+                <TbColumns2 />
+              </button>
+              <div className='bg-base-300 mx-2 h-6 w-[1px]' />
+              <button
+                title={_('Fit Page')}
+                onClick={setZoomMode.bind(null, 'fit-page')}
+                className={clsx(
+                  'hover:bg-base-300 text-base-content rounded-full p-2',
+                  zoomMode === 'fit-page' && 'bg-base-300/75',
+                )}
+              >
+                <IoMdExpand />
+              </button>
+              <button
+                title={_('Fit Width')}
+                onClick={setZoomMode.bind(null, 'fit-width')}
+                className={clsx(
+                  'hover:bg-base-300 text-base-content rounded-full p-2',
+                  zoomMode === 'fit-width' && 'bg-base-300/75',
+                )}
+              >
+                <TbArrowAutofitWidth />
+              </button>
+            </div>
 
-          <MenuItem
-            label={_('Separate Cover Page')}
-            Icon={keepCoverSpread ? BiCheckboxChecked : BiCheckbox}
-            onClick={() => setKeepCoverSpread(!keepCoverSpread)}
-            disabled={spreadMode === 'none'}
-          />
+            <MenuItem
+              label={_('Separate Cover Page')}
+              Icon={keepCoverSpread ? BiCheckboxChecked : BiCheckbox}
+              onClick={() => setKeepCoverSpread(!keepCoverSpread)}
+              disabled={spreadMode === 'none'}
+            />
+          </>
+          <hr className='border-base-300 my-1' />
         </>
       )}
-      <hr className='border-base-300 my-1' />
+      
       <MenuItem
         label={isScrolledMode ? _('Scrolled Mode') : _('Page Mode')}
         shortcut='Shift+J'
@@ -268,7 +281,7 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
         Icon={user ? MdSync : MdSyncProblem}
         onClick={handleSync}
       />
-    </div>
+    </Menu>
   );
 };
 
