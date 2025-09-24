@@ -54,6 +54,9 @@ const getFontStyles = (
       --serif: ${serifFonts.map((font) => `"${font}"`).join(', ')}, serif;
       --sans-serif: ${sansSerifFonts.map((font) => `"${font}"`).join(', ')}, sans-serif;
       --monospace: ${monospaceFonts.map((font) => `"${font}"`).join(', ')}, monospace;
+      --font-size: ${fontSize}px;
+      --min-font-size: ${minFontSize}px;
+      --font-weight: ${fontWeight};
     }
     html, body {
       font-size: ${fontSize}px !important;
@@ -550,6 +553,7 @@ export const transformStylesheet = (vw: number, vh: number, css: string) => {
     .replace(/(\d*\.?\d+)vh/gi, (_, d) => (parseFloat(d) * vh) / 100 + 'px')
     .replace(/([\s;])font-family\s*:\s*monospace/gi, '$1font-family: var(--monospace)')
     .replace(/([\s;])color\s*:\s*black/gi, '$1color: var(--theme-fg-color)')
+    .replace(/([\s;])font-weight\s*:\s*normal/gi, '$1font-weight: var(--font-weight)')
     .replace(/([\s;])color\s*:\s*#000000/gi, '$1color: var(--theme-fg-color)')
     .replace(/([\s;])color\s*:\s*#000/gi, '$1color: var(--theme-fg-color)')
     .replace(/([\s;])color\s*:\s*rgb\(0,\s*0,\s*0\)/gi, '$1color: var(--theme-fg-color)');
