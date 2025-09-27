@@ -17,14 +17,14 @@ jobs:
       release_version: ${{ steps.get-release-notes.outputs.release_version }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: setup node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
       - name: get version
-        run: echo "PACKAGE_VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_ENV
+        run: echo "PACKAGE_VERSION=$(node -p "require('./apps/readup-app/package.json').version")" >> $GITHUB_ENV
       - name: get release
         id: get-release
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const { data } = await github.rest.repos.getLatestRelease({
@@ -35,18 +35,51 @@ jobs:
             core.setOutput('release_tag', data.tag_name);
       - name: get release notes
         id: get-release-notes
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const fs = require('fs');
-            const version = require('./package.json').version;
-            const releaseNotesFileContent = fs.readFileSync('./release-notes.json', 'utf8');
+            const version = require('./apps/readup-app/package.json').version;
+            const releaseNotesFileContent = fs.readFileSync('./apps/readup-app/release-notes.json', 'utf8');
             const releaseNotes = JSON.parse(releaseNotesFileContent).releases[version] || {};
             const notes = releaseNotes.notes || [];
             const releaseNote = notes.map((note, index) => `${index + 1}. ${note}`).join(' ');
             console.log('Formatted release note:', releaseNote);
             core.setOutput('release_version', version);
             core.setOutput('release_note', releaseNote);
+
+  update-release:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    needs: get-release
+
+    steps:
+      - name: update release
+        id: update-release
+        uses: actions/github-script@v8
+        env:
+          release_id: ${{ needs.get-release.outputs.release_id }}
+          release_tag: ${{ needs.get-release.outputs.release_tag }}
+          release_note: ${{ needs.get-release.outputs.release_note }}
+        with:
+          script: |
+            const { data } = await github.rest.repos.generateReleaseNotes({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: process.env.release_tag,
+            })
+            const notes = process.env.release_note.split(/(?:\d\.\s)/).filter(Boolean);
+            const formattedNotes = notes.map(note => `* ${note.trim()}`).join("\n");
+            const body = `## Release Highlight\n${formattedNotes}\n\n${data.body}`;
+            github.rest.repos.updateRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: process.env.release_id,
+              body: body,
+              draft: false,
+              prerelease: false
+            })
 
   build-tauri:
     needs: get-release
@@ -91,7 +124,7 @@ jobs:
     runs-on: ${{ matrix.config.os }}
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: initialize git submodules
         run: git submodule update --init --recursive
@@ -99,17 +132,17 @@ jobs:
       - name: setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 9.14.4
+          version: 10.14.0
 
       - name: setup node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: pnpm
 
       - name: setup Java (for Android build only)
         if: matrix.config.release == 'android'
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'zulu'
           java-version: '17'
@@ -120,13 +153,13 @@ jobs:
 
       - name: install NDK (for Android build only)
         if: matrix.config.release == 'android'
-        run: sdkmanager "ndk;27.0.11902837"
+        run: sdkmanager "ndk;28.2.13676358"
 
       - name: install dependencies
         run: pnpm install
 
       - name: copy pdfjs-dist to public directory
-        run: pnpm setup-pdfjs
+        run: pnpm --filter @readup/readup-app setup-pdfjs
 
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable
@@ -158,17 +191,20 @@ jobs:
         run: |
           echo "NEXT_PUBLIC_POSTHOG_KEY=${{ secrets.NEXT_PUBLIC_POSTHOG_KEY }}" >> .env.local
           echo "NEXT_PUBLIC_POSTHOG_HOST=${{ secrets.NEXT_PUBLIC_POSTHOG_HOST }}" >> .env.local
+          echo "NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}" >> .env.local
+          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}" >> .env.local
           echo "NEXT_PUBLIC_APP_PLATFORM=tauri" >> .env.local
+          cp .env.local apps/readup-app/.env.local
 
       - name: build and upload Android apks
         if: matrix.config.release == 'android'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/27.0.11902837
+          NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/28.2.13676358
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: |
-          cd ./
+          cd apps/readup-app/
           rm -rf src-tauri/gen/android
           pnpm tauri android init
           pnpm tauri icon ../../data/icons/readup-book.png
@@ -205,7 +241,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          cd ./
+          cd apps/readup-app/
           curl -sL https://github.com/danloh/readup/releases/latest/download/latest.json -o latest.json
 
           version=${{ needs.get-release.outputs.release_version }}
@@ -240,7 +276,7 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           NODE_OPTIONS: '--max-old-space-size=8192'
         with:
-          projectPath: .
+          projectPath: apps/readup-app
           releaseId: ${{ needs.get-release.outputs.release_id }}
           releaseBody: ${{ needs.get-release.outputs.release_note }}
           args: ${{ matrix.config.args || '' }}
@@ -250,14 +286,20 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Uploading release notes to GitHub release"
-          gh release upload ${{ needs.get-release.outputs.release_tag }} release-notes.json --clobber
+          gh release upload ${{ needs.get-release.outputs.release_tag }} apps/readup-app/release-notes.json --clobber
 
-      - name: upload portable binaries (Windows only)
+      - name: build and upload portable binaries (Windows only)
         if: matrix.config.os == 'windows-latest'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
+          echo "Building Portable Binaries"
+          pushd apps/readup-app/
+          echo "NEXT_PUBLIC_PORTABLE_APP=true" >> .env.local
+          pnpm tauri build
+
+          popd
           echo "Uploading Portable Binaries"
           arch=${{ matrix.config.arch }}
           version=${{ needs.get-release.outputs.release_version }}
@@ -279,43 +321,3 @@ jobs:
 
           echo "Uploading $bin_file to GitHub release"
           gh release upload ${{ needs.get-release.outputs.release_tag }} $bin_file --clobber
-
-  update-release:
-    permissions:
-      contents: write
-    runs-on: ubuntu-latest
-    needs: [get-release, build-tauri]
-
-    steps:
-      - name: update release
-        id: update-release
-        uses: actions/github-script@v7
-        env:
-          release_id: ${{ needs.get-release.outputs.release_id }}
-          release_tag: ${{ needs.get-release.outputs.release_tag }}
-          release_note: ${{ needs.get-release.outputs.release_note }}
-        with:
-          script: |
-            const { data } = await github.rest.repos.generateReleaseNotes({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              tag_name: process.env.release_tag,
-            })
-            const notes = process.env.release_note.split(/(?:\d\.\s)/).filter(Boolean);
-            const formattedNotes = notes.map(note => `* ${note.trim()}`).join("\n");
-            const body = `## Release Highlight\n${formattedNotes}\n\n${data.body}`;
-            github.rest.repos.updateRelease({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              release_id: process.env.release_id,
-              body: body,
-              draft: false,
-              prerelease: false
-            })
-
-  upload-to-r2:
-    needs: [get-release, build-tauri]
-    uses: ./.github/workflows/upload-to-r2.yml
-    with:
-      tag: ${{ needs.get-release.outputs.release_tag }}
-    secrets: inherit

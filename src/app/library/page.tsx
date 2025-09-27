@@ -21,6 +21,7 @@ import SettingsMenu from './book/SettingsMenu';
 import CatalogPage from './feed/CatalogPage';
 import NotePage from '../note/page';
 import StreakPage from './streak/StreakPage';
+import { MigrateDataWindow } from './book/MigrateDataWindow';
 
 function titleCase(str: string) {
   return str.replace(
@@ -153,6 +154,7 @@ const NavTab: React.FC<{
       </div>
       <AboutWindow />
       <UpdaterWindow />
+      <MigrateDataWindow />
     </div>
   );
 };

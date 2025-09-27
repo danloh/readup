@@ -62,6 +62,17 @@
       ]
     },
     {
+      "identifier": "fs:scope",
+      "allow": [
+        {
+          "path": "**/Readup"
+        },
+        {
+          "path": "**/Readup/**/*"
+        }
+      ]
+    },
+    {
       "identifier": "http:default",
       "allow": [
         {

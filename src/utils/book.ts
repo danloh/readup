@@ -166,6 +166,20 @@ export const formatFileSize = (size: number | null) => {
   return formatter.format(size);
 };
 
+export const formatBytes = (bytes?: number | null, locale = 'en-US') => {
+  if (!bytes) return '';
+  const units = ['byte', 'kilobyte', 'megabyte', 'gigabyte', 'terabyte'];
+  const i = Math.floor(Math.log(bytes) / Math.log(1024));
+  const value = bytes / Math.pow(1024, i);
+  const formatter = new Intl.NumberFormat(locale, {
+    style: 'unit',
+    unit: units[i],
+    unitDisplay: 'short',
+    maximumFractionDigits: 2,
+  });
+  return formatter.format(value);
+};
+
 export const getCurrentPage = (book: Book, progress: BookProgress) => {
   const bookFormat = book.format;
   const { section, pageinfo } = progress;

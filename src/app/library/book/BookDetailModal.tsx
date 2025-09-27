@@ -19,11 +19,10 @@ import { useEnv } from '@/context/EnvContext';
 import { useTranslation } from '@/hooks/useTranslation';
 import {
   formatAuthors,
+  formatBytes,
   formatDate,
-  formatFileSize,
   formatLanguage,
   formatPublisher,
-  formatSubject,
   formatTitle,
 } from '@/utils/book';
 import Alert from '@/components/Alert';
@@ -305,7 +304,7 @@ const BookDetailModal = ({ book, isOpen, onClose, showBtns = true }: DetailModal
                 <div className='overflow-hidden'>
                   <span className='font-bold'>{_('Subjects')}</span>
                   <p className='text-neutral-content line-clamp-3 text-sm'>
-                    {formatSubject(bookMeta.subject) || _('Unknown')}
+                    {formatAuthors(bookMeta.subject || '') || _('Unknown')}
                   </p>
                 </div>
                 <div className='overflow-hidden'>
@@ -315,7 +314,7 @@ const BookDetailModal = ({ book, isOpen, onClose, showBtns = true }: DetailModal
                 <div className='overflow-hidden'>
                   <span className='font-bold'>{_('File Size')}</span>
                   <p className='text-neutral-content text-sm'>
-                    {formatFileSize(fileSize) || _('Unknown')}
+                    {formatBytes(fileSize) || _('Unknown')}
                   </p>
                 </div>
               </div>

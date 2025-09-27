@@ -30,6 +30,7 @@
             "$APPDATA/**/*",
             "$APPCACHE/**/*",
             "$TEMP/**/*",
+            "**/Readup/**/*",
             "/private/var/mobile/Containers/Data/Application/**/*"
           ],
           "deny": []

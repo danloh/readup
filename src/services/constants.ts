@@ -14,9 +14,10 @@ import { ReadSettings, SystemSettings } from '@/types/settings';
 import { getDefaultMaxBlockSize, getDefaultMaxInlineSize } from '@/utils/config';
 import { stubTranslation as _ } from '@/utils/misc';
 
-export const LOCAL_BOOKS_SUBDIR = 'Readup/Books';
-export const CLOUD_BOOKS_SUBDIR = 'Readup/Books';
-export const LOCAL_DATA_SUBDIR = 'Readup/Data';
+export const DATA_SUBDIR = 'Readup';
+export const LOCAL_BOOKS_SUBDIR = `${DATA_SUBDIR}/Books`;
+export const CLOUD_BOOKS_SUBDIR = `${DATA_SUBDIR}/Books`;
+export const LOCAL_FONTS_SUBDIR = `${DATA_SUBDIR}/Fonts`;
 
 export const SETTINGS_FILENAME = 'settings.json';
 

@@ -22,6 +22,7 @@ import { useResponsiveSize } from '@/hooks/useResponsiveSize';
 import { navigateToLogin, navigateToProfile } from '@/utils/nav';
 import { tauriHandleSetAlwaysOnTop, tauriHandleToggleFullScreen } from '@/utils/window';
 import { optInTelemetry, optOutTelemetry } from '@/utils/telemetry';
+import { setMigrateDataDirDialogVisible } from './MigrateDataWindow';
 
 interface SettingsMenuProps {
   setIsDropdownOpen?: (isOpen: boolean) => void;
@@ -144,6 +145,11 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
     setIsTelemetryEnabled(settings.telemetryEnabled);
   };
 
+  const handleSetRootDir = () => {
+    setMigrateDataDirDialogVisible(true);
+    setIsDropdownOpen?.(false);
+  };
+
   const avatarUrl = user?.user_metadata?.['picture'] || user?.user_metadata?.['avatar_url'];
   const userFullName = user?.user_metadata?.['full_name'];
   const userDisplayName = userFullName ? userFullName.split(' ')[0] : null;
@@ -190,6 +196,16 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
         Icon={themeMode === 'dark' ? BiMoon : themeMode === 'light' ? BiSun : GrSystem}
         onClick={cycleThemeMode}
       />
+      {appService?.canCustomizeRootDir && (
+        <>
+          <hr aria-hidden='true' className='border-base-200 my-1' />
+          <MenuItem label={_('Advanced Settings')}>
+            <ul className='flex flex-col'>
+              <MenuItem label={_('Change Data Location')} noIcon onClick={handleSetRootDir} />
+            </ul>
+          </MenuItem>
+        </>
+      )}
       <hr className='border-base-200 my-1' />
       {appService?.hasWindow && (
         <MenuItem
