@@ -26,7 +26,9 @@ import {
 } from '@tauri-apps/api/path';
 import { type as osType } from '@tauri-apps/plugin-os';
 
-import { FileSystem, BaseDir, AppPlatform, ResolvedPath, FileItem } from '@/types/system';
+import { 
+  FileSystem, BaseDir, AppPlatform, ResolvedPath, FileItem, DistChannel 
+} from '@/types/system';
 import { getOSPlatform, isContentURI, isValidURL } from '@/utils/misc';
 import { getDirPath, getFilename } from '@/utils/path';
 import { copyURIToPath } from '@/utils/bridge';
@@ -327,7 +329,7 @@ export class NativeAppService extends BaseAppService {
   override hasOrientationLock =
     (OS_TYPE === 'ios' && getOSPlatform() === 'ios') || OS_TYPE === 'android';
   override canCustomizeRootDir = OS_TYPE !== 'ios';
-  override distChannel = process.env['NEXT_PUBLIC_DIST_CHANNEL'] || 'readup';
+  override distChannel = (process.env['NEXT_PUBLIC_DIST_CHANNEL'] || 'readup') as DistChannel;
   private execDir?: string = undefined;
 
   override async init() {

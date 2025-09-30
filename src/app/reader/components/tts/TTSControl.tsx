@@ -107,7 +107,14 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey, iconRef }) => {
         artworkImage = await fetchImageAsBase64('/icon.png');
       }
 
-      await mediaSession.setActive(true, settings.alwaysInForeground);
+      await mediaSession.setActive({
+        active: true,
+        keepAppInForeground: settings.alwaysInForeground,
+        notificationTitle: _('Read Aloud'),
+        notificationText: _('Ready to read aloud'),
+        foregroundServiceTitle: _('Read Aloud'),
+        foregroundServiceText: _('Ready to read aloud'),
+      });
       mediaSession.updateMetadata({
         title: title,
         artist: sectionLabel || title,
@@ -119,7 +126,10 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey, iconRef }) => {
 
   const deinitMediaSession = async () => {
     if (mediaSessionRef.current && mediaSessionRef.current instanceof TauriMediaSession) {
-      await mediaSessionRef.current.setActive(false);
+      await mediaSessionRef.current.setActive({
+        active: false,
+        keepAppInForeground: settings.alwaysInForeground,
+      });
     }
     mediaSessionRef.current = null;
   };

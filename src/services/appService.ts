@@ -2,6 +2,7 @@ import { fetch as tauriFetch } from '@tauri-apps/plugin-http';
 import {
   AppPlatform,
   AppService,
+  DistChannel,
   FileItem,
   OsPlatform,
   ResolvedPath,
@@ -81,7 +82,7 @@ export abstract class BaseAppService implements AppService {
   hasUpdater = false;
   hasOrientationLock = false;
   canCustomizeRootDir = false;
-  distChannel = 'readup';
+  distChannel = 'readup' as DistChannel;
 
   protected abstract fs: FileSystem;
   protected abstract resolvePath(fp: string, base: BaseDir): ResolvedPath;

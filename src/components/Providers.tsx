@@ -7,16 +7,18 @@ import { useEnv } from '@/context/EnvContext';
 import { CSPostHogProvider } from '@/context/PHContext';
 import { useDefaultIconSize } from '@/hooks/useResponsiveSize';
 import { useSafeAreaInsets } from '@/hooks/useSafeAreaInsets';
-import { initSystemThemeListener } from '@/store/themeStore';
+import { initSystemThemeListener, useThemeStore } from '@/store/themeStore';
 
 const Providers = ({ children }: { children: React.ReactNode }) => {
   const { appService } = useEnv();
+  const { uiLang, setUILang } = useThemeStore();
   const iconSize = useDefaultIconSize();
   useSafeAreaInsets(); // Initialize safe area insets
 
   useEffect(() => {
     if (appService) {
       initSystemThemeListener(appService);
+      setUILang(uiLang); // init ui lang 
     }
   }, [appService]);
 

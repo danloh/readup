@@ -15,7 +15,7 @@ pub fn init<R: Runtime, C: DeserializeOwned>(
     api: PluginApi<R, C>,
 ) -> crate::Result<NativeBridge<R>> {
     #[cfg(target_os = "android")]
-    let handle = api.register_android_plugin("cc.readup.native_bridge", "NativeBridgePlugin")?;
+    let handle = api.register_android_plugin("com.readest.native_bridge", "NativeBridgePlugin")?;
     #[cfg(target_os = "ios")]
     let handle = api.register_ios_plugin(init_plugin_native_bridge)?;
     Ok(NativeBridge(handle))
@@ -166,6 +166,16 @@ impl<R: Runtime> NativeBridge<R> {
     pub fn get_safe_area_insets(&self) -> crate::Result<GetSafeAreaInsetsResponse> {
         self.0
             .run_mobile_plugin("get_safe_area_insets", ())
+            .map_err(Into::into)
+    }
+}
+
+impl<R: Runtime> NativeBridge<R> {
+    pub fn request_manage_storage_permission(
+        &self,
+    ) -> crate::Result<RequestManageStoragePermissionResponse> {
+        self.0
+            .run_mobile_plugin("request_manage_storage_permission", ())
             .map_err(Into::into)
     }
 }
