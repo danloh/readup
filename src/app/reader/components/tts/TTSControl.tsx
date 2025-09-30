@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useEnv } from '@/context/EnvContext';
 import { useBookDataStore } from '@/store/bookDataStore';
 import { useReaderStore } from '@/store/readerStore';
+import { useSettingsStore } from '@/store/settingsStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useResponsiveSize } from '@/hooks/useResponsiveSize';
 import { TTSController, SILENCE_DATA, TTSMark } from '@/services/tts';
@@ -9,8 +10,10 @@ import { getPopupPosition, Position } from '@/utils/sel';
 import { eventDispatcher } from '@/utils/event';
 import { parseSSMLLang } from '@/utils/ssml';
 import { throttle } from '@/utils/throttle';
+import { fetchImageAsBase64 } from '@/utils/image';
 import { invokeUseBackgroundAudio } from '@/utils/bridge';
 import { CFI } from '@/libs/document';
+import { getMediaSession, TauriMediaSession } from '@/libs/mediaSession';
 import Popup from '@/components/Popup';
 import TTSPanel from './TTSPanel';
 
@@ -29,6 +32,7 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey, iconRef }) => {
   const { getBookData } = useBookDataStore();
   const { getView, getProgress, getViewSettings } = useReaderStore();
   const { setViewSettings, setTTSEnabled } = useReaderStore();
+  const { settings } = useSettingsStore();
   const [ttsLang, setTtsLang] = useState<string>('en');
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -47,6 +51,8 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey, iconRef }) => {
 
   const unblockerAudioRef = useRef<HTMLAudioElement | null>(null);
   const ttsControllerRef = useRef<TTSController | null>(null);
+  const mediaSessionRef = useRef<TauriMediaSession | MediaSession | null>(null);
+
   const [ttsController, setTtsController] = useState<TTSController | null>(null);
   const [ttsClientsInited, setTtsClientsInitialized] = useState(false);
 
@@ -81,6 +87,43 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey, iconRef }) => {
     }
   };
 
+  const initMediaSession = async () => {
+    const mediaSession = getMediaSession();
+    if (!mediaSession) return;
+
+    mediaSessionRef.current = mediaSession;
+
+    if (mediaSession instanceof TauriMediaSession) {
+      const bookData = getBookData(bookKey);
+      const progress = getProgress(bookKey);
+      if (!bookData || !bookData.book) return;
+      const { title, author, coverImageUrl } = bookData.book;
+      const { sectionLabel } = progress || {};
+
+      let artworkImage = '/icon.png';
+      try {
+        artworkImage = await fetchImageAsBase64(coverImageUrl || '/icon.png');
+      } catch {
+        artworkImage = await fetchImageAsBase64('/icon.png');
+      }
+
+      await mediaSession.setActive(true, settings.alwaysInForeground);
+      mediaSession.updateMetadata({
+        title: title,
+        artist: sectionLabel || title,
+        album: author,
+        artwork: artworkImage,
+      });
+    }
+  };
+
+  const deinitMediaSession = async () => {
+    if (mediaSessionRef.current && mediaSessionRef.current instanceof TauriMediaSession) {
+      await mediaSessionRef.current.setActive(false);
+    }
+    mediaSessionRef.current = null;
+  };
+
   useEffect(() => {
     return () => {
       if (ttsControllerRef.current) {
@@ -110,13 +153,24 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey, iconRef }) => {
       const progress = getProgress(bookKey);
       const { sectionLabel } = progress || {};
       const mark = (e as CustomEvent<TTSMark>).detail;
-      if ('mediaSession' in navigator) {
-        navigator.mediaSession.metadata = new MediaMetadata({
-          title: mark?.text || '',
-          artist: sectionLabel || title,
-          album: author,
-          artwork: [{ src: coverImageUrl || '/icon.png', sizes: '512x512', type: 'image/png' }],
-        });
+
+      if (mediaSessionRef.current) {
+        const mediaSession = mediaSessionRef.current;
+        if (mediaSession instanceof TauriMediaSession) {
+          mediaSession.updateMetadata({
+            title: mark?.text || '',
+            artist: sectionLabel || title,
+            album: author,
+            artwork: '',
+          });
+        } else {
+          mediaSession.metadata = new MediaMetadata({
+            title: mark?.text || '',
+            artist: sectionLabel || title,
+            album: author,
+            artwork: [{ src: coverImageUrl || '/icon.png', sizes: '512x512', type: 'image/png' }],
+          });
+        }
       }
     };
 
@@ -194,7 +248,9 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey, iconRef }) => {
       if (appService?.isMobile) {
         unblockAudio();
       }
+      await initMediaSession();
       setTtsClientsInitialized(false);
+
       const ttsController = new TTSController(appService, view);
       await ttsController.init();
       await ttsController.initViewTTS();
@@ -288,6 +344,7 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey, iconRef }) => {
     if (appService?.isMobile) {
       releaseUnblockAudio();
     }
+    await deinitMediaSession();
     setTTSEnabled(bookKey, false);
   }, [appService]);
 
@@ -400,32 +457,33 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey, iconRef }) => {
   };
 
   useEffect(() => {
-    if ('mediaSession' in navigator) {
-      navigator.mediaSession.setActionHandler('play', () => {
+    const { current: mediaSession } = mediaSessionRef;
+    if (mediaSession) {
+      mediaSession.setActionHandler('play', () => {
         handleTogglePlay();
       });
 
-      navigator.mediaSession.setActionHandler('pause', () => {
+      mediaSession.setActionHandler('pause', () => {
         handleTogglePlay();
       });
 
-      navigator.mediaSession.setActionHandler('stop', () => {
+      mediaSession.setActionHandler('stop', () => {
         handlePause();
       });
 
-      navigator.mediaSession.setActionHandler('seekforward', () => {
+      mediaSession.setActionHandler('seekforward', () => {
         handleForward(true);
       });
 
-      navigator.mediaSession.setActionHandler('seekbackward', () => {
+      mediaSession.setActionHandler('seekbackward', () => {
         handleBackward(true);
       });
 
-      navigator.mediaSession.setActionHandler('nexttrack', () => {
+      mediaSession.setActionHandler('nexttrack', () => {
         handleForward();
       });
 
-      navigator.mediaSession.setActionHandler('previoustrack', () => {
+      mediaSession.setActionHandler('previoustrack', () => {
         handleBackward();
       });
     }

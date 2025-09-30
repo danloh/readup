@@ -1,5 +1,6 @@
 package cc.readup.native_tts
 
+import android.Manifest
 import android.os.Bundle
 import android.app.Activity
 import android.content.Context
@@ -8,8 +9,18 @@ import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import android.speech.tts.Voice
 import android.util.Log
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import androidx.media3.common.MediaMetadata
+import androidx.media3.common.Player
+import androidx.media3.common.MediaItem
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.common.ForwardingPlayer
+import androidx.media3.session.MediaSession
+import androidx.media3.exoplayer.ExoPlayer
 import app.tauri.annotation.Command
 import app.tauri.annotation.InvokeArg
+import app.tauri.annotation.Permission
 import app.tauri.annotation.TauriPlugin
 import app.tauri.plugin.Invoke
 import app.tauri.plugin.JSObject
@@ -25,6 +36,16 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 import java.util.*
+import java.net.URL
+
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.Service
+import android.content.Intent
+import android.os.Build
+import android.os.IBinder
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 
 data class TTSVoiceData(
     val id: String,
@@ -60,26 +81,130 @@ class SetVoiceArgs(
     val voice: String? = null
 )
 
-@TauriPlugin
-class NativeTTSPlugin(private val activity: Activity) : Plugin(activity) {
+@InvokeArg
+class UpdateMediaSessionMetadataArgs {
+  var title: String? = null
+  var artist: String? = null
+  var album: String? = null
+  var artwork: String? = null
+}
 
+@InvokeArg
+class UpdateMediaSessionStateArgs {
+  var playing: Boolean? = null
+  var position: Double? = null
+  var duration: Double? = null
+}
+
+@InvokeArg
+class SetMediaSessionActiveArgs {
+  var active: Boolean? = null
+}
+
+class MediaForegroundService : Service() {
+    companion object {
+        const val NOTIFICATION_ID = 1001
+        const val CHANNEL_ID = "tts_media_playback_channel"
+        const val ACTION_START = "START_FOREGROUND_SERVICE"
+        const val ACTION_STOP = "STOP_FOREGROUND_SERVICE"
+        
+        var pluginInstance: NativeTTSPlugin? = null
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        createNotificationChannel()
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        when (intent?.action) {
+            ACTION_START -> {
+                startForegroundService()
+            }
+            ACTION_STOP -> {
+                stopForegroundService()
+            }
+        }
+        return START_STICKY // Restart if killed
+    }
+
+    override fun onBind(intent: Intent?): IBinder? = null
+
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                "TTS Media Playback",
+                NotificationManager.IMPORTANCE_MIN
+            ).apply {
+                description = "Controls for TTS media playback"
+                setShowBadge(false)
+                setSound(null, null)
+            }
+            val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            manager.createNotificationChannel(channel)
+        }
+    }
+
+    private fun startForegroundService() {
+        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle("TTS Media Session")
+            .setContentText("Text-to-speech playback active")
+            .setSmallIcon(android.R.drawable.ic_media_play) // Replace with your icon
+            .setOngoing(true)
+            .setSilent(true)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setCategory(NotificationCompat.CATEGORY_SERVICE)
+            .build()
+
+        startForeground(NOTIFICATION_ID, notification)
+        Log.d("MediaForegroundService", "Foreground service started")
+    }
+
+    private fun stopForegroundService() {
+        stopForeground(STOP_FOREGROUND_REMOVE)
+        stopSelf()
+        Log.d("MediaForegroundService", "Foreground service stopped")
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.d("MediaForegroundService", "Service destroyed")
+    }
+}
+
+@TauriPlugin(
+  permissions = [
+    Permission(strings = [Manifest.permission.POST_NOTIFICATIONS], alias = "postNotification")
+  ]
+)
+class NativeTTSPlugin(private val activity: Activity) : Plugin(activity) {
+    
     companion object {
         private const val TAG = "NativeTTSPlugin"
         private const val CHANNEL_NAME = "tts_events"
     }
-
+    
     private var textToSpeech: TextToSpeech? = null
     private var isInitialized = AtomicBoolean(false)
     private var isPaused = AtomicBoolean(false)
     private var isSpeaking = AtomicBoolean(false)
     private var currentRate = AtomicReference<Float>(1.0f)
     private var currentPitch = AtomicReference<Float>(1.0f)
-
+    
     private val eventChannels = ConcurrentHashMap<String, Channel<TTSMessageEvent>>()
     private val speakingJobs = ConcurrentHashMap<String, Job>()
+    
+    private var player: Player? = null
+    private var mediaSession: MediaSession? = null
+    private var isMediaSessionActive = false
 
     private val coroutineScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
+    init {
+        MediaForegroundService.pluginInstance = this
+    }
+    
     @Command
     fun init(invoke: Invoke) {
         coroutineScope.launch {
@@ -95,7 +220,7 @@ class NativeTTSPlugin(private val activity: Activity) : Plugin(activity) {
             }
         }
     }
-
+    
     private suspend fun initializeTTS(): Boolean = suspendCancellableCoroutine { continuation ->
         try {
             val preferredEngine = Settings.Secure.getString(
@@ -123,7 +248,7 @@ class NativeTTSPlugin(private val activity: Activity) : Plugin(activity) {
             continuation.resume(false) {}
         }
     }
-
+    
     private fun setupTTSListener() {
         textToSpeech?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
             override fun onStart(utteranceId: String?) {
@@ -132,7 +257,7 @@ class NativeTTSPlugin(private val activity: Activity) : Plugin(activity) {
                     sendEvent(id, TTSMessageEvent("boundary", "start"))
                 }
             }
-
+            
             override fun onDone(utteranceId: String?) {
                 utteranceId?.let { id ->
                     isSpeaking.set(false)
@@ -149,7 +274,7 @@ class NativeTTSPlugin(private val activity: Activity) : Plugin(activity) {
                     closeEventChannel(id)
                 }
             }
-
+            
             override fun onError(utteranceId: String?, errorCode: Int) {
                 utteranceId?.let { id ->
                     isSpeaking.set(false)
@@ -157,7 +282,7 @@ class NativeTTSPlugin(private val activity: Activity) : Plugin(activity) {
                     closeEventChannel(id)
                 }
             }
-
+            
             override fun onRangeStart(utteranceId: String?, start: Int, end: Int, frame: Int) {
                 utteranceId?.let { id ->
                     sendEvent(id, TTSMessageEvent("boundary", "range", "pos:$start-$end"))
@@ -165,44 +290,44 @@ class NativeTTSPlugin(private val activity: Activity) : Plugin(activity) {
             }
         })
     }
-
+    
     @Command
     fun speak(invoke: Invoke) {
         val args = invoke.parseArgs(SpeakArgs::class.java)
         val text = args.text ?: ""
-
+        
         if (text.isEmpty()) {
             invoke.reject("Text cannot be empty")
             return
         }
-
+        
         val utteranceId = UUID.randomUUID().toString()
-
+        
         coroutineScope.launch {
             try {
                 val eventChannel = Channel<TTSMessageEvent>(Channel.UNLIMITED)
                 eventChannels[utteranceId] = eventChannel
-
+                
                 val speakJob = launch {
                     speakText(text, utteranceId, args.preload ?: false)
                 }
                 speakingJobs[utteranceId] = speakJob
-
+                
                 val result = JSObject().apply {
                     put("utteranceId", utteranceId)
                 }
                 invoke.resolve(result)
-
+                
                 // Start sending events to the frontend
                 startEventStream(utteranceId)
-
+                
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to start speaking", e)
                 invoke.reject("Failed to start speaking: ${e.message}")
             }
         }
     }
-
+    
     private suspend fun speakText(text: String, utteranceId: String, preload: Boolean) {
         withContext(Dispatchers.Main) {
             try {
@@ -210,18 +335,18 @@ class NativeTTSPlugin(private val activity: Activity) : Plugin(activity) {
                     setSpeechRate(currentRate.get())
                     setPitch(currentPitch.get())
                 }
-
+                
                 val params = Bundle().apply {
                     putString(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, utteranceId)
                 }
-
+                
                 val result = textToSpeech?.speak(
                     text,
                     if (preload) TextToSpeech.QUEUE_ADD else TextToSpeech.QUEUE_FLUSH,
                     params,
                     utteranceId
                 )
-
+                
                 if (result != TextToSpeech.SUCCESS) {
                     sendEvent(utteranceId, TTSMessageEvent("error", "Failed to start speech"))
                 }
@@ -230,7 +355,7 @@ class NativeTTSPlugin(private val activity: Activity) : Plugin(activity) {
             }
         }
     }
-
+    
     private fun startEventStream(utteranceId: String) {
         coroutineScope.launch {
             val channel = eventChannels[utteranceId] ?: return@launch
@@ -249,13 +374,13 @@ class NativeTTSPlugin(private val activity: Activity) : Plugin(activity) {
             }
         }
     }
-
+    
     private fun sendEvent(utteranceId: String, event: TTSMessageEvent) {
         coroutineScope.launch {
             eventChannels[utteranceId]?.trySend(event)
         }
     }
-
+    
     private fun closeEventChannel(utteranceId: String) {
         coroutineScope.launch {
             eventChannels[utteranceId]?.close()
@@ -264,7 +389,7 @@ class NativeTTSPlugin(private val activity: Activity) : Plugin(activity) {
             speakingJobs.remove(utteranceId)
         }
     }
-
+    
     @Command
     fun pause(invoke: Invoke) {
         try {
@@ -278,7 +403,7 @@ class NativeTTSPlugin(private val activity: Activity) : Plugin(activity) {
             invoke.reject("Exception while pausing: ${e.message}")
         }
     }
-
+    
     @Command
     fun resume(invoke: Invoke) {
         try {
@@ -288,7 +413,7 @@ class NativeTTSPlugin(private val activity: Activity) : Plugin(activity) {
             invoke.reject("Exception while resuming: ${e.message}")
         }
     }
-
+    
     @Command
     fun stop(invoke: Invoke) {
         try {
@@ -299,7 +424,7 @@ class NativeTTSPlugin(private val activity: Activity) : Plugin(activity) {
                 eventChannels.values.forEach { it.close() }
                 speakingJobs.clear()
                 eventChannels.clear()
-
+                
                 invoke.resolve()
             } else {
                 invoke.reject("Failed to stop TTS")
@@ -308,7 +433,7 @@ class NativeTTSPlugin(private val activity: Activity) : Plugin(activity) {
             invoke.reject("Exception while stopping: ${e.message}")
         }
     }
-
+    
     @Command
     fun set_rate(invoke: Invoke) {
         val args = invoke.parseArgs(SetRateArgs::class.java)
@@ -319,7 +444,7 @@ class NativeTTSPlugin(private val activity: Activity) : Plugin(activity) {
             invoke.reject("Exception setting rate: ${e.message}")
         }
     }
-
+    
     @Command
     fun set_pitch(invoke: Invoke) {
         val args = invoke.parseArgs(SetPitchArgs::class.java)
@@ -330,14 +455,14 @@ class NativeTTSPlugin(private val activity: Activity) : Plugin(activity) {
             invoke.reject("Exception setting pitch: ${e.message}")
         }
     }
-
+    
     @Command
     fun set_voice(invoke: Invoke) {
         val args = invoke.parseArgs(SetVoiceArgs::class.java)
         try {
             val voices = textToSpeech?.voices
             val targetVoice = voices?.find { it.name == args.voice }
-
+            
             if (targetVoice != null) {
                 val result = textToSpeech?.setVoice(targetVoice)
                 if (result == TextToSpeech.SUCCESS) {
@@ -352,7 +477,7 @@ class NativeTTSPlugin(private val activity: Activity) : Plugin(activity) {
             invoke.reject("Exception setting voice: ${e.message}")
         }
     }
-
+    
     @Command
     fun get_all_voices(invoke: Invoke) {
         try {
@@ -364,7 +489,7 @@ class NativeTTSPlugin(private val activity: Activity) : Plugin(activity) {
                     put("disabled", false)
                 }
             } ?: emptyList()
-
+            
             val result = JSObject().apply {
                 put("voices", JSONArray(voices))
             }
@@ -374,12 +499,235 @@ class NativeTTSPlugin(private val activity: Activity) : Plugin(activity) {
         }
     }
 
+    @UnstableApi
+    private class WebViewPlayer(player: Player) : ForwardingPlayer(player) {
+      var eventTrigger: ((String, JSObject) -> Unit)? = null
+
+      override fun play() {
+          eventTrigger?.invoke("media-session-play", JSObject())
+          if (!this.playWhenReady) {
+              this.playWhenReady = true
+          } else {
+              this.playWhenReady = false
+          }
+      }
+      override fun pause() {
+          eventTrigger?.invoke("media-session-pause", JSObject())
+          if (!this.playWhenReady) {
+              this.playWhenReady = true
+          } else {
+              this.playWhenReady = false
+          }
+      }
+      override fun seekToNext() {
+          eventTrigger?.invoke("media-session-next", JSObject())
+      }
+      override fun seekToPrevious() {
+          eventTrigger?.invoke("media-session-previous", JSObject())
+      }
+    }
+
+    private fun initializeMediaSession() {
+        var basePlayer = ExoPlayer.Builder(activity).build()
+        val webViewPlayer = WebViewPlayer(basePlayer)
+        webViewPlayer.eventTrigger = { event, data -> trigger(event, data) }
+        player = webViewPlayer
+
+        mediaSession = MediaSession.Builder(activity, player!!)
+            .setCallback(object : MediaSession.Callback {
+                override fun onConnect(
+                    session: MediaSession,
+                    controller: MediaSession.ControllerInfo
+                ): MediaSession.ConnectionResult {
+                    val builder = MediaSession.ConnectionResult.AcceptedResultBuilder(session)
+                    builder.setAvailablePlayerCommands(
+                        Player.Commands.Builder()
+                            .add(Player.COMMAND_PLAY_PAUSE)
+                            .add(Player.COMMAND_SEEK_TO_NEXT)
+                            .add(Player.COMMAND_SEEK_TO_PREVIOUS)
+                            .build()
+                    )
+                    return builder.build()
+                }
+            })
+            .build()
+    }
+
+    private fun deinitializeMediaSession() {
+        mediaSession?.release()
+        mediaSession = null
+        player?.release()
+        player = null
+    }
+
+    private fun startForegroundService() {
+        try {
+            val intent = Intent(activity, MediaForegroundService::class.java).apply {
+                action = MediaForegroundService.ACTION_START
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                activity.startForegroundService(intent)
+            } else {
+                activity.startService(intent)
+            }
+            Log.d(TAG, "Foreground service started")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to start foreground service", e)
+        }
+    }
+
+    private fun stopForegroundService() {
+        try {
+            val intent = Intent(activity, MediaForegroundService::class.java).apply {
+                action = MediaForegroundService.ACTION_STOP
+            }
+            activity.stopService(intent)
+            Log.d(TAG, "Foreground service stopped")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to stop foreground service", e)
+        }
+    }
+
+    private suspend fun loadArtworkFromUrl(urlString: String): Bitmap? {
+        return withContext(Dispatchers.IO) {
+            try {
+                when {
+                    urlString.startsWith("data:image/") -> {
+                        val base64Data = urlString.substringAfter("base64,")
+                        val decodedBytes = android.util.Base64.decode(base64Data, android.util.Base64.DEFAULT)
+                        BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+                    }
+                    urlString.startsWith("http") -> {
+                        val url = URL(urlString)
+                        val input: java.io.InputStream = url.openStream()
+                        BitmapFactory.decodeStream(input)
+                    }
+                    else -> {
+                        val assetPath = urlString.removePrefix("/")
+                        val inputStream = activity.assets.open(assetPath)
+                        BitmapFactory.decodeStream(inputStream)
+                    }
+                }
+            } catch (e: Exception) {
+                null
+            }
+        }
+    }
+
+    private var currentArtworkByteArray: ByteArray? = null
+
+    @Command
+    fun update_media_session_metadata(invoke: Invoke) {
+        val args = invoke.parseArgs(UpdateMediaSessionMetadataArgs::class.java)
+        val title = args.title ?: ""
+        val artist = args.artist ?: ""
+        val album = args.album ?: ""
+        val artworkUrl = args.artwork ?: ""
+        
+        coroutineScope.launch {
+            try {
+                val metadataBuilder = MediaMetadata.Builder()
+                    .setTitle(title)
+                    .setArtist(artist)
+                    .setAlbumTitle(album)
+                    .apply {
+                        if (artworkUrl.isNotEmpty()) {
+                            loadArtworkFromUrl(artworkUrl)?.let { bitmap ->
+                                java.io.ByteArrayOutputStream().use { stream ->
+                                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+                                    currentArtworkByteArray = stream.toByteArray()
+                                }
+                            }
+                        }
+                        currentArtworkByteArray?.let {
+                            setArtworkData(it, MediaMetadata.PICTURE_TYPE_FRONT_COVER)
+                        }
+                    }
+
+                val mediaItem: MediaItem = MediaItem.Builder()
+                    .setMediaId("silent_media")
+                    .setUri("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQQAAAAAAA==")
+                    .setMediaMetadata(metadataBuilder.build())
+                    .build()
+
+                player?.setMediaItems(listOf(mediaItem, mediaItem))
+                player?.prepare()
+                player?.playWhenReady = true
+                player?.setRepeatMode(Player.REPEAT_MODE_ALL)
+
+                invoke.resolve()
+            } catch (e: Exception) {
+                Log.e("NativeBridgePlugin", "Failed to update metadata: ${e.message}")
+                invoke.reject("Failed to update metadata: ${e.message}")
+            }
+        }
+    }
+
+    @Command
+    fun update_media_session_state(invoke: Invoke) {
+        var args = invoke.parseArgs(UpdateMediaSessionStateArgs::class.java)
+        val isPlaying = args.playing ?: false
+        val position = args.position ?: 0.0
+        val duration = args.duration ?: 0.0
+        
+        try {
+            player?.let { player ->
+                if (position > 0) {
+                    player.seekTo((position * 1000).toLong())
+                }
+                player.playWhenReady = isPlaying
+            }
+            invoke.resolve()
+        } catch (e: Exception) {
+            invoke.reject("Failed to update playback state: ${e.message}")
+        }
+    }
+
+    @Command
+    fun set_media_session_active(invoke: Invoke) {
+        var args = invoke.parseArgs(SetMediaSessionActiveArgs::class.java)
+        val active = args.active ?: true
+        
+        try {
+            if (active && !isMediaSessionActive) {
+                initializeMediaSession()
+                startForegroundService()
+                isMediaSessionActive = true
+                Log.d(TAG, "Media session activated with foreground service")
+            } else if (!active && isMediaSessionActive) {
+                deinitializeMediaSession()
+                stopForegroundService()
+                isMediaSessionActive = false
+                Log.d(TAG, "Media session deactivated and foreground service stopped")
+            }
+            invoke.resolve()
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to set media session active state: ${e.message}")
+            invoke.reject("Failed to set media session active state: ${e.message}")
+        }
+    }
+    
     fun destroy() {
-        coroutineScope.cancel()
-        textToSpeech?.shutdown()
-        eventChannels.values.forEach { it.close() }
-        eventChannels.clear()
-        speakingJobs.values.forEach { it.cancel() }
-        speakingJobs.clear()
+        try {
+            if (isMediaSessionActive) {
+                stopForegroundService()
+                isMediaSessionActive = false
+            }
+
+            deinitializeMediaSession()
+
+            coroutineScope.cancel()
+            textToSpeech?.shutdown()
+            eventChannels.values.forEach { it.close() }
+            eventChannels.clear()
+            speakingJobs.values.forEach { it.cancel() }
+            speakingJobs.clear()
+
+            MediaForegroundService.pluginInstance = null
+
+            Log.d(TAG, "Plugin destroyed successfully")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error during plugin destruction", e)
+        }
     }
 }

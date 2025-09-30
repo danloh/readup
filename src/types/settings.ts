@@ -28,6 +28,7 @@ export interface SystemSettings {
   alwaysOnTop: boolean;
   autoCheckUpdates: boolean;
   screenWakeLock: boolean;
+  alwaysInForeground: boolean;
   alwaysShowStatusBar: boolean;
   openBookInNewWindow: boolean;
   openLastBooks: boolean;

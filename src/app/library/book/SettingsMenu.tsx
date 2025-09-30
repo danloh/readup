@@ -5,6 +5,7 @@ import { PiUserCircle, PiUserCircleCheck } from 'react-icons/pi';
 import { MdCheck } from 'react-icons/md';
 import { GrSystem } from "react-icons/gr";
 import { BiMoon, BiSun } from 'react-icons/bi';
+import { invoke, PermissionState } from '@tauri-apps/api/core';
 
 import { setAboutDialogVisible } from '@/components/AboutWindow';
 import UserAvatar from '@/components/UserAvatar';
@@ -28,6 +29,10 @@ interface SettingsMenuProps {
   setIsDropdownOpen?: (isOpen: boolean) => void;
 }
 
+interface Permissions {
+  postNotification: PermissionState;
+}
+
 const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
   const _ = useTranslation();
   const router = useRouter();
@@ -44,6 +49,7 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
     settings.autoImportBooksOnOpen,
   );
   const [isTelemetryEnabled, setIsTelemetryEnabled] = useState(settings.telemetryEnabled);
+  const [alwaysInForeground, setAlwaysInForeground] = useState(settings.alwaysInForeground);
   const iconSize = useResponsiveSize(16);
 
   const showAboutReadup = () => {
@@ -150,6 +156,25 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
     setIsDropdownOpen?.(false);
   };
 
+  const toggleAlwaysInForeground = async () => {
+    const requestAlwaysInForeground = !settings.alwaysInForeground;
+
+    if (requestAlwaysInForeground) {
+      let permission = await invoke<Permissions>('plugin:native-tts|checkPermissions');
+      if (permission.postNotification !== 'granted') {
+        permission = await invoke<Permissions>('plugin:native-tts|requestPermissions', {
+          permissions: ['postNotification'],
+        });
+      }
+      if (permission.postNotification !== 'granted') return;
+    }
+
+    settings.alwaysInForeground = requestAlwaysInForeground;
+    setSettings(settings);
+    saveSettings(envConfig, settings);
+    setAlwaysInForeground(settings.alwaysInForeground);
+  };
+
   const avatarUrl = user?.user_metadata?.['picture'] || user?.user_metadata?.['avatar_url'];
   const userFullName = user?.user_metadata?.['full_name'];
   const userDisplayName = userFullName ? userFullName.split(' ')[0] : null;
@@ -241,6 +266,13 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
           label={_('Always Show Status Bar')}
           Icon={isAlwaysShowStatusBar ? MdCheck : undefined}
           onClick={toggleAlwaysShowStatusBar}
+        />
+      )}
+      {appService?.isAndroidApp && (
+        <MenuItem
+          label={_(_('Background Read Aloud'))}
+          Icon={alwaysInForeground ? MdCheck : undefined}
+          onClick={toggleAlwaysInForeground}
         />
       )}
       <MenuItem
