@@ -654,7 +654,7 @@ export const TRANSLATED_LANGS = {
 
 export const TRANSLATOR_LANGS: Record<string, string> = {
   ...TRANSLATED_LANGS,
-  no: 'Norsk',
+  nb: 'Bokmål',
   sv: 'Svenska',
   fi: 'Suomi',
   da: 'Dansk',
