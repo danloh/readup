@@ -222,7 +222,7 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
         onBlur={handleBlur}
         {...handlers}
       >
-        <div className='flex-grow'>
+        <div className='flex h-full flex-col justify-end'>
           {'format' in item ? (
             <BookItem
               mode={mode}

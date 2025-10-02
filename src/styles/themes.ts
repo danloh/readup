@@ -1,6 +1,6 @@
 import tinycolor from 'tinycolor2';
 import { stubTranslation as _ } from '../utils/misc';
-import { getContrastOklch, hexToOklch } from './color';
+import { getContrastHex, getContrastOklch, hexToOklch } from './color';
 
 export type BaseColor = {
   bg: string;
@@ -79,6 +79,22 @@ export const themes = [
     },
   },
   {
+    name: 'gray',
+    label: _('Gray'),
+    colors: {
+      light: generateLightPalette({ fg: '#222222', bg: '#e0e0e0', primary: '#4488cc' }),
+      dark: generateDarkPalette({ fg: '#c6c6c6', bg: '#444444', primary: '#88ccee' }),
+    },
+  },
+  {
+    name: 'sepia',
+    label: _('Sepia'),
+    colors: {
+      light: generateLightPalette({ fg: '#5b4636', bg: '#f1e8d0', primary: '#008b8b' }),
+      dark: generateDarkPalette({ fg: '#ffd595', bg: '#342e25', primary: '#48d1cc' }),
+    },
+  },
+  {
     name: 'grass',
     label: _('Grass'),
     colors: {
@@ -87,11 +103,35 @@ export const themes = [
     },
   },
   {
-    name: 'gray',
-    label: _('Gray'),
+    name: 'cherry',
+    label: _('Cherry'),
     colors: {
-      light: generateLightPalette({ fg: '#222222', bg: '#e0e0e0', primary: '#4488cc' }),
-      dark: generateDarkPalette({ fg: '#c6c6c6', bg: '#444444', primary: '#88ccee' }),
+      light: generateLightPalette({ fg: '#4e1609', bg: '#f0d1d5', primary: '#de3838' }),
+      dark: generateDarkPalette({ fg: '#e5c4c8', bg: '#462f32', primary: '#ff646e' }),
+    },
+  },
+  {
+    name: 'sky',
+    label: _('Sky'),
+    colors: {
+      light: generateLightPalette({ fg: '#262d48', bg: '#cedef5', primary: '#2d53e5' }),
+      dark: generateDarkPalette({ fg: '#babee1', bg: '#282e47', primary: '#ff646e' }),
+    },
+  },
+  {
+    name: 'solarized',
+    label: _('Solarized'),
+    colors: {
+      light: generateLightPalette({ fg: '#586e75', bg: '#fdf6e3', primary: '#268bd2' }),
+      dark: generateDarkPalette({ fg: '#93a1a1', bg: '#002b36', primary: '#268bd2' }),
+    },
+  },
+  {
+    name: 'gruvbox',
+    label: _('Gruvbox'),
+    colors: {
+      light: generateLightPalette({ fg: '#3c3836', bg: '#fbf1c7', primary: '#076678' }),
+      dark: generateDarkPalette({ fg: '#ebdbb2', bg: '#282828', primary: '#83a598' }),
     },
   },
   {
@@ -103,61 +143,111 @@ export const themes = [
     },
   },
   {
-    name: 'sky',
-    label: _('Sky'),
+    name: 'contrast',
+    label: _('Contrast'),
     colors: {
-      light: generateLightPalette({ fg: '#262d48', bg: '#cedef5', primary: '#2d53e5' }),
-      dark: generateDarkPalette({ fg: '#babee1', bg: '#282e47', primary: '#ff646e' }),
+      light: generateLightPalette({ fg: '#000000', bg: '#ffffff', primary: '#4488cc' }),
+      dark: generateDarkPalette({ fg: '#ffffff', bg: '#000000', primary: '#88ccee' }),
+    },
+  },
+  {
+    name: 'sunset',
+    label: _('Sunset'),
+    colors: {
+      light: generateLightPalette({ fg: '#423126', bg: '#fff7f0', primary: '#fe6b64' }),
+      dark: generateDarkPalette({ fg: '#f6e1d7', bg: '#3c2b25', primary: '#ff9c94' }),
     },
   },
 ] as Theme[];
 
-const generateCustomThemeVariables = (palette: Palette): string => {
-  return `
+const generateCustomThemeVariables = (palette: Palette, fallbackIncluded = false): string => {
+  const colors = `
     --b1: ${hexToOklch(palette['base-100'])};
     --b2: ${hexToOklch(palette['base-200'])};
     --b3: ${hexToOklch(palette['base-300'])};
     --bc: ${hexToOklch(palette['base-content'])};
-
+    
     --p: ${hexToOklch(palette.primary)};
     --pc: ${getContrastOklch(palette.primary)};
-
+    
     --s: ${hexToOklch(palette.secondary)};
     --sc: ${getContrastOklch(palette.secondary)};
-
+    
     --a: ${hexToOklch(palette.accent)};
     --ac: ${getContrastOklch(palette.accent)};
-
+    
     --n: ${hexToOklch(palette.neutral)};
     --nc: ${hexToOklch(palette['neutral-content'])};
-
-    --in: 69.37% 0.047 231;
-    --inc: 100% 0 0;
-    --su: 78.15% 0.12 160;
-    --suc: 100% 0 0;
-    --wa: 90.69% 0.123 84;
-    --wac: 0% 0 0;
-    --er: 70.9% 0.184 22;
-    --erc: 100% 0 0;
+    
+    --in: 69.37% 0.047 231deg;
+    --inc: 100% 0 0deg;
+    --su: 78.15% 0.12 160deg;
+    --suc: 100% 0 0deg;
+    --wa: 90.69% 0.123 84deg;
+    --wac: 0% 0 0deg;
+    --er: 70.9% 0.184 22deg;
+    --erc: 100% 0 0deg;
   `;
+
+  const fallbackColors = `
+    --fallback-b1: ${palette['base-100']};
+    --fallback-b2: ${palette['base-200']};
+    --fallback-b3: ${palette['base-300']};
+    --fallback-bc: ${palette['base-content']};
+
+    --fallback-p: ${palette.primary};
+    --fallback-pc: ${getContrastHex(palette.primary)};
+
+    --fallback-s: ${palette.secondary};
+    --fallback-sc: ${getContrastHex(palette.secondary)};
+
+    --fallback-a: ${palette.accent};
+    --fallback-ac: ${getContrastHex(palette.accent)};
+
+    --fallback-n: ${palette.neutral};
+    --fallback-nc: ${palette['neutral-content']};
+
+    --fallback-in: #ff0000;
+    --fallback-inc: #ffffff;
+    --fallback-su: #00ff00;
+    --fallback-suc: #000000;
+    --fallback-wa: #ffff00;
+    --fallback-wac: #000000;
+    --fallback-er: #ff8000;
+    --fallback-erc: #000000;
+  `;
+
+  return colors + (fallbackIncluded ? fallbackColors : '');
 };
 
-export const applyCustomTheme = (customTheme: CustomTheme) => {
-  const lightPalette = generateLightPalette(customTheme.colors.light);
-  const darkPalette = generateDarkPalette(customTheme.colors.dark);
+export const applyCustomTheme = (
+  customTheme?: CustomTheme,
+  themeName?: string,
+  fallbackIncluded = false,
+) => {
+  if (!customTheme && !themeName) return;
 
-  const lightThemeName = `${customTheme.name}-light`;
-  const darkThemeName = `${customTheme.name}-dark`;
+  const lightThemeName = customTheme ? `${customTheme.name}-light` : `${themeName}-light`;
+  const darkThemeName = customTheme ? `${customTheme.name}-dark` : `${themeName}-dark`;
+
+  console.log('themeName', themeName);
+  const lightPalette = customTheme
+    ? generateLightPalette(customTheme.colors.light)
+    : (themes.find((t) => t.name === themeName) || themes[0]!).colors.light;
+
+  const darkPalette = customTheme
+    ? generateDarkPalette(customTheme.colors.dark)
+    : (themes.find((t) => t.name === themeName) || themes[0]!).colors.dark;
 
   const css = `
     [data-theme="${lightThemeName}"] {
-      ${generateCustomThemeVariables(lightPalette)}
+      ${generateCustomThemeVariables(lightPalette, fallbackIncluded)}
     }
-
+    
     [data-theme="${darkThemeName}"] {
-      ${generateCustomThemeVariables(darkPalette)}
+      ${generateCustomThemeVariables(darkPalette, fallbackIncluded)}
     }
-
+    
     :root {
       --${lightThemeName}: 1;
       --${darkThemeName}: 1;
@@ -165,7 +255,7 @@ export const applyCustomTheme = (customTheme: CustomTheme) => {
   `;
 
   const styleElement = document.createElement('style');
-  styleElement.id = `theme-${lightThemeName}-styles`;
+  styleElement.id = `theme-${customTheme ? customTheme.name : themeName}-styles`;
   styleElement.textContent = css;
 
   const existingStyle = document.getElementById(styleElement.id);

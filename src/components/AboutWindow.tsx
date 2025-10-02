@@ -3,7 +3,7 @@ import Image from 'next/image';
 import { useEnv } from '@/context/EnvContext';
 import { useTranslation } from '@/hooks/useTranslation';
 import { checkForAppUpdates, checkAppReleaseNotes } from '@/helpers/updater';
-import { parseWebViewVersion } from '@/utils/ua';
+import { parseWebViewInfo } from '@/utils/ua';
 import { getAppVersion } from '@/utils/version';
 import Dialog from './Dialog';
 
@@ -27,7 +27,7 @@ export const AboutWindow = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    setBrowserInfo(parseWebViewVersion(appService));
+    setBrowserInfo(parseWebViewInfo(appService));
 
     const handleCustomEvent = (event: CustomEvent) => {
       setIsOpen(event.detail.visible);
