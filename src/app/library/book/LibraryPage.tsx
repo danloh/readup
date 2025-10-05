@@ -33,6 +33,7 @@ import { useOpenWithBooks } from '@/hooks/useOpenWithBooks';
 import useShortcuts from '@/hooks/useShortcuts';
 import { lockScreenOrientation } from '@/utils/bridge';
 import {
+  tauriHandleClose,
   tauriHandleSetAlwaysOnTop,
   tauriHandleToggleFullScreen,
   tauriQuitApp,
@@ -66,6 +67,7 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
   const { selectFiles } = useFileSelector(appService, _);
   const { safeAreaInsets: insets } = useThemeStore();
   const { settings, setSettings, saveSettings } = useSettingsStore();
+  const { setFontLayoutSettingsDialogOpen } = useSettingsStore();
   const [loading, setLoading] = useState(false);
   const isInitiating = useRef(false);
   const [libraryLoaded, setLibraryLoaded] = useState(false);
@@ -90,10 +92,21 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
         await tauriHandleToggleFullScreen();
       }
     },
+    onCloseWindow: async () => {
+      if (isTauriAppPlatform()) {
+        await tauriHandleClose();
+      }
+    },
     onQuitApp: async () => {
       if (isTauriAppPlatform()) {
         await tauriQuitApp();
       }
+    },
+    onOpenFontLayoutSettings: () => {
+      setFontLayoutSettingsDialogOpen(true);
+    },
+    onOpenBooks: () => {
+      handleImportBooks();
     },
   });
 
