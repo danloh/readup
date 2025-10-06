@@ -5,6 +5,7 @@ import { IconContext } from 'react-icons';
 import { AuthProvider } from '@/context/AuthContext';
 import { useEnv } from '@/context/EnvContext';
 import { CSPostHogProvider } from '@/context/PHContext';
+import { SyncProvider } from '@/context/SyncContext';
 import { useDefaultIconSize } from '@/hooks/useResponsiveSize';
 import { useSafeAreaInsets } from '@/hooks/useSafeAreaInsets';
 import { initSystemThemeListener, useThemeStore } from '@/store/themeStore';
@@ -29,7 +30,7 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
     <CSPostHogProvider>
       <AuthProvider>
         <IconContext.Provider value={{ size: `${iconSize}px` }}>
-          {children}
+          <SyncProvider>{children}</SyncProvider>
         </IconContext.Provider>
       </AuthProvider>
     </CSPostHogProvider>

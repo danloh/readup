@@ -30,6 +30,7 @@ import { transformContent } from '../transformers/transformService';
 import { useMouseEvent, useTouchEvent } from '../hooks/useIframeEvents';
 import { usePagination } from '../hooks/usePagination';
 import { useFoliateEvents } from '../hooks/useFoliateEvents';
+import { useProgressSync } from '../hooks/useProgressSync';
 import { useProgressAutoSave } from '../hooks/useProgressAutoSave';
 import { useTextTranslation } from '../hooks/useTextTranslation';
 import {
@@ -77,6 +78,7 @@ const FoliateViewer: React.FC<{
   }, [toastMessage]);
 
   useUICSS(bookKey);
+  useProgressSync(bookKey);
   useProgressAutoSave(bookKey);
   useTextTranslation(bookKey, viewRef.current);
 
