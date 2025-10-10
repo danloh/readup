@@ -265,7 +265,8 @@ const SideBar: React.FC<{
         )}
         <div
           className={clsx(
-            'drag-bar bg-base-100 absolute right-0 top-0 -m-2 h-full w-0.5 cursor-col-resize p-1',
+            'drag-bar absolute right-0 top-0 -m-2 h-full w-0.5 cursor-col-resize p-1',
+            isSideBarPinned ? 'bg-base-100' : 'bg-transparent',
             isMobile && 'hidden',
           )}
           onMouseDown={handleHorizontalDragStart}

@@ -216,7 +216,10 @@ const Notebook: React.FC = ({}) => {
           }
         `}</style>
         <div
-          className='drag-bar bg-base-100 absolute left-0 top-0 -m-2 h-full w-0.5 cursor-col-resize p-2'
+          className={clsx(
+            'drag-bar absolute -left-2 top-0 h-full w-0.5 cursor-col-resize p-2',
+            isNotebookPinned ? 'bg-base-100' : 'bg-transparent',
+          )}
           onMouseDown={handleDragStart}
           onTouchStart={handleDragStart}
         />

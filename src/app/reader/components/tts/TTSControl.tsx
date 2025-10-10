@@ -313,6 +313,15 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey, iconRef }) => {
         await ttsController.start();
       }
     }
+
+    if (mediaSessionRef.current) {
+      const mediaSession = mediaSessionRef.current;
+      if (mediaSession instanceof TauriMediaSession) {
+        await mediaSession.updatePlaybackState({ playing: !isPlaying });
+      } else {
+        mediaSession.playbackState = isPlaying ? 'paused' : 'playing';
+      }
+    }
   }, [isPlaying, isPaused]);
 
   const handleBackward = useCallback(async (byMark = false) => {
