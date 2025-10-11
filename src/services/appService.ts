@@ -233,13 +233,13 @@ export abstract class BaseAppService implements AppService {
           fileobj = file;
           filename = file.name;
         }
-        if (filename.endsWith('.txt')) {
+        if (/\.txt$/i.test(filename)) {
           const txt2epub = new TxtToEpubConverter();
           ({ file: fileobj } = await txt2epub.convert({ file: fileobj }));
         }
         ({ book: loadedBook, format } = await new DocumentLoader(fileobj).open());
         const metadataTitle = formatTitle(loadedBook.metadata.title);
-        if (!metadataTitle || !metadataTitle.trim()) {
+        if (!metadataTitle || !metadataTitle.trim() || metadataTitle === filename) {
           loadedBook.metadata.title = getBaseFilename(filename);
         }
       } catch (error) {
@@ -289,7 +289,7 @@ export abstract class BaseAppService implements AppService {
         !transient &&
         (!(await this.fs.exists(getLocalBookFilename(book), 'Books')) || overwrite)
       ) {
-        if (filename.endsWith('.txt')) {
+        if (/\.txt$/i.test(filename)) {
           await this.fs.writeFile(getLocalBookFilename(book), 'Books', fileobj);
         } else if (typeof file === 'string' && isContentURI(file)) {
           await this.fs.copyFile(file, getLocalBookFilename(book), 'Books');

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import clsx from 'clsx';
 import { RiArrowLeftSLine, RiArrowRightSLine, RiChatVoiceFill } from 'react-icons/ri';
 import { RiArrowGoBackLine, RiArrowGoForwardLine, RiSpeakAiLine } from 'react-icons/ri';
@@ -49,6 +49,7 @@ const FooterBar: React.FC<FooterBarProps> = ({
   const sliderHeight = useResponsiveSize(28);
   const tocIconSize = useResponsiveSize(22);
 
+  const config = getConfig(bookKey);
   const view = getView(bookKey);
   const progress = getProgress(bookKey);
   const viewSettings = getViewSettings(bookKey);
@@ -99,29 +100,41 @@ const FooterBar: React.FC<FooterBarProps> = ({
     eventDispatcher.dispatch('tts-popup');
   };
 
-  const handleSetActionTab = (tab: string) => {
-    setActionTab(actionTab === tab ? '' : tab);
-    if (tab === 'tts') {
-      setHoveredBookKey('');
-      handleSpeakText();
-    } else if (tab === 'toc') {
-      setHoveredBookKey('');
-      setSideBarVisible(true);
-      const config = getConfig(bookKey);
-      if (config && config.viewSettings) {
-        config.viewSettings.sideBarTab = 'toc';
-        setConfig(bookKey, config);
+  const handleSetActionTab = useCallback(
+    (tab: string) => {
+      setActionTab((prevTab) => (prevTab === tab ? '' : tab));
+
+      if (tab === 'tts') {
+        if (viewState?.ttsEnabled) {
+          setHoveredBookKey('');
+        }
+        handleSpeakText();
+      } else if (tab === 'toc') {
+        setHoveredBookKey('');
+        if (config?.viewSettings) {
+          config.viewSettings.sideBarTab = 'toc';
+          setConfig(bookKey, config);
+        }
+        setSideBarVisible(true);
+      } else if (tab === 'note') {
+        setHoveredBookKey('');
+        setSideBarVisible(true);
+        if (config?.viewSettings) {
+          config.viewSettings.sideBarTab = 'annotations';
+          setConfig(bookKey, config);
+        }
       }
-    } else if (tab === 'note') {
-      setHoveredBookKey('');
-      setSideBarVisible(true);
-      const config = getConfig(bookKey);
-      if (config && config.viewSettings) {
-        config.viewSettings.sideBarTab = 'annotations';
-        setConfig(bookKey, config);
-      }
-    }
-  };
+    },
+    [
+      config,
+      bookKey,
+      viewState?.ttsEnabled,
+      setConfig,
+      setSideBarVisible,
+      setHoveredBookKey,
+      handleSpeakText,
+    ],
+  );
 
   useEffect(() => {
     if (hoveredBookKey !== bookKey && actionTab !== 'progress') {
