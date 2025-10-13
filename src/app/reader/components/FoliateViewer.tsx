@@ -266,7 +266,7 @@ const FoliateViewer: React.FC<{
       book.transformTarget?.addEventListener('load', (event: Event) => {
         const { detail } = event as CustomEvent;
         if (detail.isScript) {
-          detail.allowScript = viewSettings.allowScript ?? false;
+          detail.allow = viewSettings.allowScript ?? false;
         }
       });
       const viewWidth = appService?.isMobile ? screen.width : window.innerWidth;
