@@ -66,12 +66,12 @@ const SectionInfo: React.FC<SectionInfoProps> = ({
               }
             : {
                 top: `${topInset}px`,
-                insetInlineStart: `calc(${horizontalGap / 2}% + ${contentInsets.left}px)`,
-                width: `calc(100% - ${contentInsets.left + contentInsets.right}px)`,
+                paddingInlineStart: `calc(${horizontalGap / 2}% + ${contentInsets.left}px)`,
+                width: '100%',
               }
         }
       >
-        <h2
+        <span
           className={clsx(
             'text-center',
             isVertical ? '' : 'line-clamp-1',
@@ -79,7 +79,7 @@ const SectionInfo: React.FC<SectionInfoProps> = ({
           )}
         >
           {`${bookTitle ? `${bookTitle} § ` : ''}${section || ''}`}
-        </h2>
+        </span>
       </div>
     </>
   );

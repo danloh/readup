@@ -2,7 +2,7 @@ import { Overlayer } from 'foliate-js/overlayer.js';
 import { FoliateView } from '@/types/view';
 import { AppService } from '@/types/system';
 import { parseSSMLMarks } from '@/utils/ssml';
-import { createRejecttFilter } from '@/utils/node';
+import { createRejectFilter } from '@/utils/node';
 import { TTSGranularity, TTSHighlightOptions, TTSMark, TTSVoice } from './types';
 import { WebSpeechClient } from './WebSpeechClient';
 import { NativeTTSClient } from './NativeTTSClient';
@@ -85,13 +85,6 @@ export class TTSController extends EventTarget {
       const { style, color } = options;
       overlayer?.remove(HIGHLIGHT_KEY);
       overlayer?.add(HIGHLIGHT_KEY, range, Overlayer[style], { color });
-      const rect = range.getBoundingClientRect();
-      const { start, size, viewSize, sideProp } = this.view.renderer;
-      const position = rect[sideProp === 'height' ? 'y' : 'x'] + 88;
-      const offset = this.view.book.dir === 'rtl' ? viewSize - position : position;
-      if (!this.view.renderer.scrolled || offset < start || offset > start + size) {
-        this.view.renderer.scrollToAnchor(range);
-      }
     };
   }
 
@@ -109,7 +102,7 @@ export class TTSController extends EventTarget {
     const highlightOptions: TTSHighlightOptions = { style: 'highlight', color: 'green' };
     await this.view.initTTS(
       granularity,
-      createRejecttFilter({
+      createRejectFilter({
         tags: ['rt', 'sup'],
         contents: [{ tag: 'a', content: /^\d+$/ }],
       }),
