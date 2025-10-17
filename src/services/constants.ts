@@ -123,8 +123,8 @@ export const DEFAULT_BOOK_LAYOUT: BookLayout = {
 
 export const DEFAULT_BOOK_STYLE: BookStyle = {
   zoomLevel: 100,
-  paragraphMargin: 1,
-  lineHeight: 1.6,
+  paragraphMargin: 0.6,
+  lineHeight: 1.4,
   wordSpacing: 0,
   letterSpacing: 0,
   textIndent: 0,
@@ -203,6 +203,7 @@ export const SERIF_FONTS = [
   'Bitter',
   'Literata',
   'Merriweather',
+  'Roboto Slab',
   'Vollkorn',
   'Georgia',
   'Times New Roman',

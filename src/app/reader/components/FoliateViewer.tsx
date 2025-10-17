@@ -12,6 +12,7 @@ import {
   applyFixedlayoutStyles,
   applyImageStyle,
   applyTranslationStyle,
+  keepTextAlignment,
   getStyles,
   transformStylesheet,
 } from '@/styles/style';
@@ -149,6 +150,7 @@ const FoliateViewer: React.FC<{
       }
 
       applyImageStyle(detail.doc);
+      keepTextAlignment(detail.doc);
 
       // Inline scripts in tauri platforms are not executed by default
       if (viewSettings.allowScript && isTauriAppPlatform()) {
