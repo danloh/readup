@@ -60,6 +60,14 @@ export const DEFAULT_SYSTEM_SETTINGS: Partial<SystemSettings> = {
   lastSyncedAtNotes: 0,
 };
 
+export const HIGHLIGHT_COLOR_HEX: Record<HighlightColor, string> = {
+  red: '#f87171', // red-400
+  yellow: '#facc15', // yellow-400
+  green: '#4ade80', // green-400
+  blue: '#60a5fa', // blue-400
+  violet: '#a78bfa', // violet-400
+};
+
 export const DEFAULT_READSETTINGS: ReadSettings = {
   sideBarWidth: '15%',
   isSideBarPinned: true,
@@ -76,6 +84,7 @@ export const DEFAULT_READSETTINGS: ReadSettings = {
     underline: 'green',
     squiggly: 'blue',
   },
+  customHighlightColors: HIGHLIGHT_COLOR_HEX,
 };
 
 export const DEFAULT_MOBILE_READSETTINGS: Partial<ReadSettings> = {
@@ -566,14 +575,6 @@ export const DEFAULT_DAILY_TRANSLATION_QUOTA = 10 * 1024;
 export const DOUBLE_CLICK_INTERVAL_THRESHOLD_MS = 250;
 export const DISABLE_DOUBLE_CLICK_ON_MOBILE = true;
 export const LONG_HOLD_THRESHOLD = 500;
-
-export const HIGHLIGHT_COLOR_HEX: Record<HighlightColor, string> = {
-  red: '#f87171', // red-400
-  yellow: '#facc15', // yellow-400
-  green: '#4ade80', // green-400
-  blue: '#60a5fa', // blue-400
-  violet: '#a78bfa', // violet-400
-};
 
 export const CUSTOM_THEME_TEMPLATES = [
   {
