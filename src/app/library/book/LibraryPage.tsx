@@ -371,9 +371,12 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
     setLoading(true);
     const failedFiles = [];
     const errorMap: [string, string][] = [
-      ['No chapters detected.', _('No chapters detected.')],
-      ['Failed to parse EPUB.', _('Failed to parse the EPUB file.')],
-      ['Unsupported format.', _('This book format is not supported.')],
+      ['No chapters detected', _('No chapters detected')],
+      ['Failed to parse EPUB', _('Failed to parse the EPUB file')],
+      ['Unsupported format', _('This book format is not supported')],
+      ['Failed to open file', _('Failed to open the book file')],
+      ['Invalid or empty book file', _('The book file is empty')],
+      ['Unsupported or corrupted book file', _('The book file is corrupted')],
     ];
     const { library } = useLibraryStore.getState();
     for (const selectedFile of files) {
@@ -393,7 +396,7 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
         failedFiles.push(baseFilename);
         const errorMessage =
           error instanceof Error
-            ? errorMap.find(([substring]) => error.message.includes(substring))?.[1] || ''
+            ? errorMap.find(([str]) => error.message.includes(str))?.[1] || error.message
             : '';
         eventDispatcher.dispatch('toast', {
           message:
