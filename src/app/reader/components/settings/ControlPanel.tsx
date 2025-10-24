@@ -27,6 +27,7 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
   const [scrollingOverlap, setScrollingOverlap] = useState(viewSettings.scrollingOverlap!);
   const [volumeKeysToFlip, setVolumeKeysToFlip] = useState(viewSettings.volumeKeysToFlip!);
   const [isDisableClick, setIsDisableClick] = useState(viewSettings.disableClick!);
+  const [fullscreenClickArea, setFullscreenClickArea] = useState(viewSettings.fullscreenClickArea);
   const [isDisableDoubleClick, setIsDisableDoubleClick] = useState(
     viewSettings.disableDoubleClick!,
   );
@@ -100,6 +101,11 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
   }, [isDisableDoubleClick]);
 
   useEffect(() => {
+    saveViewSettings(envConfig, bookKey, 'fullscreenClickArea', fullscreenClickArea, false, false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fullscreenClickArea]);
+
+  useEffect(() => {
     saveViewSettings(envConfig, bookKey, 'swapClickArea', swapClickArea, false, false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [swapClickArea]);
@@ -124,7 +130,9 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
   return (
     <div className='my-4 w-full space-y-6'>
       <div className='flex items-center justify-between'>
-        <b className=''>{_('Clicks for Page Flip')}</b>
+        <b className=''>
+          {appService?.isMobileApp ? _('Tap to Paginate') : _('Click to Paginate')}
+        </b>
         <input
           type='checkbox'
           className='toggle toggle-success h-5'
@@ -133,7 +141,9 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
         />
       </div>
       <div className='flex items-center justify-between'>
-        <b className=''>{_('Disable Double Click')}</b>
+        <b className=''>
+          {appService?.isMobileApp ? _('Disable Double Tap') : _('Disable Double Click')}
+        </b>
         <input
           type='checkbox'
           className='toggle toggle-success h-5'
@@ -151,12 +161,26 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
         />
       </div>
       <div className='flex items-center justify-between'>
-        <b className=''>{_('Swap Clicks Area')}</b>
+        <b className=''>
+          {appService?.isMobileApp ? _('Tap Both Sides') : _('Click Both Sides')}
+        </b>
+        <input
+          type='checkbox'
+          className='toggle toggle-success h-5'
+          checked={fullscreenClickArea}
+          disabled={isDisableClick}
+          onChange={() => setFullscreenClickArea(!fullscreenClickArea)}
+        />
+      </div>
+      <div className='flex items-center justify-between'>
+        <b className=''>
+          {appService?.isMobileApp ? _('Swap Tap Sides') : _('Swap Click Sides')}
+        </b>
         <input
           type='checkbox'
           className='toggle toggle-success h-5'
           checked={swapClickArea}
-          disabled={isDisableClick}
+          disabled={isDisableClick || fullscreenClickArea}
           onChange={() => setSwapClickArea(!swapClickArea)}
         />
       </div>
