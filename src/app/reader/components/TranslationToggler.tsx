@@ -45,7 +45,7 @@ const TranslationToggler = ({ bookKey }: { bookKey: string }) => {
       icon={
         <BsTranslate className={translationEnabled ? 'text-blue-500' : 'text-base-content'} />
       }
-      disabled={!translationAvailable}
+      disabled={!translationAvailable && !translationEnabled}
       onClick={() => setTranslationEnabled(!translationEnabled)}
       tooltip={
         translationAvailable

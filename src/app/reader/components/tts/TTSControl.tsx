@@ -12,6 +12,7 @@ import { parseSSMLLang } from '@/utils/ssml';
 import { throttle } from '@/utils/throttle';
 import { fetchImageAsBase64 } from '@/utils/image';
 import { invokeUseBackgroundAudio } from '@/utils/bridge';
+import { getLocale } from '@/utils/misc';
 import { CFI } from '@/libs/document';
 import { getMediaSession, TauriMediaSession } from '@/libs/mediaSession';
 import Popup from '@/components/Popup';
@@ -32,6 +33,7 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey, iconRef }) => {
   const { getBookData } = useBookDataStore();
   const { getView, getProgress, getViewSettings } = useReaderStore();
   const { setViewSettings, setTTSEnabled } = useReaderStore();
+  const viewSettings = getViewSettings(bookKey);
   const { settings } = useSettingsStore();
   const [ttsLang, setTtsLang] = useState<string>('en');
   const [isPlaying, setIsPlaying] = useState(false);
@@ -233,6 +235,27 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey, iconRef }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ttsController, bookKey]);
 
+  const getTTSTargetLang = useCallback((): string | null => {
+    const ttsReadAloudText = viewSettings?.ttsReadAloudText;
+    if (viewSettings?.translationEnabled && ttsReadAloudText === 'translated') {
+      return viewSettings?.translateTargetLang || getLocale();
+    } else if (viewSettings?.translationEnabled && ttsReadAloudText === 'source') {
+      const bookData = getBookData(bookKey);
+      return bookData?.book?.primaryLanguage || '';
+    }
+    return null;
+  }, [
+    bookKey,
+    getBookData,
+    viewSettings?.translationEnabled,
+    viewSettings?.ttsReadAloudText,
+    viewSettings?.translateTargetLang,
+  ]);
+
+  useEffect(() => {
+    ttsControllerRef.current?.setTargetLang(getTTSTargetLang() || '');
+  }, [getTTSTargetLang]);
+
   const handleTTSSpeak = async (event: CustomEvent) => {
     const { bookKey: ttsBookKey, range } = event.detail;
     if (bookKey !== ttsBookKey) return;
@@ -297,6 +320,7 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey, iconRef }) => {
         ttsController.setLang(lang);
         ttsController.setRate(viewSettings.ttsRate);
         ttsController.speak(ssml);
+        ttsController.setTargetLang(getTTSTargetLang() || '');
         ttsControllerRef.current = ttsController;
         setTtsController(ttsController);
       }
