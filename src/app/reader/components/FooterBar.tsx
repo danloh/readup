@@ -157,7 +157,7 @@ const FooterBar: React.FC<FooterBarProps> = ({
     <>
       <div
         className={clsx(
-          'absolute bottom-0 left-0 z-10 hidden w-full sm:flex sm:h-[52px]',
+          'absolute bottom-0 left-0 z-10 flex h-[52px] w-full',
           // show scroll bar when vertical and scrolled in desktop
           viewSettings?.vertical && viewSettings?.scrolled && 'sm:!bottom-3 sm:!h-7',
         )}

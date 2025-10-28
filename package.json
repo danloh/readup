@@ -66,6 +66,7 @@
     "clsx": "^2.1.1",
     "cors": "^2.8.5",
     "dayjs": "^1.11.13",
+    "dompurify": "^3.3.0",
     "foliate-js": "workspace:*",
     "mdsmirror": "workspace:*",
     "codemirror": "6.0.2",
