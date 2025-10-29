@@ -19,11 +19,10 @@ import { useBookDataStore } from '@/store/bookDataStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { isCJKEnv } from '@/utils/misc';
 import { getStyles } from '@/styles/style';
-import { saveAndReload } from '@/utils/reload';
 import { getMaxInlineSize } from '@/utils/config';
 import { lockScreenOrientation } from '@/utils/bridge';
 import { getBookDirFromWritingMode, getBookLangCode } from '@/utils/book';
-import { MIGHT_BE_RTL_LANGS } from '@/services/constants';
+import { MIGHT_BE_RTL_LANGS, RELOAD_BEFORE_SAVED_TIMEOUT_MS } from '@/services/constants';
 import { useResetViewSettings } from '../../hooks/useResetSettings';
 import { saveViewSettings } from '../../utils/viewSettingsHelper';
 import { SettingsPanelPanelProp } from './SettingsDialog';
@@ -32,7 +31,8 @@ import NumberInput from './NumberInput';
 const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset }) => {
   const _ = useTranslation();
   const { envConfig, appService } = useEnv();
-  const { getView, getViewSettings, getGridInsets, setViewSettings } = useReaderStore();
+  const { getView, getViewSettings, getGridInsets } = useReaderStore();
+  const { setViewSettings, recreateViewer } = useReaderStore();
   const { getBookData } = useBookDataStore();
   const view = getView(bookKey);
   const bookData = getBookData(bookKey)!;
@@ -284,7 +284,7 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
       (['horizontal-rl', 'vertical-rl'].includes(writingMode) ||
         ['horizontal-rl', 'vertical-rl'].includes(prevWritingMode))
     ) {
-      saveAndReload();
+      setTimeout(() => recreateViewer(envConfig, bookKey), RELOAD_BEFORE_SAVED_TIMEOUT_MS);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [writingMode]);

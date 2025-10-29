@@ -6,7 +6,7 @@ import { useDeviceControlStore } from '@/store/deviceStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useBookDataStore } from '@/store/bookDataStore';
 import { getStyles } from '@/styles/style';
-import { saveAndReload } from '@/utils/reload';
+import { RELOAD_BEFORE_SAVED_TIMEOUT_MS } from '@/services/constants';
 import { getMaxInlineSize } from '@/utils/config';
 import { useResetViewSettings } from '../../hooks/useResetSettings';
 import { saveViewSettings } from '../../utils/viewSettingsHelper';
@@ -16,7 +16,7 @@ import NumberInput from './NumberInput';
 const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset }) => {
   const _ = useTranslation();
   const { envConfig, appService } = useEnv();
-  const { getView, getViewSettings } = useReaderStore();
+  const { getView, getViewSettings, recreateViewer } = useReaderStore();
   const { getBookData } = useBookDataStore();
   const { acquireVolumeKeyInterception, releaseVolumeKeyInterception } = useDeviceControlStore();
   const bookData = getBookData(bookKey)!;
@@ -123,7 +123,9 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
   useEffect(() => {
     if (viewSettings.allowScript === allowScript) return;
     saveViewSettings(envConfig, bookKey, 'allowScript', allowScript, true, false);
-    saveAndReload();
+    setTimeout(() => {
+      recreateViewer(envConfig, bookKey);
+    }, RELOAD_BEFORE_SAVED_TIMEOUT_MS);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allowScript]);
 

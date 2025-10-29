@@ -4,8 +4,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useReaderStore } from '@/store/readerStore';
 import { useThemeStore } from '@/store/themeStore';
 import { useTranslation } from '@/hooks/useTranslation';
-import { saveAndReload } from '@/utils/reload';
-import { TRANSLATOR_LANGS } from '@/services/constants';
+import { RELOAD_BEFORE_SAVED_TIMEOUT_MS,TRANSLATOR_LANGS } from '@/services/constants';
 import Select, { getLangOptions, LangSelect } from '@/components/Select';
 import { getTranslators } from '@/services/translators';
 import { saveViewSettings } from '../../utils/viewSettingsHelper';
@@ -16,7 +15,7 @@ const LangPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
   const _ = useTranslation();
   const { token } = useAuth();
   const { envConfig } = useEnv();
-  const { getViewSettings, setViewSettings } = useReaderStore();
+  const { getViewSettings, setViewSettings, recreateViewer } = useReaderStore();
   const { setUILang } = useThemeStore();
   const viewSettings = getViewSettings(bookKey)!;
 
@@ -109,10 +108,8 @@ const LangPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
   useEffect(() => {
     if (translationEnabled === viewSettings.translationEnabled) return;
     saveViewSettings(envConfig, bookKey, 'translationEnabled', translationEnabled, true, false);
-    viewSettings.translationEnabled = translationEnabled;
-    setViewSettings(bookKey, { ...viewSettings });
-    if (!showTranslateSource && !translationEnabled) {
-      saveAndReload();
+    if (!showTranslateSource && translationEnabled) {
+      setTimeout(() => recreateViewer(envConfig, bookKey), RELOAD_BEFORE_SAVED_TIMEOUT_MS);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [translationEnabled]);
@@ -120,7 +117,7 @@ const LangPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
   useEffect(() => {
     if (showTranslateSource === viewSettings.showTranslateSource) return;
     saveViewSettings(envConfig, bookKey, 'showTranslateSource', showTranslateSource, false, false);
-    saveAndReload();
+    setTimeout(() => recreateViewer(envConfig, bookKey), RELOAD_BEFORE_SAVED_TIMEOUT_MS);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showTranslateSource]);
 
