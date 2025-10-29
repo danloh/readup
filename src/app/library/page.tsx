@@ -19,7 +19,6 @@ import { useThemeStore } from '@/store/themeStore';
 import LibraryPage from './book/LibraryPage';
 import SettingsMenu from './book/SettingsMenu';
 import CatalogPage from './feed/CatalogPage';
-import NotePage from '../note/page';
 import StreakPage from './streak/StreakPage';
 import { MigrateDataWindow } from './book/MigrateDataWindow';
 
@@ -47,8 +46,6 @@ const Library = () => {
       </div>
       {activeTab === 'library' ? (
         <LibraryPage />
-      ) : activeTab === 'note' ? (
-        <NotePage />
       ) : activeTab === 'streak' ? (
         <StreakPage />
       ) : activeTab === 'catalog' && appService?.appPlatform !== 'web' ? (
@@ -89,9 +86,7 @@ const NavTab: React.FC<{
   
   const windowButtonVisible = appService?.hasWindowBar && !isTrafficLightVisible;
 
-  const tabs = appService?.appPlatform === 'web' 
-    ? ['library', 'note', 'streak']
-    : ['library', 'catalog', 'note', 'streak'];
+  const tabs = ['library', 'catalog', 'streak'];
 
   if (!insets) return null;
 
