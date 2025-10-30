@@ -5,6 +5,7 @@ import { FiSearch } from 'react-icons/fi';
 import { MdOutlineMenu, MdOutlinePushPin, MdPushPin, MdArrowBackIosNew } from 'react-icons/md';
 import { useEnv } from '@/context/EnvContext';
 import { useResponsiveSize } from '@/hooks/useResponsiveSize';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useTrafficLightStore } from '@/store/trafficLightStore';
 import Dropdown from '@/components/Dropdown';
 import BookMenu from './BookMenu';
@@ -17,6 +18,7 @@ const SidebarHeader: React.FC<{
   onTogglePin: () => void;
   onToggleSearchBar: () => void;
 }> = ({ isPinned, isSearchBarVisible, onGoToLibrary, onClose, onTogglePin, onToggleSearchBar }) => {
+  const _ = useTranslation();
   const { appService } = useEnv();
   const {
     isTrafficLightVisible,
@@ -51,12 +53,14 @@ const SidebarHeader: React.FC<{
     >
       <div className='flex items-center gap-x-8'>
         <button
+          title={_('Close')}
           onClick={onClose}
           className={'btn btn-ghost btn-circle flex h-6 min-h-6 w-6 hover:bg-transparent sm:hidden'}
         >
           <MdArrowBackIosNew size={iconSize22} />
         </button>
         <button
+          title={_('Go to Library')}
           className='btn btn-ghost hidden h-8 min-h-8 w-8 p-0 sm:flex'
           onClick={onGoToLibrary}
         >
@@ -64,7 +68,8 @@ const SidebarHeader: React.FC<{
         </button>
       </div>
       <div className='flex min-w-24 max-w-32 items-center justify-between sm:size-[70%]'>
-        <button
+        <button 
+          title={isSearchBarVisible ? _('Hide Search Bar') : _('Show Search Bar')}
           onClick={onToggleSearchBar}
           className={clsx(
             'btn btn-ghost left-0 h-8 min-h-8 w-8 p-0',
@@ -74,6 +79,7 @@ const SidebarHeader: React.FC<{
           <FiSearch size={iconSize18} className='text-base-content' />
         </button>
         <Dropdown
+          label={_('Book Menu')}
           className={clsx(
             window.innerWidth < 640 && 'dropdown-end',
             'dropdown-bottom flex justify-center',
@@ -85,7 +91,8 @@ const SidebarHeader: React.FC<{
           <BookMenu />
         </Dropdown>
         <div className='right-0 hidden h-8 w-8 items-center justify-center sm:flex'>
-          <button
+          <button 
+            title={isPinned ? _('Unpin Sidebar') : _('Pin Sidebar')}
             onClick={onTogglePin}
             className={clsx(
               'sidebar-pin-btn btn btn-ghost btn-circle hidden h-6 min-h-6 w-6 sm:flex',

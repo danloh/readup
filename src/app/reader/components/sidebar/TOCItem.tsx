@@ -74,7 +74,6 @@ const TOCItemView = React.memo<{
         height: itemSize ? `${itemSize}px` : 'auto',
         paddingInlineStart: `${(depth + 1) * 12}px`,
       }}
-      data-tip={item.label}
     >
       {item.subitems && (
         <div

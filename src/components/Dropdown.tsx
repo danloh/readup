@@ -2,6 +2,7 @@ import clsx from 'clsx';
 import React, { useState, isValidElement, ReactElement } from 'react';
 
 interface DropdownProps {
+  label?: string;
   className?: string;
   menuClassName?: string;
   buttonClassName?: string;
@@ -11,6 +12,7 @@ interface DropdownProps {
 }
 
 const Dropdown: React.FC<DropdownProps> = ({
+  label = '',
   className,
   menuClassName,
   buttonClassName,
@@ -42,6 +44,7 @@ const Dropdown: React.FC<DropdownProps> = ({
       )}
       <div className={clsx('dropdown', className)}>
         <div
+          title={label}
           tabIndex={-1}
           onClick={toggleDropdown}
           className={clsx('dropdown-toggle', buttonClassName, isOpen && 'bg-base-300/50')}
