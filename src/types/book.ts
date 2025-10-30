@@ -162,6 +162,7 @@ export interface TTSConfig {
   ttsRate: number;
   ttsVoice: string;
   ttsLocation: string;
+  ttsHighlightColor: string;
 }
 
 export interface TranslatorConfig {

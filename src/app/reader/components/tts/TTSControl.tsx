@@ -5,7 +5,7 @@ import { useReaderStore } from '@/store/readerStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useResponsiveSize } from '@/hooks/useResponsiveSize';
-import { TTSController, SILENCE_DATA, TTSMark } from '@/services/tts';
+import { TTSController, SILENCE_DATA, TTSMark, TTSHighlightOptions } from '@/services/tts';
 import { getPopupPosition, Position } from '@/utils/sel';
 import { eventDispatcher } from '@/utils/event';
 import { parseSSMLLang } from '@/utils/ssml';
@@ -310,7 +310,7 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey, iconRef }) => {
 
       const ttsController = new TTSController(appService, view);
       await ttsController.init();
-      await ttsController.initViewTTS();
+      await ttsController.initViewTTS({ style: 'highlight', color: viewSettings.ttsHighlightColor });
       const ssml = view.tts?.from(ttsFromRange);
       if (ssml) {
         const lang = parseSSMLLang(ssml, primaryLang) || 'en';
@@ -582,6 +582,16 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey, iconRef }) => {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    const ttsHighlightOptions: TTSHighlightOptions = { 
+      style: 'highlight', 
+      color: viewSettings?.ttsHighlightColor || 'green',
+    };
+    if (ttsControllerRef.current && ttsHighlightOptions) {
+      ttsControllerRef.current.initViewTTS(ttsHighlightOptions);
+    }
+  }, [viewSettings?.ttsHighlightColor]);
 
   return (
     <>

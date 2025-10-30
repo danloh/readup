@@ -46,6 +46,7 @@ const ColorPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset
   const [customThemes, setCustomThemes] = useState<Theme[]>([]);
   const [showCustomThemeEditor, setShowCustomThemeEditor] = useState(false);
   const [overrideColor, setOverrideColor] = useState(viewSettings.overrideColor!);
+  const [ttsHighlightColor, setTtsHighlightColor] = useState(viewSettings.ttsHighlightColor);
   const [codeHighlighting, setcodeHighlighting] = useState(viewSettings.codeHighlighting!);
   const [codeLanguage, setCodeLanguage] = useState(viewSettings.codeLanguage!);
   const [customHighlightColors, setCustomHighlightColors] = useState(
@@ -222,6 +223,26 @@ const ColorPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset
               }))}
               disabled={!codeHighlighting}
             />
+          </div>
+
+          <div className='flex items-center justify-between'>
+            <b className='mb-2 font-medium'>{_('TTS Highlight Color')}</b>
+            <div className='flex items-center gap-2'>
+              <div
+                className='border-base-300 h-8 w-8 rounded-full border-2 shadow-sm'
+                style={{ backgroundColor: ttsHighlightColor }}
+              />
+              <ColorInput
+                label=''
+                value={ttsHighlightColor}
+                compact={true}
+                pickerPosition='right'
+                onChange={(value: string) => {
+                  setTtsHighlightColor(value);
+                  saveViewSettings(envConfig, bookKey, 'ttsHighlightColor', value);
+                }}
+              />
+            </div>
           </div>
 
           <div>

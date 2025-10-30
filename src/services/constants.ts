@@ -187,6 +187,7 @@ export const DEFAULT_TTS_CONFIG: TTSConfig = {
   ttsRate: 1.0,
   ttsVoice: '',
   ttsLocation: '',
+  ttsHighlightColor: 'green',
 };
 
 export const DEFAULT_TRANSLATOR_CONFIG: TranslatorConfig = {
