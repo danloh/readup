@@ -118,6 +118,7 @@ const getColorStyles = (
       --theme-bg-color: ${bg};
       --theme-fg-color: ${fg};
       --theme-primary-color: ${primary};
+      --override-color: ${overrideColor};
       color-scheme: ${isDarkMode ? 'dark' : 'light'};
     }
     html, body {
@@ -340,6 +341,11 @@ const getLayoutStyles = (
 
   .calibre {
     color: unset;
+  }
+
+  /* some epubs set insane inline-block for p */
+  p {
+    display: block;
   }
 
   /* inline images without dimension */
@@ -605,7 +611,10 @@ export const applyImageStyle = (document: Document) => {
     const hasTextSiblings = Array.from(parent.childNodes).some(
       (node) => node.nodeType === Node.TEXT_NODE && node.textContent?.trim(),
     );
-    if (hasTextSiblings) {
+    const isInline = Array.from(parent.childNodes).every(
+      (node) => node.nodeType !== Node.ELEMENT_NODE || (node as Element).tagName !== 'BR',
+    );
+    if (hasTextSiblings && isInline) {
       img.classList.add('has-text-siblings');
     }
   });
