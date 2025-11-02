@@ -168,8 +168,8 @@ const getColorStyles = (
       ${isDarkMode ? `background-color: color-mix(in srgb, ${bg} 90%, #000);` : ''}
     }
     blockquote, table * {
-      ${isDarkMode ? `background: color-mix(in srgb, ${bg} 80%, #000);` : ''}
-      ${isDarkMode ? `background-color: color-mix(in srgb, ${bg} 80%, #000);` : ''}
+      ${isDarkMode && overrideColor ? `background: color-mix(in srgb, ${bg} 80%, #000);` : ''}
+      ${isDarkMode && overrideColor ? `background-color: color-mix(in srgb, ${bg} 80%, #000);` : ''}
     }
     /* override inline hardcoded text color */
     font[color="#000000"], font[color="#000"], font[color="black"],
@@ -198,6 +198,10 @@ const getColorStyles = (
 
 const getLayoutStyles = (
   overrideLayout: boolean,
+  marginTop: number,
+  marginRight: number,
+  marginBottom: number,
+  marginLeft: number,
   paragraphMargin: number,
   lineSpacing: number,
   wordSpacing: number,
@@ -213,6 +217,10 @@ const getLayoutStyles = (
   @namespace epub "http://www.idpf.org/2007/ops";
   html {
     --default-text-align: ${justify ? 'justify' : 'start'};
+    --margin-top: ${marginTop}px;
+    --margin-right: ${marginRight}px;
+    --margin-bottom: ${marginBottom}px;
+    --margin-left: ${marginLeft}px;
     hanging-punctuation: allow-end last;
     orphans: 2;
     widows: 2;
@@ -289,7 +297,7 @@ const getLayoutStyles = (
   p[align="center"], dd[align="center"],
   p.aligned-center, blockquote.aligned-center,
   dd.aligned-center, div.aligned-center,
-  li p, ol p, ul p {
+  li p, ol p, ul p, td p {
     text-indent: initial !important;
   }
   p {
@@ -498,6 +506,10 @@ export const getStyles = (viewSettings: ViewSettings, themeCode?: ThemeCode) => 
   }
   const layoutStyles = getLayoutStyles(
     viewSettings.overrideLayout!,
+    viewSettings.marginTopPx,
+    viewSettings.marginRightPx,
+    viewSettings.marginBottomPx,
+    viewSettings.marginLeftPx,
     viewSettings.paragraphMargin!,
     viewSettings.lineHeight!,
     viewSettings.wordSpacing!,
@@ -568,6 +580,23 @@ export const transformStylesheet = (vw: number, vh: number, css: string) => {
     }
     return match;
   });
+
+  // Process duokan-bleed
+  css = css.replace(ruleRegex, (_, selector, block) => {
+    const directions = ['top', 'bottom', 'left', 'right'];
+    for (const dir of directions) {
+      const bleedRegex = new RegExp(`duokan-bleed\\s*:\\s*[^;]*${dir}[^;]*;`);
+      const marginRegex = new RegExp(`margin-${dir}\\s*:`);
+      if (bleedRegex.test(block) && !marginRegex.test(block)) {
+        block = block.replace(
+          /}$/,
+          ` margin-${dir}: calc(-1 * var(--margin-${dir})) !important; }`,
+        );
+      }
+    }
+    return selector + block;
+  });
+
   // replace absolute font sizes with rem units
   // replace vw and vh as they cause problems with layout
   // replace hardcoded colors
