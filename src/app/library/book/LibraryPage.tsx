@@ -434,7 +434,7 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
     <div
       ref={pageRef}
       className={clsx(
-        'library-page bg-base-200 text-base-content flex select-none flex-col overflow-hidden',
+        'library-page bg-base-200 text-base-content flex flex-col h-[100vh] overflow-hidden',
       )}
     >
       <div className='top-0 z-40 w-full'>

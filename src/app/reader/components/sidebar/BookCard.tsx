@@ -13,7 +13,7 @@ const BookCard = ({ book }: { book: Book }) => {
   const { coverImageUrl, title, author } = book;
   const _ = useTranslation();
   const { isDarkMode } = useThemeStore();
-  const iconSize18 = useResponsiveSize(18);
+  const iconSize24 = useResponsiveSize(24);
 
   const showBookDetails = () => {
     eventDispatcher.dispatchSync('show-book-details', book);
@@ -42,7 +42,7 @@ const BookCard = ({ book }: { book: Book }) => {
         className='btn btn-ghost hover:bg-base-300 h-6 min-h-6 w-6 rounded-full p-0 transition-colors'
         aria-label={_('More Info')}
       >
-        <MdInfoOutline size={iconSize18} className='fill-base-content' onClick={showBookDetails} />
+        <MdInfoOutline size={iconSize24} className='fill-base-content' onClick={showBookDetails} />
       </button>
     </div>
   );

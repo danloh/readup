@@ -19,12 +19,7 @@ const BookItem: React.FC<BookItemProps> = ({
   mode,
   showBookDetailsModal,
 }) => {
-  const iconSize15 = useResponsiveSize(15);
-
-  const stopEvent = (e: React.MouseEvent | React.TouchEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-  };
+  const iconSize18 = useResponsiveSize(18);
 
   return (
     <div
@@ -67,24 +62,20 @@ const BookItem: React.FC<BookItemProps> = ({
         </div>
         <div
           className={clsx('flex items-center', book.progress ? 'justify-between' : 'justify-end')}
-          style={{
-            height: `${iconSize15}px`,
-            minHeight: `${iconSize15}px`,
-          }}
+          style={{ height: `${iconSize18}px`,minHeight: `${iconSize18}px` }}
         >
           {book.progress && <ReadingProgress book={book} />}
           <div className='flex items-center justify-center gap-x-2'>
             <button
               className='show-detail-button -m-2 p-2'
-              onPointerDown={(e) => stopEvent(e)}
-              onPointerUp={(e) => stopEvent(e)}
-              onPointerMove={(e) => stopEvent(e)}
-              onPointerCancel={(e) => stopEvent(e)}
-              onPointerLeave={(e) => stopEvent(e)}
-              onClick={() => showBookDetailsModal(book)}
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopPropagation();
+                showBookDetailsModal(book);
+              }}
             >
               <div className='pt-[1px]'>
-                <LiaInfoCircleSolid size={iconSize15} />
+                <LiaInfoCircleSolid size={iconSize18} />
               </div>
             </button>
           </div>

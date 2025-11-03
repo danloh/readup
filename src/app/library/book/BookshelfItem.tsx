@@ -215,9 +215,7 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
           keyboardFocused && 'focus-inset-2',
           pressing ? (mode === 'grid' ? 'scale-95' : 'scale-98') : 'scale-100',
         )}
-        style={{
-          transition: 'transform 0.2s',
-        }}
+        style={{ transition: 'transform 0.2s', }}
         onFocus={handleFocus}
         onBlur={handleBlur}
         {...handlers}
