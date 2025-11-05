@@ -1,0 +1,96 @@
+{
+  "lexicon": 1,
+  "id": "cc.readup.rfile",
+  "description": "A record for uploading and tracking binary blob files with metadata.",
+  "defs": {
+    "checksum": {
+      "type": "object",
+      "description": "Checksum for integrity verification.",
+      "properties": {
+        "algo": {
+          "type": "string",
+          "description": "Hash algorithm name.",
+          "maxLength": 32,
+          "knownValues": ["sha256", "sha512", "blake3"]
+        },
+        "hash": {
+          "type": "string",
+          "description": "Hex or base64 encoded digest produced by the algorithm.",
+          "maxLength": 128
+        }
+      },
+      "required": ["algo", "hash"]
+    },
+
+    "file": {
+      "type": "object",
+      "description": "File metadata describing the uploaded blob.",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "User-visible filename.",
+          "maxLength": 512
+        },
+        "size": {
+          "type": "integer",
+          "description": "File size in bytes.",
+          "minimum": 0,
+          "maximum": 1000000000
+        },
+        "mimeType": {
+          "type": "string",
+          "description": "MIME type, e.g. 'video/mp4'.",
+          "maxLength": 255
+        },
+        "modifiedAt": {
+          "type": "string",
+          "format": "datetime",
+          "description": "Client-side last-modified timestamp."
+        }
+      },
+      "required": ["name", "size"]
+    },
+
+    "main": {
+      "type": "record",
+      "description": "A record representing an uploaded file blob with metadata.",
+      "key": "any",
+      "record": {
+        "type": "object",
+        "properties": {
+          "blob": {
+            "type": "blob",
+            "accept": ["*/*"],
+            "maxSize": 1000000000,
+            "description": "The uploaded blob reference. Note: Individual PDS instances may enforce lower size limits."
+          },
+
+          "createdAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Timestamp when this record was created."
+          },
+
+          "attribution": {
+            "type": "string",
+            "format": "at-identifier",
+            "description": "Handle or DID of the account to attribute this upload to."
+          },
+
+          "file": {
+            "type": "ref",
+            "ref": "#file",
+            "description": "Metadata about the file."
+          },
+
+          "checksum": {
+            "type": "ref",
+            "ref": "#checksum",
+            "description": "Optional cryptographic checksum for integrity verification."
+          }
+        },
+        "required": ["blob", "createdAt", "file"]
+      }
+    }
+  }
+}

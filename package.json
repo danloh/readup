@@ -67,6 +67,9 @@
     "dayjs": "^1.11.18",
     "dompurify": "^3.3.0",
     "foliate-js": "workspace:*",
+
+    "@atproto/api": "0.17.7",
+    "mime-types": "3.0.1",
     
     "franc-min": "^6.2.0",
     "highlight.js": "^11.11.1",
@@ -102,6 +105,7 @@
     "@testing-library/dom": "^10.4.0",
     "@testing-library/react": "^16.3.0",
     "@types/cors": "^2.8.17",
+    "@types/mime-types": "3.0.1",
     "@types/node": "^22.15.31",
     "@types/react": "19.1.13",
     "@types/react-color": "^3.0.13",
