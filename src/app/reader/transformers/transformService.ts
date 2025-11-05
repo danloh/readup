@@ -5,6 +5,7 @@ import { languageTransformer } from './language';
 import { punctuationTransformer } from './punctuation';
 import { whitespaceTransformer } from './whitespace';
 import { sanitizerTransformer } from './sanitizer';
+import { styleTransformer } from './style';
 
 export const availableTransformers: Transformer[] = [
   punctuationTransformer,
@@ -12,6 +13,7 @@ export const availableTransformers: Transformer[] = [
   languageTransformer,
   whitespaceTransformer,
   sanitizerTransformer,
+  styleTransformer,
   // Add more transformers here
 ];
 
