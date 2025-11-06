@@ -98,7 +98,7 @@
   "TTS not supported in this device": "القراءة الصوتية غير مدعومة في هذا الجهاز",
   "TTS not supported for this document": "تكنولوجيا تحويل النص إلى كلام غير مدعومة لهذا المستند.",
   "Theme Color": "لون السمة",
-  "Highlight Colors": "ألوان التمييز",
+  "Available Highlight Colors": "ألوان التمييز",
   "Theme Mode": "وضع السمة",
   "Translate": "ترجمة",
   "Translated Text": "النص المترجم",

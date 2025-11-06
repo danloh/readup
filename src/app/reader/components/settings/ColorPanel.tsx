@@ -246,7 +246,7 @@ const ColorPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset
           </div>
 
           <div>
-            <h2 className='mb-2 font-medium'>{_('Highlight Colors')}</h2>
+            <h2 className='mb-2 font-medium'>{_('Available Highlight Colors')}</h2>
             <div className='card border-base-200 bg-base-100 overflow-visible border p-4 shadow'>
               <div className='grid grid-cols-3 gap-2 sm:grid-cols-5'>
                 {(['red', 'violet', 'blue', 'green', 'yellow'] as HighlightColor[]).map(
