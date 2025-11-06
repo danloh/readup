@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { RiArrowLeftSLine, RiArrowRightSLine, RiChatVoiceFill } from 'react-icons/ri';
 import { RiArrowGoBackLine, RiArrowGoForwardLine, RiSpeakAiLine } from 'react-icons/ri';
@@ -10,6 +10,7 @@ import { useEnv } from '@/context/EnvContext';
 import { useReaderStore } from '@/store/readerStore';
 import { useSidebarStore } from '@/store/sidebarStore';
 import { useBookDataStore } from '@/store/bookDataStore';
+import { useDeviceControlStore } from '@/store/deviceStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useResponsiveSize } from '@/hooks/useResponsiveSize';
 import { eventDispatcher } from '@/utils/event';
@@ -45,7 +46,9 @@ const FooterBar: React.FC<FooterBarProps> = ({
   const { hoveredBookKey, setHoveredBookKey } = useReaderStore();
   const { getView, getViewState, getProgress, getViewSettings } = useReaderStore();
   const { isSideBarVisible, setSideBarVisible } = useSidebarStore();
-  const [actionTab, setActionTab] = React.useState('progress');
+  const { acquireBackKeyInterception, releaseBackKeyInterception } = useDeviceControlStore();
+
+  const [actionTab, setActionTab] = useState('progress');
   const sliderHeight = useResponsiveSize(28);
   const tocIconSize = useResponsiveSize(22);
 
@@ -142,6 +145,40 @@ const FooterBar: React.FC<FooterBarProps> = ({
     }
   }, [hoveredBookKey, bookKey, actionTab]);
 
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent | CustomEvent) => {
+      if (event instanceof CustomEvent) {
+        if (event.detail.keyName === 'Back') {
+          setHoveredBookKey('');
+          return true;
+        }
+      } else {
+        if (event.key === 'Escape') {
+          setHoveredBookKey('');
+        }
+        event.stopPropagation();
+      }
+      return false;
+    },
+    [setHoveredBookKey],
+  );
+
+  useEffect(() => {
+    if (!appService?.isAndroidApp) return;
+
+    if (hoveredBookKey) {
+      acquireBackKeyInterception();
+      eventDispatcher.onSync('native-key-down', handleKeyDown);
+    }
+    return () => {
+      if (hoveredBookKey) {
+        releaseBackKeyInterception();
+        eventDispatcher.offSync('native-key-down', handleKeyDown);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hoveredBookKey]);
+
   const isVisible = hoveredBookKey === bookKey;
   const ttsEnabled = viewState?.ttsEnabled;
   const progressInfo = bookFormat === 'PDF' ? section : pageinfo;
@@ -161,6 +198,7 @@ const FooterBar: React.FC<FooterBarProps> = ({
           // show scroll bar when vertical and scrolled in desktop
           viewSettings?.vertical && viewSettings?.scrolled && 'sm:!bottom-3 sm:!h-7',
         )}
+        onClick={() => setHoveredBookKey(bookKey)}
         onMouseEnter={() => !appService?.isMobile && setHoveredBookKey(bookKey)}
         onTouchStart={() => !appService?.isMobile && setHoveredBookKey(bookKey)}
       />

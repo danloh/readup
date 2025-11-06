@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Insets } from '@/types/misc';
 import { useEnv } from '@/context/EnvContext';
 import { useThemeStore } from '@/store/themeStore';
@@ -31,7 +31,7 @@ const HintInfo: React.FC<SectionInfoProps> = ({
     appService?.isAndroidApp && systemUIVisible ? statusBarHeight / 2 : 0,
   );
 
-  const [hintMessage, setHintMessage] = React.useState<string | null>(null);
+  const [hintMessage, setHintMessage] = useState<string | null>(null);
   const hintTimeout = useRef(2000);
   const dismissTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -58,6 +58,8 @@ const HintInfo: React.FC<SectionInfoProps> = ({
     };
   }, [hintMessage]);
 
+  if (!hintMessage) return null;
+
   return (
     <>
       <div
@@ -65,9 +67,7 @@ const HintInfo: React.FC<SectionInfoProps> = ({
           'absolute left-0 right-0 top-0 z-10',
           hintMessage ? 'bg-base-100' : 'bg-transparent',
         )}
-        style={{
-          height: `${topInset}px`,
-        }}
+        style={{ height: `${topInset}px` }}
       />
       <div
         className={clsx(
@@ -75,12 +75,8 @@ const HintInfo: React.FC<SectionInfoProps> = ({
           hintMessage ? 'bg-base-100' : 'bg-transparent',
           isVertical ? 'writing-vertical-rl' : 'top-0 h-[44px]',
           isScrolled
-            ? isVertical
-              ? 'h-full'
-              : 'w-full'
-            : isVertical
-              ? 'max-h-[50%]'
-              : 'max-w-[50%]',
+            ? isVertical ? 'h-full' : 'w-full'
+            : isVertical ? 'max-h-[50%]' : 'max-w-[50%]',
         )}
         style={
           isVertical

@@ -60,9 +60,9 @@ const ProgressInfoView: React.FC<PageInfoProps> = ({
     ? formatReadingProgress(section?.current, section?.total, formatTemplate)
     : formatReadingProgress(pageinfo?.current, pageinfo?.total, formatTemplate);
 
-  const timeLeft = timeinfo ? _('{{time}} min', { time: Math.round(timeinfo.section) }) : '';
+  const timeLeft = timeinfo ? _('{{time}}m', { time: Math.round(timeinfo.section) }) : '';
   const { page = 0, pages = 0 } = view?.renderer || {};
-  const pageLeft = pages - 1 > page ? _('{{count}} pages', { count: pages - 1 - page }) : '';
+  const pageLeft = pages - 1 > page ? _('{{count}}p', { count: pages - 1 - page }) : '';
   const remainingInfo = `${timeLeft}${timeLeft && pageLeft ? ' § ' : ''}${pageLeft}`;
 
   return (
@@ -96,8 +96,8 @@ const ProgressInfoView: React.FC<PageInfoProps> = ({
           isVertical ? 'h-full' : 'h-[52px] w-full',
         )}
       >
-        <span className='text-start'>{remainingInfo}</span>
-        <span className='ms-auto text-end'>{progressInfo}</span>
+        <span className='text-start truncate'>{remainingInfo}</span>
+        <span className='ms-auto text-end truncate'>{progressInfo}</span>
       </div>
     </div>
   );
