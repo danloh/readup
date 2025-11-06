@@ -29,7 +29,6 @@ const HighlightOptions: React.FC<HighlightOptionsProps> = ({
   const [selectedStyle, setSelectedStyle] = React.useState<HighlightStyle>(_selectedStyle);
   const [selectedColor, setSelectedColor] = React.useState<HighlightColor>(_selectedColor);
   const size16 = useResponsiveSize(16);
-  const size18 = useResponsiveSize(18);
   const size28 = useResponsiveSize(28);
 
   const handleSelectStyle = (style: HighlightStyle) => {
@@ -68,21 +67,20 @@ const HighlightOptions: React.FC<HighlightOptionsProps> = ({
             <div
               style={{
                 width: size16,
-                height: style === 'squiggly' ? size18 : size16,
+                height: size16,
                 ...(style === 'highlight' &&
                   selectedStyle === 'highlight' && {
                     backgroundColor: customColors[selectedColor],
-                    paddingTop: '2px',
+                    paddingTop: '1px',
                   }),
                 ...(style === 'highlight' &&
                   selectedStyle !== 'highlight' && {
                     backgroundColor: '#d1d5db',
-                    paddingTop: '2px',
+                    paddingTop: '1px',
                   }),
                 ...((style === 'underline' || style === 'squiggly') && {
                   color: '#d1d5db',
                   textDecoration: 'underline',
-                  textDecorationThickness: '2px',
                   textDecorationColor:
                     selectedStyle === style ? customColors[selectedColor] : '#d1d5db',
                   ...(style === 'squiggly' && { textDecorationStyle: 'wavy' }),
@@ -90,7 +88,7 @@ const HighlightOptions: React.FC<HighlightOptionsProps> = ({
               }}
               className='w-4 p-0 text-center leading-none'
             >
-              A
+              T
             </div>
           </button>
         ))}

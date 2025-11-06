@@ -4,7 +4,7 @@ import { lookup } from "mime-types";
 import { AtpAgent } from "@atproto/api";
 import { getBaseFilename } from "@/utils/path";
 import { calculateChecksum, getFileMetadata } from "./utils";
-import type { NetAltqAqfile } from "./types";
+import type { AtFile } from "./types";
 
 /**
  * Options for uploading a file to the PDS
@@ -118,7 +118,7 @@ interface GetOptions {
  * console.log(`Uploaded: ${result.record.uri}`);
  * ```
  */
-async function uploadFile(options: UploadOptions, data: any): Promise<UploadResult> {
+async function uploadFile(options: UploadOptions, data: Uint8Array): Promise<UploadResult> {
   const { serviceUrl, handle, password, filePath } = options;
 
   // Initialize agent
@@ -164,9 +164,9 @@ async function uploadFile(options: UploadOptions, data: any): Promise<UploadResu
 
   // Build the record with proper typing
   // The blob from uploadBlob already has the correct structure
-  const recordData: NetAltqAqfile.Main = {
+  const recordData: AtFile.Main = {
     $type: "cc.readup.rfile",
-    blob: blob as unknown as NetAltqAqfile.Main["blob"],
+    blob: blob as unknown as AtFile.Main["blob"],
     checksum,
     createdAt: new Date().toISOString(),
     file: fileMetadata,
@@ -270,7 +270,7 @@ async function listRecords(options: ListOptions): Promise<void> {
   // Print each record
   for (const record of records) {
     const rkey = record.uri.split("/").pop() || "unknown";
-    const value = record.value as NetAltqAqfile.Main;
+    const value = record.value as AtFile.Main;
 
     // Extract relevant info
     const fileName = value.file?.name || "unknown";
@@ -352,7 +352,7 @@ async function deleteRecord(options: DeleteOptions): Promise<void> {
       rkey,
     });
 
-    const record = recordResponse.data.value as NetAltqAqfile.Main;
+    const record = recordResponse.data.value as AtFile.Main;
     const blob = record.blob;
 
     // Delete the record
@@ -428,7 +428,7 @@ async function showRecord(options: ShowOptions): Promise<void> {
       rkey,
     });
 
-    const record = recordResponse.data.value as NetAltqAqfile.Main;
+    const record = recordResponse.data.value as AtFile.Main;
     const uri = recordResponse.data.uri;
     const cid = recordResponse.data.cid;
 
@@ -535,7 +535,7 @@ async function getRecord(options: GetOptions): Promise<void> {
   const collection = "cc.readup.rfile";
 
   // Get the record
-  let record: NetAltqAqfile.Main;
+  let record: AtFile.Main;
   let blobCid: string;
 
   try {
@@ -545,7 +545,7 @@ async function getRecord(options: GetOptions): Promise<void> {
       rkey,
     });
 
-    record = recordResponse.data.value as NetAltqAqfile.Main;
+    record = recordResponse.data.value as AtFile.Main;
 
     // Extract blob CID
     const blob = record.blob;
@@ -598,14 +598,4 @@ async function getRecord(options: GetOptions): Promise<void> {
   const isContentBinary = isBinary(blobData);
   const mimeType = record.file?.mimeType || "application/octet-stream";
   const fileName = record.file?.name || rkey;
-
-  // If outputPath is specified, save to file
-  // if (outputPath) {
-  //   await Deno.writeFile(outputPath, blobData);
-  //   console.error(`✓ Saved to: ${outputPath} (${blobData.length} bytes)`);
-  //   return;
-  // }
-
-  // Output to stdout
-  // await Deno.stdout.write(blobData);
 }

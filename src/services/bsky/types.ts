@@ -120,8 +120,8 @@ export interface Main {
  * This provides the same structure as the generated lexicon types
  * without global augmentation.
  */
-// deno-lint-ignore no-namespace
-export namespace NetAltqAqfile {
+
+export namespace AtFile {
   export type Checksum = {
     $type?: "cc.readup.rfile#checksum";
     algo: "blake3" | "sha256" | "sha512" | string;
