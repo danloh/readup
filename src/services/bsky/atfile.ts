@@ -209,20 +209,6 @@ async function uploadFile(options: UploadOptions, data: Uint8Array): Promise<Upl
  * @param options - List configuration options including authentication and limit
  * @returns A promise that resolves when the list is displayed
  * @throws {Error} If authentication fails or the PDS is unreachable
- *
- * @example
- * ```ts
- * await listRecords({
- *   serviceUrl: "https://bsky.social",
- *   identifier: "alice.bsky.social",
- *   password: "app-password",
- *   limit: 50
- * });
- * // Outputs:
- * // RKEY          SIZE        MIME TYPE                    NAME
- * // ─────────────────────────────────────────────────────────────────
- * // 3m35jjrc5b62d 43B         text/plain                   test.txt
- * ```
  */
 async function listRecords(options: ListOptions): Promise<void> {
   const { serviceUrl, handle, password, limit = 100 } = options;
@@ -255,18 +241,6 @@ async function listRecords(options: ListOptions): Promise<void> {
     return;
   }
 
-  console.log(
-    `Found ${records.length} record${records.length === 1 ? "" : "s"}:\n`,
-  );
-
-  // Table header
-  console.log(
-    "RKEY          SIZE        MIME TYPE                    NAME",
-  );
-  console.log(
-    "─────────────────────────────────────────────────────────────────────────────────────────",
-  );
-
   // Print each record
   for (const record of records) {
     const rkey = record.uri.split("/").pop() || "unknown";
@@ -295,8 +269,6 @@ async function listRecords(options: ListOptions): Promise<void> {
 
     console.log(`${rkeyStr} ${sizeStr} ${mimeStr} ${nameStr}`);
   }
-
-  console.log();
 }
 
 /**

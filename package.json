@@ -68,7 +68,7 @@
     "dompurify": "^3.3.0",
     "foliate-js": "workspace:*",
 
-    "@atproto/api": "0.17.7",
+    "@atproto/api": "0.18.0",
     "mime-types": "3.0.1",
     
     "franc-min": "^6.2.0",
