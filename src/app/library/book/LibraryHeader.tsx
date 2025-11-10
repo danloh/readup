@@ -73,7 +73,7 @@ const LibraryHeader: React.FC<LibraryHeaderProps> = ({onImportBooks}) => {
             </button>
           )}
           <div className='relative flex h-9 w-full items-center sm:h-7'>
-            <span className='absolute left-3 text-gray-500'>
+            <span className='absolute left-3 text-base-content/50'>
               <FaSearch className='h-4 w-4' />
             </span>
             <input
@@ -96,7 +96,7 @@ const LibraryHeader: React.FC<LibraryHeaderProps> = ({onImportBooks}) => {
               )}
             />
           </div>
-          <div className='absolute right-4 flex items-center space-x-2 text-gray-500 sm:space-x-4'>
+          <div className='absolute right-4 flex items-center space-x-2 text-base-content/50'>
             {searchQuery && (
               <button
                 type='button'
@@ -104,7 +104,7 @@ const LibraryHeader: React.FC<LibraryHeaderProps> = ({onImportBooks}) => {
                   setSearchQuery('');
                   debouncedUpdateQueryParam('');
                 }}
-                className='pe-1 text-gray-400 hover:text-gray-600'
+                className='text-base-content/40 hover:text-base-content/60 pe-1'
                 aria-label={_('Clear Search')}
               >
                 <IoMdCloseCircle className='h-4 w-4' />

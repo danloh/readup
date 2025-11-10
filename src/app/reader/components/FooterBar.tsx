@@ -42,7 +42,7 @@ const FooterBar: React.FC<FooterBarProps> = ({
 }) => {
   const _ = useTranslation();
   const { appService } = useEnv();
-  const { getConfig, setConfig } = useBookDataStore();
+  const { getConfig, setConfig, getBookData } = useBookDataStore();
   const { hoveredBookKey, setHoveredBookKey } = useReaderStore();
   const { getView, getViewState, getProgress, getViewSettings } = useReaderStore();
   const { isSideBarVisible, setSideBarVisible } = useSidebarStore();
@@ -53,6 +53,7 @@ const FooterBar: React.FC<FooterBarProps> = ({
   const tocIconSize = useResponsiveSize(22);
 
   const config = getConfig(bookKey);
+  const bookData = getBookData(bookKey);
   const view = getView(bookKey);
   const progress = getProgress(bookKey);
   const viewSettings = getViewSettings(bookKey);
@@ -190,13 +191,16 @@ const FooterBar: React.FC<FooterBarProps> = ({
 
   const iconRef = useRef<HTMLDivElement>(null);
 
+  const needHorizontalScroll =
+    (viewSettings?.vertical && viewSettings?.scrolled) ||
+    (bookData?.isFixedLayout && viewSettings?.zoomLevel && viewSettings.zoomLevel > 100);
+
   return (
     <>
       <div
         className={clsx(
           'absolute bottom-0 left-0 z-10 flex h-[52px] w-full',
-          // show scroll bar when vertical and scrolled in desktop
-          viewSettings?.vertical && viewSettings?.scrolled && 'sm:!bottom-3 sm:!h-7',
+          needHorizontalScroll && 'sm:!bottom-3 sm:!h-7',
         )}
         onClick={() => setHoveredBookKey(bookKey)}
         onMouseEnter={() => !appService?.isMobile && setHoveredBookKey(bookKey)}
