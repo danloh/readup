@@ -45,13 +45,13 @@ export default function AuthPage() {
   return (
     <div style={{ maxWidth: '420px', margin: 'auto', padding: '2rem', paddingTop: '4rem' }}>
       <div className="card mx-auto py-8 px-4 w-full mx-auto max-w-md">
-        <h1 className="title text-center text-2xl mb-4">"Welcome to ATPage"</h1>
+        <h1 className="title text-center text-2xl mb-4">Welcome to Readup</h1>
         <form
           className="flex flex-col gap-4" 
           onSubmit={onSubmit}
         >
           <label className="w-full input flex items-center gap-2">
-            <span className="text-accent">"Service"</span> 
+            <span className="text-accent">Service</span> 
             <input
               type="text"
               name="host"
@@ -63,7 +63,7 @@ export default function AuthPage() {
             />
           </label>
           <label className="w-full input flex items-center gap-2">
-            <span className="text-accent">"Handle@"</span>
+            <span className="text-accent">Handle</span>
             <input
               type="text"
               name="handle"
@@ -75,7 +75,7 @@ export default function AuthPage() {
             />
           </label>
           <label className="w-full input flex items-center gap-2">
-            <span className="text-accent">"Password"</span>
+            <span className="text-accent">Password</span>
             <input
               type="password"
               name="pass"
@@ -91,10 +91,10 @@ export default function AuthPage() {
             href="https://bsky.app/settings/app-passwords" 
             target="_blank"
           >
-            "Go to generate the app password"
+            Go to generate the app password
           </a>
           <button type="submit" className="btn btn-neutral" >
-            "Log In"
+            Log In
           </button>
         </form>
       </div>
