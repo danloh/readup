@@ -139,7 +139,11 @@ export const usePagination = (
               }
             }
           }
-        } else if (msg.data.type === 'iframe-wheel' && !viewSettings.scrolled) {
+        } else if (
+          msg.data.type === 'iframe-wheel' &&
+          !viewSettings.scrolled &&
+          (!bookData.isFixedLayout || viewSettings.zoomLevel <= 100)
+        ) {
           // The wheel event is handled by the iframe itself in scrolled mode.
           const { deltaY } = msg.data;
           if (deltaY > 0) {
@@ -167,11 +171,12 @@ export const usePagination = (
         }
       } else if (
         msg.type === 'touch-swipe' &&
-        bookData.bookDoc?.rendition?.layout === 'pre-paginated' &&
-        viewSettings?.zoomLevel === 100
+        bookData.isFixedLayout &&
+        viewSettings!.zoomLevel <= 100
       ) {
-        const { deltaX, deltaY } = msg.detail;
-        if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 30) {
+        const { deltaX, deltaY, deltaT } = msg.detail;
+        const vx = Math.abs(deltaX / deltaT);
+        if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 30 && vx > 0.2) {
           if (deltaX > 0) {
             viewPagination(viewRef.current, viewSettings, 'left');
           } else {
