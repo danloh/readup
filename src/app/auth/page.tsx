@@ -15,7 +15,6 @@ import { useTrafficLightStore } from '@/store/trafficLightStore';
 import { isTauriAppPlatform } from '@/services/environment';
 import { onOpenUrl } from '@tauri-apps/plugin-deep-link';
 import { start, cancel, onUrl, onInvalidUrl } from '@fabianlars/tauri-plugin-oauth';
-import { handleAuthCallback } from '@/helpers/auth';
 import WindowButtons from '@/components/WindowButtons';
 
 

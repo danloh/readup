@@ -1,64 +1,84 @@
 
-type User = any; // TODO
-
-interface UseAuthCallbackOptions {
-  accessToken?: string | null;
-  refreshToken?: string | null;
-  login: (accessToken: string, user: User) => void;
-  navigate: (path: string) => void;
-  type?: string | null;
-  next?: string;
-  error?: string | null;
-  errorCode?: string | null;
-  errorDescription?: string | null;
+interface AuthToken {
+  did: string;
+  handle: string;
+  accessJwt: string | null;
+  refreshJwt: string | null;
+  email?: string;
 }
 
-export function handleAuthCallback({
-  accessToken,
-  refreshToken,
-  login,
-  navigate,
-  type,
-  next = '/',
-  error,
-}: UseAuthCallbackOptions) {
-  async function finalizeSession() {
-    if (error) {
-      navigate('/auth/error');
-      return;
-    }
+export type User = {
+  host: string;
+	did: string;
+	handle: string;
+  email: string;
+	access: string;
+	refresh: string;
+	service: string;
+};
 
-    if (!accessToken || !refreshToken) {
-      navigate('/library');
-      return;
-    }
-
-    // TODO
-    // const { error: err } = await auth.setSession({
-    //   access_token: accessToken,
-    //   refresh_token: refreshToken,
-    // });
-
-    // if (err) {
-    //   console.error('Error setting session:', err);
-    //   navigate('/auth/error');
-    //   return;
-    // }
-
-    // todo
-    // const {data: { user }} = await auth.getUser();
-    // if (user) {
-    //   login(accessToken, user);
-    //   if (type === 'recovery') {
-    //     navigate('/auth/recovery');
-    //     return;
-    //   }
-    //   navigate(next);
-    // } else {
-    //   console.error('Error fetching user data');
-    //   navigate('/auth/error');
-    // }
+export async function createSession(handle: string, pass: string, host: string) {
+  let url = `https://${host}/xrpc/com.atproto.server.createSession`;
+  const response = await fetch(url, {
+    method: "POST",
+    body: JSON.stringify({ identifier: handle, password: pass }),
+  });
+  if (!response.ok) {
+    throw new Error(`Response status: ${response.status}`);
+    return;
   }
+  const result = await response.json();
+  console.log(result);
+  return result;
+}
 
-  finalizeSession();
+export async function getSession(host: string, accessToken: string) {
+  let url = `https://${host}/xrpc/com.atproto.server.getSession`;
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {"Authorization": `Bearer ${accessToken}`,},
+  });
+
+  if (!response.ok) {
+    throw new Error(`Response status: ${response.status}`);
+    return;
+  }
+  const result = await response.json();
+  console.log(result);
+  return result;
+}
+
+export async function refreshSession() {
+  //
+}
+
+export async function refreshToken(host: string, accessToken: string) {
+  let url = `https://${host}/xrpc/com.atproto.server.refreshSession`;
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {"Authorization": `Bearer ${accessToken}`,},
+  });
+
+  if (!response.ok) {
+    throw new Error(`Response status: ${response.status}`);
+    return;
+  }
+  const result = await response.json();
+  console.log(result);
+  return result;
+}
+
+export async function resolveDid(did: string) {
+  const url = `https://plc.directory/${did}`;
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Response status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    console.log(result);
+  } catch (error: any) {
+    console.error(error.message);
+  }
 }
