@@ -14,13 +14,13 @@ import { eventDispatcher } from '@/utils/event';
 import { LibraryViewModeType } from '@/types/settings';
 import { BOOK_UNGROUPED_ID, BOOK_UNGROUPED_NAME } from '@/services/constants';
 import { FILE_REVEAL_LABELS, FILE_REVEAL_PLATFORMS } from '@/utils/os';
-import { Book, BookGroupType, BooksGroup } from '@/types/book';
+import { Book, BooksGroup } from '@/types/book';
 import BookItem from './BookItem';
 import GroupItem from './GroupItem';
 
 export type BookshelfItem = Book | BooksGroup;
 
-export const generateGridItems = (books: Book[]): (Book | BooksGroup)[] => {
+export const generateBookshelfItems = (books: Book[]): (Book | BooksGroup)[] => {
   const groups: BooksGroup[] = books.reduce((acc: BooksGroup[], book: Book) => {
     if (book.deletedAt) return acc;
     book.groupId = book.groupId || BOOK_UNGROUPED_ID;
@@ -47,28 +47,6 @@ export const generateGridItems = (books: Book[]): (Book | BooksGroup)[] => {
     groups.find((group) => group.name === BOOK_UNGROUPED_NAME)?.books || [];
   const groupedBooks: BooksGroup[] = groups.filter((group) => group.name !== BOOK_UNGROUPED_NAME);
   return [...ungroupedBooks, ...groupedBooks].sort((a, b) => b.updatedAt - a.updatedAt);
-};
-
-export const generateListItems = (books: Book[]): (Book | BooksGroup)[] => {
-  return books.filter((book) => !book.deletedAt).sort((a, b) => b.updatedAt - a.updatedAt);
-};
-
-export const generateGroupsList = (items: Book[]): BookGroupType[] => {
-  return items
-    .sort((a, b) => b.updatedAt - a.updatedAt)
-    .reduce((acc: BookGroupType[], item: Book) => {
-      if (item.deletedAt) return acc;
-      if (
-        item.groupId &&
-        item.groupName &&
-        item.groupId !== BOOK_UNGROUPED_ID &&
-        item.groupName !== BOOK_UNGROUPED_NAME &&
-        !acc.find((group) => group.id === item.groupId)
-      ) {
-        acc.push({ id: item.groupId, name: item.groupName });
-      }
-      return acc;
-    }, []) as BookGroupType[];
 };
 
 interface BookshelfItemProps {
@@ -213,7 +191,7 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
           mode === 'grid' && 'sm:hover:bg-base-300/50 flex h-full flex-col px-0 py-4 sm:px-4',
           mode === 'list' && 'border-base-300 flex flex-col border-b py-2',
           keyboardFocused && 'focus-inset-2',
-          pressing ? (mode === 'grid' ? 'scale-95' : 'scale-98') : 'scale-100',
+          pressing && mode === 'grid' ? 'scale-95' : 'scale-100',
         )}
         style={{ transition: 'transform 0.2s', }}
         onFocus={handleFocus}
@@ -228,7 +206,7 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
               showBookDetailsModal={showBookDetailsModal}
             />
           ) : (
-            <GroupItem group={item} />
+            <GroupItem mode={mode} group={item} />
           )}
         </div>
       </div>

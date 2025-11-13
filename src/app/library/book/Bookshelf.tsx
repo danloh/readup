@@ -1,16 +1,17 @@
 import clsx from 'clsx';
 import * as React from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Book, BooksGroup } from '@/types/book';
 import { LibraryViewModeType } from '@/types/settings';
 import { useEnv } from '@/context/EnvContext';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useLibraryStore } from '@/store/libraryStore';
 import { navigateToLibrary, navigateToReader } from '@/utils/nav';
-import { formatAuthors, formatTitle } from '@/utils/book';
+import { formatTitle } from '@/utils/book';
 import Spinner from '@/components/Spinner';
-import BookshelfItem, { generateGridItems, generateListItems } from './BookshelfItem';
+import BookshelfItem, { generateBookshelfItems } from './BookshelfItem';
+import { createBookFilter, createBookSorter } from './libraryUtils';
 
 interface BookshelfProps {
   libraryBooks: Book[];
@@ -38,8 +39,38 @@ const Bookshelf: React.FC<BookshelfProps> = ({
   const isImportingBook = useRef(false);
 
   const { setCurrentBookshelf, setLibrary } = useLibraryStore();
-  const allBookshelfItems =
-    viewMode === 'grid' ? generateGridItems(libraryBooks) : generateListItems(libraryBooks);
+
+  const bookFilter = useMemo(() => createBookFilter(queryTerm), [queryTerm]);
+  const uiLanguage = localStorage?.getItem('i18nextLng') || '';
+  const bookSorter = useMemo(() => createBookSorter(sortBy, uiLanguage), [sortBy, uiLanguage]);
+
+  const filteredBooks = useMemo(() => {
+    return queryTerm ? libraryBooks.filter((book) => bookFilter(book)) : libraryBooks;
+  }, [libraryBooks, queryTerm, bookFilter]);
+
+  const allBookshelfItems = useMemo(() => {
+    return generateBookshelfItems(filteredBooks);
+  }, [filteredBooks]);
+
+  const sortedBookshelfItems = useMemo(() => {
+    const sortOrderMultiplier = sortOrder === 'asc' ? 1 : -1;
+    const currentBookshelfItems = navBooksGroup ? navBooksGroup.books : allBookshelfItems;
+    return currentBookshelfItems.sort((a, b) => {
+      if (sortBy === 'updated') {
+        return (
+          (new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime()) * sortOrderMultiplier
+        );
+      } else if ('name' in a || 'name' in b) {
+        const aName = 'name' in a ? a.name : formatTitle(a.title);
+        const bName = 'name' in b ? b.name : formatTitle(b.title);
+        return aName.localeCompare(bName, uiLanguage || navigator.language) * sortOrderMultiplier;
+      } else if (!('name' in a || 'name' in b)) {
+        return bookSorter(a, b) * sortOrderMultiplier;
+      } else {
+        return 0;
+      }
+    });
+  }, [sortOrder, sortBy, uiLanguage, navBooksGroup, allBookshelfItems, bookSorter]);
 
   useEffect(() => {
     if (isImportingBook.current) return;
@@ -126,65 +157,6 @@ const Bookshelf: React.FC<BookshelfProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, libraryBooks]);
 
-  const bookFilter = (item: Book, queryTerm: string) => {
-    if (item.deletedAt) return false;
-    const searchTerm = new RegExp(queryTerm, 'i');
-    const title = formatTitle(item.title);
-    const authors = formatAuthors(item.author);
-    return (
-      searchTerm.test(title) ||
-      searchTerm.test(authors) ||
-      searchTerm.test(item.format) ||
-      (item.groupName && searchTerm.test(item.groupName)) ||
-      (item.metadata?.description && searchTerm.test(item.metadata?.description))
-    );
-  };
-  const bookSorter = (a: Book, b: Book) => {
-    const uiLanguage = localStorage?.getItem('i18nextLng') || '';
-    switch (sortBy) {
-      case 'title':
-        const aTitle = formatTitle(a.title);
-        const bTitle = formatTitle(b.title);
-        return aTitle.localeCompare(bTitle, uiLanguage || navigator.language);
-      case 'author':
-        const aAuthors = formatAuthors(a.author, a?.primaryLanguage || 'en', true);
-        const bAuthors = formatAuthors(b.author, b?.primaryLanguage || 'en', true);
-        return aAuthors.localeCompare(bAuthors, uiLanguage || navigator.language);
-      case 'updated':
-        return new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime();
-      case 'created':
-        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-      case 'format':
-        return a.format.localeCompare(b.format, uiLanguage || navigator.language);
-      default:
-        return new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime();
-    }
-  };
-  const sortOrderMultiplier = sortOrder === 'asc' ? 1 : -1;
-  const currentBookshelfItems = navBooksGroup ? navBooksGroup.books : allBookshelfItems;
-  const filteredBookshelfItems = currentBookshelfItems
-    .filter((item) => {
-      if ('name' in item) return item.books.some((book) => bookFilter(book, queryTerm || ''));
-      else if (queryTerm) return bookFilter(item, queryTerm);
-      return true;
-    })
-    .sort((a, b) => {
-      const uiLanguage = localStorage?.getItem('i18nextLng') || '';
-      if (sortBy === 'updated') {
-        return (
-          (new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime()) * sortOrderMultiplier
-        );
-      } else if ('name' in a || 'name' in b) {
-        const aName = 'name' in a ? a.name : formatTitle(a.title);
-        const bName = 'name' in b ? b.name : formatTitle(b.title);
-        return aName.localeCompare(bName, uiLanguage || navigator.language) * sortOrderMultiplier;
-      } else if (!('name' in a || 'name' in b)) {
-        return bookSorter(a, b) * sortOrderMultiplier;
-      } else {
-        return 0;
-      }
-    });
-
   return (
     <div className='bookshelf'>
       <div
@@ -195,7 +167,7 @@ const Bookshelf: React.FC<BookshelfProps> = ({
           viewMode === 'list' && 'flex flex-col',
         )}
       >
-        {filteredBookshelfItems.map((item) => (
+        {sortedBookshelfItems.map((item) => (
           <BookshelfItem
             key={`library-item-${'hash' in item ? item.hash : item.id}`}
             item={item}
