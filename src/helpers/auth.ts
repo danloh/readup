@@ -1,9 +1,9 @@
 
-interface AuthToken {
+export interface AuthToken {
   did: string;
   handle: string;
-  accessJwt: string | null;
-  refreshJwt: string | null;
+  accessJwt: string;
+  refreshJwt: string;
   email?: string;
 }
 
@@ -29,7 +29,7 @@ export async function createSession(handle: string, pass: string, host: string) 
   }
   const result = await response.json();
   console.log(result);
-  return result;
+  return result as AuthToken;
 }
 
 export async function getSession(host: string, accessToken: string) {
@@ -48,15 +48,11 @@ export async function getSession(host: string, accessToken: string) {
   return result;
 }
 
-export async function refreshSession() {
-  //
-}
-
-export async function refreshToken(host: string, accessToken: string) {
+export async function refreshSession(host: string, refreshToken: string) {
   let url = `https://${host}/xrpc/com.atproto.server.refreshSession`;
   const response = await fetch(url, {
-    method: "GET",
-    headers: {"Authorization": `Bearer ${accessToken}`,},
+    method: "POST",
+    headers: {"Authorization": `Bearer ${refreshToken}`},
   });
 
   if (!response.ok) {
@@ -65,10 +61,10 @@ export async function refreshToken(host: string, accessToken: string) {
   }
   const result = await response.json();
   console.log(result);
-  return result;
+  return result as AuthToken;
 }
 
-export async function resolveDid(did: string) {
+export async function resolveDid(did: string): Promise<string> {
   const url = `https://plc.directory/${did}`;
   try {
     const response = await fetch(url);
@@ -78,7 +74,9 @@ export async function resolveDid(did: string) {
 
     const result = await response.json();
     console.log(result);
+    return 'service';  // TODO
   } catch (error: any) {
     console.error(error.message);
+    return '';
   }
 }
