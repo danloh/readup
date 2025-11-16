@@ -4,11 +4,6 @@ import withBundleAnalyzer from '@next/bundle-analyzer';
 const isDev = process.env['NODE_ENV'] === 'development';
 const appPlatform = process.env['NEXT_PUBLIC_APP_PLATFORM'];
 
-if (isDev) {
-  const { initOpenNextCloudflareForDev } = await import('@opennextjs/cloudflare');
-  initOpenNextCloudflareForDev();
-}
-
 const exportOutput = appPlatform !== 'web' && !isDev;
 
 /** @type {import('next').NextConfig} */

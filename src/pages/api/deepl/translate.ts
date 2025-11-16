@@ -1,7 +1,6 @@
 import crypto from 'crypto';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { corsAllMethods, runMiddleware } from '@/utils/cors';
-import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { getDailyTranslationPlanData } from '@/utils/access';
 import { ErrorCodes } from '@/services/translators';
 
@@ -14,7 +13,7 @@ interface KVNamespace {
   delete(key: string): Promise<void>;
 }
 
-interface CloudflareEnv {
+interface CEnv {
   TRANSLATIONS_KV?: KVNamespace;
 }
 
@@ -41,7 +40,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const env = (getCloudflareContext().env || {}) as CloudflareEnv;
+  const env = {} as CEnv; // FIXME
   const hasKVCache = !!env['TRANSLATIONS_KV'];
 
   const { DEEPL_PRO_API, DEEPL_FREE_API } = process.env;
