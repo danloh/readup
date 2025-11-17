@@ -74,7 +74,7 @@ export const DEFAULT_READSETTINGS: ReadSettings = {
   notebookWidth: '25%',
   isNotebookPinned: false,
   autohideCursor: true,
-  translationProvider: 'deepl',
+  translationProvider: 'azure',
   translateTargetLang: 'EN',
 
   customThemes: [],
@@ -192,7 +192,7 @@ export const DEFAULT_TTS_CONFIG: TTSConfig = {
 
 export const DEFAULT_TRANSLATOR_CONFIG: TranslatorConfig = {
   translationEnabled: false,
-  translationProvider: 'deepl',
+  translationProvider: 'azure',
   translateTargetLang: '',
   showTranslateSource: true,
   ttsReadAloudText: 'both',
@@ -572,8 +572,6 @@ export const RELOAD_BEFORE_SAVED_TIMEOUT_MS = 300;
 export const MAX_ZOOM_LEVEL = 500;
 export const MIN_ZOOM_LEVEL = 50;
 export const ZOOM_STEP = 10;
-
-export const DEFAULT_DAILY_TRANSLATION_QUOTA = 10 * 1024;
 
 export const DOUBLE_CLICK_INTERVAL_THRESHOLD_MS = 250;
 export const DISABLE_DOUBLE_CLICK_ON_MOBILE = true;

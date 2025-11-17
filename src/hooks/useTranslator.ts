@@ -1,13 +1,13 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { ErrorCodes, getTranslator, getTranslators, TranslatorName } from '@/services/translators';
+import { getTranslator, getTranslators, TranslatorName } from '@/services/translators';
 import { getFromCache, storeInCache, UseTranslatorOptions } from '@/services/translators';
 import { polish, preprocess } from '@/services/translators';
 import { eventDispatcher } from '@/utils/event';
 import { useTranslation } from './useTranslation';
 
 export function useTranslator({
-  provider = 'deepl',
+  provider = 'azure',
   sourceLang = 'AUTO',
   targetLang = 'EN',
   enablePolishing = true,
@@ -93,7 +93,7 @@ export function useTranslator({
           textsNeedingTranslation,
           sourceLanguage,
           targetLanguage,
-          token,
+          null,
           useCache,
         );
 
@@ -137,15 +137,13 @@ export function useTranslator({
         setLoading(false);
         return enablePolishing ? polish(results, targetLanguage) : results;
       } catch (err) {
-        if (err instanceof Error && err.message.includes(ErrorCodes.DAILY_QUOTA_EXCEEDED)) {
+        if (err instanceof Error) {
           eventDispatcher.dispatch('toast', {
             timeout: 5000,
-            message: _(
-              'Daily translation quota reached. Upgrade your plan to continue using AI translations.',
-            ),
+            message: _('Failed to translate.'),
             type: 'error',
           });
-          setSelectedProvider('azure');
+          setSelectedProvider('google');
         }
         setLoading(false);
         throw err instanceof Error ? err : new Error(String(err));
