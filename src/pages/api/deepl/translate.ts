@@ -1,21 +1,9 @@
-import crypto from 'crypto';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { corsAllMethods, runMiddleware } from '@/utils/cors';
-import { getDailyTranslationPlanData } from '@/utils/access';
 import { ErrorCodes } from '@/services/translators';
 
 const DEFAULT_DEEPL_FREE_API = 'https://api-free.deepl.com/v2/translate';
 const DEFAULT_DEEPL_PRO_API = 'https://api.deepl.com/v2/translate';
-
-interface KVNamespace {
-  get(key: string): Promise<string | null>;
-  put(key: string, value: string, options?: { expirationTtl?: number }): Promise<void>;
-  delete(key: string): Promise<void>;
-}
-
-interface CEnv {
-  TRANSLATIONS_KV?: KVNamespace;
-}
 
 const LANG_V2_V1_MAP: Record<string, string> = {
   'ZH-HANS': 'ZH',
@@ -27,21 +15,12 @@ const getDeepLAPIKey = (keys: string | undefined) => {
   return keyArray.length ? keyArray[Math.floor(Math.random() * keyArray.length)]! : '';
 };
 
-const generateCacheKey = (text: string, sourceLang: string, targetLang: string): string => {
-  const inputString = `${sourceLang}:${targetLang}:${text}`;
-  const hash = crypto.createHash('sha1').update(inputString).digest('hex');
-  return `tr:${hash}`;
-};
-
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   await runMiddleware(req, res, corsAllMethods);
 
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
-
-  const env = {} as CEnv; // FIXME
-  const hasKVCache = !!env['TRANSLATIONS_KV'];
 
   const { DEEPL_PRO_API, DEEPL_FREE_API } = process.env;
   const deepFreeApiUrl = DEEPL_FREE_API || DEFAULT_DEEPL_FREE_API;
@@ -58,8 +37,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     text,
     source_lang: sourceLang = 'AUTO',
     target_lang: targetLang = 'EN',
-    use_cache: useCache = false,
-  }: { text: string[]; source_lang: string; target_lang: string; use_cache: boolean } = req.body;
+  }: { text: string[]; source_lang: string; target_lang: string } = req.body;
 
   try {
     const translations = await Promise.all(
@@ -67,34 +45,15 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         if (!singleText?.trim()) {
           return { text: '' };
         }
-        if (useCache && hasKVCache) {
-          try {
-            const cacheKey = generateCacheKey(singleText, sourceLang, targetLang);
-            const cachedTranslation = await env['TRANSLATIONS_KV']!.get(cacheKey);
-
-            if (cachedTranslation) {
-              return {
-                text: cachedTranslation,
-                detected_source_language: sourceLang,
-              };
-            }
-          } catch (cacheError) {
-            console.error('Cache retrieval error:', cacheError);
-          }
-        }
-
+        
         // if (!user || !token) return res.status(401).json({ error: ErrorCodes.UNAUTHORIZED });
 
         return await callDeepLAPI(
-          undefined,
-          undefined,
           singleText,
           sourceLang,
           targetLang,
           deeplApiUrl,
           deeplAuthKey,
-          env['TRANSLATIONS_KV'],
-          useCache,
         );
       }),
     );
@@ -110,27 +69,12 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 };
 
 async function callDeepLAPI(
-  userId: string | undefined,
-  token: string | undefined,
   text: string,
   sourceLang: string,
   targetLang: string,
   apiUrl: string,
   authKey: string,
-  translationsKV: KVNamespace | undefined,
-  useCache: boolean,
 ) {
-  let dailyUsageKey = '';
-  if (userId && token) {
-    const { quota: dailyQuota } = getDailyTranslationPlanData(token);
-    const currentDate = new Date().toISOString().split('T')[0]!;
-    dailyUsageKey = `daily_usage:${currentDate}:${userId}`;
-    const dailyUsage = (await translationsKV?.get(dailyUsageKey)) || '0';
-    if (dailyQuota <= parseInt(dailyUsage) + text.length) {
-      throw new Error(ErrorCodes.DAILY_QUOTA_EXCEEDED);
-    }
-  }
-
   const isV2Api = apiUrl.endsWith('/v2/translate');
 
   // TODO: this should be processed in the client, but for now, we need to do it here
@@ -172,32 +116,8 @@ async function callDeepLAPI(
     translatedText = data.data;
   }
 
-  let newDailyUsage = 0;
-  if (dailyUsageKey && translationsKV) {
-    try {
-      const usage = translatedText.length + text.length;
-      const dailyUsage = (await translationsKV.get(dailyUsageKey)) || '0';
-      newDailyUsage = parseInt(dailyUsage) + usage;
-      await translationsKV.put(dailyUsageKey, newDailyUsage.toString(), {
-        expirationTtl: 86400 * 30,
-      });
-    } catch (cacheError) {
-      console.error('Cache storage error:', cacheError);
-    }
-  }
-
-  if (useCache && translationsKV && translatedText) {
-    try {
-      const cacheKey = generateCacheKey(text, sourceLang, targetLang);
-      await translationsKV.put(cacheKey, translatedText, { expirationTtl: 86400 * 90 });
-    } catch (cacheError) {
-      console.error('Cache storage error:', cacheError);
-    }
-  }
-
   return {
     text: translatedText,
-    daily_usage: newDailyUsage,
     detected_source_language: detectedSourceLanguage,
   };
 }

@@ -1,24 +1,4 @@
-import { jwtDecode } from 'jwt-decode';
-import { DEFAULT_DAILY_TRANSLATION_QUOTA } from '@/services/constants';
 import { isWebAppPlatform } from '@/services/environment';
-
-interface Token {
-  plan:'free';
-  storage_usage_bytes: number;
-  [key: string]: string | number;
-}
-
-export const getDailyTranslationPlanData = (token: string) => {
-  const data = jwtDecode<Token>(token) || {};
-  const plan = data['plan'] || 'free';
-  const fixedQuota = parseInt(process.env['NEXT_PUBLIC_TRANSLATION_FIXED_QUOTA'] || '0');
-  const quota = fixedQuota || DEFAULT_DAILY_TRANSLATION_QUOTA;
-
-  return {
-    plan,
-    quota,
-  };
-};
 
 export const getAccessToken = async (): Promise<string | null> => {
   // In browser context there might be two instances of supabase one in the app route

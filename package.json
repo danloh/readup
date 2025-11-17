@@ -32,11 +32,6 @@
     "release-macos-universial-appstore": "dotenv -e .env.tauri.local -e .env.apple-appstore.local -- bash scripts/release-mac-appstore.sh",
     "release-ios-appstore": "dotenv -e .env.ios-appstore.local -- bash scripts/release-ios-appstore.sh",
     "release-google-play": "dotenv -e .env.google-play.local -- bash scripts/release-google-play.sh",
-    "config-wrangler": "sed -i \"s/\\${TRANSLATIONS_KV_ID}/$TRANSLATIONS_KV_ID/g\" wrangler.toml",
-    "preview": "NEXT_PUBLIC_APP_PLATFORM=web opennextjs-cloudflare build && opennextjs-cloudflare preview --ip 0.0.0.0",
-    "deploy": "NEXT_PUBLIC_APP_PLATFORM=web opennextjs-cloudflare build && opennextjs-cloudflare deploy",
-    "upload": "NEXT_PUBLIC_APP_PLATFORM=web opennextjs-cloudflare build && opennextjs-cloudflare upload",
-    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
     "check:optional-chaining": "count=$(grep -rno '\\?\\.[a-zA-Z_$]' .next/static/chunks/* out/_next/static/chunks/* | wc -l); if [ \"$count\" -gt 0 ]; then echo '❌ Optional chaining found in output!'; exit 1; else echo '✅ No optional chaining found.'; fi",
     "check:translations": "count=$(grep -rno '__STRING_NOT_TRANSLATED__' public/locales/* | wc -l); if [ \"$count\" -gt 0 ]; then echo '❌ Untranslated strings found!'; exit 1; else echo '✅ All strings translated.'; fi",
     "check:all": "pnpm check:optional-chaining && pnpm check:translations",
@@ -131,8 +126,7 @@
     "tailwindcss": "^3.4.17",
     "typescript": "^5.7.2",
     "vite-tsconfig-paths": "^5.1.4",
-    "vitest": "^3.2.4",
-    "wrangler": "4.31.0"
+    "vitest": "^3.2.4"
   },
   "packageManager": "pnpm@10.15.0+sha512.486ebc259d3e999a4e8691ce03b5cac4a71cbeca39372a9b762cb500cfdf0873e2cb16abe3d951b1ee2cf012503f027b98b6584e4df22524e0c7450d9ec7aa7b"
 }
