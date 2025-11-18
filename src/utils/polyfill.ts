@@ -1,4 +1,3 @@
-import 'abortcontroller-polyfill/dist/abortcontroller-polyfill-only';
 
 // A groupBy polyfill for foliate-js
 Object.groupBy ??= (iterable, callbackfn) => {
