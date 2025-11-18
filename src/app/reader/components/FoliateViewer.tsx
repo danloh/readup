@@ -13,6 +13,7 @@ import {
   applyImageStyle,
   applyThemeModeClass,
   applyTranslationStyle,
+  applyTableStyle,
   keepTextAlignment,
   getStyles,
   transformStylesheet,
@@ -160,6 +161,7 @@ const FoliateViewer: React.FC<{
       }
 
       applyImageStyle(detail.doc);
+      applyTableStyle(detail.doc);
       applyThemeModeClass(detail.doc, isDarkMode);
       keepTextAlignment(detail.doc);
 
