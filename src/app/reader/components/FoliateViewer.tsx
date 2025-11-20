@@ -13,6 +13,7 @@ import {
   applyImageStyle,
   applyThemeModeClass,
   applyTranslationStyle,
+  applyScrollModeClass,
   applyTableStyle,
   keepTextAlignment,
   getStyles,
@@ -163,6 +164,7 @@ const FoliateViewer: React.FC<{
       applyImageStyle(detail.doc);
       applyTableStyle(detail.doc);
       applyThemeModeClass(detail.doc, isDarkMode);
+      applyScrollModeClass(detail.doc, viewSettings.scrolled || false);
       keepTextAlignment(detail.doc);
 
       // Inline scripts in tauri platforms are not executed by default
@@ -369,10 +371,17 @@ const FoliateViewer: React.FC<{
           applyFixedlayoutStyles(doc, viewSettings);
         }
         applyThemeModeClass(doc, isDarkMode);
+        applyScrollModeClass(doc, viewSettings.scrolled || false);
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [themeCode, isDarkMode, viewSettings?.overrideColor, viewSettings?.invertImgColor]);
+  }, [
+    themeCode,
+    isDarkMode,
+    viewSettings?.scrolled,
+    viewSettings?.overrideColor,
+    viewSettings?.invertImgColor,
+  ]);
 
   useEffect(() => {
     if (viewRef.current && viewRef.current.renderer) {
