@@ -19,7 +19,7 @@ crate-type = ["staticlib", "cdylib", "lib"]
 cargo-clippy = []
 
 [build-dependencies]
-tauri-build = { version = "2.5.1", features = [] }
+tauri-build = { version = "2.5.2", features = [] }
 
 [dependencies]
 futures = "0.3.31"
@@ -34,11 +34,11 @@ read-progress-stream = "1.0.0"
 reqwest = { version = "0.12", default-features = false, features = ["json", "stream"] }
 rss = { version = "2.0", features = ["serde"] }
 atom_syndication = "0.12"
-bytes = "1.10.1"
+bytes = "1.11.0"
 chrono = "0.4.42"
 # FIXME: remove the devtools feature in production
-tauri = { version = "2.9.2", features = [ "protocol-asset", "devtools"] }
-tauri-build = "2.5.1"
+tauri = { version = "2.9.3", features = [ "protocol-asset", "devtools"] }
+tauri-build = "2.5.2"
 tauri-plugin-log = "2.7.1"
 tauri-plugin-fs = "2.4.4"
 tauri-plugin-dialog = "2.4.2"
