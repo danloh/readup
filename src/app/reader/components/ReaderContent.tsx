@@ -11,6 +11,7 @@ import { useSettingsStore } from '@/store/settingsStore';
 import { useBookDataStore } from '@/store/bookDataStore';
 import { useReaderStore } from '@/store/readerStore';
 import { useSidebarStore } from '@/store/sidebarStore';
+import { useTranslation } from '@/hooks/useTranslation';
 import { Book } from '@/types/book';
 import { SystemSettings } from '@/types/settings';
 import { parseOpenWithFiles } from '@/helpers/openWith';
@@ -30,7 +31,8 @@ import SideBar from './sidebar/SideBar';
 import Notebook from './notebook/Notebook';
 import BooksGrid from './BooksGrid';
 
-const ReaderContent: React.FC<{ ids?: string; settings: SystemSettings }> = ({ ids, settings }) => {
+const ReaderContent: React.FC<{ids?: string; settings: SystemSettings}> = ({ ids, settings }) => {
+  const _ = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { envConfig, appService } = useEnv();
@@ -43,6 +45,7 @@ const ReaderContent: React.FC<{ ids?: string; settings: SystemSettings }> = ({ i
   const [showDetailsBook, setShowDetailsBook] = useState<Book | null>(null);
   const isInitiating = useRef(false);
   const [loading, setLoading] = useState(false);
+  const [errorLoading, setErrorLoading] = useState(false);
 
   useBookShortcuts({ sideBarBookKey, bookKeys });
 
@@ -63,6 +66,13 @@ const ReaderContent: React.FC<{ ids?: string; settings: SystemSettings }> = ({ i
       if (!getViewState(key)) {
         initViewState(envConfig, id, key, isPrimary).catch((error) => {
           console.log('Error initializing book', key, error);
+          setErrorLoading(true);
+          eventDispatcher.dispatch('toast', {
+            message: _('Unable to open book'),
+            callback: () => navigateBackToLibrary(),
+            timeout: 2000,
+            type: 'error',
+          });
         });
         if (index === 0) setSideBarBookKey(key);
       }
@@ -131,9 +141,13 @@ const ReaderContent: React.FC<{ ids?: string; settings: SystemSettings }> = ({ i
     clearViewState(bookKey);
   };
 
+  const navigateBackToLibrary = () => {
+    navigateToLibrary(router, '', undefined, true);
+  };
+
   const saveSettingsAndGoToLibrary = () => {
     saveSettings(envConfig, settings);
-    navigateToLibrary(router);
+    navigateBackToLibrary();
   };
 
   const handleCloseBooks = throttle(async () => {
@@ -147,12 +161,12 @@ const ReaderContent: React.FC<{ ids?: string; settings: SystemSettings }> = ({ i
     if (isTauriAppPlatform()) {
       const currentWindow = getCurrentWindow();
       if (currentWindow.label === 'main') {
-        navigateToLibrary(router);
+        navigateBackToLibrary();
       } else {
         currentWindow.close();
       }
     } else {
-      navigateToLibrary(router);
+      navigateBackToLibrary();
     }
   };
 
@@ -184,7 +198,7 @@ const ReaderContent: React.FC<{ ids?: string; settings: SystemSettings }> = ({ i
   if (!bookData || !bookData.book || !bookData.bookDoc || !viewSettings) {
     setTimeout(() => setLoading(true), 200);
     return (
-      loading && (
+      loading && !errorLoading && (
         <div className='hero hero-content h-[100vh]'>
           <Spinner loading={true} />
         </div>

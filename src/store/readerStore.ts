@@ -226,6 +226,7 @@ export const useReaderStore = create<ReaderStore>((set, get) => ({
           },
         },
       }));
+      throw error;
     }
   },
   getViewSettings: (key: string) => get().viewStates[key]?.viewSettings || null,

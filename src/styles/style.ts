@@ -234,10 +234,6 @@ const getLayoutStyles = (
       text-align: unset;
       hyphens: unset;
   }
-  pre {
-      white-space: pre-wrap !important;
-      tab-size: 2;
-  }
   html, body {
     ${writingMode === 'auto' ? '' : `writing-mode: ${writingMode} !important;`}
     text-align: var(--default-text-align);
