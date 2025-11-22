@@ -1,2 +1,5 @@
 packages:
-  - 'packages/foliate-js'
+  - packages/foliate-js
+
+onlyBuiltDependencies:
+  - sharp
