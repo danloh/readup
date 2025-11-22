@@ -29,6 +29,7 @@ const Bookshelf: React.FC<BookshelfProps> = ({
   const [loading, setLoading] = useState(false);
   const [queryTerm, setQueryTerm] = useState<string | null>(null);
   const [navBooksGroup, setNavBooksGroup] = useState<BooksGroup | null>(null);
+  const [groupId, setGroupId] = useState(searchParams?.get('group') || '');
   const [importBookUrl] = useState(searchParams?.get('url') || '');
   const [viewMode, setViewMode] = useState(searchParams?.get('view') || settings.libraryViewMode);
   const [sortBy, setSortBy] = useState(searchParams?.get('sort') || settings.librarySortBy);
@@ -107,55 +108,70 @@ const Bookshelf: React.FC<BookshelfProps> = ({
     const sort = searchParams?.get('sort') || settings.librarySortBy;
     const order = searchParams?.get('order') || (settings.librarySortAscending ? 'asc' : 'desc');
 
+    setGroupId(group);
+    setQueryTerm(query || null);
+    setViewMode(view);
+    setSortBy(sort);
+    setSortOrder(order);
+  }, [searchParams, settings]);
+
+  useEffect(() => {
     const params = new URLSearchParams(searchParams?.toString());
-    if (query) {
-      params.set('q', query);
-      setQueryTerm(query);
-    } else {
-      params.delete('q');
-      setQueryTerm(null);
-    }
-    if (sort) {
-      params.set('sort', sort);
-      setSortBy(sort);
-    } else {
-      params.delete('sort');
-    }
-    if (order) {
-      params.set('order', order);
-      setSortOrder(order);
-    } else {
-      params.delete('order');
-    }
-    if (view) {
-      params.set('view', view);
-      setViewMode(view);
-    } else {
-      params.delete('view');
-    }
-    if (sort === 'updated' && order === 'desc' && view === 'grid') {
-      params.delete('sort');
-      params.delete('order');
-      params.delete('view');
-    }
-    if (group) {
-      const booksGroup = allBookshelfItems.find(
-        (item) => 'name' in item && item.id === group,
-      ) as BooksGroup;
-      if (booksGroup) {
-        setNavBooksGroup(booksGroup);
-        params.set('group', group);
-      } else {
-        params.delete('group');
-        navigateToLibrary(router, `${params.toString()}`);
+    let hasChanges = false;
+
+    if (queryTerm) {
+      if (params.get('q') !== queryTerm) {
+        params.set('q', queryTerm);
+        hasChanges = true;
       }
     } else {
-      setNavBooksGroup(null);
+      if (params.has('q')) {
+        params.delete('q');
+        hasChanges = true;
+      }
+    }
+
+    if (sortBy !== 'updated' && params.get('sort') !== sortBy) {
+      params.set('sort', sortBy);
+      hasChanges = true;
+    }
+
+    if (sortBy === 'updated') {
+      params.delete('sort');
+      hasChanges = true;
+    }
+
+    if (sortOrder === 'desc') {
+      params.delete('order');
+      hasChanges = true;
+    }
+
+    if (viewMode === 'grid') {
+      params.delete('view');
+      hasChanges = true;
+    }
+
+    if (groupId) {
+      const booksGroup = allBookshelfItems.find(
+        (item) => 'name' in item && item.id === groupId,
+      ) as BooksGroup;
+      if (booksGroup) {
+        params.delete('group');
+        hasChanges = true;
+      } else if (params.get('group') !== groupId) {
+        params.set('group', groupId);
+        hasChanges = true;
+      }
+    } else if (params.has('group')) {
       params.delete('group');
-      navigateToLibrary(router, `${params.toString()}`);
+      hasChanges = true;
+    }
+
+    if (hasChanges) {
+      navigateToLibrary(router, params.toString());
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams, libraryBooks]);
+  }, [queryTerm, sortBy, sortOrder, viewMode, groupId]);
 
   return (
     <div className='bookshelf'>
