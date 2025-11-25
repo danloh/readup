@@ -153,6 +153,7 @@ export class FixedLayout extends HTMLElement {
             if (!iframe) return
             if (onZoom) onZoom({ doc: frame.iframe.contentDocument, scale })
             const iframeScale = onZoom ? scale : 1
+            const zoomedOut = this.#scaleFactor < 1.0
             Object.assign(iframe.style, {
                 width: `${width * iframeScale}px`,
                 height: `${height * iframeScale}px`,
@@ -161,12 +162,13 @@ export class FixedLayout extends HTMLElement {
                 display: blank ? 'none' : 'block',
             })
             Object.assign(element.style, {
-                width: `${(width ?? blankWidth) * scale}px`,
-                height: `${(height ?? blankHeight) * scale}px`,
-                overflow: 'hidden',
-                display: 'block',
+                width: `${(width ?? blankWidth) * scale / this.#scaleFactor}px`,
+                height: `${(height ?? blankHeight) * scale / this.#scaleFactor}px`,
                 flexShrink: '0',
-                marginBlock: 'auto',
+                display: zoomedOut ? 'flex' : 'block',
+                marginBlock: zoomedOut ? undefined : 'auto',
+                alignItems: zoomedOut ? 'center' : undefined,
+                justifyContent: zoomedOut ? 'center' : undefined,
             })
             if (portrait && frame !== target) {
                 element.style.display = 'none'

@@ -39,6 +39,7 @@ import { useProgressAutoSave } from '../hooks/useProgressAutoSave';
 import { useTextTranslation } from '../hooks/useTextTranslation';
 import {
   handleKeydown,
+  handleKeyup,
   handleMousedown,
   handleMouseup,
   handleClick,
@@ -190,6 +191,7 @@ const FoliateViewer: React.FC<{
         // and more gesture events can be detected in the iframeEventHandlers
         detail.doc.isEventListenersAdded = true;
         detail.doc.addEventListener('keydown', handleKeydown.bind(null, bookKey));
+        detail.doc.addEventListener('keyup', handleKeyup.bind(null, bookKey));
         detail.doc.addEventListener('mousedown', handleMousedown.bind(null, bookKey));
         detail.doc.addEventListener('mouseup', handleMouseup.bind(null, bookKey));
         detail.doc.addEventListener('click', handleClick.bind(null, bookKey, doubleClickDisabled));
