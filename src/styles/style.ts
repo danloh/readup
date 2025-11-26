@@ -168,6 +168,9 @@ const getColorStyles = (
       ${isDarkMode ? `background: color-mix(in srgb, ${bg} 90%, #000);` : ''}
       ${isDarkMode ? `background-color: color-mix(in srgb, ${bg} 90%, #000);` : ''}
     }
+    blockquote {
+      ${isDarkMode ? `background: color-mix(in srgb, ${bg} 80%, #000);` : ''}
+    }
     blockquote, table * {
       ${isDarkMode && overrideColor ? `background: color-mix(in srgb, ${bg} 80%, #000);` : ''}
       ${isDarkMode && overrideColor ? `background-color: color-mix(in srgb, ${bg} 80%, #000);` : ''}
@@ -385,6 +388,12 @@ const getLayoutStyles = (
   .duokan-footnote img:not([class]) {
     width: 0.8em;
     height: 0.8em;
+  }
+
+  div:has(img.singlepage) {
+    position: relative;
+    width: auto;
+    height: auto;
   }
 
   /* workaround for some badly designed epubs */

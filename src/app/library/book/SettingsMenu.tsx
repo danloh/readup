@@ -1,7 +1,7 @@
 import clsx from 'clsx';
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { PiUserCircle, PiUserCircleCheck } from 'react-icons/pi';
+import { PiUserCircle } from 'react-icons/pi';
 import { MdCheck } from 'react-icons/md';
 import { GrSystem } from "react-icons/gr";
 import { BiMoon, BiSun } from 'react-icons/bi';
@@ -19,7 +19,6 @@ import { useEnv } from '@/context/EnvContext';
 import { useThemeStore } from '@/store/themeStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useTranslation } from '@/hooks/useTranslation';
-import { useResponsiveSize } from '@/hooks/useResponsiveSize';
 import { navigateToLogin, navigateToProfile } from '@/utils/nav';
 import { tauriHandleSetAlwaysOnTop, tauriHandleToggleFullScreen } from '@/utils/window';
 import { optInTelemetry, optOutTelemetry } from '@/utils/telemetry';
@@ -50,7 +49,6 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
   );
   const [isTelemetryEnabled, setIsTelemetryEnabled] = useState(settings.telemetryEnabled);
   const [alwaysInForeground, setAlwaysInForeground] = useState(settings.alwaysInForeground);
-  const iconSize = useResponsiveSize(16);
 
   const showAboutReadup = () => {
     setAboutDialogVisible(true);
@@ -175,10 +173,6 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
     setAlwaysInForeground(settings.alwaysInForeground);
   };
 
-  const avatarUrl = user?.user_metadata?.['picture'] || user?.user_metadata?.['avatar_url'];
-  const userFullName = user?.user_metadata?.['full_name'];
-  const userDisplayName = userFullName ? userFullName.split(' ')[0] : null;
-
   return (
     <Menu
       label={_('Settings Menu')}
@@ -188,25 +182,7 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
       )}
     >
       {user ? (
-        <MenuItem
-          label={
-            userDisplayName
-              ? _('Logged in as {{userDisplayName}}', { userDisplayName })
-              : _('Logged in')
-          }
-          labelClass='!max-w-40'
-          Icon={
-            avatarUrl ? (
-              <UserAvatar url={avatarUrl} size={iconSize} DefaultIcon={PiUserCircleCheck} />
-            ) : (
-              PiUserCircleCheck
-            )
-          }
-        >
-          <ul>
-            <MenuItem label={_('Account')} noIcon onClick={handleUserProfile} />
-          </ul>
-        </MenuItem>
+        <MenuItem label={_('Account')} noIcon onClick={handleUserProfile} />
       ) : (
         <MenuItem label={_('Sign In')} Icon={PiUserCircle} onClick={handleUserLogin}></MenuItem>
       )}
