@@ -79,6 +79,7 @@ const ViewMenu: React.FC<ViewMenuProps> = ({ setIsDropdownOpen }) => {
     <Menu
       label={_('View Menu')}
       className='view-menu dropdown-content no-triangle border-base-100 z-20 mt-2 shadow-2xl'
+      onCancel={() => setIsDropdownOpen?.(false)}
     >
       {viewOptions.map((option) => (
         <MenuItem

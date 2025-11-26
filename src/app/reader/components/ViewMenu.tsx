@@ -147,6 +147,7 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
         maxWidth: `${window.innerWidth - 40}px`,
         marginRight: window.innerWidth < 640 ? '-36px' : '0px',
       }}
+      onCancel={() => setIsDropdownOpen?.(false)}
     >
       {bookData.bookDoc?.rendition?.layout === 'pre-paginated' && (
         <>
