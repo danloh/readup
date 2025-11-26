@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { FiSearch } from 'react-icons/fi';
 import { FiCopy } from 'react-icons/fi';
 import { PiFeatherDuotone } from 'react-icons/pi';
@@ -48,6 +48,8 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
   const bookData = getBookData(bookKey)!;
   const view = getView(bookKey);
   const viewSettings = getViewSettings(bookKey)!;
+
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const [selection, setSelection] = useState<TextSelection | null>(null);
   const [showAnnotPopup, setShowAnnotPopup] = useState(false);
@@ -373,6 +375,9 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
   }, [progress]);
 
   const handleShowAnnotPopup = () => {
+    if (!appService?.isMobile) {
+      containerRef.current?.focus();
+    }
     setShowAnnotPopup(true);
     setShowTsPopup(false);
     setShowWiktionaryPopup(false);
@@ -421,13 +426,13 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
     }
   };
 
-  const handleHighlight = (update = false) => {
+  const handleHighlight = (update = false, highlightStyle?: HighlightStyle) => {
     if (!selection || !selection.text) return;
     setHighlightOptionsVisible(true);
     const { booknotes: annotations = [] } = config;
     const cfi = view?.getCFI(selection.index, selection.range);
     if (!cfi) return;
-    const style = settings.globalReadSettings.highlightStyle;
+    const style = highlightStyle || settings.globalReadSettings.highlightStyle;
     const color = settings.globalReadSettings.highlightStyles[style];
     const annotation: BookNote = {
       id: uniqueId(),
@@ -479,7 +484,7 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
 
   const handleSearch = () => {
     if (!selection || !selection.text) return;
-    setShowAnnotPopup(false);
+    handleDismissPopupAndSelection();
     eventDispatcher.dispatch('search', { term: selection.text });
   };
 
@@ -511,20 +516,32 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
   // Keyboard shortcuts: trigger actions only if there's an active selection and popup hidden
   useShortcuts(
     {
+      onHighlightSelection: () => {
+        handleHighlight(false, 'highlight');
+      },
+      onUnderlineSelection: () => {
+        handleHighlight(false, 'underline');
+      },
+      onAnnotateSelection: () => {
+        handleAnnotate();
+      },
+      onSearchSelection: () => {
+        handleSearch();
+      },
+      onCopySelection: () => {
+        handleCopy();
+      },
       onTranslateSelection: () => {
-        if (selection?.text) {
-          handleTranslation();
-        }
+        handleTranslation();
       },
       onDictionarySelection: () => {
-        if (selection?.text) {
-          handleDictionary();
-        }
+        handleDictionary();
       },
       onWikipediaSelection: () => {
-        if (selection?.text) {
-          handleWikipedia();
-        }
+        handleWikipedia();
+      },
+      onReadAloudSelection: () => {
+        handleSpeakText();
       },
     },
     [selection?.text],
@@ -648,7 +665,7 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
   ];
 
   return (
-    <div>
+    <div ref={containerRef} role='toolbar' tabIndex={-1}>
       {showWiktionaryPopup && trianglePosition && dictPopupPosition && (
         <WiktionaryPopup
           word={selection?.text as string}
@@ -657,6 +674,7 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
           trianglePosition={trianglePosition}
           popupWidth={dictPopupWidth}
           popupHeight={dictPopupHeight}
+          onDismiss={handleDismissPopupAndSelection}
         />
       )}
       {showWikipediaPopup && trianglePosition && dictPopupPosition && (
@@ -667,6 +685,7 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
           trianglePosition={trianglePosition}
           popupWidth={dictPopupWidth}
           popupHeight={dictPopupHeight}
+          onDismiss={handleDismissPopupAndSelection}
         />
       )}
       {showTsPopup && trianglePosition && translatorPopupPosition && (
@@ -676,6 +695,7 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
           trianglePosition={trianglePosition}
           popupWidth={transPopupWidth}
           popupHeight={transPopupHeight}
+          onDismiss={handleDismissPopupAndSelection}
         />
       )}
       {showAnnotPopup && trianglePosition && annotPopupPosition && (
@@ -691,6 +711,7 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
           popupWidth={annotPopupWidth}
           popupHeight={annotPopupHeight}
           onHighlight={handleHighlight}
+          onDismiss={handleDismissPopupAndSelection}
         />
       )}
     </div>

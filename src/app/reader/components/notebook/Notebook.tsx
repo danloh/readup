@@ -1,20 +1,22 @@
 import clsx from 'clsx';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useSettingsStore } from '@/store/settingsStore';
 import { useBookDataStore } from '@/store/bookDataStore';
 import { useReaderStore } from '@/store/readerStore';
 import { useSidebarStore } from '@/store/sidebarStore';
 import { useNotebookStore } from '@/store/notebookStore';
-import { useTranslation } from '@/hooks/useTranslation';
 import { useThemeStore } from '@/store/themeStore';
 import { useEnv } from '@/context/EnvContext';
 import { useDrag } from '@/hooks/useDrag';
+import { useTranslation } from '@/hooks/useTranslation';
+import useShortcuts from '@/hooks/useShortcuts';
 import { TextSelection } from '@/utils/sel';
 import { BookNote } from '@/types/book';
 import { uniqueId } from '@/utils/misc';
 import { eventDispatcher } from '@/utils/event';
 import { getBookDirFromLanguage } from '@/utils/book';
+
 import BooknoteItem from '../sidebar/BooknoteItem';
 import NotebookHeader from './Header';
 import NoteEditor from './NoteEditor';
@@ -47,6 +49,15 @@ const Notebook: React.FC = ({}) => {
       setNotebookVisible(false);
     }
   };
+
+  const handleHideNotebook = useCallback(() => {
+    if (!isNotebookPinned) {
+      setNotebookVisible(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isNotebookPinned]);
+
+  useShortcuts({ onEscape: handleHideNotebook }, [handleHideNotebook]);
 
   useEffect(() => {
     if (isNotebookVisible) {

@@ -614,6 +614,7 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey, iconRef }) => {
           position={panelPosition}
           trianglePosition={trianglePosition}
           className='bg-base-200 flex shadow-lg'
+          onDismiss={handleDismissPopup}
         >
           <TTSPanel
             bookKey={bookKey}
