@@ -99,7 +99,7 @@ const GroupItem: React.FC<GroupItemProps> = ({ mode, group }) => {
         className={clsx(
           'relative flex overflow-hidden',
           mode === 'grid' && 'bg-base-100 aspect-[28/41] items-center justify-center shadow-md',
-          mode === 'list' && 'h-32 items-center justify-start gap-4 py-2',
+          mode === 'list' && 'items-center justify-start gap-4 py-2',
         )}
       >
         <div
@@ -111,6 +111,7 @@ const GroupItem: React.FC<GroupItemProps> = ({ mode, group }) => {
           <div
             ref={mode === 'list' ? scrollContainerRef : undefined}
             className={clsx(
+              mode === 'list' ? 'library-list-item' : 'library-grid-item',
               mode === 'grid' && 'grid w-full grid-cols-2 grid-rows-2 gap-1 overflow-hidden',
               mode === 'list' && 'flex h-28 gap-2 overflow-x-auto overflow-y-hidden',
             )}

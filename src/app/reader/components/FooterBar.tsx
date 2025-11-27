@@ -49,8 +49,7 @@ const FooterBar: React.FC<FooterBarProps> = ({
   const { acquireBackKeyInterception, releaseBackKeyInterception } = useDeviceControlStore();
 
   const [actionTab, setActionTab] = useState('progress');
-  const sliderHeight = useResponsiveSize(28);
-  const tocIconSize = useResponsiveSize(22);
+  const sliderHeight = useResponsiveSize(20);
 
   const config = getConfig(bookKey);
   const bookData = getBookData(bookKey);
@@ -284,7 +283,7 @@ const FooterBar: React.FC<FooterBarProps> = ({
         >
           {!isSideBarVisible && (
             <Button
-              icon={<TOCIcon size={tocIconSize} className='' />}
+              icon={<TOCIcon className='' />}
               onClick={() => handleSetActionTab('toc')}
               tooltip={_('TOC')}
               tooltipDirection='top'

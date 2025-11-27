@@ -1,14 +1,14 @@
 import clsx from 'clsx';
-import * as React from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Book, BooksGroup } from '@/types/book';
+import { Book } from '@/types/book';
 import { LibraryViewModeType } from '@/types/settings';
 import { useEnv } from '@/context/EnvContext';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useLibraryStore } from '@/store/libraryStore';
 import { navigateToLibrary, navigateToReader } from '@/utils/nav';
 import { formatTitle } from '@/utils/book';
+import { useAutoFocus } from '@/hooks/useAutoFocus';
 import Spinner from '@/components/Spinner';
 import BookshelfItem, { generateBookshelfItems } from './BookshelfItem';
 import { createBookFilter, createBookSorter } from './libraryUtils';
@@ -26,37 +26,70 @@ const Bookshelf: React.FC<BookshelfProps> = ({
   const searchParams = useSearchParams();
   const { appService } = useEnv();
   const { settings } = useSettingsStore();
+
+  const groupId = searchParams?.get('group') || '';
+  const queryTerm = searchParams?.get('q') || null;
+  const viewMode = searchParams?.get('view') || settings.libraryViewMode;
+  const sortBy = searchParams?.get('sort') || settings.librarySortBy;
+  const sortOrder = searchParams?.get('order') || (settings.librarySortAscending ? 'asc' : 'desc');
+
   const [loading, setLoading] = useState(false);
-  const [queryTerm, setQueryTerm] = useState<string | null>(null);
-  const [navBooksGroup, setNavBooksGroup] = useState<BooksGroup | null>(null);
-  const [groupId, setGroupId] = useState(searchParams?.get('group') || '');
   const [importBookUrl] = useState(searchParams?.get('url') || '');
-  const [viewMode, setViewMode] = useState(searchParams?.get('view') || settings.libraryViewMode);
-  const [sortBy, setSortBy] = useState(searchParams?.get('sort') || settings.librarySortBy);
-  const [sortOrder, setSortOrder] = useState(
-    searchParams?.get('order') || (settings.librarySortAscending ? 'asc' : 'desc'),
-  );
 
   const isImportingBook = useRef(false);
-
+  const autofocusRef = useAutoFocus<HTMLDivElement>();
   const { setCurrentBookshelf, setLibrary } = useLibraryStore();
 
-  const bookFilter = useMemo(() => createBookFilter(queryTerm), [queryTerm]);
   const uiLanguage = localStorage?.getItem('i18nextLng') || '';
-  const bookSorter = useMemo(() => createBookSorter(sortBy, uiLanguage), [sortBy, uiLanguage]);
+
+  const updateUrlParams = useCallback(
+    (updates: Record<string, string | null>) => {
+      const params = new URLSearchParams(searchParams?.toString());
+
+      Object.entries(updates).forEach(([key, value]) => {
+        if (value === null || value === '') {
+          params.delete(key);
+        } else {
+          params.set(key, value);
+        }
+      });
+
+      if (params.get('sort') === 'updated') params.delete('sort');
+      if (params.get('order') === 'desc') params.delete('order');
+      if (params.get('cover') === 'crop') params.delete('cover');
+      if (params.get('view') === 'grid') params.delete('view');
+
+      const newParamString = params.toString();
+      const currentParamString = searchParams?.toString() || '';
+
+      if (newParamString !== currentParamString) {
+        navigateToLibrary(router, newParamString);
+      }
+    },
+    [router, searchParams],
+  );
 
   const filteredBooks = useMemo(() => {
+    const bookFilter = createBookFilter(queryTerm);
     return queryTerm ? libraryBooks.filter((book) => bookFilter(book)) : libraryBooks;
-  }, [libraryBooks, queryTerm, bookFilter]);
+  }, [libraryBooks, queryTerm]);
 
   const allBookshelfItems = useMemo(() => {
     return generateBookshelfItems(filteredBooks);
   }, [filteredBooks]);
 
+  useEffect(() => {
+    if (groupId && allBookshelfItems.length === 0) {
+      updateUrlParams({ group: null });
+    } else {
+      updateUrlParams({});
+    }
+  }, [searchParams, groupId, allBookshelfItems.length, updateUrlParams]);
+
   const sortedBookshelfItems = useMemo(() => {
+    const bookSorter = createBookSorter(sortBy, uiLanguage);
     const sortOrderMultiplier = sortOrder === 'asc' ? 1 : -1;
-    const currentBookshelfItems = navBooksGroup ? navBooksGroup.books : allBookshelfItems;
-    return currentBookshelfItems.sort((a, b) => {
+    return allBookshelfItems.sort((a, b) => {
       if (sortBy === 'updated') {
         return (
           (new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime()) * sortOrderMultiplier
@@ -71,7 +104,7 @@ const Bookshelf: React.FC<BookshelfProps> = ({
         return 0;
       }
     });
-  }, [sortOrder, sortBy, uiLanguage, navBooksGroup, allBookshelfItems, bookSorter]);
+  }, [sortOrder, sortBy, uiLanguage, allBookshelfItems]);
 
   useEffect(() => {
     if (isImportingBook.current) return;
@@ -93,89 +126,13 @@ const Bookshelf: React.FC<BookshelfProps> = ({
   }, [importBookUrl, appService]);
 
   useEffect(() => {
-    if (navBooksGroup) {
-      setCurrentBookshelf(navBooksGroup.books);
-    } else {
-      setCurrentBookshelf(allBookshelfItems);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [libraryBooks, navBooksGroup]);
-
-  useEffect(() => {
-    const group = searchParams?.get('group') || '';
-    const query = searchParams?.get('q') || '';
-    const view = searchParams?.get('view') || settings.libraryViewMode;
-    const sort = searchParams?.get('sort') || settings.librarySortBy;
-    const order = searchParams?.get('order') || (settings.librarySortAscending ? 'asc' : 'desc');
-
-    setGroupId(group);
-    setQueryTerm(query || null);
-    setViewMode(view);
-    setSortBy(sort);
-    setSortOrder(order);
-  }, [searchParams, settings]);
-
-  useEffect(() => {
-    const params = new URLSearchParams(searchParams?.toString());
-    let hasChanges = false;
-
-    if (queryTerm) {
-      if (params.get('q') !== queryTerm) {
-        params.set('q', queryTerm);
-        hasChanges = true;
-      }
-    } else {
-      if (params.has('q')) {
-        params.delete('q');
-        hasChanges = true;
-      }
-    }
-
-    if (sortBy !== 'updated' && params.get('sort') !== sortBy) {
-      params.set('sort', sortBy);
-      hasChanges = true;
-    }
-
-    if (sortBy === 'updated') {
-      params.delete('sort');
-      hasChanges = true;
-    }
-
-    if (sortOrder === 'desc') {
-      params.delete('order');
-      hasChanges = true;
-    }
-
-    if (viewMode === 'grid') {
-      params.delete('view');
-      hasChanges = true;
-    }
-
-    if (groupId) {
-      const booksGroup = allBookshelfItems.find(
-        (item) => 'name' in item && item.id === groupId,
-      ) as BooksGroup;
-      if (booksGroup) {
-        params.delete('group');
-        hasChanges = true;
-      } else if (params.get('group') !== groupId) {
-        params.set('group', groupId);
-        hasChanges = true;
-      }
-    } else if (params.has('group')) {
-      params.delete('group');
-      hasChanges = true;
-    }
-
-    if (hasChanges) {
-      navigateToLibrary(router, params.toString());
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [queryTerm, sortBy, sortOrder, viewMode, groupId]);
+    setCurrentBookshelf(allBookshelfItems);
+  }, [allBookshelfItems, setCurrentBookshelf]);
 
   return (
     <div className='bookshelf'>
       <div
+        ref={autofocusRef}
         className={clsx(
           'bookshelf-items transform-wrapper',
           viewMode === 'grid' && 'grid flex-1 grid-cols-3 gap-x-4 px-4 sm:gap-x-0 sm:px-2',

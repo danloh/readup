@@ -5,16 +5,17 @@ import { useEnv } from '@/context/EnvContext';
 import { useReaderStore } from '@/store/readerStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useTranslation } from '@/hooks/useTranslation';
-import { useResetViewSettings } from '../../hooks/useResetSettings';
-import { SettingsPanelPanelProp } from './SettingsDialog';
 import { getStyles } from '@/styles/style';
 import { validateCSS, formatCSS } from '@/styles/css';
+import { useResetViewSettings } from '../../hooks/useResetSettings';
+import { saveViewSettings } from '../../utils/viewSettingsHelper';
+import { SettingsPanelPanelProp } from './SettingsDialog';
 
 type CSSType = 'book' | 'reader';
 
 const MiscPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset }) => {
   const _ = useTranslation();
-  const { appService } = useEnv();
+  const { appService, envConfig } = useEnv();
   const { settings, isFontLayoutSettingsGlobal, setSettings } = useSettingsStore();
   const { getView, getViewSettings, setViewSettings } = useReaderStore();
   const viewSettings = getViewSettings(bookKey)!;
@@ -107,6 +108,14 @@ const MiscPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
 
     setViewSettings(bookKey, { ...viewSettings });
     getView(bookKey)?.renderer.setStyles?.(getStyles(viewSettings));
+    saveViewSettings(
+      envConfig,
+      bookKey,
+      type === 'book' ? 'userStylesheet' : 'userUIStylesheet',
+      formattedCSS,
+      false,
+      false,
+    );
   };
 
   const handleInput = (e: React.FormEvent<HTMLTextAreaElement>) => {

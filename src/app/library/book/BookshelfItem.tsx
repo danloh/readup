@@ -18,8 +18,6 @@ import { Book, BooksGroup } from '@/types/book';
 import BookItem from './BookItem';
 import GroupItem from './GroupItem';
 
-export type BookshelfItem = Book | BooksGroup;
-
 export const generateBookshelfItems = (books: Book[]): (Book | BooksGroup)[] => {
   const groups: BooksGroup[] = books.reduce((acc: BooksGroup[], book: Book) => {
     if (book.deletedAt) return acc;
@@ -51,7 +49,7 @@ export const generateBookshelfItems = (books: Book[]): (Book | BooksGroup)[] => 
 
 interface BookshelfItemProps {
   mode: LibraryViewModeType;
-  item: BookshelfItem;
+  item: Book | BooksGroup;
   setLoading: React.Dispatch<React.SetStateAction<boolean>>;
   handleShowDetailsBook: (book: Book) => void;
 }

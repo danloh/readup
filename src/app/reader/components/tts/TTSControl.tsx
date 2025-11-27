@@ -15,6 +15,7 @@ import { invokeUseBackgroundAudio } from '@/utils/bridge';
 import { getLocale } from '@/utils/misc';
 import { CFI } from '@/libs/document';
 import { getMediaSession, TauriMediaSession } from '@/libs/mediaSession';
+import { Overlay } from '@/components/Overlay';
 import Popup from '@/components/Popup';
 import TTSPanel from './TTSPanel';
 
@@ -600,13 +601,7 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey, iconRef }) => {
 
   return (
     <>
-      {showPanel && (
-        <div
-          className='fixed inset-0'
-          onClick={handleDismissPopup}
-          onContextMenu={handleDismissPopup}
-        />
-      )}
+      {showPanel && <Overlay onDismiss={handleDismissPopup} />}
       {showPanel && panelPosition && trianglePosition && ttsClientsInited && (
         <Popup
           width={popupWidth}
