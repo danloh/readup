@@ -23,7 +23,7 @@ import { navigateToLogin } from '@/utils/nav';
 import { eventDispatcher } from '@/utils/event';
 import { getMaxInlineSize } from '@/utils/config';
 import { tauriHandleToggleFullScreen } from '@/utils/window';
-import { saveViewSettings } from '../utils/viewSettingsHelper';
+import { saveViewSettings } from '@/helpers/settings';
 
 interface ViewMenuProps {
   bookKey: string;

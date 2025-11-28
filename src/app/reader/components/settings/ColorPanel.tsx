@@ -22,8 +22,8 @@ import { CODE_LANGUAGES, CodeLanguage, manageSyntaxHighlighting } from '@/utils/
 import Select from '@/components/Select';
 import { HighlightColor } from '@/types/book';
 import { HIGHLIGHT_COLOR_HEX } from '@/services/constants';
+import { saveViewSettings } from '@/helpers/settings';
 import { useResetViewSettings } from '../../hooks/useResetSettings';
-import { saveViewSettings } from '../../utils/viewSettingsHelper';
 import ThemeEditor from './ThemeEditor';
 import ColorInput from './ColorInput';
 import { SettingsPanelPanelProp } from './SettingsDialog';

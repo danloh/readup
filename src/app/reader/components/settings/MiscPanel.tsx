@@ -7,8 +7,8 @@ import { useSettingsStore } from '@/store/settingsStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { getStyles } from '@/styles/style';
 import { validateCSS, formatCSS } from '@/styles/css';
+import { saveViewSettings } from '@/helpers/settings';
 import { useResetViewSettings } from '../../hooks/useResetSettings';
-import { saveViewSettings } from '../../utils/viewSettingsHelper';
 import { SettingsPanelPanelProp } from './SettingsDialog';
 
 type CSSType = 'book' | 'reader';

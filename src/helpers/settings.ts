@@ -4,6 +4,7 @@ import { useBookDataStore } from '@/store/bookDataStore';
 import { useReaderStore } from '@/store/readerStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { getStyles } from '@/styles/style';
+import { SystemSettings } from '@/types/settings';
 
 export const saveViewSettings = async <K extends keyof ViewSettings>(
   envConfig: EnvConfigType,
@@ -34,4 +35,17 @@ export const saveViewSettings = async <K extends keyof ViewSettings>(
   }
   await saveConfig(envConfig, bookKey, config, settings);
   await saveSettings(envConfig, settings);
+};
+
+export const saveSysSettings = async <K extends keyof SystemSettings>(
+  envConfig: EnvConfigType,
+  key: K,
+  value: SystemSettings[K],
+) => {
+  const { settings, setSettings, saveSettings } = useSettingsStore.getState();
+  if (settings[key] !== value) {
+    settings[key] = value;
+    setSettings(settings);
+    await saveSettings(envConfig, settings);
+  }
 };

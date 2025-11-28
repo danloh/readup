@@ -8,6 +8,7 @@ import { LibrarySortByType, LibraryViewModeType } from '@/types/settings';
 import { navigateToLibrary } from '@/utils/nav';
 import Menu from '@/components/Menu';
 import MenuItem from '@/components/MenuItem';
+import { saveSysSettings } from '@/helpers/settings';
 
 interface ViewMenuProps {
   setIsDropdownOpen?: (isOpen: boolean) => void;
@@ -18,7 +19,7 @@ const ViewMenu: React.FC<ViewMenuProps> = ({ setIsDropdownOpen }) => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { envConfig } = useEnv();
-  const { settings, setSettings, saveSettings } = useSettingsStore();
+  const { settings } = useSettingsStore();
 
   const viewMode = settings.libraryViewMode;
   const sortBy = settings.librarySortBy;
@@ -42,10 +43,8 @@ const ViewMenu: React.FC<ViewMenuProps> = ({ setIsDropdownOpen }) => {
     { label: _('Descending'), value: false },
   ];
 
-  const handleSetViewMode = (value: LibraryViewModeType) => {
-    settings.libraryViewMode = value;
-    setSettings(settings);
-    saveSettings(envConfig, settings);
+  const handleSetViewMode = async (value: LibraryViewModeType) => {
+    await saveSysSettings(envConfig, 'libraryViewMode', value);
     setIsDropdownOpen?.(false);
 
     const params = new URLSearchParams(searchParams?.toString());
@@ -53,10 +52,8 @@ const ViewMenu: React.FC<ViewMenuProps> = ({ setIsDropdownOpen }) => {
     navigateToLibrary(router, `${params.toString()}`);
   };
 
-  const handleSetSortBy = (value: LibrarySortByType) => {
-    settings.librarySortBy = value;
-    setSettings(settings);
-    saveSettings(envConfig, settings);
+  const handleSetSortBy = async (value: LibrarySortByType) => {
+    await saveSysSettings(envConfig, 'librarySortBy', value);
     setIsDropdownOpen?.(false);
 
     const params = new URLSearchParams(searchParams?.toString());
@@ -64,10 +61,8 @@ const ViewMenu: React.FC<ViewMenuProps> = ({ setIsDropdownOpen }) => {
     navigateToLibrary(router, `${params.toString()}`);
   };
 
-  const handleSetSortAscending = (value: boolean) => {
-    settings.librarySortAscending = value;
-    setSettings(settings);
-    saveSettings(envConfig, settings);
+  const handleSetSortAscending = async (value: boolean) => {
+    await saveSysSettings(envConfig, 'librarySortAscending', value);
     setIsDropdownOpen?.(false);
 
     const params = new URLSearchParams(searchParams?.toString());

@@ -8,8 +8,8 @@ import { useBookDataStore } from '@/store/bookDataStore';
 import { getStyles } from '@/styles/style';
 import { RELOAD_BEFORE_SAVED_TIMEOUT_MS } from '@/services/constants';
 import { getMaxInlineSize } from '@/utils/config';
+import { saveViewSettings } from '@/helpers/settings';
 import { useResetViewSettings } from '../../hooks/useResetSettings';
-import { saveViewSettings } from '../../utils/viewSettingsHelper';
 import { SettingsPanelPanelProp } from './SettingsDialog';
 import NumberInput from './NumberInput';
 

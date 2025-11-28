@@ -7,7 +7,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { RELOAD_BEFORE_SAVED_TIMEOUT_MS,TRANSLATOR_LANGS } from '@/services/constants';
 import Select, { getLangOptions, LangSelect } from '@/components/Select';
 import { getTranslators } from '@/services/translators';
-import { saveViewSettings } from '../../utils/viewSettingsHelper';
+import { saveViewSettings } from '@/helpers/settings';
 import { SettingsPanelPanelProp } from './SettingsDialog';
 import { useResetViewSettings } from '../../hooks/useResetSettings';
 

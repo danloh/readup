@@ -24,7 +24,7 @@ import { useEnv } from '@/context/EnvContext';
 import { getOSPlatform, isCJKEnv } from '@/utils/misc';
 import { getSysFontsList } from '@/utils/bridge';
 import { isTauriAppPlatform } from '@/services/environment';
-import { saveViewSettings } from '../../utils/viewSettingsHelper';
+import { saveViewSettings } from '@/helpers/settings';
 import { useResetViewSettings } from '../../hooks/useResetSettings';
 import { SettingsPanelPanelProp } from './SettingsDialog';
 import NumberInput from './NumberInput';

@@ -4,6 +4,8 @@ import { FaCheckCircle } from 'react-icons/fa';
 import { HighlightColor, HighlightStyle } from '@/types/book';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useResponsiveSize } from '@/hooks/useResponsiveSize';
+import { saveSysSettings } from '@/helpers/settings';
+import { useEnv } from '@/context/EnvContext';
 
 const styles = ['highlight', 'underline', 'squiggly'] as HighlightStyle[];
 const colors = ['red', 'violet', 'blue', 'green', 'yellow'] as HighlightColor[];
@@ -23,7 +25,8 @@ const HighlightOptions: React.FC<HighlightOptionsProps> = ({
   selectedColor: _selectedColor,
   onHandleHighlight,
 }) => {
-  const { settings, setSettings } = useSettingsStore();
+  const { envConfig } = useEnv();
+  const { settings } = useSettingsStore();
   const globalReadSettings = settings.globalReadSettings;
   const customColors = globalReadSettings.customHighlightColors;
   const [selectedStyle, setSelectedStyle] = React.useState<HighlightStyle>(_selectedStyle);
@@ -31,20 +34,25 @@ const HighlightOptions: React.FC<HighlightOptionsProps> = ({
   const size16 = useResponsiveSize(16);
   const size28 = useResponsiveSize(28);
 
-  const handleSelectStyle = (style: HighlightStyle) => {
-    globalReadSettings.highlightStyle = style;
-    setSettings(settings);
+  const handleSelectStyle = async (style: HighlightStyle) => {
+    const newGlobalReadSettings = { ...globalReadSettings, highlightStyle: style };
+    await saveSysSettings(envConfig, 'globalReadSettings', newGlobalReadSettings);
     setSelectedStyle(style);
     setSelectedColor(globalReadSettings.highlightStyles[style]);
     onHandleHighlight(true);
   };
-  const handleSelectColor = (color: HighlightColor) => {
-    globalReadSettings.highlightStyle = selectedStyle;
-    globalReadSettings.highlightStyles[selectedStyle] = color;
-    setSettings(settings);
+
+  const handleSelectColor = async (color: HighlightColor) => {
+    const newGlobalReadSettings = {
+      ...globalReadSettings,
+      highlightStyle: selectedStyle,
+      highlightStyles: { ...globalReadSettings.highlightStyles, [selectedStyle]: color },
+    };
+    await saveSysSettings(envConfig, 'globalReadSettings', newGlobalReadSettings);
     setSelectedColor(color);
     onHandleHighlight(true);
   };
+
   return (
     <div
       className={clsx(

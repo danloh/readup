@@ -22,6 +22,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { navigateToLogin, navigateToProfile } from '@/utils/nav';
 import { tauriHandleSetAlwaysOnTop, tauriHandleToggleFullScreen } from '@/utils/window';
 import { optInTelemetry, optOutTelemetry } from '@/utils/telemetry';
+import { saveSysSettings } from '@/helpers/settings';
 import { setMigrateDataDirDialogVisible } from './MigrateDataWindow';
 
 interface SettingsMenuProps {
@@ -85,68 +86,58 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
     setIsDropdownOpen?.(false);
   };
 
-  const toggleOpenInNewWindow = () => {
-    settings.openBookInNewWindow = !settings.openBookInNewWindow;
-    setSettings(settings);
-    saveSettings(envConfig, settings);
+  const toggleOpenInNewWindow = async () => {
+    await saveSysSettings(envConfig, 'openBookInNewWindow', !settings.openBookInNewWindow);
     setIsDropdownOpen?.(false);
   };
 
-  const toggleAlwaysOnTop = () => {
-    settings.alwaysOnTop = !settings.alwaysOnTop;
-    setSettings(settings);
-    saveSettings(envConfig, settings);
-    setIsAlwaysOnTop(settings.alwaysOnTop);
-    tauriHandleSetAlwaysOnTop(settings.alwaysOnTop);
+  const toggleAlwaysOnTop = async () => {
+    const newValue = !settings.alwaysOnTop;
+    await saveSysSettings(envConfig, 'alwaysOnTop', newValue);
+    setIsAlwaysOnTop(newValue);
+    tauriHandleSetAlwaysOnTop(newValue);
     setIsDropdownOpen?.(false);
   };
 
-  const toggleAlwaysShowStatusBar = () => {
-    settings.alwaysShowStatusBar = !settings.alwaysShowStatusBar;
-    setSettings(settings);
-    saveSettings(envConfig, settings);
-    setIsAlwaysShowStatusBar(settings.alwaysShowStatusBar);
-    setIsDropdownOpen?.(false);
+  const toggleAlwaysShowStatusBar = async () => {
+    const newValue = !settings.alwaysShowStatusBar;
+    await saveSysSettings(envConfig, 'alwaysShowStatusBar', newValue);
+    setIsAlwaysShowStatusBar(newValue);
   };
 
-  const toggleAutoImportBooksOnOpen = () => {
-    settings.autoImportBooksOnOpen = !settings.autoImportBooksOnOpen;
-    setSettings(settings);
-    saveSettings(envConfig, settings);
-    setIsAutoImportBooksOnOpen(settings.autoImportBooksOnOpen);
+  const toggleAutoImportBooksOnOpen = async () => {
+    const newValue = !settings.autoImportBooksOnOpen;
+    await saveSysSettings(envConfig, 'autoImportBooksOnOpen', newValue);
+    setIsAutoImportBooksOnOpen(newValue);
   };
 
-  const toggleAutoCheckUpdates = () => {
-    settings.autoCheckUpdates = !settings.autoCheckUpdates;
-    setSettings(settings);
-    saveSettings(envConfig, settings);
-    setIsAutoCheckUpdates(settings.autoCheckUpdates);
+  const toggleAutoCheckUpdates = async () => {
+    const newValue = !settings.autoCheckUpdates;
+    await saveSysSettings(envConfig, 'autoCheckUpdates', newValue);
+    setIsAutoCheckUpdates(newValue);
   };
 
-  const toggleScreenWakeLock = () => {
-    settings.screenWakeLock = !settings.screenWakeLock;
-    setSettings(settings);
-    saveSettings(envConfig, settings);
-    setIsScreenWakeLock(settings.screenWakeLock);
+  const toggleScreenWakeLock = async () => {
+    const newValue = !settings.screenWakeLock;
+    await saveSysSettings(envConfig, 'screenWakeLock', newValue);
+    setIsScreenWakeLock(newValue);
   };
 
-  const toggleOpenLastBooks = () => {
-    settings.openLastBooks = !settings.openLastBooks;
-    setSettings(settings);
-    saveSettings(envConfig, settings);
-    setIsOpenLastBooks(settings.openLastBooks);
+  const toggleOpenLastBooks = async () => {
+    const newValue = !settings.openLastBooks;
+    await saveSysSettings(envConfig, 'openLastBooks', newValue);
+    setIsOpenLastBooks(newValue);
   };
 
-  const toggleTelemetry = () => {
-    settings.telemetryEnabled = !settings.telemetryEnabled;
-    if (settings.telemetryEnabled) {
+  const toggleTelemetry = async () => {
+    const newValue = !settings.telemetryEnabled;
+    await saveSysSettings(envConfig, 'telemetryEnabled', newValue);
+    setIsTelemetryEnabled(newValue);
+    if (newValue) {
       optInTelemetry();
     } else {
       optOutTelemetry();
     }
-    setSettings(settings);
-    saveSettings(envConfig, settings);
-    setIsTelemetryEnabled(settings.telemetryEnabled);
   };
 
   const handleSetRootDir = () => {
@@ -167,10 +158,8 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
       if (permission.postNotification !== 'granted') return;
     }
 
-    settings.alwaysInForeground = requestAlwaysInForeground;
-    setSettings(settings);
-    saveSettings(envConfig, settings);
-    setAlwaysInForeground(settings.alwaysInForeground);
+    await saveSysSettings(envConfig, 'alwaysInForeground', requestAlwaysInForeground);
+    setAlwaysInForeground(requestAlwaysInForeground);
   };
 
   return (

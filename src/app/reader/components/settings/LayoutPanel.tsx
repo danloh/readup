@@ -23,8 +23,8 @@ import { getMaxInlineSize } from '@/utils/config';
 import { lockScreenOrientation } from '@/utils/bridge';
 import { getBookDirFromWritingMode, getBookLangCode } from '@/utils/book';
 import { MIGHT_BE_RTL_LANGS, RELOAD_BEFORE_SAVED_TIMEOUT_MS } from '@/services/constants';
+import { saveViewSettings } from '@/helpers/settings';
 import { useResetViewSettings } from '../../hooks/useResetSettings';
-import { saveViewSettings } from '../../utils/viewSettingsHelper';
 import { SettingsPanelPanelProp } from './SettingsDialog';
 import NumberInput from './NumberInput';
 
