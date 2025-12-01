@@ -189,7 +189,6 @@ export function PublicationView({
                           <MenuItem
                             key={idx}
                             noIcon
-                            transient
                             label={link.title || link.type || ''}
                             onClick={() => handleActionButton(link.href, link.type)}
                           />
