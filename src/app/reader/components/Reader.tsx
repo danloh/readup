@@ -20,6 +20,7 @@ import { interceptWindowOpen } from '@/utils/open';
 import { mountAdditionalFonts } from '@/styles/font';
 import { isTauriAppPlatform } from '@/services/environment';
 import { getSysFontsList, setSystemUIVisibility } from '@/utils/bridge';
+import { AuthWindow } from '@/components/AuthWindow';
 import { UpdaterWindow } from '@/components/UpdaterWindow';
 import { Toast } from '@/components/Toast';
 import { getLocale } from '@/utils/misc';
@@ -132,6 +133,7 @@ const Reader: React.FC<{ ids?: string }> = ({ ids }) => {
     >
       <Suspense fallback={<div className='h-[100vh]'></div>}>
         <ReaderContent ids={ids} settings={settings} />
+        <AuthWindow />
         <UpdaterWindow />
         <Toast />
       </Suspense>

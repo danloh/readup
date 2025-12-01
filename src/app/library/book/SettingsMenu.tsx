@@ -8,6 +8,7 @@ import { BiMoon, BiSun } from 'react-icons/bi';
 import { invoke, PermissionState } from '@tauri-apps/api/core';
 
 import { setAboutDialogVisible } from '@/components/AboutWindow';
+import { setAuthDialogVisible } from '@/components/AuthWindow';
 import UserAvatar from '@/components/UserAvatar';
 import Menu from '@/components/Menu';
 import MenuItem from '@/components/MenuItem';
@@ -19,7 +20,7 @@ import { useEnv } from '@/context/EnvContext';
 import { useThemeStore } from '@/store/themeStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useTranslation } from '@/hooks/useTranslation';
-import { navigateToLogin, navigateToProfile } from '@/utils/nav';
+import { navigateToProfile } from '@/utils/nav';
 import { tauriHandleSetAlwaysOnTop, tauriHandleToggleFullScreen } from '@/utils/window';
 import { optInTelemetry, optOutTelemetry } from '@/utils/telemetry';
 import { saveSysSettings } from '@/helpers/settings';
@@ -39,7 +40,7 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
   const { envConfig, appService } = useEnv();
   const { user } = useAuth();
   const { themeMode, setThemeMode } = useThemeStore();
-  const { settings, setSettings, saveSettings } = useSettingsStore();
+  const { settings } = useSettingsStore();
   const [isAutoCheckUpdates, setIsAutoCheckUpdates] = useState(settings.autoCheckUpdates);
   const [isAlwaysOnTop, setIsAlwaysOnTop] = useState(settings.alwaysOnTop);
   const [isAlwaysShowStatusBar, setIsAlwaysShowStatusBar] = useState(settings.alwaysShowStatusBar);
@@ -56,13 +57,13 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
     setIsDropdownOpen?.(false);
   };
 
-  const downloadReadup = () => {
-    window.open(DOWNLOAD_READUP_URL, '_blank');
+  const showAuthWindow = () => {
+    setAuthDialogVisible(true);
     setIsDropdownOpen?.(false);
   };
 
-  const handleUserLogin = () => {
-    navigateToLogin(router);
+  const downloadReadup = () => {
+    window.open(DOWNLOAD_READUP_URL, '_blank');
     setIsDropdownOpen?.(false);
   };
 
@@ -174,7 +175,7 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
       {user ? (
         <MenuItem label={_('Account')} noIcon onClick={handleUserProfile} />
       ) : (
-        <MenuItem label={_('Sign In')} Icon={PiUserCircle} onClick={handleUserLogin}></MenuItem>
+        <MenuItem label={_('Sign In')} Icon={PiUserCircle} onClick={showAuthWindow}></MenuItem>
       )}
       <MenuItem
         label={
@@ -190,11 +191,7 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
       {appService?.canCustomizeRootDir && (
         <>
           <hr aria-hidden='true' className='border-base-200 my-1' />
-          <MenuItem label={_('Advanced Settings')}>
-            <ul className='flex flex-col'>
-              <MenuItem label={_('Change Data Location')} noIcon onClick={handleSetRootDir} />
-            </ul>
-          </MenuItem>
+          <MenuItem label={_('Change Data Location')} noIcon onClick={handleSetRootDir} />
         </>
       )}
       <hr className='border-base-200 my-1' />

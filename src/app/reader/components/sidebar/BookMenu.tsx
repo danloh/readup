@@ -1,7 +1,6 @@
 import clsx from 'clsx';
 import React from 'react';
 import Image from 'next/image';
-
 import { MdCheck } from 'react-icons/md';
 import { useReaderStore } from '@/store/readerStore';
 import { useLibraryStore } from '@/store/libraryStore';
@@ -33,14 +32,17 @@ const BookMenu: React.FC<BookMenuProps> = ({ menuClassName, setIsDropdownOpen })
     openParallelView(id);
     setIsDropdownOpen?.(false);
   };
+
   const handleReloadPage = () => {
     window.location.reload();
     setIsDropdownOpen?.(false);
   };
+
   const handleExportAnnotations = () => {
     eventDispatcher.dispatch('export-annotations', { bookKey: sideBarBookKey });
     setIsDropdownOpen?.(false);
   };
+
   const handleToggleSortTOC = () => {
     setIsSortedTOC((prev) => !prev);
     setIsDropdownOpen?.(false);
@@ -51,10 +53,12 @@ const BookMenu: React.FC<BookMenuProps> = ({ menuClassName, setIsDropdownOpen })
     }
     setTimeout(() => window.location.reload(), 100);
   };
+
   const handleSetParallel = () => {
     setParallel(bookKeys);
     setIsDropdownOpen?.(false);
   };
+
   const handleUnsetParallel = () => {
     unsetParallel(bookKeys);
     setIsDropdownOpen?.(false);
@@ -112,13 +116,14 @@ const BookMenu: React.FC<BookMenuProps> = ({ menuClassName, setIsDropdownOpen })
         ))
       }
       <hr className='border-base-200 my-1' />
-      <MenuItem label={_('Export Annotations')} onClick={handleExportAnnotations} />
       <MenuItem
         label={_('Sort TOC by Page')}
         Icon={isSortedTOC ? MdCheck : undefined}
         onClick={handleToggleSortTOC}
       />
       <MenuItem label={_('Reload Page')} shortcut='Shift+R' onClick={handleReloadPage} />
+      <hr className='border-base-200 my-1' />
+      <MenuItem label={_('Export Annotations')} onClick={handleExportAnnotations} />
     </Menu>
   );
 };

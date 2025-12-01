@@ -12,6 +12,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useEnv } from '@/context/EnvContext';
 import Dropdown from '@/components/Dropdown';
 import { AboutWindow } from '@/components/AboutWindow';
+import { AuthWindow } from '@/components/AuthWindow';
 import { UpdaterWindow } from '@/components/UpdaterWindow';
 import WindowButtons from '@/components/WindowButtons';
 import { useTrafficLightStore } from '@/store/trafficLightStore';
@@ -148,6 +149,7 @@ const NavTab: React.FC<{
         )}
       </div>
       <AboutWindow />
+      <AuthWindow />
       <UpdaterWindow />
       <MigrateDataWindow />
     </div>

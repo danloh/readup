@@ -1,7 +1,6 @@
 import clsx from 'clsx';
 import React, { useEffect } from 'react';
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { GrSystem } from "react-icons/gr";
 import { MdZoomOut, MdZoomIn, MdSync, MdSyncProblem } from 'react-icons/md';
 import { PiScrollLight, PiBookOpenLight } from "react-icons/pi";
@@ -14,12 +13,12 @@ import { useEnv } from '@/context/EnvContext';
 import { useAuth } from '@/context/AuthContext';
 import MenuItem from '@/components/MenuItem';
 import Menu from '@/components/Menu';
+import { setAuthDialogVisible } from '@/components/AuthWindow';
 import { useThemeStore } from '@/store/themeStore';
 import { useReaderStore } from '@/store/readerStore';
 import { useBookDataStore } from '@/store/bookDataStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { getStyles } from '@/styles/style';
-import { navigateToLogin } from '@/utils/nav';
 import { eventDispatcher } from '@/utils/event';
 import { getMaxInlineSize } from '@/utils/config';
 import { tauriHandleToggleFullScreen } from '@/utils/window';
@@ -35,7 +34,6 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
   setIsDropdownOpen,
 }) => {
   const _ = useTranslation();
-  const router = useRouter();
   const { user } = useAuth();
   const { envConfig, appService } = useEnv();
   const { getConfig, getBookData } = useBookDataStore();
@@ -71,7 +69,7 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
 
   const handleSync = () => {
     if (!user) {
-      navigateToLogin(router);
+      setAuthDialogVisible(true);
       setIsDropdownOpen?.(false);
     } else {
       eventDispatcher.dispatch('sync-book-progress', { bookKey });
@@ -269,6 +267,7 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
         Icon={invertImgColor ? BiCheckboxChecked : BiCheckbox}
         onClick={() => setInvertImgColor(!invertImgColor)}
       />
+      <hr className='border-base-200 my-1' />
       <MenuItem
         label={
           !user
