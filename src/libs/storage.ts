@@ -1,4 +1,5 @@
 import { getAPIBaseUrl, isWebAppPlatform } from '@/services/environment';
+import { AppService } from '@/types/system';
 import { getUserID } from '@/utils/access';
 import { fetchWithAuth } from '@/utils/fetch';
 import {
@@ -69,36 +70,88 @@ export const uploadFile = async (
   }
 };
 
-export const downloadFile = async (
-  filePath: string,
-  fileFullPath: string,
-  onProgress?: ProgressHandler,
-) => {
+export const batchGetDownloadUrls = async (files: { lfp: string; cfp: string }[]) => {
   try {
     const userId = await getUserID();
     if (!userId) {
       throw new Error('Not authenticated');
     }
-
-    const fileKey = `${userId}/${filePath}`;
-    const response = await fetchWithAuth(
-      `${API_ENDPOINTS.download}?fileKey=${encodeURIComponent(fileKey)}`,
-      {
-        method: 'GET',
+    const filePaths = files.map((file) => file.cfp);
+    const fileKeys = filePaths.map((path) => `${userId}/${path}`);
+    const response = await fetchWithAuth(`${API_ENDPOINTS.download}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
       },
-    );
+      body: JSON.stringify({ fileKeys }),
+    });
 
-    const { downloadUrl } = await response.json();
+    const { downloadUrls } = await response.json();
+    return files.map((file) => {
+      const fileKey = `${userId}/${file.cfp}`;
+      return {
+        lfp: file.lfp,
+        cfp: file.cfp,
+        downloadUrl: downloadUrls[fileKey],
+      };
+    });
+  } catch (error) {
+    console.error('Batch get download URLs failed:', error);
+    throw new Error('Batch get download URLs failed');
+  }
+};
+
+type DownloadFileParams = {
+  appService: AppService;
+  dst: string;
+  cfp: string;
+  url?: string;
+  headers?: Record<string, string>;
+  singleThreaded?: boolean;
+  onProgress?: ProgressHandler;
+};
+
+export const downloadFile = async ({
+  appService,
+  dst,
+  cfp,
+  url,
+  headers,
+  singleThreaded,
+  onProgress,
+}: DownloadFileParams) => {
+  try {
+    let downloadUrl = url;
+    if (!downloadUrl) {
+      const userId = await getUserID();
+      if (!userId) {
+        throw new Error('Not authenticated');
+      }
+      const fileKey = `${userId}/${cfp}`;
+      const response = await fetchWithAuth(
+        `${API_ENDPOINTS.download}?fileKey=${encodeURIComponent(fileKey)}`,
+        {
+          method: 'GET',
+        },
+      );
+
+      const { downloadUrl: url } = await response.json();
+      downloadUrl = url;
+    }
+
+    if (!downloadUrl) {
+      throw new Error('No download URL available');
+    }
 
     if (isWebAppPlatform()) {
-      return await webDownload(downloadUrl, onProgress);
+      const file = await webDownload(downloadUrl, onProgress, headers);
+      await appService.writeFile(dst, 'None', await file.arrayBuffer());
     } else {
-      await tauriDownload(downloadUrl, fileFullPath, onProgress);
-      return;
+      await tauriDownload(downloadUrl, dst, onProgress, headers, undefined, singleThreaded);
     }
   } catch (error) {
-    console.error(`File '${filePath}' download failed:`, error);
-    throw new Error('File download failed');
+    console.error(`File '${dst}' download failed:`, error);
+    throw error;
   }
 };
 

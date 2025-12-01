@@ -27,6 +27,7 @@ export interface FileSystem {
   resolvePath(path: string, base: BaseDir): ResolvedPath;
   getURL(path: string): string;
   getBlobURL(path: string, base: BaseDir): Promise<string>;
+  getImageURL(path: string): Promise<string>;
   openFile(path: string, base: BaseDir, filename?: string): Promise<File>;
   copyFile(srcPath: string, dstPath: string, base: BaseDir): Promise<void>;
   readFile(path: string, base: BaseDir, mode: 'text' | 'binary'): Promise<string | ArrayBuffer>;
@@ -66,9 +67,12 @@ export interface AppService {
   init(): Promise<void>;
   openFile(path: string, base: BaseDir): Promise<File>;
   copyFile(srcPath: string, dstPath: string, base: BaseDir): Promise<void>;
+  writeFile(path: string, base: BaseDir, content: string | ArrayBuffer | File): Promise<void>;
   createDir(path: string, base: BaseDir, recursive?: boolean): Promise<void>;
   deleteFile(path: string, base: BaseDir): Promise<void>;
   deleteDir(path: string, base: BaseDir, recursive?: boolean): Promise<void>;
+  exists(path: string, base: BaseDir): Promise<boolean>;
+  getImageURL(path: string): Promise<string>;
 
   setCustomRootDir(customRootDir: string): Promise<void>;
   resolveFilePath(path: string, base: BaseDir): Promise<string>;
@@ -96,6 +100,7 @@ export interface AppService {
     redownload?: boolean,
     onProgress?: ProgressHandler,
   ): Promise<void>;
+  downloadBookCovers(books: Book[], redownload?: boolean): Promise<void>;
   isBookAvailable(book: Book): Promise<boolean>;
   getBookFileSize(book: Book): Promise<number | null>;
   loadBookConfig(book: Book, settings: SystemSettings): Promise<BookConfig>;

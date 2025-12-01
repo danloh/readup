@@ -203,7 +203,7 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey, iconRef }) => {
       }
 
       const docs = view.renderer.getContents();
-      if (docs.some(({ doc }) => doc.getSelection())) {
+      if (docs.some(({ doc }) => (doc.getSelection()?.toString().length ?? 0) > 0)) {
         return;
       }
 

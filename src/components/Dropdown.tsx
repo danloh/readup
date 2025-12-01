@@ -8,6 +8,7 @@ interface DropdownProps {
   buttonClassName?: string;
   toggleButton: React.ReactNode;
   children: ReactElement<{ setIsDropdownOpen: (isOpen: boolean) => void; menuClassName?: string }>;
+  disabled?: boolean;
   onToggle?: (isOpen: boolean) => void;
 }
 
@@ -18,6 +19,7 @@ const Dropdown: React.FC<DropdownProps> = ({
   buttonClassName,
   toggleButton,
   children,
+  disabled,
   onToggle,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -29,6 +31,7 @@ const Dropdown: React.FC<DropdownProps> = ({
   };
 
   const setIsDropdownOpen = (isOpen: boolean) => {
+    if (disabled) return;
     setIsOpen(isOpen);
     onToggle?.(isOpen);
   };
