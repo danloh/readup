@@ -7,7 +7,7 @@ import { FeedManager } from './FeedManager';
 import * as dataAgent from './dataAgent';
 import { ArticleType, FeedType } from './dataAgent';
 
-export default function CatalogPage() {
+export default function FeedPage() {
   const { envConfig } = useEnv();
   // channel list
   const [channelList, setChannelList] = useState<FeedType[]>([]);

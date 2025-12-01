@@ -50,7 +50,7 @@ export function ChannelList(props: Props) {
       >
         <div className='flex flex-row items-center justify-start'>
           <IoIosSettings size={18} className='m-1' />
-          <span className='m-1'>Manage Catalog</span>
+          <span className='m-1'>Manage Feed</span>
         </div>
       </div>
       <div 

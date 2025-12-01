@@ -19,7 +19,7 @@ import { useTrafficLightStore } from '@/store/trafficLightStore';
 import { useThemeStore } from '@/store/themeStore';
 import LibraryPage from './book/LibraryPage';
 import SettingsMenu from './book/SettingsMenu';
-import CatalogPage from './feed/CatalogPage';
+import FeedPage from './feed/FeedPage';
 import StreakPage from './streak/StreakPage';
 import { MigrateDataWindow } from './book/MigrateDataWindow';
 
@@ -33,7 +33,7 @@ function titleCase(str: string) {
 const Library = () => {
   const { appService } = useEnv();
   const { isRoundedWindow } = useThemeStore();
-  const [activeTab, setActiveTab] = useState('library');
+  const [activeTab, setActiveTab] = useState('book');
   return (
     <div 
       className={clsx(
@@ -45,12 +45,12 @@ const Library = () => {
       <div className='nav-bar'>
         <NavTab activeTab={activeTab} onTabChange={setActiveTab} />
       </div>
-      {activeTab === 'library' ? (
+      {activeTab === 'book' ? (
         <LibraryPage />
       ) : activeTab === 'streak' ? (
         <StreakPage />
-      ) : activeTab === 'catalog' && appService?.appPlatform !== 'web' ? (
-        <CatalogPage />
+      ) : activeTab === 'feed' && appService?.appPlatform !== 'web' ? (
+        <FeedPage />
       ) : null}
     </div>
   );
@@ -87,7 +87,7 @@ const NavTab: React.FC<{
   
   const windowButtonVisible = appService?.hasWindowBar && !isTrafficLightVisible;
 
-  const tabs = ['library', 'catalog', 'streak'];
+  const tabs = ['book', 'feed', 'catalog', 'streak'];
 
   if (!insets) return null;
 
@@ -120,9 +120,9 @@ const NavTab: React.FC<{
               className='btn btn-ghost btn-sm' 
               onClick={() => onTabChange(tab)}
             >
-              {tab === 'library' ? (
+              {tab === 'book' ? (
                 <BiLibrary className={clsx('mx-auto', tab === activeTab && 'text-success')} />
-              ) : tab === 'catalog' ? (
+              ) : tab === 'feed' ? (
                 <ImFeed className={clsx('mx-auto', tab === activeTab && 'text-success')} />
               ) : tab === 'note' ? (
                 <PiNotebook className={clsx('mx-auto', tab === activeTab && 'text-success')} />  

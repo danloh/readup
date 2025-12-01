@@ -673,7 +673,7 @@ export abstract class BaseAppService implements AppService {
   }
 
   async loadFeeds(): Promise<FeedType[]> {
-    console.log('Loading Catalogs...');
+    console.log('Loading Feeds...');
     let feeds: FeedType[] = [];
 
     const mainResult = await this.loadJSONFile('feeds.json', 'Books');

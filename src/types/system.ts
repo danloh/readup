@@ -108,7 +108,7 @@ export interface AppService {
   getCoverImageBlobUrl(book: Book): Promise<string>;
   generateCoverImageUrl(book: Book): Promise<string>;
   updateCoverImage(book: Book, imageUrl?: string, imageFile?: string): Promise<void>;
-  // for catalogs(feeds)
+  // for feeds
   loadFeeds(): Promise<FeedType[]>;
   saveFeeds(feeds: FeedType[]): Promise<void>;
   loadArticles(): Promise<ArticleType[]>;
