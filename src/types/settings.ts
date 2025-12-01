@@ -1,5 +1,6 @@
 import { CustomTheme } from '@/styles/themes';
 import { HighlightColor, HighlightStyle, ViewSettings } from './book';
+import { OPDSCatalog } from './opds';
 
 export type ThemeType = 'light' | 'dark' | 'auto';
 export type LibraryViewModeType = 'grid' | 'list';
@@ -39,6 +40,7 @@ export interface SystemSettings {
   libraryViewMode: LibraryViewModeType;
   librarySortBy: LibrarySortByType;
   librarySortAscending: boolean;
+  opdsCatalogs: OPDSCatalog[];
 
   lastSyncedAtBooks: number;
   lastSyncedAtConfigs: number;

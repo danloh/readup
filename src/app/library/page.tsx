@@ -7,7 +7,8 @@ import { ImFeed } from "react-icons/im";
 import { BiLibrary } from 'react-icons/bi';
 import { SiProgress } from "react-icons/si";
 import { MdOutlineSettings } from 'react-icons/md';
-import { PiNotebook } from 'react-icons/pi';
+import { GrCatalog } from 'react-icons/gr';
+//import { PiNotebook } from 'react-icons/pi';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useEnv } from '@/context/EnvContext';
 import Dropdown from '@/components/Dropdown';
@@ -22,6 +23,7 @@ import SettingsMenu from './book/SettingsMenu';
 import FeedPage from './feed/FeedPage';
 import StreakPage from './streak/StreakPage';
 import { MigrateDataWindow } from './book/MigrateDataWindow';
+import OpdsPage from './opds/OpdsPage';
 
 function titleCase(str: string) {
   return str.replace(
@@ -47,7 +49,9 @@ const Library = () => {
       </div>
       {activeTab === 'book' ? (
         <LibraryPage />
-      ) : activeTab === 'streak' ? (
+      ) : activeTab === 'catalog' ? (
+        <OpdsPage />
+      ): activeTab === 'streak' ? (
         <StreakPage />
       ) : activeTab === 'feed' && appService?.appPlatform !== 'web' ? (
         <FeedPage />
@@ -87,7 +91,9 @@ const NavTab: React.FC<{
   
   const windowButtonVisible = appService?.hasWindowBar && !isTrafficLightVisible;
 
-  const tabs = ['book', 'feed', 'catalog', 'streak'];
+  const tabs = appService?.appPlatform !== 'web' 
+    ? ['book', 'feed', 'catalog', 'streak']
+    : ['book', 'catalog', 'streak'];
 
   if (!insets) return null;
 
@@ -124,8 +130,8 @@ const NavTab: React.FC<{
                 <BiLibrary className={clsx('mx-auto', tab === activeTab && 'text-success')} />
               ) : tab === 'feed' ? (
                 <ImFeed className={clsx('mx-auto', tab === activeTab && 'text-success')} />
-              ) : tab === 'note' ? (
-                <PiNotebook className={clsx('mx-auto', tab === activeTab && 'text-success')} />  
+              ) : tab === 'catalog' ? (
+                <GrCatalog className={clsx('mx-auto', tab === activeTab && 'text-success')} />  
               ) : (
                 <SiProgress className={clsx('mx-auto', tab === activeTab && 'text-success')} />
               )}
