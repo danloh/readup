@@ -2,17 +2,16 @@
 
 import clsx from 'clsx';
 import { useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import { IoChevronBack, IoChevronForward } from 'react-icons/io5';
-import { BiLibrary } from 'react-icons/bi';
+import { IoChevronBack, IoChevronForward, IoHome } from 'react-icons/io5';
 import { RiToolsFill } from 'react-icons/ri';
 import { useEnv } from '@/context/EnvContext';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useTrafficLight } from '@/hooks/useTrafficLight';
-import { navigateToLibrary } from '@/utils/nav';
 
 interface NavigationProps {
   currentURL: string;
+  startURL?: string;
+  onNavigate: (url: string) => void;
   onBack?: () => void;
   onForward?: () => void;
   canGoBack: boolean;
@@ -21,6 +20,8 @@ interface NavigationProps {
 }
 
 export function Navigation({
+  startURL,
+  onNavigate,
   onBack,
   onForward,
   canGoBack,
@@ -29,13 +30,14 @@ export function Navigation({
 }: NavigationProps) {
   const _ = useTranslation();
   const { appService } = useEnv();
-  const router = useRouter();
 
   const { isTrafficLightVisible } = useTrafficLight();
 
-  const handleGoLibrary = useCallback(() => {
-    navigateToLibrary(router, '', {}, true);
-  }, [router]);
+  const handleGoHome = useCallback(() => {
+    if (startURL) {
+      onNavigate(startURL);
+    }
+  }, [startURL, onNavigate]);
 
   return (
     <header
@@ -76,8 +78,8 @@ export function Navigation({
         <button className='btn btn-ghost btn-xs' onClick={onShowCatalog} title={_('Catalog')}>
           <RiToolsFill className='h-5 w-5' />
         </button>
-        <button className='btn btn-ghost btn-xs' onClick={handleGoLibrary} title={_('Library')}>
-          <BiLibrary className='h-5 w-5' />
+        <button className='btn btn-ghost btn-sm' onClick={handleGoHome} title={_('Home')}>
+          <IoHome className='h-5 w-5' />
         </button>
       </div>
     </header>

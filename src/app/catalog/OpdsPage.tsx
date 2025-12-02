@@ -449,6 +449,8 @@ export default function BrowserPage() {
       >
         <Navigation
           currentURL={state.currentURL}
+          startURL={state.startURL}
+          onNavigate={handleNavigate}
           onBack={handleBack}
           onForward={handleForward}
           canGoBack={canGoBack}

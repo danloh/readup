@@ -121,7 +121,7 @@ export function CatalogManager() {
     const params = new URLSearchParams({ url: catalog.url });
     if (catalog.username) params.set('username', catalog.username);
     if (catalog.password) params.set('password', catalog.password);
-    router.push(`/opds?${params.toString()}`);
+    router.push(`/catalog?${params.toString()}`);
   };
 
   const handleCloseDialog = () => {

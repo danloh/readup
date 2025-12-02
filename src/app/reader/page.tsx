@@ -9,7 +9,7 @@ import { checkForAppUpdates, checkAppReleaseNotes } from '@/helpers/updater';
 import Reader from './components/Reader';
 
 // This is only used for the Tauri app in the app router
-export default function Page() {
+export default function ReadPage() {
   const _ = useTranslation();
   const { appService } = useEnv();
   const { settings } = useSettingsStore();
