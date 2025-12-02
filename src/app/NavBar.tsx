@@ -1,7 +1,7 @@
 'use client';
 
 import clsx from 'clsx';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { ImFeed } from "react-icons/im";
 import { BiLibrary } from 'react-icons/bi';
@@ -27,10 +27,7 @@ function titleCase(str: string) {
   );
 }
 
-export const NavTab: React.FC<{
-  activeTab: string;
-  onTabChange: (tab: string) => void;
-}> = ({ activeTab, onTabChange }) => {
+export const NavTab: React.FC<{activeTab: string}> = ({ activeTab }) => {
   const _ = useTranslation();
   const router = useRouter();
   const { appService } = useEnv();
@@ -48,7 +45,6 @@ export const NavTab: React.FC<{
   if (!insets) return null;
 
   const onTabNav = useCallback((tab: string) => {
-    onTabChange(tab);
     router.push(`/${tab}`)
   }, [router]);
 
@@ -118,12 +114,9 @@ export const NavTab: React.FC<{
 };
 
 
-export default function NavBar(
-  { tab, children }: { tab: string; children: React.ReactNode }
-) {
+export default function NavBar({ tab, children }: { tab: string; children: React.ReactNode }) {
   const { appService } = useEnv();
   const { isRoundedWindow } = useThemeStore();
-  const [activeTab, setActiveTab] = useState(tab || 'library');
 
   return (
     <div 
@@ -133,9 +126,7 @@ export default function NavBar(
         appService?.hasRoundedWindow && isRoundedWindow && 'window-border rounded-window',
       )}
     >
-      <div className='nav-bar'>
-        <NavTab activeTab={activeTab} onTabChange={setActiveTab} />
-      </div>
+      <div className='nav-bar'><NavTab activeTab={tab} /></div>
       {children}
     </div>
   );

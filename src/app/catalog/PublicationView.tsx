@@ -5,7 +5,6 @@ import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { IoPricetag } from 'react-icons/io5';
 import { Book } from '@/types/book';
-import { groupByArray } from './utils/opdsUtils';
 import { useTranslation } from '@/hooks/useTranslation';
 import { formatDate, formatLanguage } from '@/utils/book';
 import { eventDispatcher } from '@/utils/event';
@@ -14,6 +13,7 @@ import { CachedImage } from '@/components/CachedImage';
 import { OPDSLink, OPDSPublication, REL, SYMBOL } from '@/types/opds';
 import Dropdown from '@/components/Dropdown';
 import MenuItem from '@/components/MenuItem';
+import { groupByArray } from './utils/opdsUtils';
 
 interface PublicationViewProps {
   publication: OPDSPublication;

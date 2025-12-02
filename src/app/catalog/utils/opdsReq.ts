@@ -1,6 +1,6 @@
 import { md5 } from 'js-md5';
-import { isTauriAppPlatform, isWebAppPlatform } from '@/services/environment';
 import { fetch as tauriFetch } from '@tauri-apps/plugin-http';
+import { isTauriAppPlatform, isWebAppPlatform } from '@/services/environment';
 
 /**
  * Extract username and password from URL credentials

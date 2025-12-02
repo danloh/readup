@@ -1,5 +1,6 @@
 'use client';
 
+import clsx from 'clsx';
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { isOPDSCatalog, getPublication, getFeed, getOpenSearch } from 'foliate-js/opds.js';
@@ -7,10 +8,6 @@ import { md5 } from 'js-md5';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { useEnv } from '@/context/EnvContext';
 import { isWebAppPlatform } from '@/services/environment';
-import { FeedView } from './FeedView';
-import { PublicationView } from './PublicationView';
-import { SearchView } from './SearchView';
-import { Navigation } from './Navigation';
 import { getBaseFilename } from '@/utils/path';
 import { downloadFile } from '@/libs/storage';
 import { Toast } from '@/components/Toast';
@@ -20,12 +17,15 @@ import { useLibrary } from '@/hooks/useLibrary';
 import { eventDispatcher } from '@/utils/event';
 import { getFileExtFromMimeType } from '@/libs/document';
 import { OPDSFeed, OPDSPublication, OPDSSearch } from '@/types/opds';
-import { MIME, parseMediaType, resolveURL } from './utils/opdsUtils';
-import { getProxiedURL, fetchWithAuth, probeAuth, needsProxy } from './utils/opdsReq';
-import clsx from 'clsx';
 import { useThemeStore } from '@/store/themeStore';
 import { useTheme } from '@/hooks/useTheme';
+import { MIME, parseMediaType, resolveURL } from './utils/opdsUtils';
+import { getProxiedURL, fetchWithAuth, probeAuth, needsProxy } from './utils/opdsReq';
 import { CatalogDialog } from './OPDSDialog';
+import { FeedView } from './FeedView';
+import { PublicationView } from './PublicationView';
+import { SearchView } from './SearchView';
+import { Navigation } from './Navigation';
 
 type ViewMode = 'feed' | 'publication' | 'search' | 'loading' | 'error';
 
