@@ -77,15 +77,10 @@ const ProfilePage = () => {
     );
   }
 
-  const avatarUrl = user?.user_metadata?.['picture'] || user?.user_metadata?.['avatar_url'];
-  const userFullName = user?.user_metadata?.['full_name'] || '-';
-  const userEmail = user?.email || '';
-
   return (
     <div
       className={clsx(
-        'bg-base-100 inset-0 select-none overflow-hidden',
-        appService?.isIOSApp ? 'h-[100vh]' : 'h-dvh',
+        'bg-base-100 inset-0 full-height select-none overflow-hidden',
         appService?.isLinuxApp && 'window-border',
         appService?.hasRoundedWindow && 'rounded-window',
       )}
@@ -105,9 +100,9 @@ const ProfilePage = () => {
               <div className='flex flex-col gap-y-8'>
                 <div className='flex flex-col gap-y-8 px-6'>
                   <UserInfo
-                    avatarUrl={avatarUrl}
-                    userFullName={userFullName}
-                    userEmail={userEmail}
+                    avatarUrl={'avatarUrl'}
+                    userFullName={'userFullName'}
+                    userEmail={'userEmail'}
                     
                   />
                 </div>

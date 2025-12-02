@@ -430,7 +430,7 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
   };
 
   if (!appService || !insets || checkOpenWithBooks || checkLastOpenBooks) {
-    return <div className={clsx('h-[100vh]', !appService?.isLinuxApp && 'bg-base-200')} />;
+    return <div className={clsx('full-height', !appService?.isLinuxApp && 'bg-base-200')} />;
   }
 
   const showBookshelf = libraryLoaded || libraryBooks.length > 0;
@@ -439,7 +439,7 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
     <div
       ref={pageRef}
       className={clsx(
-        'library-page bg-base-200 text-base-content flex flex-col h-[100vh] overflow-hidden',
+        'library-page text-base-content full-height flex select-none flex-col overflow-hidden',
       )}
     >
       <div className='top-0 z-40 w-full'>
@@ -508,7 +508,7 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
 
 const LibraryPage = () => {
   return (
-    <Suspense fallback={<div className='h-[100vh]' />}>
+    <Suspense fallback={<div className='full-height' />}>
       <LibraryPageWithSearchParams />
     </Suspense>
   );

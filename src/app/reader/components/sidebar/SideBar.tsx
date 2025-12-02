@@ -216,8 +216,7 @@ const SideBar: React.FC<{
       <div
         className={clsx(
           'sidebar-container bg-base-200 flex min-w-60 select-none flex-col',
-          appService?.isIOSApp ? 'h-[100vh]' : 'h-full',
-          'transition-[padding-top] duration-300',
+          'full-height transition-[padding-top] duration-300',
           appService?.hasRoundedWindow && 'rounded-window-top-left rounded-window-bottom-left',
           isSideBarPinned ? 'z-20' : 'z-[45] shadow-2xl',
         )}

@@ -121,8 +121,7 @@ export default function NavBar({ tab, children }: { tab: string; children: React
   return (
     <div 
       className={clsx(
-        'nav-page bg-base-200 text-base-content flex select-none flex-col overflow-hidden',
-        appService?.isIOSApp ? 'h-[100vh]' : 'h-dvh',
+        'nav-page full-height bg-base-200 text-base-content flex select-none flex-col overflow-hidden',
         appService?.hasRoundedWindow && isRoundedWindow && 'window-border rounded-window',
       )}
     >
