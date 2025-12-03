@@ -7,7 +7,7 @@ import { AuthToken, createSession, resolveDid, User } from '@/helpers/auth';
 interface AuthContextType {
   token: AuthToken | null;
   user: User | null;
-  login: (handle: string, passwd: string, host: string) => void;
+  login: (handle: string, passwd: string, host: string) => Promise<boolean>;
   logout: () => void;
 }
 
@@ -21,6 +21,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
     return null;
   });
+
   const [user, setUser] = useState<User | null>(() => {
     if (typeof window !== 'undefined') {
       const userJson = localStorage.getItem('user');
@@ -30,9 +31,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   });
 
   useEffect(() => {
-    const syncSession = (
-      session: { token: AuthToken; user: User } | null,
-    ) => {
+    const syncSession = (session: { token: AuthToken; user: User } | null) => {
       if (session) {
         console.log('Syncing session');
         const { token, user } = session;
@@ -58,7 +57,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     refreshSession();
-    
   }, []);
 
   const login = async (handle: string, passwd: string, host: string) => {
@@ -83,8 +81,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(newUser);
         localStorage.setItem('user', JSON.stringify(newUser));
       }
+      return true;
     } else {
       console.log('Failed to Log in');
+      return false;
     }
   };
 

@@ -1,7 +1,6 @@
-import { useEffect, useState } from 'react';
-import Image from 'next/image';
-import { useEnv } from '@/context/EnvContext';
+import { FormEvent, useCallback, useEffect, useState } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useAuth } from '@/context/AuthContext';
 import Dialog from './Dialog';
 
 export const setAuthDialogVisible = (visible: boolean) => {
@@ -16,9 +15,29 @@ export const setAuthDialogVisible = (visible: boolean) => {
 
 export const AuthWindow = () => {
   const _ = useTranslation();
-  const { appService } = useEnv();
 
   const [isOpen, setIsOpen] = useState(false);
+  const handleClose = () => {
+    setIsOpen(false);
+  };
+
+  const { login } = useAuth();
+  const [host, setHost] = useState('');
+  const [handle, setHandle] = useState('');
+  const [password, setPassword] = useState('');
+
+  const onSubmit = useCallback(
+    async (event: FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      const res = await login(handle, password, host); 
+      if (res) {
+        handleClose();
+      } else {
+        // toast 
+      }
+    },
+    [host, handle, password]
+  );
 
   useEffect(() => {
     const handleCustomEvent = (event: CustomEvent) => {
@@ -38,10 +57,6 @@ export const AuthWindow = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleClose = () => {
-    setIsOpen(false);
-  };
-
   return (
     <Dialog
       id='auth_window'
@@ -50,14 +65,59 @@ export const AuthWindow = () => {
       onClose={handleClose}
       boxClassName='sm:!w-96 sm:h-auto'
     >
-      <div className='about-content flex flex-col items-center justify-center'>
-        <div className='flex flex-col items-center gap-2 px-8 py-2'>
-          <div className='mb-2 mt-6'>
-            <Image src='/icon.png' alt='App Logo' className='h-20 w-20' width={64} height={64} />
-          </div>
-          <div className='flex select-text flex-col items-center'>
-            <h2 className='mb-2 text-2xl font-bold'>Readup</h2>
-          </div>
+      <div className='auth-content flex flex-col items-center justify-center'>
+        <div className="card mx-auto p-4 w-full mx-auto max-w-md">
+          <form
+            className="flex flex-col gap-4" 
+            onSubmit={onSubmit}
+          >
+            <label className="w-full input flex items-center gap-2">
+              <span className="text-accent">Service</span> 
+              <input
+                type="text"
+                name="host"
+                id="host" 
+                placeholder="such as: bsky.social"
+                value="bsky.social" 
+                onChange={(event) => setHost(event.target.value || 'bsky.social')}
+                className="grow" 
+              />
+            </label>
+            <label className="w-full input flex items-center gap-2">
+              <span className="text-accent">Handle</span>
+              <input
+                type="text"
+                name="handle"
+                id="handle" 
+                placeholder="e.g. my.bsky.social"
+                className="grow" 
+                onChange={(event) => setHandle(event.target.value)}
+                required
+              />
+            </label>
+            <label className="w-full input flex items-center gap-2">
+              <span className="text-accent">Password</span>
+              <input
+                type="password"
+                name="pass"
+                id="pass" 
+                className="grow" 
+                placeholder="App Password" 
+                onChange={(event) => setPassword(event.target.value)}
+                required
+              />
+            </label>
+            <a 
+              className="text-sm text-success" 
+              href="https://bsky.app/settings/app-passwords" 
+              target="_blank"
+            >
+              Go to generate the app password
+            </a>
+            <button type="submit" className="btn btn-neutral">
+              Log In
+            </button>
+          </form>
         </div>
       </div>
     </Dialog>
