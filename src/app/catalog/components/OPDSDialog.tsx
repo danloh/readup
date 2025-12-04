@@ -18,7 +18,7 @@ export function CatalogDialog({ onClose }: CatalogDialogProps) {
       boxClassName='sm:min-w-[520px] sm:w-3/4 sm:h-[85%] sm:!max-w-screen-sm'
     >
       <div className={clsx('bg-base-100 relative flex flex-col overflow-y-auto')}>
-        <CatalogManager />
+        <CatalogManager closeDialog={onClose} />
       </div>
       <form method='dialog' className='modal-backdrop'>
         <button onClick={onClose}>{_('Close')}</button>

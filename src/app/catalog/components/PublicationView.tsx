@@ -13,7 +13,7 @@ import { CachedImage } from '@/components/CachedImage';
 import { OPDSLink, OPDSPublication, REL, SYMBOL } from '@/types/opds';
 import Dropdown from '@/components/Dropdown';
 import MenuItem from '@/components/MenuItem';
-import { groupByArray } from './utils/opdsUtils';
+import { groupByArray } from '../utils/opdsUtils';
 
 interface PublicationViewProps {
   publication: OPDSPublication;

@@ -1,6 +1,6 @@
 'use client';
 
-import OpdsPage from './OpdsPage';
+import OpdsPage from './components/OpdsPage';
 import NavBar from '../NavBar';
 
 export default function Opds() {

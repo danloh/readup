@@ -11,7 +11,7 @@ import { saveSysSettings } from '@/helpers/settings';
 import { OPDSCatalog } from '@/types/opds';
 import { isLanAddress } from '@/utils/network';
 import ModalPortal from '@/components/ModalPortal';
-import { validateOPDSURL } from './utils/opdsUtils';
+import { validateOPDSURL } from '../utils/opdsUtils';
 
 const POPULAR_CATALOGS: OPDSCatalog[] = [
   {
@@ -39,7 +39,11 @@ async function validateOPDSCatalog(
   return { valid: result.isValid, error: result.error };
 }
 
-export function CatalogManager() {
+interface CMProps {
+  closeDialog: () => void;
+}
+
+export function CatalogManager({ closeDialog}: CMProps) {
   const _ = useTranslation();
   const router = useRouter();
   const { envConfig } = useEnv();
@@ -119,9 +123,9 @@ export function CatalogManager() {
 
   const handleOpenCatalog = (catalog: OPDSCatalog) => {
     const params = new URLSearchParams({ url: catalog.url });
-    if (catalog.username) params.set('username', catalog.username);
-    if (catalog.password) params.set('password', catalog.password);
+    if (catalog.username) params.set('id', catalog.id);
     router.push(`/catalog?${params.toString()}`);
+    closeDialog();
   };
 
   const handleCloseDialog = () => {
@@ -280,7 +284,7 @@ export function CatalogManager() {
                     type='text'
                     value={newCatalog.name}
                     onChange={(e) => setNewCatalog({ ...newCatalog, name: e.target.value })}
-                    placeholder={_('My Calibre Library')}
+                    placeholder={_('My Online Library')}
                     className='input input-bordered placeholder:text-sm'
                     disabled={isValidating}
                     required
@@ -369,12 +373,12 @@ export function CatalogManager() {
                   <button
                     type='button'
                     onClick={handleCloseDialog}
-                    className='btn'
+                    className='btn btn-sm'
                     disabled={isValidating}
                   >
                     {_('Cancel')}
                   </button>
-                  <button type='submit' className='btn btn-primary' disabled={isValidating}>
+                  <button type='submit' className='btn btn-sm btn-primary' disabled={isValidating}>
                     {isValidating ? (
                       <>
                         <span className='loading loading-spinner loading-sm'></span>

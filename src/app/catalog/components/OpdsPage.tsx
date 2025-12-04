@@ -17,9 +17,10 @@ import { eventDispatcher } from '@/utils/event';
 import { getFileExtFromMimeType } from '@/libs/document';
 import { OPDSFeed, OPDSPublication, OPDSSearch } from '@/types/opds';
 import { useThemeStore } from '@/store/themeStore';
+import { useSettingsStore } from '@/store/settingsStore';
 import { useTheme } from '@/hooks/useTheme';
-import { MIME, parseMediaType, resolveURL } from './utils/opdsUtils';
-import { getProxiedURL, fetchWithAuth, probeAuth, needsProxy } from './utils/opdsReq';
+import { MIME, parseMediaType, resolveURL } from '../utils/opdsUtils';
+import { getProxiedURL, fetchWithAuth, probeAuth, needsProxy } from '../utils/opdsReq';
 import { CatalogDialog } from './OPDSDialog';
 import { FeedView } from './FeedView';
 import { PublicationView } from './PublicationView';
@@ -50,6 +51,7 @@ export default function BrowserPage() {
   const { appService } = useEnv();
   const { libraryLoaded } = useLibrary();
   const { safeAreaInsets, isRoundedWindow } = useThemeStore();
+  const { settings } = useSettingsStore();
   const [viewMode, setViewMode] = useState<ViewMode>('loading');
   const [state, setState] = useState<OPDSState>({
     baseURL: '',
@@ -66,10 +68,10 @@ export default function BrowserPage() {
   const [showCatalogManager, setShowCatalogManager] = useState(false);
 
   const searchParams = useSearchParams();
-  const usernameRef = useRef(searchParams?.get('username'));
-  const passwordRef = useRef(searchParams?.get('password'));
+  const usernameRef = useRef<string | null | undefined>(undefined);
+  const passwordRef = useRef<string | null | undefined>(undefined);
+  const startURLRef = useRef<string | null | undefined>(undefined);
   const loadingOPDSRef = useRef(false);
-  const startURLRef = useRef<string | undefined>(undefined);
   const historyIndexRef = useRef(-1);
   const isNavigatingHistoryRef = useRef(false);
 
@@ -237,9 +239,10 @@ export default function BrowserPage() {
 
   useEffect(() => {
     const url = searchParams?.get('url') || 'https://m.gutenberg.org/ebooks.opds/';
-    const username = searchParams?.get('username');
-    const password = searchParams?.get('password');
     if (url && !isNavigatingHistoryRef.current) {
+      const catalogId = searchParams?.get('id') || '';
+      const catalog = settings.opdsCatalogs?.find((cat) => cat.id === catalogId);
+      const { username, password } = catalog || {};
       if (username || password) {
         usernameRef.current = username;
         passwordRef.current = password;
@@ -247,14 +250,16 @@ export default function BrowserPage() {
         usernameRef.current = null;
         passwordRef.current = null;
       }
-      loadOPDS(url);
+      if (libraryLoaded) {
+        loadOPDS(url);
+      }
     } else if (isNavigatingHistoryRef.current) {
       isNavigatingHistoryRef.current = false;
     } else {
       setViewMode('error');
       setError(new Error('No OPDS URL provided'));
     }
-  }, [searchParams, loadOPDS]);
+  }, [searchParams, settings, libraryLoaded, loadOPDS]);
 
   const handleNavigate = useCallback(
     (url: string) => {
