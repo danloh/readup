@@ -11,13 +11,23 @@ import { DBBookConfig, DBBook, DBBookNote } from '@/types/records';
 import { sanitizeString } from './sanitize';
 
 export const transformBookConfigToDB = (bookConfig: unknown, userId: string): DBBookConfig => {
-  const { bookHash, progress, location, searchConfig, viewSettings, updatedAt } =
-    bookConfig as BookConfig;
+  const {
+    bookHash,
+    metaHash,
+    progress,
+    location,
+    xpointer,
+    searchConfig,
+    viewSettings,
+    updatedAt,
+  } = bookConfig as BookConfig;
 
   return {
     user_id: userId,
     book_hash: bookHash!,
+    meta_hash: metaHash,
     location: location,
+    xpointer: xpointer,
     progress: progress && JSON.stringify(progress),
     search_config: searchConfig && JSON.stringify(searchConfig),
     view_settings: viewSettings && JSON.stringify(viewSettings),
@@ -26,10 +36,21 @@ export const transformBookConfigToDB = (bookConfig: unknown, userId: string): DB
 };
 
 export const transformBookConfigFromDB = (dbBookConfig: DBBookConfig): BookConfig => {
-  const { book_hash, progress, location, search_config, view_settings, updated_at } = dbBookConfig;
+  const {
+    book_hash,
+    meta_hash,
+    progress,
+    location,
+    xpointer,
+    search_config,
+    view_settings,
+    updated_at,
+  } = dbBookConfig;
   return {
     bookHash: book_hash,
+    metaHash: meta_hash,
     location,
+    xpointer,
     progress: progress && JSON.parse(progress),
     searchConfig: search_config && JSON.parse(search_config),
     viewSettings: view_settings && JSON.parse(view_settings),
@@ -40,6 +61,7 @@ export const transformBookConfigFromDB = (dbBookConfig: DBBookConfig): BookConfi
 export const transformBookToDB = (book: unknown, userId: string): DBBook => {
   const {
     hash,
+    metaHash,
     format,
     title,
     sourceTitle,
@@ -58,6 +80,7 @@ export const transformBookToDB = (book: unknown, userId: string): DBBook => {
   return {
     user_id: userId,
     book_hash: hash,
+    meta_hash: metaHash,
     format,
     title: sanitizeString(title)!,
     author: sanitizeString(author)!,
@@ -77,6 +100,7 @@ export const transformBookToDB = (book: unknown, userId: string): DBBook => {
 export const transformBookFromDB = (dbBook: DBBook): Book => {
   const {
     book_hash,
+    meta_hash,
     format,
     title,
     author,
@@ -94,6 +118,7 @@ export const transformBookFromDB = (dbBook: DBBook): Book => {
 
   return {
     hash: book_hash,
+    metaHash: meta_hash,
     format: format as BookFormat,
     title,
     author,
@@ -111,12 +136,25 @@ export const transformBookFromDB = (dbBook: DBBook): Book => {
 };
 
 export const transformBookNoteToDB = (bookNote: unknown, userId: string): DBBookNote => {
-  const { bookHash, id, type, cfi, text, style, color, note, createdAt, updatedAt, deletedAt } =
-    bookNote as BookNote;
+  const {
+    bookHash,
+    metaHash,
+    id,
+    type,
+    cfi,
+    text,
+    style,
+    color,
+    note,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  } = bookNote as BookNote;
 
   return {
     user_id: userId,
     book_hash: bookHash!,
+    meta_hash: metaHash,
     id,
     type,
     cfi,
@@ -132,11 +170,24 @@ export const transformBookNoteToDB = (bookNote: unknown, userId: string): DBBook
 };
 
 export const transformBookNoteFromDB = (dbBookNote: DBBookNote): BookNote => {
-  const { book_hash, id, type, cfi, text, style, color, note, created_at, updated_at, deleted_at } =
-    dbBookNote;
+  const {
+    book_hash,
+    meta_hash,
+    id,
+    type,
+    cfi,
+    text,
+    style,
+    color,
+    note,
+    created_at,
+    updated_at,
+    deleted_at,
+  } = dbBookNote;
 
   return {
     bookHash: book_hash,
+    metaHash: meta_hash,
     id,
     type: type as BookNoteType,
     cfi,

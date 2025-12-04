@@ -1,5 +1,4 @@
 import { BookMetadata } from '@/libs/document';
-
 export type BookFormat = 'EPUB' | 'PDF' | 'MOBI' | 'AZW' | 'AZW3' | 'CBZ' | 'FB2' | 'FBZ';
 export type BookNoteType = 'bookmark' | 'annotation' | 'excerpt';
 export type HighlightStyle = 'highlight' | 'underline' | 'squiggly';
@@ -32,6 +31,7 @@ export interface Book {
   uploadedAt?: number | null;
   downloadedAt?: number | null;
   coverDownloadedAt?: number | null;
+  syncedAt?: number | null;
 
   lastUpdated?: number; // deprecated in favor of updatedAt
   progress?: [number, number]; // Add progress field: [current, total], 1-based page number
@@ -59,6 +59,7 @@ export interface TimeInfo {
 
 export interface BookNote {
   bookHash?: string;
+  metaHash?: string;
   id: string;
   type: BookNoteType;
   cfi: string;
@@ -104,6 +105,7 @@ export interface BookLayout {
   maxInlineSize: number;
   maxBlockSize: number;
   animated: boolean;
+  // isEink: boolean;  // TODO
   writingMode: WritingMode;
   vertical: boolean;
   rtl: boolean;
@@ -146,6 +148,22 @@ export interface BookFont {
   fontWeight: number;
 }
 
+export type ConvertChineseVariant =
+  | 'none'
+  | 's2t'
+  | 't2s'
+  | 's2tw'
+  | 's2hk'
+  | 's2twp'
+  | 'tw2s'
+  | 'hk2s'
+  | 'tw2sp';
+
+export interface BookLanguage {
+  replaceQuotationMarks: boolean;
+  convertChineseVariant: ConvertChineseVariant;
+}
+
 export interface ViewConfig {
   sideBarTab: string;
   sortedTOC: boolean;
@@ -181,6 +199,7 @@ export interface ViewSettings
   extends BookLayout,
     BookStyle,
     BookFont,
+    // BookLanguage,
     ViewConfig,
     TTSConfig,
     TranslatorConfig,
@@ -226,8 +245,10 @@ export interface BookSearchResult {
 
 export interface BookConfig {
   bookHash?: string;
+  metaHash?: string;
   progress?: [number, number]; // [current pagenum, total pagenum], 1-based page number
-  location?: string;
+  location?: string; // CFI of the current location
+  xpointer?: string; // XPointer of the current location (for Koreader interoperability)
   booknotes?: BookNote[];
   searchConfig?: Partial<BookSearchConfig>;
   viewSettings?: Partial<ViewSettings>;
@@ -241,6 +262,7 @@ export interface BookConfig {
 export interface BookDataRecord {
   id: string;
   book_hash: string;
+  meta_hash?: string;
   user_id: string;
   updated_at: number | null;
   deleted_at: number | null;

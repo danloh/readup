@@ -5,7 +5,6 @@ import {
   MdOutlineDelete,
   MdOutlineCloudDownload,
   MdOutlineCloudUpload,
-  MdOutlineCloudOff,
 } from 'react-icons/md';
 
 import { eventDispatcher } from '@/utils/event';
@@ -30,7 +29,6 @@ import Spinner from '@/components/Spinner';
 import Dialog from '@/components/Dialog';
 import BookCover from './BookCover';
 
-
 interface DetailModalProps {
   book: Book;
   isOpen: boolean;
@@ -44,7 +42,6 @@ const BookDetailModal = ({ book, isOpen, onClose, showBtns = true }: DetailModal
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
-  const [showDeleteCloudBackupAlert, setShowDeleteCloudBackupAlert] = useState(false);
   const [bookMeta, setBookMeta] = useState<BookDoc['metadata'] | null>(null);
   const [fileSize, setFileSize] = useState<number | null>(null);
   const { envConfig, appService } = useEnv();
@@ -77,10 +74,6 @@ const BookDetailModal = ({ book, isOpen, onClose, showBtns = true }: DetailModal
 
   const handleDelete = () => {
     setShowDeleteAlert(true);
-  };
-
-  const handleDeleteCloudBackup = () => {
-    setShowDeleteCloudBackupAlert(true);
   };
 
   const onBookUpload = async (book: Book) => {
@@ -168,41 +161,10 @@ const BookDetailModal = ({ book, isOpen, onClose, showBtns = true }: DetailModal
     }
   };
 
-  const onBookDeleteCloudBackup = async (book: Book) => {
-    try {
-      await appService?.deleteBook(book, 'cloud');
-      await updateBook(envConfig, book);
-      
-      eventDispatcher.dispatch('toast', {
-        type: 'info',
-        timeout: 2000,
-        message: _('Deleted cloud backup of the book: {{title}}', {
-          title: book.title,
-        }),
-      });
-      return true;
-    } catch (e) {
-      console.error(e);
-      eventDispatcher.dispatch('toast', {
-        type: 'error',
-        message: _('Failed to delete cloud backup of the book', {
-          title: book.title,
-        }),
-      });
-      return false;
-    }
-  };
-
   const confirmDelete = async () => {
     handleClose();
     setShowDeleteAlert(false);
     onBookDelete(book);
-  };
-
-  const confirmDeleteCloudBackup = async () => {
-    handleClose();
-    setShowDeleteCloudBackupAlert(false);
-    onBookDeleteCloudBackup(book);
   };
 
   const handleRedownload = async () => {
@@ -253,11 +215,6 @@ const BookDetailModal = ({ book, isOpen, onClose, showBtns = true }: DetailModal
                     <button onClick={handleDelete}>
                       <MdOutlineDelete className='fill-red-500' />
                     </button>
-                    {book.uploadedAt && (
-                      <button onClick={handleDeleteCloudBackup}>
-                        <MdOutlineCloudOff className='fill-red-500' />
-                      </button>
-                    )}
                     {book.uploadedAt && (
                       <button onClick={handleRedownload}>
                         <MdOutlineCloudDownload className='fill-base-content' />
@@ -343,21 +300,6 @@ const BookDetailModal = ({ book, isOpen, onClose, showBtns = true }: DetailModal
               setShowDeleteAlert(false);
             }}
             onConfirm={confirmDelete}
-          />
-        </div>
-      )}
-      {showDeleteCloudBackupAlert && (
-        <div
-          className={clsx('fixed bottom-0 left-0 right-0 z-50 flex justify-center')}
-          style={{paddingBottom: `${(safeAreaInsets?.bottom || 0) + 16}px`}}
-        >
-          <Alert
-            title={_('Confirm Deletion')}
-            message={_('Are you sure to delete the cloud backup of the selected book?')}
-            onCancel={() => {
-              setShowDeleteAlert(false);
-            }}
-            onConfirm={confirmDeleteCloudBackup}
           />
         </div>
       )}

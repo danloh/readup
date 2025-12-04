@@ -38,13 +38,12 @@ import {
   tauriHandleToggleFullScreen,
   tauriQuitApp,
 } from '@/utils/window';
-import BookDetailModal from '@/app/library/book/BookDetailModal';
 import DropIndicator from '@/components/DropIndicator';
 import { Toast } from '@/components/Toast';
 import Spinner from '@/components/Spinner';
+import BookDetailModal from './metadata/BookDetailModal';
 import LibraryHeader from './LibraryHeader';
 import Bookshelf from './Bookshelf';
-
 
 const LibraryPageWithSearchParams = () => {
   const searchParams = useSearchParams();
@@ -389,7 +388,7 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
       if (!file) continue;
       try {
         // const book = 
-          await appService?.importBook(file, library);
+        await appService?.importBook(file, library);
         setLibrary([...library]);
         // if (user && book && !book.uploadedAt ) {
         //   console.log('Uploading book:', book.title);

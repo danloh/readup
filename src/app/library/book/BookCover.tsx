@@ -62,7 +62,7 @@ const BookCover: React.FC<BookCoverProps> = ({
         )}
       >
         <Image
-          src={book.coverImageUrl!}
+          src={book.metadata?.coverImageUrl || book.coverImageUrl!}
           alt={book.title}
           fill={true}
           width={0}

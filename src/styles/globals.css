@@ -90,6 +90,11 @@ foliate-fxl {
   }
 }
 
+.visible-focus-inset-2:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px transparent, inset 0 0 0 3px #6396e7;
+}
+
 .hover-bar-anim:hover ~ .foliate-viewer {
   animation: scaleUpAndDown 0.3s ease forwards;
 }
@@ -97,7 +102,16 @@ foliate-fxl {
 .window-button {
   @apply inline-flex h-6 w-6 items-center justify-center rounded-full;
   @apply transform transition duration-200 ease-in-out hover:scale-105;
-  @apply bg-base-200/85 hover:bg-base-200;
+}
+
+.window-button {
+  position: relative;
+}
+
+.window-button::before {
+  content: '';
+  position: absolute;
+  inset: -8px;
 }
 
 .rounded-window {
@@ -386,6 +400,19 @@ foliate-fxl {
   -moz-user-select: text !important;
   -ms-user-select: text !important;
   user-select: text !important;
+}
+
+@keyframes spin-counterclockwise {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+.animate-reverse-spin {
+  animation: spin-counterclockwise 1s linear;
 }
 
 [data-eink="true"] [class*="shadow-"] {

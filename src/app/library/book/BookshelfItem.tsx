@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { navigateToLibrary, navigateToReader, showReaderWindow } from '@/utils/nav';
 import { useEnv } from '@/context/EnvContext';
@@ -10,6 +10,7 @@ import { useLongPress } from '@/hooks/useLongPress';
 import { Menu, MenuItem } from '@tauri-apps/api/menu';
 import { revealItemInDir } from '@tauri-apps/plugin-opener';
 import { getOSPlatform } from '@/utils/misc';
+import { throttle } from '@/utils/throttle';
 import { eventDispatcher } from '@/utils/event';
 import { LibraryViewModeType } from '@/types/settings';
 import { BOOK_UNGROUPED_ID, BOOK_UNGROUPED_NAME } from '@/services/constants';
@@ -122,21 +123,35 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
     return true;
   };
 
-  const handleBookClick = async (book: Book) => {
-    if (!(await makeBookAvailable(book))) return;
-    if (appService?.hasWindow && settings.openBookInNewWindow) {
-      showReaderWindow(appService, [book.hash]);
-    } else {
-      navigateToReader(router, [book.hash]);
-    }
-  };
+  const handleBookClick = useCallback(
+    async (book: Book) => {
+      const available = await makeBookAvailable(book);
+      if (!available) return;
+      if (appService?.hasWindow && settings.openBookInNewWindow) {
+        showReaderWindow(appService, [book.hash]);
+      } else {
+        setTimeout(() => {
+          navigateToReader(router, [book.hash]);
+        }, 0);
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [settings.openBookInNewWindow, appService],
+  );
 
-  const handleGroupClick = (group: BooksGroup) => {
-    const params = new URLSearchParams(searchParams?.toString());
-    params.set('group', group.id);
-    navigateToLibrary(router, `${params.toString()}`);
-  };
+  const handleGroupClick = useCallback(
+    (group: BooksGroup) => {
+      const params = new URLSearchParams(searchParams?.toString());
+      params.set('group', group.id);
+      setTimeout(() => {
+        navigateToLibrary(router, `${params.toString()}`);
+      }, 0);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [searchParams],
+  );
 
+  // FIXME
   const bookContextMenuHandler = async (book: Book) => {
     if (!appService?.hasContextMenu) return;
     const osPlatform = getOSPlatform();
@@ -156,20 +171,42 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
     menu.popup();
   };
 
-  const { pressing, hasPointerEventsRef, handlers } = useLongPress({
-    onTap: () => {
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const handleOpenItem = useCallback(
+    throttle(() => {
       if ('format' in item) {
         handleBookClick(item as Book);
       } else {
         handleGroupClick(item as BooksGroup);
       }
-    },
-    onContextMenu: () => {
+    }, 100),
+    [handleBookClick, handleGroupClick],
+  );
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const handleContextMenu = useCallback(
+    throttle(() => {
       if ('format' in item) {
         bookContextMenuHandler(item as Book);
+      } else {
+        // groupContextMenuHandler(item as BooksGroup);
+      }
+    }, 100),
+    [settings.localBooksDir],
+  );
+
+  const { pressing, hasPointerEventsRef, handlers } = useLongPress({
+    onTap: () => {
+      handleOpenItem();
+    },
+    onContextMenu: () => {
+      if (appService?.hasContextMenu) {
+        handleContextMenu();
+      } else if (appService?.isAndroidApp) {
+        // handleSelectItem();
       }
     },
-  }, []);
+  }, [handleOpenItem, handleContextMenu]);
 
   const handleFocus = () => {
     if (!hasPointerEventsRef.current) {
@@ -189,6 +226,7 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
           mode === 'grid' && 'sm:hover:bg-base-300/50 flex h-full flex-col px-0 py-4 sm:px-4',
           mode === 'list' && 'border-base-300 flex flex-col border-b py-2',
           keyboardFocused && 'focus-inset-2',
+          appService?.isMobileApp && 'no-context-menu',
           pressing && mode === 'grid' ? 'scale-95' : 'scale-100',
         )}
         style={{ transition: 'transform 0.2s', }}

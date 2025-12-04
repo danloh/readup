@@ -1,10 +1,10 @@
-import { md5 } from 'js-md5';
 import { BookMetadata, EXTS } from '@/libs/document';
 import { Book, BookConfig, BookProgress, WritingMode } from '@/types/book';
 import { SUPPORTED_LANGS } from '@/services/constants';
 import { getUserLang, makeSafeFilename } from './misc';
 import { getDirFromLanguage } from './rtl';
 import { code6392to6391, isValidLang, normalizedLangCode } from './lang';
+import { md5 } from './md5';
 
 export const getDir = (book: Book) => {
   return `${book.hash}`;
@@ -16,10 +16,10 @@ export const getLibraryBackupFilename = () => {
   return 'library_backup.json';
 };
 export const getRemoteBookFilename = (book: Book) => {
-  return `${book.hash}/${makeSafeFilename(book.title)}.${EXTS[book.format]}`;
+  return `${book.hash}/${book.hash}.${EXTS[book.format]}`;
 };
 export const getLocalBookFilename = (book: Book) => {
-  return `${book.hash}/${makeSafeFilename(book.title)}.${EXTS[book.format]}`;
+  return `${book.hash}/${makeSafeFilename(book.sourceTitle || book.title)}.${EXTS[book.format]}`;
 };
 export const getCoverFilename = (book: Book) => {
   return `${book.hash}/cover.png`;
@@ -72,6 +72,21 @@ export const getBookLangCode = (lang: string | string[] | undefined) => {
   } catch {
     return '';
   }
+};
+
+export const flattenContributors = (
+  contributors: string | string[] | Contributor | Contributor[],
+) => {
+  if (!contributors) return '';
+  return Array.isArray(contributors)
+    ? contributors
+        .map((contributor) =>
+          typeof contributor === 'string' ? contributor : formatLanguageMap(contributor?.name),
+        )
+        .join(', ')
+    : typeof contributors === 'string'
+      ? contributors
+      : formatLanguageMap(contributors?.name);
 };
 
 // prettier-ignore
@@ -150,23 +165,6 @@ export const formatDate = (date: string | number | Date | null | undefined, isUT
   }
 };
 
-export const formatSubject = (subject: string | string[] | undefined) => {
-  if (!subject) return '';
-  return Array.isArray(subject) ? subject.join(', ') : subject;
-};
-
-export const formatFileSize = (size: number | null) => {
-  if (size === null) return '';
-  const formatter = new Intl.NumberFormat('en', {
-    style: 'unit',
-    unit: 'byte',
-    unitDisplay: 'narrow',
-    notation: 'compact',
-    compactDisplay: 'short',
-  });
-  return formatter.format(size);
-};
-
 export const formatBytes = (bytes?: number | null, locale = 'en-US') => {
   if (!bytes) return '';
   const units = ['byte', 'kilobyte', 'megabyte', 'gigabyte', 'terabyte'];
@@ -231,7 +229,7 @@ const getAuthorsList = (contributors: string | string[] | Contributor | Contribu
       ];
 };
 
-const normalizeIdentifier = (identifier: string) => {
+export const normalizeIdentifier = (identifier: string) => {
   try {
     if (identifier.includes('urn:')) {
       // Slice after the last ':'
@@ -246,10 +244,30 @@ const normalizeIdentifier = (identifier: string) => {
   return identifier;
 };
 
+const getPreferredIdentifier = (identifiers: string[] | Identifier[]) => {
+  for (const scheme of ['uuid', 'calibre', 'isbn']) {
+    const found = identifiers.find((identifier) =>
+      typeof identifier === 'string'
+        ? identifier.toLowerCase().includes(scheme)
+        : identifier.scheme.toLowerCase() === scheme,
+    );
+    if (found) {
+      return typeof found === 'string' ? normalizeIdentifier(found) : found.value;
+    }
+  }
+  return;
+};
+
 const getIdentifiersList = (
   identifiers: undefined | string | string[] | Identifier | Identifier[],
 ) => {
   if (!identifiers) return [];
+  if (Array.isArray(identifiers)) {
+    const preferred = getPreferredIdentifier(identifiers);
+    if (preferred) {
+      return [preferred];
+    }
+  }
   return Array.isArray(identifiers)
     ? identifiers
         .map((identifier) =>
@@ -262,10 +280,15 @@ const getIdentifiersList = (
 };
 
 export const getMetadataHash = (metadata: BookMetadata) => {
-  const title = getTitleForHash(metadata.title);
-  const authors = getAuthorsList(metadata.author).join(',');
-  const identifiers = getIdentifiersList(metadata.altIdentifier || metadata.identifier).join(',');
-  const hashSource = `${title}|${authors}|${identifiers}`;
-  const metaHash = md5(hashSource.normalize('NFC'));
-  return metaHash;
+  try {
+    const title = getTitleForHash(metadata.title);
+    const authors = getAuthorsList(metadata.author).join(',');
+    const identifiers = getIdentifiersList(metadata.altIdentifier || metadata.identifier).join(',');
+    const hashSource = `${title}|${authors}|${identifiers}`;
+    const metaHash = md5(hashSource.normalize('NFC'));
+    return metaHash;
+  } catch (error) {
+    console.error('Error generating metadata hash:', error);
+  }
+  return;
 };
