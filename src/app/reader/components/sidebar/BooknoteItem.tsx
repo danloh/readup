@@ -1,7 +1,6 @@
 import clsx from 'clsx';
 import dayjs from 'dayjs';
 import React, { useRef, useState } from 'react';
-
 import { marked } from 'marked';
 import { useEnv } from '@/context/EnvContext';
 import { BookNote } from '@/types/book';
