@@ -449,9 +449,7 @@ export default function BrowserPage() {
     >
       <div
         className='relative top-0 z-40 w-full'
-        style={{
-          paddingTop: `${safeAreaInsets?.top || 0}px`,
-        }}
+        style={{ paddingTop: `${safeAreaInsets?.top || 0}px` }}
       >
         <Navigation
           currentURL={state.currentURL}
@@ -468,7 +466,7 @@ export default function BrowserPage() {
         {viewMode === 'loading' && (
           <div className='flex h-full items-center justify-center'>
             <div className='text-center'>
-              <div className='loading loading-spinner loading-lg mb-4'></div>
+              <div className='loading loading-lg loading-dots text-success mb-4'></div>
               <h1 className='text-base font-semibold'>{_('Loading...')}</h1>
             </div>
           </div>

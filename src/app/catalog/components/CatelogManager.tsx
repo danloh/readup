@@ -381,7 +381,7 @@ export function CatalogManager({ closeDialog}: CMProps) {
                   <button type='submit' className='btn btn-sm btn-primary' disabled={isValidating}>
                     {isValidating ? (
                       <>
-                        <span className='loading loading-spinner loading-sm'></span>
+                        <span className='loading loading-dots text-success loading-sm'></span>
                         {_('Validating...')}
                       </>
                     ) : (

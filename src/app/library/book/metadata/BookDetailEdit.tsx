@@ -309,7 +309,7 @@ const BookDetailEdit: React.FC<BookDetailEditProps> = ({
             title={_('Auto-Retrieve Metadata')}
           >
             {searchLoading ? (
-              <span className='loading loading-spinner h-4 w-4'></span>
+              <span className='loading loading-dots text-success h-4 w-4'></span>
             ) : (
               <MdOutlineSearch className='mt-[1px] h-4 w-4' />
             )}
