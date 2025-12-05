@@ -6,6 +6,7 @@ import { getOSPlatform } from '@/utils/misc';
 import { eventDispatcher } from '@/utils/event';
 import { getTextFromRange, TextSelection } from '@/utils/sel';
 import { transformContent } from '../transformers/transformService';
+import { TransformContext } from '../transformers/types';
 
 export const useTextSelector = (
   bookKey: string,
@@ -25,13 +26,14 @@ export const useTextSelector = (
   const isTextSelected = useRef(false);
   const isTouchStarted = useRef(false);
   const selectionPosition = useRef<number | null>(null);
+  const lastPointerType = useRef<string>('mouse');
   const [textSelected, setTextSelected] = useState(false);
 
   const isValidSelection = (sel: Selection) => {
     return sel && sel.toString().trim().length > 0 && sel.rangeCount > 0;
   };
 
-  const transformCtx = {
+  const transformCtx: TransformContext = {
     bookKey,
     viewSettings: getViewSettings(bookKey)!,
     content: '',
@@ -109,6 +111,9 @@ export const useTextSelector = (
     }
     return false;
   };
+  const handlePointerdown = (e: PointerEvent) => {
+    lastPointerType.current = e.pointerType;
+  };
   const handlePointerup = (doc: Document, index: number, ev: PointerEvent) => {
     // Available on iOS and Desktop, fired at touchend or mouseup
     // Note that on Android, pointerup event is fired after an additional touch event
@@ -130,6 +135,7 @@ export const useTextSelector = (
   const handleScroll = () => {
     // Prevent the container from scrolling when text is selected in paginated mode
     // FIXME: this is a workaround for issue #873
+    // TODO: support text selection across pages
     const viewSettings = getViewSettings(bookKey);
     if (
       appService?.isAndroidApp &&
@@ -157,6 +163,19 @@ export const useTextSelector = (
 
   const handleUpToPopup = () => {
     isUpToPopup.current = true;
+  };
+
+  const handleContextmenu = (event: Event) => {
+    if (appService?.isMobile) {
+      event.preventDefault();
+      event.stopPropagation();
+      return false;
+    } else if (lastPointerType.current === 'touch' || lastPointerType.current === 'pen') {
+      event.preventDefault();
+      event.stopPropagation();
+      return false;
+    }
+    return;
   };
 
   useEffect(() => {
@@ -199,9 +218,11 @@ export const useTextSelector = (
     handleScroll,
     handleTouchStart,
     handleTouchEnd,
+    handlePointerdown,
     handlePointerup,
     handleSelectionchange,
     handleShowPopup,
     handleUpToPopup,
+    handleContextmenu,
   };
 };
