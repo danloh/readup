@@ -15,7 +15,7 @@ pub fn init<R: Runtime, C: DeserializeOwned>(
     api: PluginApi<R, C>,
 ) -> crate::Result<NativeBridge<R>> {
     #[cfg(target_os = "android")]
-    let handle = api.register_android_plugin("cc.readup.native_bridge", "NativeBridgePlugin")?;
+    let handle = api.register_android_plugin("com.readest.native_bridge", "NativeBridgePlugin")?;
     #[cfg(target_os = "ios")]
     let handle = api.register_ios_plugin(init_plugin_native_bridge)?;
     Ok(NativeBridge(handle))
@@ -193,6 +193,25 @@ impl<R: Runtime> NativeBridge<R> {
     pub fn get_external_sdcard_path(&self) -> crate::Result<GetExternalSDCardPathResponse> {
         self.0
             .run_mobile_plugin("get_external_sdcard_path", ())
+            .map_err(Into::into)
+    }
+}
+
+impl<R: Runtime> NativeBridge<R> {
+    pub fn open_external_url(
+        &self,
+        payload: OpenExternalUrlRequest,
+    ) -> crate::Result<OpenExternalUrlResponse> {
+        self.0
+            .run_mobile_plugin("open_external_url", payload)
+            .map_err(Into::into)
+    }
+}
+
+impl<R: Runtime> NativeBridge<R> {
+    pub fn select_directory(&self) -> crate::Result<SelectDirectoryResponse> {
+        self.0
+            .run_mobile_plugin("select_directory", ())
             .map_err(Into::into)
     }
 }
