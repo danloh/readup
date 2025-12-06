@@ -11,6 +11,7 @@ import { BookMetadata } from '@/libs/document';
 import { useEnv } from '@/context/EnvContext';
 import { useThemeStore } from '@/store/themeStore';
 import { useSettingsStore } from '@/store/settingsStore';
+import { useBookDataStore } from '@/store/bookDataStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import Alert from '@/components/Alert';
 import Dialog from '@/components/Dialog';
@@ -34,6 +35,7 @@ const BookDetailModal: React.FC<BookDetailModalProps> = ({
   showBtns,
 }) => {
   const _ = useTranslation();
+  const { envConfig, appService } = useEnv();
   const router = useRouter();
   const { safeAreaInsets } = useThemeStore();
   const [loading, setLoading] = useState(false);
@@ -41,9 +43,9 @@ const BookDetailModal: React.FC<BookDetailModalProps> = ({
   const [editMode, setEditMode] = useState(false);
   const [bookMeta, setBookMeta] = useState<BookMetadata | null>(null);
   const [fileSize, setFileSize] = useState<number | null>(null);
-  const { envConfig, appService } = useEnv();
   const { settings, setSettings } = useSettingsStore();
   const { updateBook } = useLibraryStore();
+  const { clearBookData } = useBookDataStore();
 
   // Initialize metadata edit hook
   const {
@@ -69,7 +71,7 @@ const BookDetailModal: React.FC<BookDetailModalProps> = ({
     const fetchBookDetails = async () => {
       const appService = await envConfig.getAppService();
       try {
-        const details = book.metadata || (await appService.fetchBookDetails(book, settings));
+        const details = book.metadata || (await appService.fetchBookDetails(book));
         setBookMeta(details);
         const size = await appService.getBookFileSize(book);
         setFileSize(size);
@@ -140,10 +142,11 @@ const BookDetailModal: React.FC<BookDetailModalProps> = ({
     setShowDeleteAlert(true);
   };
 
-  const onBookDelete = async (book: Book) => {
+  const handleBookDelete = async (book: Book) => {
     try {
       await appService?.deleteBook(book, 'local');
       await updateBook(envConfig, book);
+      clearBookData(book.hash);
       // if (syncBooks) pushLibrary(); // FIXME
       eventDispatcher.dispatch('toast', {
         type: 'info',
@@ -167,7 +170,7 @@ const BookDetailModal: React.FC<BookDetailModalProps> = ({
   const confirmDeleteAction = async () => {
     handleClose();
     setShowDeleteAlert(false);
-    onBookDelete(book);
+    handleBookDelete(book);
   };
 
   const cancelDeleteAction = () => {

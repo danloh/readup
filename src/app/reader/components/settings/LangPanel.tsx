@@ -140,6 +140,7 @@ const LangPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
           className='toggle toggle-success h-5'
           checked={translationEnabled}
           onChange={() => setTranslationEnabled(!translationEnabled)}
+          disabled={!bookKey}
         />
       </div>
       <div className='flex items-center justify-between'>
