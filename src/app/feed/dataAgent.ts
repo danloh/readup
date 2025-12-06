@@ -1,4 +1,7 @@
 import { invoke } from '@tauri-apps/api/core';
+import { extract as articleExtract } from '@extractus/article-extractor';
+import { extract as feedExtract } from '@extractus/feed-extractor';
+import { isWebAppPlatform } from '@/services/environment';
 
 export const getFavicon = (url: string) => {
   const hostname = url ? new URL(url).hostname : '';
@@ -54,5 +57,47 @@ export interface PodType {
 }
 
 export const fetchFeed = async (url: string): Promise<FeedType> => {
-  return await invoke('fetch_feed', { url })
+  if (isWebAppPlatform()) {
+    return await webFetchFeed(url);
+  }
+  return await invoke('fetch_feed', { url });
+}
+
+export const webFetchFeed = async (url: string): Promise<FeedType> => {
+  console.log("fetch feed on web");
+  const result = await feedExtract(url);
+  console.log(result)
+  const entries = result.entries || [];
+  let articles = [];
+  for (const entry of entries) {
+    const articleUrl = entry.link;
+    if (articleUrl && articleUrl.trim()) {
+      const data = await articleExtract(articleUrl);
+      console.log(data)
+      if (data) {
+        let newArticle: ArticleType = {
+          title: data.title || '',
+          url: data.url || '',
+          feed_link: result.link || url,
+          audio_url: '',
+          description: data.description || '',
+          published: new Date(data.published  || ''),
+          content: data.content || data.description || '',
+          author: data.author || '',
+          image: data.image || '', 
+        };
+        articles.push(newArticle);
+      }
+    }
+  }
+
+  const feed: FeedType = {
+    ty: 'feed',
+    title: result.title || '',
+    link: result.link || url,
+    description: result.description,
+    articles,
+  };
+
+  return feed;
 }

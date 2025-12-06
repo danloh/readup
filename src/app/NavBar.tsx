@@ -40,7 +40,7 @@ export const NavTab: React.FC<{activeTab: string}> = ({ activeTab }) => {
 
   const tabs = appService?.appPlatform !== 'web' 
     ? ['library', 'feed', 'catalog', 'streak']
-    : ['library', 'catalog', 'streak'];
+    : ['library', 'feed', 'catalog', 'streak'];
 
   if (!insets) return null;
 
