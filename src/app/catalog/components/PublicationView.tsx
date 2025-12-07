@@ -9,6 +9,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { formatDate, formatLanguage } from '@/utils/book';
 import { eventDispatcher } from '@/utils/event';
 import { navigateToReader } from '@/utils/nav';
+import { getFileExtFromMimeType } from '@/libs/document';
 import { CachedImage } from '@/components/CachedImage';
 import { OPDSLink, OPDSPublication, REL, SYMBOL } from '@/types/opds';
 import Dropdown from '@/components/Dropdown';
@@ -189,7 +190,11 @@ export function PublicationView({
                           <MenuItem
                             key={idx}
                             noIcon
-                            label={link.title || link.type || ''}
+                            label={
+                              link.title ||
+                              getFileExtFromMimeType(link.type || '').toUpperCase() ||
+                              idx.toString()
+                            }
                             onClick={() => handleActionButton(link.href, link.type)}
                           />
                         ))}

@@ -2,7 +2,7 @@
 
 import clsx from 'clsx';
 import { useCallback } from 'react';
-import { IoChevronBack, IoChevronForward, IoHome } from 'react-icons/io5';
+import { IoChevronBack, IoChevronForward, IoHome, IoSearch } from 'react-icons/io5';
 import { RiToolsFill } from 'react-icons/ri';
 import { useEnv } from '@/context/EnvContext';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -16,6 +16,8 @@ interface NavigationProps {
   canGoBack: boolean;
   canGoForward: boolean;
   onShowCatalog?: () => void;
+  onSearch: () => void;
+  hasSearch: boolean;
 }
 
 export function Navigation({
@@ -26,6 +28,8 @@ export function Navigation({
   canGoBack,
   canGoForward,
   onShowCatalog,
+  onSearch,
+  hasSearch = false,
 }: NavigationProps) {
   const _ = useTranslation();
   const { appService } = useEnv();
@@ -35,6 +39,10 @@ export function Navigation({
       onNavigate(startURL);
     }
   }, [startURL, onNavigate]);
+
+  const handleSearch = useCallback(() => {
+    onSearch();
+  }, [onSearch]);
 
   return (
     <header
@@ -67,6 +75,11 @@ export function Navigation({
         )}
       </div>
       <div className='navbar-end gap-2'>
+        {hasSearch && (
+          <button className='btn btn-ghost btn-sm' onClick={handleSearch} title={_('Search')}>
+            <IoSearch className='h-5 w-5' />
+          </button>
+        )}
         <button 
           className='btn btn-ghost btn-xs h-8 min-h-8 w-8 p-0' 
           onClick={onShowCatalog} 

@@ -28,6 +28,21 @@ const POPULAR_CATALOGS: OPDSCatalog[] = [
     description: 'Over 50,000 free ebooks',
     icon: '📖',
   },
+  {
+    id: 'standardebooks',
+    name: 'Standard Ebooks',
+    url: 'https://standardebooks.org/feeds/opds',
+    description: 'Carefully formatted and lovingly produced free ebooks',
+    icon: '📚',
+    disabled: true,
+  },
+  {
+    id: 'unglue.it',
+    name: 'Unglue.it',
+    url: 'https://unglue.it/api/opds/',
+    description: 'Free ebooks from authors who have "unglued" their books',
+    icon: '📚',
+  },
 ];
 
 async function validateOPDSCatalog(
@@ -68,6 +83,12 @@ export function CatalogManager({ closeDialog}: CMProps) {
 
   const handleAddCatalog = async () => {
     if (!newCatalog.name || !newCatalog.url) return;
+
+    const urlLower = newCatalog.url.trim().toLowerCase();
+    if (!urlLower.startsWith('http://') && !urlLower.startsWith('https://')) {
+      setUrlError(_('URL must start with http:// or https://'));
+      return;
+    }
 
     if (
       process.env['NODE_ENV'] === 'production' &&
@@ -221,7 +242,7 @@ export function CatalogManager({ closeDialog}: CMProps) {
       <section className='text-base'>
         <h2 className='mb-4 font-semibold'>{_('Popular Catalogs')}</h2>
         <div className='grid gap-4 sm:grid-cols-2'>
-          {POPULAR_CATALOGS.map((catalog) => {
+          {POPULAR_CATALOGS.filter((catalog) => !catalog.disabled).map((catalog) => {
             const isAdded = catalogs.some((c) => c.url === catalog.url);
             return (
               <div

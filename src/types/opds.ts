@@ -18,6 +18,7 @@ export interface OPDSCatalog {
   id: string;
   name: string;
   url: string;
+  disabled?: boolean;
   description?: string;
   icon?: string;
   username?: string;
@@ -65,7 +66,7 @@ export interface OPDSSearch {
 }
 
 export interface OPDSLink {
-  rel?: string;
+  rel?: string | string[];
   href: string;
   type?: string;
   title?: string;
