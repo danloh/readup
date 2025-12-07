@@ -104,7 +104,6 @@ export default function BrowserPage() {
     [],
   );
 
-  const [opdsLoadedUrl, setOpdsLoadedUrl] = useState('');
   const loadOPDS = useCallback(
     async (url: string, options: { skipHistory?: boolean; isSearch?: boolean } = {}) => {
       const { skipHistory = false, isSearch = false } = options;
@@ -243,7 +242,6 @@ export default function BrowserPage() {
             addToHistory(url, newState, 'feed', null);
           }
         }
-        setOpdsLoadedUrl(url);
       } catch (e) {
         console.error(e);
         setError(e as Error);
@@ -257,7 +255,6 @@ export default function BrowserPage() {
 
   useEffect(() => {
     const url = searchParams?.get('url') || 'https://m.gutenberg.org/ebooks.opds/';
-    if (opdsLoadedUrl === url) return;
     console.log("fresh? ", url, libraryLoaded);
     if (url && !isNavigatingHistoryRef.current) {
       const catalogId = searchParams?.get('id') || '';
@@ -279,7 +276,7 @@ export default function BrowserPage() {
       setViewMode('error');
       setError(new Error('No OPDS URL provided'));
     }
-  }, [searchParams, settings, libraryLoaded, loadOPDS]);
+  }, [searchParams, settings, libraryLoaded]);
 
   const handleNavigate = useCallback(
     (url: string, isSearch = false) => {
