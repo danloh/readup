@@ -82,6 +82,7 @@ async function handleRequest(request: NextRequest, method: 'GET' | 'HEAD') {
           },
         });
       }
+      // throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       return new NextResponse(data, {
         status: response.status,
         headers: {
