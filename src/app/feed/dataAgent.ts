@@ -1,7 +1,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import { extract as articleExtract } from '@extractus/article-extractor';
 import { extract as feedExtract } from '@extractus/feed-extractor';
-import { isWebAppPlatform } from '@/services/environment';
+import { getAPIBaseUrl, isWebAppPlatform } from '@/services/environment';
 
 export const getFavicon = (url: string) => {
   const hostname = url ? new URL(url).hostname : '';
@@ -58,7 +58,7 @@ export interface PodType {
 
 export const fetchFeed = async (url: string): Promise<FeedType> => {
   if (isWebAppPlatform()) {
-    return await webFetchFeed(url);
+    return await fetchFeedWeb(url);
   }
   return await invoke('fetch_feed', { url });
 }
@@ -66,7 +66,7 @@ export const fetchFeed = async (url: string): Promise<FeedType> => {
 export const webFetchFeed = async (url: string): Promise<FeedType> => {
   console.log("fetch feed on web");
   const result = await feedExtract(url);
-  console.log(result)
+  // console.log(result)
   const entries = result.entries || [];
   let articles = [];
   for (const entry of entries) {
@@ -101,3 +101,28 @@ export const webFetchFeed = async (url: string): Promise<FeedType> => {
 
   return feed;
 }
+
+export interface FeedResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  timestamp: string;
+  responseTime?: number;
+}
+
+const API_ENDPOINT = getAPIBaseUrl() + '/feed/proxy';
+
+const fetchFeedWeb = async (url: string): Promise<FeedType> => {
+  const response = await fetch(`${API_ENDPOINT}?url=${url}`);
+
+  const result: FeedResponse<FeedType> = await response.json();
+
+  if (!result.success) {
+    throw new Error(result.error || 'Fetch failed');
+  }
+  if (!result.data) {
+    throw new Error('Fetch failed');
+  }
+
+  return result.data;
+};

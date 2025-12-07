@@ -1,15 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { MetadataService } from '@/services/metadata/service';
 import { SearchRequest } from '@/services/metadata/types';
-import { validateUserAndToken } from '@/utils/access';
-
-interface ApiResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: string;
-  timestamp: string;
-  responseTime?: number;
-}
+// import { validateUserAndToken } from '@/utils/access';
+import { ApiResponse } from '@/libs/metadata';
 
 function validateSearchRequest(body: SearchRequest): {
   isValid: boolean;

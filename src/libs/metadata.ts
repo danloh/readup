@@ -2,7 +2,7 @@ import { MetadataResult, SearchRequest } from '@/services/metadata/types';
 import { getAPIBaseUrl } from '@/services/environment';
 import { fetchWithAuth } from '@/utils/fetch';
 
-interface ApiResponse<T> {
+export interface ApiResponse<T> {
   success: boolean;
   data?: T;
   error?: string;

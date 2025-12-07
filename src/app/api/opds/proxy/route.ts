@@ -35,7 +35,7 @@ async function handleRequest(request: NextRequest, method: 'GET' | 'HEAD') {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 20000);
     const headers: HeadersInit = {
-      'User-Agent': 'Readest/1.0 (OPDS Browser)',
+      'User-Agent': 'Readup/1.0 (OPDS Browser)',
       Accept: 'application/atom+xml, application/xml, text/xml, application/json, */*',
     };
 
