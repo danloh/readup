@@ -114,8 +114,8 @@ export const AuthWindow = () => {
             >
               Go to generate the app password
             </a>
-            <button type="submit" className="btn btn-neutral">
-              Log In
+            <button type="submit" className="btn btn-primary">
+              Sign in with Bluesky
             </button>
           </form>
         </div>

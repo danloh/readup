@@ -5,7 +5,6 @@ import { createContext, useState, useContext, ReactNode, useEffect } from 'react
 import { AuthToken, createSession, resolveDid, User } from '@/helpers/auth';
 
 interface AuthContextType {
-  token: AuthToken | null;
   user: User | null;
   login: (handle: string, passwd: string, host: string) => Promise<boolean>;
   logout: () => void;
@@ -14,14 +13,6 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [token, setToken] = useState<AuthToken | null>(() => {
-    if (typeof window !== 'undefined') {
-      const token =  localStorage.getItem('token');
-      return token ? JSON.parse(token) as AuthToken : null
-    }
-    return null;
-  });
-
   const [user, setUser] = useState<User | null>(() => {
     if (typeof window !== 'undefined') {
       const userJson = localStorage.getItem('user');
@@ -31,26 +22,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   });
 
   useEffect(() => {
-    const syncSession = (session: { token: AuthToken; user: User } | null) => {
-      if (session) {
+    const syncSession = (user: User | null) => {
+      if (user) {
         console.log('Syncing session');
-        const { token, user } = session;
-        localStorage.setItem('token', JSON.stringify(token));
         localStorage.setItem('user', JSON.stringify(user));
         // posthog.identify(user.id);
-        setToken(token);
         setUser(user);
       } else {
         console.log('Clearing session');
-        localStorage.removeItem('token');
         localStorage.removeItem('user');
-        setToken(null);
         setUser(null);
       }
     };
     const refreshSession = async () => {
       try {
         // TODO: refresh session
+        // const res = refreshSession()
       } catch {
         syncSession(null);
       }
@@ -61,10 +48,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (handle: string, passwd: string, host: string) => {
     console.log('Logging in');
-    const res = await createSession(handle, passwd, host)
+    const res: AuthToken | undefined = await createSession(handle, passwd, host);
+    console.log('Logg result: ', res);
     if (res) {
-      setToken(res);
-      localStorage.setItem('token', JSON.stringify(res));
       // build User
       let serv = await resolveDid(res.did);
       if (serv) {
@@ -90,14 +76,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = () => {
     console.log('Logging out');
-    localStorage.removeItem('token');
     localStorage.removeItem('user');
-    setToken(null);
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ token, user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

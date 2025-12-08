@@ -38,9 +38,7 @@ export const NavTab: React.FC<{activeTab: string}> = ({ activeTab }) => {
 
   const windowButtonVisible = appService?.hasWindowBar && !isTrafficLightVisible;
 
-  const tabs = appService?.appPlatform !== 'web' 
-    ? ['library', 'feed', 'catalog', 'streak']
-    : ['library', 'feed', 'catalog', 'streak'];
+  const tabs = ['library', 'feed', 'catalog', 'streak'];
 
   if (!insets) return null;
 

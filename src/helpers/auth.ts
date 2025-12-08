@@ -57,11 +57,22 @@ export async function refreshSession(host: string, refreshToken: string) {
 
   if (!response.ok) {
     throw new Error(`Response status: ${response.status}`);
-    return;
   }
   const result = await response.json();
   console.log(result);
   return result as AuthToken;
+}
+
+interface ResolveService {
+  id: string;
+  type: string;
+  serviceEndpoint: string;
+}
+
+interface ResolveResp {
+  id: string;
+  alsoKnownAs: string[];
+  service: ResolveService[]
 }
 
 export async function resolveDid(did: string): Promise<string> {
@@ -69,12 +80,13 @@ export async function resolveDid(did: string): Promise<string> {
   try {
     const response = await fetch(url);
     if (!response.ok) {
-      throw new Error(`Response status: ${response.status}`);
+      console.error(`Response status: ${response.status}`);
+      return '';
     }
 
-    const result = await response.json();
+    const result: ResolveResp = await response.json();
     console.log(result);
-    return 'service';  // TODO
+    return result.service[0]?.serviceEndpoint || '';
   } catch (error: any) {
     console.error(error.message);
     return '';
