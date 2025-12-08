@@ -9,7 +9,7 @@ import { invoke, PermissionState } from '@tauri-apps/api/core';
 
 import { setAboutDialogVisible } from '@/components/AboutWindow';
 import { setAuthDialogVisible } from '@/components/AuthWindow';
-import UserAvatar from '@/components/UserAvatar';
+// import UserAvatar from '@/components/UserAvatar';
 import Menu from '@/components/Menu';
 import MenuItem from '@/components/MenuItem';
 import { LangSelect } from '@/components/Select';
@@ -173,7 +173,7 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
       onCancel={() => setIsDropdownOpen?.(false)}
     >
       {user ? (
-        <MenuItem label={_('Account')} noIcon onClick={handleUserProfile} />
+        <MenuItem label={_('Account')} Icon={PiUserCircle} onClick={handleUserProfile} />
       ) : (
         <MenuItem label={_('Sign In')} Icon={PiUserCircle} onClick={showAuthWindow}></MenuItem>
       )}

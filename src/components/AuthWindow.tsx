@@ -1,6 +1,7 @@
 import { FormEvent, useCallback, useEffect, useState } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAuth } from '@/context/AuthContext';
+import { eventDispatcher } from '@/utils/event';
 import Dialog from './Dialog';
 
 export const setAuthDialogVisible = (visible: boolean) => {
@@ -22,7 +23,7 @@ export const AuthWindow = () => {
   };
 
   const { login } = useAuth();
-  const [host, setHost] = useState('');
+  const [host, setHost] = useState('bsky.social');
   const [handle, setHandle] = useState('');
   const [password, setPassword] = useState('');
 
@@ -34,6 +35,11 @@ export const AuthWindow = () => {
         handleClose();
       } else {
         // toast 
+        eventDispatcher.dispatch('toast', {
+          message: 'Failed Signing in',
+          timeout: 2000,
+          type: 'warning',
+        });
       }
     },
     [host, handle, password]

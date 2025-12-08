@@ -2,7 +2,7 @@
 
 import { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 // import posthog from 'posthog-js';
-import { AuthToken, createSession, resolveDid, User } from '@/helpers/auth';
+import { AuthToken, createSession, refreshSession, resolveDid, User } from '@/helpers/auth';
 
 interface AuthContextType {
   user: User | null;
@@ -22,7 +22,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   });
 
   useEffect(() => {
-    const syncSession = (user: User | null) => {
+    const syncSession = (user: User | null | undefined) => {
       if (user) {
         console.log('Syncing session');
         localStorage.setItem('user', JSON.stringify(user));
@@ -34,16 +34,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(null);
       }
     };
-    const refreshSession = async () => {
+    const refresh = async () => {
       try {
-        // TODO: refresh session
-        // const res = refreshSession()
+        // refresh session
+        const usr = await refreshSession();
+        syncSession(usr);
       } catch {
-        syncSession(null);
+        console.log('error on refresh session');
       }
     };
 
-    refreshSession();
+    refresh();
   }, []);
 
   const login = async (handle: string, passwd: string, host: string) => {

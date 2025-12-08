@@ -22,10 +22,12 @@ export async function createSession(handle: string, pass: string, host: string) 
   const response = await fetch(url, {
     method: "POST",
     body: JSON.stringify({ identifier: handle, password: pass }),
+    headers: {
+      "Content-Type": "application/json",
+    },
   });
   if (!response.ok) {
     throw new Error(`Response status: ${response.status}`);
-    return;
   }
   const result = await response.json();
   console.log(result);
@@ -36,23 +38,44 @@ export async function getSession(host: string, accessToken: string) {
   let url = `https://${host}/xrpc/com.atproto.server.getSession`;
   const response = await fetch(url, {
     method: "GET",
-    headers: {"Authorization": `Bearer ${accessToken}`,},
+    headers: {
+      "Authorization": `Bearer ${accessToken}`,
+    },
   });
 
-  if (!response.ok) {
-    throw new Error(`Response status: ${response.status}`);
-    return;
-  }
-  const result = await response.json();
-  console.log(result);
-  return result;
+  return response.ok;
 }
 
-export async function refreshSession(host: string, refreshToken: string) {
+export async function refreshSession() {
+  const userJson = localStorage.getItem('user');
+  const usr = userJson ? JSON.parse(userJson) as User : null;
+  if (!usr) {
+    throw new Error(`Need to log in`);
+  }
+  const host = usr.host;
+  const access = usr.access;
+  const refresh = usr.refresh;
+  const hasSession = await getSession(host, access);
+  if (!hasSession) {
+    const res = await refreshToken(host, refresh);
+    const newUser: User = {
+      ...usr,
+      access: res.accessJwt,
+      refresh: res.refreshJwt,
+    };
+    return newUser;
+  } else {
+    return usr;
+  }
+}
+
+async function refreshToken(host: string, refreshToken: string) {
   let url = `https://${host}/xrpc/com.atproto.server.refreshSession`;
   const response = await fetch(url, {
     method: "POST",
-    headers: {"Authorization": `Bearer ${refreshToken}`},
+    headers: {
+      "Authorization": `Bearer ${refreshToken}`,
+    },
   });
 
   if (!response.ok) {
