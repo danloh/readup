@@ -13,12 +13,12 @@ import { Book } from '@/types/book';
 import { AppService } from '@/types/system';
 import { navigateToReader } from '@/utils/nav';
 import { listFormater } from '@/utils/book';
-import { getFilename } from '@/utils/path';
+import { getDirPath, getFilename, joinPaths } from '@/utils/path';
 import { eventDispatcher } from '@/utils/event';
 import { parseOpenWithFiles } from '@/helpers/openWith';
 import { isTauriAppPlatform } from '@/services/environment';
 import { checkForAppUpdates, checkAppReleaseNotes } from '@/helpers/updater';
-import { BOOK_ACCEPT_FORMATS } from '@/services/constants';
+import { BOOK_ACCEPT_FORMATS, SUPPORTED_BOOK_EXTS } from '@/services/constants';
 import { useEnv } from '@/context/EnvContext';
 import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -31,7 +31,7 @@ import { useScreenWakeLock } from '@/hooks/useScreenWakeLock';
 import { SelectedFile, useFileSelector } from '@/hooks/useFileSelector';
 import { useOpenWithBooks } from '@/hooks/useOpenWithBooks';
 import useShortcuts from '@/hooks/useShortcuts';
-import { lockScreenOrientation } from '@/utils/bridge';
+import { lockScreenOrientation, selectDirectory } from '@/utils/bridge';
 import {
   tauriHandleClose,
   tauriHandleSetAlwaysOnTop,
@@ -44,6 +44,7 @@ import Spinner from '@/components/Spinner';
 import BookDetailModal from './metadata/BookDetailModal';
 import LibraryHeader from './LibraryHeader';
 import Bookshelf from './Bookshelf';
+import { requestStoragePermission } from '@/utils/permission';
 
 const LibraryPageWithSearchParams = () => {
   const searchParams = useSearchParams();
@@ -53,10 +54,11 @@ const LibraryPageWithSearchParams = () => {
 const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchParams | null }) => {
   const router = useRouter();
   const { envConfig, appService } = useEnv();
-  const { token, user } = useAuth();
+  const { user } = useAuth();
   const {
     library: libraryBooks,
     setLibrary,
+    updateBook,
     checkOpenWithBooks,
     checkLastOpenBooks,
     setCheckOpenWithBooks,
@@ -105,7 +107,7 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
       setFontLayoutSettingsDialogOpen(true);
     },
     onOpenBooks: () => {
-      handleImportBooks();
+      handleImportBooksFromFiles();
     },
   });
 
@@ -317,7 +319,7 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
     const initLogin = async () => {
       const appService = await envConfig.getAppService();
       const settings = await appService.loadSettings();
-      if (token && user) {
+      if (user) {
         if (!settings.keepLogin) {
           settings.keepLogin = true;
           setSettings(settings);
@@ -373,7 +375,8 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
 
   const importBooks = async (files: SelectedFile[]) => {
     setLoading(true);
-    const failedFiles = [];
+    const failedImports: Array<{ filename: string; errorMessage: string }> = [];
+    const successfulImports: string[] = [];
     const errorMap: [string, string][] = [
       ['No chapters detected', _('No chapters detected')],
       ['Failed to parse EPUB', _('Failed to parse the EPUB file')],
@@ -383,45 +386,110 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
       ['Unsupported or corrupted book file', _('The book file is corrupted')],
     ];
     const { library } = useLibraryStore.getState();
-    for (const selectedFile of files) {
+
+    const processFile = async (selectedFile: SelectedFile) => {
       const file = selectedFile.file || selectedFile.path;
-      if (!file) continue;
+      if (!file) return;
       try {
-        // const book = 
-        await appService?.importBook(file, library);
-        setLibrary([...library]);
-        // if (user && book && !book.uploadedAt ) {
-        //   console.log('Uploading book:', book.title);
-        //   handleBookUpload(book);
-        // }
+        const book = await appService?.importBook(file, library);
+        const { path, basePath } = selectedFile;
+        if (book && path && basePath) {
+          const rootPath = getDirPath(basePath);
+          const groupName = getDirPath(path).replace(rootPath, '').replace(/^\//, '');
+          book.groupName = groupName;
+          // book.groupId = getGroupId(groupName);
+          await updateBook(envConfig, book);
+        }
+
+        if (book) {
+          successfulImports.push(book.title);
+        }
       } catch (error) {
         const filename = typeof file === 'string' ? file : file.name;
         const baseFilename = getFilename(filename);
-        failedFiles.push(baseFilename);
         const errorMessage =
           error instanceof Error
             ? errorMap.find(([str]) => error.message.includes(str))?.[1] || error.message
             : '';
-        eventDispatcher.dispatch('toast', {
-          message:
-            _('Failed to import book(s): {{filenames}}', {
-              filenames: listFormater(false).format(failedFiles),
-            }) + (errorMessage ? `\n${errorMessage}` : ''),
-          type: 'error',
-        });
+        failedImports.push({ filename: baseFilename, errorMessage });
         console.error('Failed to import book:', filename, error);
       }
+    };
+
+    const concurrency = 4;
+    for (let i = 0; i < files.length; i += concurrency) {
+      const batch = files.slice(i, i + concurrency);
+      await Promise.all(batch.map(processFile));
     }
+    // pushLibrary(); // FIXME
+
+    if (failedImports.length > 0) {
+      const filenames = failedImports.map((f) => f.filename);
+      const errorMessage = failedImports.find((f) => f.errorMessage)?.errorMessage || '';
+
+      eventDispatcher.dispatch('toast', {
+        message:
+          _('Failed to import book(s): {{filenames}}', {
+            filenames: listFormater(false).format(filenames),
+          }) + (errorMessage ? `\n${errorMessage}` : ''),
+        timeout: 5000,
+        type: 'error',
+      });
+    } else if (successfulImports.length > 0) {
+      eventDispatcher.dispatch('toast', {
+        message: _('Successfully imported {{count}} book(s)', {
+          count: successfulImports.length,
+        }),
+        timeout: 2000,
+        type: 'success',
+      });
+    }
+
+    setLibrary([...library]);
+
     appService?.saveLibraryBooks(library);
     setLoading(false);
   };
 
-  const handleImportBooks = async () => {
-    console.log('Importing books...');
+  const handleImportBooksFromFiles = async () => {
+    console.log('Importing books from files...');
     selectFiles({ type: 'books', multiple: true }).then((result) => {
       if (result.files.length === 0 || result.error) return;
       importBooks(result.files);
     });
+  };
+
+  const handleImportBooksFromDirectory = async () => {
+    if (!appService || !isTauriAppPlatform()) return;
+
+    console.log('Importing books from directory...');
+    let importDirectory: string | undefined = '';
+    if (appService.isAndroidApp) {
+      if (!(await requestStoragePermission())) return;
+      const response = await selectDirectory();
+      importDirectory = response.path;
+    } else {
+      const selectedDir = await appService.selectDirectory?.('read');
+      importDirectory = selectedDir;
+    }
+    if (!importDirectory) {
+      console.log('No directory selected');
+      return;
+    }
+    const files = await appService.readDirectory(importDirectory, 'None');
+    const supportedFiles = files.filter((file) => {
+      const ext = file.path.split('.').pop()?.toLowerCase() || '';
+      return SUPPORTED_BOOK_EXTS.includes(ext);
+    });
+    const toImportFiles = await Promise.all(
+      supportedFiles.map(async (file) => {
+        return {
+          path: await joinPaths(importDirectory, file.path),
+          basePath: importDirectory,
+        };
+      }),
+    );
+    importBooks(toImportFiles);
   };
 
   const handleShowDetailsBook = (book: Book) => {
@@ -442,7 +510,14 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
       )}
     >
       <div className='top-0 z-40 w-full'>
-        <LibraryHeader onImportBooks={handleImportBooks} />
+        <LibraryHeader 
+          onImportBooksFromFiles={handleImportBooksFromFiles}
+          onImportBooksFromDirectory={
+            appService?.canReadExternalDir 
+              ? handleImportBooksFromDirectory 
+              : undefined
+          }
+        />
       </div>
       {loading && (
         <div className='fixed inset-0 z-50 flex items-center justify-center'>
@@ -485,7 +560,10 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
           <div className='hero drop-zone h-screen items-center justify-center'>
             <div className='hero-content text-neutral-content text-center'>
               <div className='max-w-md'>
-                <button className='btn btn-primary rounded-xl' onClick={handleImportBooks}>
+                <button 
+                  className='btn btn-primary rounded-xl' 
+                  onClick={handleImportBooksFromFiles}
+                >
                   {_('Import Books')}
                 </button>
               </div>

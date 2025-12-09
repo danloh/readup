@@ -10,23 +10,26 @@ extern crate objc;
 mod windows;
 
 use tauri::utils::config::BackgroundThrottlingPolicy;
+
 #[cfg(target_os = "macos")]
 use tauri::TitleBarStyle;
 
-#[cfg(desktop)]
 use std::path::PathBuf;
+use tauri::{AppHandle, Manager};
+use tauri::{command, Emitter, WebviewUrl, WebviewWindowBuilder, Window};
+
 #[cfg(desktop)]
-use tauri::{AppHandle, Listener, Manager, Url};
-#[cfg(desktop)]
+use tauri::{Listener, Url};
+
 use tauri_plugin_fs::FsExt;
+use tauri_plugin_oauth::start;
+#[cfg(target_os = "android")]
+use tauri_plugin_native_bridge::register_select_directory_callback;
 
 #[cfg(target_os = "macos")]
 mod macos;
 mod file;
 mod feed;
-
-use tauri::{command, Emitter, WebviewUrl, WebviewWindowBuilder, Window};
-use tauri_plugin_oauth::start;
 
 #[cfg(desktop)]
 fn allow_file_in_scopes(app: &AppHandle, files: Vec<PathBuf>) {
@@ -46,7 +49,6 @@ fn allow_file_in_scopes(app: &AppHandle, files: Vec<PathBuf>) {
     }
 }
 
-#[cfg(desktop)]
 fn allow_dir_in_scopes(app: &AppHandle, dir: &PathBuf) {
     let fs_scope = app.fs_scope();
     let asset_protocol_scope = app.asset_protocol_scope();
@@ -220,6 +222,11 @@ pub fn run() {
             {
                 allow_dir_in_scopes(app.handle(), &PathBuf::from(get_executable_dir()));
             }
+
+            #[cfg(target_os = "android")]
+            register_select_directory_callback(app.handle(), move |app, path| {
+                allow_dir_in_scopes(app, path);
+            });
 
             #[cfg(desktop)]
             {

@@ -14,12 +14,16 @@ import { navigateToLibrary } from '@/utils/nav';
 import { debounce } from '@/utils/debounce';
 import Dropdown from '@/components/Dropdown';
 import ViewMenu from './ViewMenu';
+import { IoFileTray } from 'react-icons/io5';
 
 interface LibraryHeaderProps {
-  onImportBooks: () => void;
+  onImportBooksFromFiles: () => void;
+  onImportBooksFromDirectory?: () => void;
 }
 
-const LibraryHeader: React.FC<LibraryHeaderProps> = ({onImportBooks}) => {
+const LibraryHeader: React.FC<LibraryHeaderProps> = (
+  {onImportBooksFromFiles, onImportBooksFromDirectory,}
+) => {
   const _ = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -27,7 +31,6 @@ const LibraryHeader: React.FC<LibraryHeaderProps> = ({onImportBooks}) => {
 
   const [searchQuery, setSearchQuery] = useState(searchParams?.get('q') ?? '');
 
-  const iconSize18 = useResponsiveSize(18);
   const iconSize20 = useResponsiveSize(20);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -117,16 +120,28 @@ const LibraryHeader: React.FC<LibraryHeaderProps> = ({onImportBooks}) => {
             <button
               type='button'
               className='btn btn-ghost h-8 min-h-8 w-8 p-0'
-              onClick={onImportBooks}
+              onClick={onImportBooksFromFiles}
               aria-label={_('Import Books')}
             >
               <LiaFileImportSolid className='m-0.5 h-5 w-5' />
             </button>
           </div>
+          {onImportBooksFromDirectory && (
+            <div className='tooltip tooltip-bottom' data-tip={_('Import Directory')}>
+              <button
+                type='button'
+                className='btn btn-ghost h-8 min-h-8 w-8 p-0'
+                onClick={onImportBooksFromDirectory}
+                aria-label={_('Import Directory')}
+              >
+                <IoFileTray className='m-0.5 h-5 w-5' />
+              </button>
+            </div>
+          )}
           <Dropdown
             className='exclude-title-bar-mousedown dropdown-bottom dropdown-end'
             buttonClassName='btn btn-ghost h-8 min-h-8 w-8 p-0'
-            toggleButton={<PiDotsThreeCircle size={iconSize18} />}
+            toggleButton={<PiDotsThreeCircle />}
           >
             <ViewMenu />
           </Dropdown>

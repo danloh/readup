@@ -62,6 +62,7 @@ export interface AppService {
   isPortableApp: boolean;
   isDesktopApp: boolean;
   canCustomizeRootDir: boolean;
+  canReadExternalDir: boolean;
   distChannel: DistChannel;
 
   init(): Promise<void>;
