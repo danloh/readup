@@ -27,7 +27,7 @@ export async function createSession(handle: string, pass: string, host: string) 
     },
   });
   if (!response.ok) {
-    throw new Error(`Response status: ${response.status}`);
+    throw new Error(`Create Session, Response status: ${response.status}`);
   }
   const result = await response.json();
   console.log(result);
@@ -42,6 +42,10 @@ export async function getSession(host: string, accessToken: string) {
       "Authorization": `Bearer ${accessToken}`,
     },
   });
+
+  // if (!response.ok) {
+  //   throw new Error(`Get Seesion: Response status: ${response.status}`);
+  // }
 
   return response.ok;
 }
@@ -79,10 +83,10 @@ async function refreshToken(host: string, refreshToken: string) {
   });
 
   if (!response.ok) {
-    throw new Error(`Response status: ${response.status}`);
+    throw new Error(`Refresh Token, Response status: ${response.status}`);
   }
   const result = await response.json();
-  console.log(result);
+  console.log('refresh token', result);
   return result as AuthToken;
 }
 
@@ -103,7 +107,7 @@ export async function resolveDid(did: string): Promise<string> {
   try {
     const response = await fetch(url);
     if (!response.ok) {
-      console.error(`Response status: ${response.status}`);
+      console.error(`Resolve DID, Response status: ${response.status}`);
       return '';
     }
 

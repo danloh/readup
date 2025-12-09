@@ -14,6 +14,7 @@ export const useNotesSync = (bookKey: string) => {
   const config = getConfig(bookKey);
   const bookHash = bookKey.split('-')[0]!;
 
+  // a
   const getNewNotes = () => {
     const config = getConfig(bookKey);
     if (!config?.location || !user) return [];
@@ -27,6 +28,7 @@ export const useNotesSync = (bookKey: string) => {
     return newNotes;
   };
 
+  // a
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const handleAutoSync = useCallback(
     debounce(() => {
@@ -36,6 +38,7 @@ export const useNotesSync = (bookKey: string) => {
     [lastSyncedAtNotes],
   );
 
+  // a
   useEffect(() => {
     if (!config?.location || !user) return;
     handleAutoSync();

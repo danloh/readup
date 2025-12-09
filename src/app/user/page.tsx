@@ -22,7 +22,7 @@ const ProfilePage = () => {
   const _ = useTranslation();
   const router = useRouter();
   const { envConfig, appService } = useEnv();
-  const { token, user, logout } = useAuth();
+  const { user, logout } = useAuth();
   const { settings, setSettings, saveSettings } = useSettingsStore();
   const { safeAreaInsets } = useThemeStore();
   const [showEmbeddedCheckout, setShowEmbeddedCheckout] = useState(false);
@@ -65,7 +65,7 @@ const ProfilePage = () => {
     return null;
   }
 
-  if (!user || !token || !appService) {
+  if (!user || !appService) {
     return (
       <div className='mx-auto max-w-4xl px-4 py-8'>
         <div className='overflow-hidden rounded-lg shadow-md'>

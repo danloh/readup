@@ -54,7 +54,7 @@ const BookDetailModal = ({ book, isOpen, onClose, showBtns = true }: DetailModal
     const fetchBookDetails = async () => {
       const appService = await envConfig.getAppService();
       try {
-        const details = await appService.fetchBookDetails(book, settings);
+        const details = await appService.fetchBookDetails(book);
         const size = await appService.getBookFileSize(book);
         setBookMeta(details);
         setFileSize(size);

@@ -40,8 +40,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // refresh session
         const usr = await refreshSession();
         syncSession(usr);
-      } catch {
-        console.log('error on refresh session');
+      } catch (e) {
+        console.log('error on refresh session: ', e);
       }
     };
 
@@ -88,8 +88,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const usr = await refreshSession();
       setUser(usr);
       localStorage.setItem('user', JSON.stringify(usr));
-    } catch {
-      console.log('error on refresh session');
+    } catch (e) {
+      console.log('Error on refresh session: ', e);
     }
   };
 

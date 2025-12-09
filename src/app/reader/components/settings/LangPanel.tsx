@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useEnv } from '@/context/EnvContext';
-import { useAuth } from '@/context/AuthContext';
 import { useReaderStore } from '@/store/readerStore';
 import { useThemeStore } from '@/store/themeStore';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -13,7 +12,6 @@ import { useResetViewSettings } from '../../hooks/useResetSettings';
 
 const LangPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset }) => {
   const _ = useTranslation();
-  const { token } = useAuth();
   const { envConfig } = useEnv();
   const { getViewSettings, setViewSettings, recreateViewer } = useReaderStore();
   const { setUILang } = useThemeStore();
@@ -46,13 +44,7 @@ const LangPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
   const getTranslationProviderOptions = () => {
     const translators = getTranslators();
     const availableProviders = translators.map((t) => {
-      let label = t.label;
-      if (t.authRequired && !token) {
-        label = `${label} (${_('Login Required')})`;
-      } else if (t.quotaExceeded) {
-        label = `${label} (${_('Quota Exceeded')})`;
-      }
-      return { value: t.name, label };
+      return { value: t.name, label: t.label };
     });
     return availableProviders;
   };
@@ -60,9 +52,7 @@ const LangPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
   const getCurrentTranslationProviderOption = () => {
     const value = translationProvider;
     const allProviders = getTranslationProviderOptions();
-    const availableTranslators = getTranslators().filter(
-      (t) => (t.authRequired ? !!token : true) && !t.quotaExceeded,
-    );
+    const availableTranslators = getTranslators();
     const currentProvider = availableTranslators.find((t) => t.name === value)
       ? value
       : availableTranslators[0]?.name;

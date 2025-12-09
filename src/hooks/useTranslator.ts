@@ -1,5 +1,4 @@
 import { useState, useCallback, useEffect } from 'react';
-import { useAuth } from '@/context/AuthContext';
 import { getTranslator, getTranslators, TranslatorName } from '@/services/translators';
 import { getFromCache, storeInCache, UseTranslatorOptions } from '@/services/translators';
 import { polish, preprocess } from '@/services/translators';
@@ -14,7 +13,6 @@ export function useTranslator({
   enablePreprocessing = true,
 }: UseTranslatorOptions = {}) {
   const _ = useTranslation();
-  const { token } = useAuth();
   const [loading, setLoading] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState(provider);
   const [translator, setTransltor] = useState(() => getTranslator(provider));
@@ -25,9 +23,7 @@ export function useTranslator({
   }, [provider, sourceLang, targetLang]);
 
   useEffect(() => {
-    const availableTranslators = getTranslators().filter(
-      (t) => (t.authRequired ? !!token : true) && !t.quotaExceeded,
-    );
+    const availableTranslators = getTranslators();
     const selectedTranslator =
       availableTranslators.find((t) => t.name === provider) || availableTranslators[0]!;
     const selectedProviderName = selectedTranslator.name as TranslatorName;
@@ -150,7 +146,7 @@ export function useTranslator({
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [selectedProvider, sourceLang, targetLang, translator, token],
+    [selectedProvider, sourceLang, targetLang, translator],
   );
 
   return {

@@ -40,7 +40,7 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
   const { getProgress, getView, getViewsById, getViewSettings } = useReaderStore();
   const { setNotebookVisible, setNotebookNewAnnotation } = useNotebookStore();
 
-  useNotesSync(bookKey);
+  // useNotesSync(bookKey);  // FIXME
 
   const osPlatform = getOSPlatform();
   const config = getConfig(bookKey)!;
@@ -383,7 +383,7 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
 
   const handleCopy = (copyToNotebook = true) => {
     if (!selection || !selection.text) return;
-    
+
     setTimeout(() => {
       // Delay to ensure it won't be overridden by system clipboard actions
       navigator.clipboard?.writeText(selection.text);

@@ -84,7 +84,7 @@ const FoliateViewer: React.FC<{
   }, [toastMessage]);
 
   useUICSS(bookKey);
-  useProgressSync(bookKey);
+  // useProgressSync(bookKey); // FIXME
   useProgressAutoSave(bookKey);
   useTextTranslation(bookKey, viewRef.current);
 
