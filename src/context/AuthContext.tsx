@@ -8,6 +8,7 @@ interface AuthContextType {
   user: User | null;
   login: (handle: string, passwd: string, host: string) => Promise<boolean>;
   logout: () => void;
+  refresh: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -34,7 +35,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(null);
       }
     };
-    const refresh = async () => {
+    const refreshSess = async () => {
       try {
         // refresh session
         const usr = await refreshSession();
@@ -44,7 +45,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     };
 
-    refresh();
+    refreshSess();
   }, []);
 
   const login = async (handle: string, passwd: string, host: string) => {
@@ -81,8 +82,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
   };
 
+  const refresh = async () => {
+    try {
+      // refresh session
+      const usr = await refreshSession();
+      setUser(usr);
+      localStorage.setItem('user', JSON.stringify(usr));
+    } catch {
+      console.log('error on refresh session');
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, refresh }}>
       {children}
     </AuthContext.Provider>
   );

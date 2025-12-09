@@ -61,6 +61,7 @@ import {
 import { ClosableFile } from '@/utils/file';
 import { ProgressHandler } from '@/utils/transfer';
 import { TxtToEpubConverter } from '@/utils/txt';
+import { svg2png } from '@/utils/svg';
 import { ArticleType, FeedType } from '@/app/feed/dataAgent';
 import { BOOK_FILE_NOT_FOUND_ERROR } from './errors';
 
@@ -330,7 +331,13 @@ export abstract class BaseAppService implements AppService {
         }
       }
       if (saveCover && (!(await this.fs.exists(getCoverFilename(book), 'Books')) || overwrite)) {
-        const cover = await loadedBook.getCover();
+        let cover = await loadedBook.getCover();
+        if (cover?.type === 'image/svg+xml') {
+          try {
+            console.log('Converting SVG cover to PNG...');
+            cover = await svg2png(cover);
+          } catch {}
+        }
         if (cover) {
           await this.fs.writeFile(getCoverFilename(book), 'Books', await cover.arrayBuffer());
         }

@@ -46,6 +46,14 @@ const FootnotePopup: React.FC<FootnotePopupProps> = ({ bookKey, bookDoc }) => {
     return Math.min(size, maxSize - popupPadding - 12);
   };
 
+  const clipPopupWith = (size: number) => {
+    return Math.min(size, window.innerWidth - popupPadding - 12);
+  };
+
+  const clipPopupHeight = (size: number) => {
+    return Math.min(size, window.innerHeight - popupPadding - 12);
+  };
+
   useEffect(() => {
     const handleBeforeRender = (e: Event) => {
       const detail = (e as CustomEvent).detail;
@@ -95,7 +103,9 @@ const FootnotePopup: React.FC<FootnotePopupProps> = ({ bookKey, bookDoc }) => {
         const viewSettings = getViewSettings(bookKey)!;
         if (viewSettings.vertical) {
           setResponsiveWidth(getResponsivePopupSize(renderer.viewSize, true));
+          setResponsiveHeight(clipPopupHeight(popupHeight));
         } else {
+          setResponsiveWidth(clipPopupWith(popupWidth));
           setResponsiveHeight(getResponsivePopupSize(renderer.viewSize, false));
         }
         setShowPopup(true);
@@ -119,11 +129,11 @@ const FootnotePopup: React.FC<FootnotePopupProps> = ({ bookKey, bookDoc }) => {
 
   useEffect(() => {
     if (viewSettings.vertical) {
-      setResponsiveWidth(popupHeight);
+      setResponsiveWidth(clipPopupWith(popupHeight));
       setResponsiveHeight(Math.max(popupWidth, window.innerHeight / 4));
     } else {
       setResponsiveWidth(Math.max(popupWidth, window.innerWidth / 4));
-      setResponsiveHeight(popupHeight);
+      setResponsiveHeight(clipPopupHeight(popupHeight));
     }
   }, [viewSettings]);
 
@@ -245,7 +255,7 @@ const FootnotePopup: React.FC<FootnotePopupProps> = ({ bookKey, bookDoc }) => {
         onDismiss={handleDismissPopup}
       >
         <div
-          className=''
+          className='footnote-content'
           ref={footnoteRef}
           style={{
             width: `${responsiveWidth}px`,
