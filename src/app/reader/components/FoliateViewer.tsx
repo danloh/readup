@@ -34,7 +34,7 @@ import { transformContent } from '../transformers/transformService';
 import { useMouseEvent, useTouchEvent } from '../hooks/useIframeEvents';
 import { usePagination } from '../hooks/usePagination';
 import { useFoliateEvents } from '../hooks/useFoliateEvents';
-import { useProgressSync } from '../hooks/useProgressSync';
+// import { useProgressSync } from '../hooks/useProgressSync';
 import { useProgressAutoSave } from '../hooks/useProgressAutoSave';
 import { useTextTranslation } from '../hooks/useTextTranslation';
 import {

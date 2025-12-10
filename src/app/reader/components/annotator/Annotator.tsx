@@ -25,7 +25,7 @@ import { findTocItemBS } from '@/utils/toc';
 import { throttle } from '@/utils/throttle';
 import { HIGHLIGHT_COLOR_HEX } from '@/services/constants';
 import { useFoliateEvents } from '../../hooks/useFoliateEvents';
-import { useNotesSync } from '../../hooks/useNotesSync';
+// import { useNotesSync } from '../../hooks/useNotesSync';
 import { useTextSelector } from '../../hooks/useTextSelector';
 import AnnotationPopup from './AnnotationPopup';
 import WiktionaryPopup from './WiktionaryPopup';
