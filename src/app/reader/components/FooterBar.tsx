@@ -211,6 +211,7 @@ const FooterBar: React.FC<FooterBarProps> = ({
           'sm:h-[52px] sm:justify-center',
           'sm:bg-base-100 border-base-300/50 border-t sm:border-none',
           'transition-[opacity,transform] duration-300',
+          window.innerWidth < 640 ? 'fixed' : 'absolute',
           appService?.hasRoundedWindow && 'rounded-window-bottom-right',
           !isSideBarVisible && appService?.hasRoundedWindow && 'rounded-window-bottom-left',
           isHoveredAnim && 'hover-bar-anim',
@@ -220,6 +221,7 @@ const FooterBar: React.FC<FooterBarProps> = ({
             : `pointer-events-none translate-y-full opacity-0 sm:translate-y-0`,
         )}
         dir={viewSettings?.rtl ? 'rtl' : 'ltr'}
+        onFocus={() => !appService?.isMobile && setHoveredBookKey(bookKey)}
         onMouseLeave={() => window.innerWidth >= 640 && setHoveredBookKey('')}
         aria-hidden={!isVisible}
       >
