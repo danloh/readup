@@ -559,8 +559,8 @@ export const READUP_WEB_BASE_URL = 'https://web.readup.cc';
 const LATEST_DOWNLOAD_BASE_URL = 'https://download.readup.cc/releases';
 
 export const READUP_UPDATER_FILE = `${LATEST_DOWNLOAD_BASE_URL}/latest.json`;
-
 export const READUP_CHANGELOG_FILE = `${LATEST_DOWNLOAD_BASE_URL}/release-notes.json`;
+export const READUP_OPDS_USER_AGENT = 'Readup/1.0 (OPDS Browser)';
 
 export const SYNC_PROGRESS_INTERVAL_SEC = 3;
 export const SYNC_NOTES_INTERVAL_SEC = 5;

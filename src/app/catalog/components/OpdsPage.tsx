@@ -19,6 +19,7 @@ import { OPDSFeed, OPDSPublication, OPDSSearch } from '@/types/opds';
 import { useThemeStore } from '@/store/themeStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useTheme } from '@/hooks/useTheme';
+import { READUP_OPDS_USER_AGENT } from '@/services/constants';
 import { isSearchLink, MIME, parseMediaType, resolveURL } from '../utils/opdsUtils';
 import { getProxiedURL, fetchWithAuth, probeAuth, needsProxy } from '../utils/opdsReq';
 import { CatalogDialog } from './OPDSDialog';
@@ -365,7 +366,7 @@ export default function BrowserPage() {
             const useProxy = needsProxy(url);
             let downloadUrl = useProxy ? getProxiedURL(url, '', true) : url;
             const headers: Record<string, string> = {
-              'User-Agent': 'Readup/1.0 (OPDS Browser)',
+              'User-Agent': READUP_OPDS_USER_AGENT,
             };
             if (username || password) {
               const authHeader = await probeAuth(url, username, password, useProxy);

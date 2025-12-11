@@ -32,16 +32,16 @@ const POPULAR_CATALOGS: OPDSCatalog[] = [
     id: 'standardebooks',
     name: 'Standard Ebooks',
     url: 'https://standardebooks.org/feeds/opds',
-    description: 'Carefully formatted and lovingly produced free ebooks',
+    description: 'Free and liberated ebooks, carefully produced for the true book lover',
     icon: '📚',
-    disabled: true,
+    disabled: isWebAppPlatform(),
   },
   {
     id: 'unglue.it',
     name: 'Unglue.it',
     url: 'https://unglue.it/api/opds/',
     description: 'Free ebooks from authors who have "unglued" their books',
-    icon: '📚',
+    icon: '🔓',
   },
 ];
 

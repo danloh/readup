@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { READUP_OPDS_USER_AGENT } from '@/services/constants';
 
 async function handleRequest(request: NextRequest, method: 'GET' | 'HEAD') {
   // Cloudflare Workers incorrectly decodes %26 to & in the url parameter value,
@@ -35,7 +36,7 @@ async function handleRequest(request: NextRequest, method: 'GET' | 'HEAD') {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 20000);
     const headers: HeadersInit = {
-      'User-Agent': 'Readup/1.0 (OPDS Browser)',
+      'User-Agent': READUP_OPDS_USER_AGENT,
       Accept: 'application/atom+xml, application/xml, text/xml, application/json, */*',
     };
 
