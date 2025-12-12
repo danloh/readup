@@ -37,7 +37,7 @@ atom_syndication = "0.12"
 bytes = "1.11.0"
 chrono = "0.4.42"
 # FIXME: remove the devtools feature in production
-tauri = { version = "2.9.4", features = [ "protocol-asset", "devtools"] }
+tauri = { version = "2.9.5", features = [ "protocol-asset", "devtools"] }
 tauri-build = "2.5.3"
 tauri-plugin-log = "2.7.1"
 tauri-plugin-fs = "2.4.4"
