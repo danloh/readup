@@ -2,11 +2,14 @@ import clsx from 'clsx';
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { PiUserCircle } from 'react-icons/pi';
-import { MdCheck } from 'react-icons/md';
+import { MdCheckBox, MdCheckBoxOutlineBlank } from 'react-icons/md';
 import { GrSystem } from "react-icons/gr";
-import { BiMoon, BiSun } from 'react-icons/bi';
+import { BiData, BiMoon, BiSun } from 'react-icons/bi';
+import { AiOutlineFullscreen } from 'react-icons/ai';
+import { RxReload } from 'react-icons/rx';
+import { IoCloudDownloadOutline } from 'react-icons/io5';
+import { FaInfo } from 'react-icons/fa';
 import { invoke, PermissionState } from '@tauri-apps/api/core';
-
 import { setAboutDialogVisible } from '@/components/AboutWindow';
 import { setAuthDialogVisible } from '@/components/AuthWindow';
 // import UserAvatar from '@/components/UserAvatar';
@@ -191,74 +194,98 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
       {appService?.canCustomizeRootDir && (
         <>
           <hr aria-hidden='true' className='border-base-200 my-1' />
-          <MenuItem label={_('Change Data Location')} noIcon onClick={handleSetRootDir} />
+          <MenuItem 
+            label={_('Change Data Location')} 
+            Icon={BiData} 
+            onClick={handleSetRootDir} 
+          />
         </>
       )}
       <hr className='border-base-200 my-1' />
       {appService?.hasWindow && (
+        <MenuItem 
+          label={_('Fullscreen')} 
+          Icon={AiOutlineFullscreen}
+          onClick={handleFullScreen} 
+        />
+      )}
+      {appService?.hasWindow && (
         <MenuItem
           label={_('Open Book in New Window')}
-          Icon={settings.openBookInNewWindow ? MdCheck : undefined}
+          Icon={settings.openBookInNewWindow ? MdCheckBox : MdCheckBoxOutlineBlank}
           onClick={toggleOpenInNewWindow}
         />
       )}
       {isTauriAppPlatform() && (
         <MenuItem
           label={_('Open Last Book on Start')}
-          Icon={isOpenLastBooks ? MdCheck : undefined}
+          Icon={isOpenLastBooks ? MdCheckBox : MdCheckBoxOutlineBlank}
           onClick={toggleOpenLastBooks}
         />
       )}
       {isTauriAppPlatform() && !appService?.isMobile && (
         <MenuItem
           label={_('Auto Import on File Open')}
-          Icon={isAutoImportBooksOnOpen ? MdCheck : undefined}
+          Icon={isAutoImportBooksOnOpen ? MdCheckBox : MdCheckBoxOutlineBlank}
           onClick={toggleAutoImportBooksOnOpen}
         />
       )}
-      {appService?.hasWindow && <MenuItem label={_('Fullscreen')} onClick={handleFullScreen} />}
       {appService?.hasWindow && (
         <MenuItem
           label={_('Always on Top')}
-          Icon={isAlwaysOnTop ? MdCheck : undefined}
+          Icon={isAlwaysOnTop ? MdCheckBox : MdCheckBoxOutlineBlank}
           onClick={toggleAlwaysOnTop}
         />
       )}
       {appService?.isMobileApp && (
         <MenuItem
           label={_('Always Show Status Bar')}
-          Icon={isAlwaysShowStatusBar ? MdCheck : undefined}
+          Icon={isAlwaysShowStatusBar ? MdCheckBox : MdCheckBoxOutlineBlank}
           onClick={toggleAlwaysShowStatusBar}
         />
       )}
       {appService?.isAndroidApp && (
         <MenuItem
           label={_(_('Background Read Aloud'))}
-          Icon={alwaysInForeground ? MdCheck : undefined}
+          Icon={alwaysInForeground ? MdCheckBox : MdCheckBoxOutlineBlank}
           onClick={toggleAlwaysInForeground}
         />
       )}
       <MenuItem
         label={_('Keep Screen Awake')}
-        Icon={isScreenWakeLock ? MdCheck : undefined}
+        Icon={isScreenWakeLock ? MdCheckBox : MdCheckBoxOutlineBlank}
         onClick={toggleScreenWakeLock}
       />
-      <MenuItem label={_('Reload Page')} onClick={handleReloadPage} />
+      <MenuItem 
+        label={_('Reload Page')} 
+        Icon={RxReload}
+        onClick={handleReloadPage} 
+      />
       <hr className='border-base-200 my-1' />
-      {isWebAppPlatform() && <MenuItem label={_('Download Readup')} onClick={downloadReadup} />}
-      {appService?.hasUpdater && (
-        <MenuItem
-          label={_('Check Updates on Start')}
-          Icon={isAutoCheckUpdates ? MdCheck : undefined}
-          onClick={toggleAutoCheckUpdates}
-        />
-      )}
-      <MenuItem label={_('About Readup')} onClick={showAboutReadup} />
       <MenuItem
         label={_('Help improve Readup')}
         description={isTelemetryEnabled ? _('Sharing anonymized statistics') : ''}
-        Icon={isTelemetryEnabled ? MdCheck : undefined}
+        Icon={isTelemetryEnabled ? MdCheckBox : MdCheckBoxOutlineBlank}
         onClick={toggleTelemetry}
+      />
+      {isWebAppPlatform() && (
+        <MenuItem 
+          label={_('Download Readup')} 
+          Icon={IoCloudDownloadOutline}
+          onClick={downloadReadup} 
+        />
+      )}
+      {appService?.hasUpdater && (
+        <MenuItem
+          label={_('Check Updates on Start')}
+          Icon={isAutoCheckUpdates ? MdCheckBox : MdCheckBoxOutlineBlank}
+          onClick={toggleAutoCheckUpdates}
+        />
+      )}
+      <MenuItem 
+        label={_('About Readup')} 
+        Icon={FaInfo}
+        onClick={showAboutReadup} 
       />
       <hr className='border-base-200 my-1' />
       <div className='flex items-end justify-between'>  

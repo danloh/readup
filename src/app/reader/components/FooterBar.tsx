@@ -179,6 +179,7 @@ const FooterBar: React.FC<FooterBarProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hoveredBookKey]);
 
+  const isMobile = appService?.isMobile || window.innerWidth < 640;
   const isVisible = hoveredBookKey === bookKey;
   const ttsEnabled = viewState?.ttsEnabled;
   const progressInfo = bookFormat === 'PDF' ? section : pageinfo;
@@ -200,10 +201,11 @@ const FooterBar: React.FC<FooterBarProps> = ({
         className={clsx(
           'absolute bottom-0 left-0 z-10 flex h-[52px] w-full',
           needHorizontalScroll && 'sm:!bottom-3 sm:!h-7',
+          isMobile ? 'pointer-events-none' : '',
         )}
         onClick={() => setHoveredBookKey(bookKey)}
-        onMouseEnter={() => !appService?.isMobile && setHoveredBookKey(bookKey)}
-        onTouchStart={() => !appService?.isMobile && setHoveredBookKey(bookKey)}
+        onMouseEnter={() => !isMobile && setHoveredBookKey(bookKey)}
+        onTouchStart={() => !isMobile && setHoveredBookKey(bookKey)}
       />
       <div
         className={clsx(
