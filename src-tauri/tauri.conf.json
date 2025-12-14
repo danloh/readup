@@ -71,7 +71,8 @@
       "minSdkVersion": 26
     },
     "iOS": {
-      "developmentTeam": "J5W48D69VR",
+      "developmentTeam": "",
+      "infoPlist": "./Info-ios.plist",
       "minimumSystemVersion": "14.0"
     },
     "fileAssociations": [

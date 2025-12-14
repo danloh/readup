@@ -177,7 +177,7 @@ const ReaderContent: React.FC<{ids?: string; settings: SystemSettings}> = ({ ids
     }
     dismissBook(bookKey);
     if (bookKeys.filter((key) => key !== bookKey).length == 0) {
-      const openWithFiles = (await parseOpenWithFiles()) || [];
+      const openWithFiles = (await parseOpenWithFiles(appService)) || [];
       if (appService?.hasWindow) {
         if (openWithFiles.length > 0) {
           tauriHandleOnCloseWindow(handleCloseBooks);
