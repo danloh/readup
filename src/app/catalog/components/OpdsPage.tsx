@@ -16,7 +16,6 @@ import { useLibrary } from '@/hooks/useLibrary';
 import { eventDispatcher } from '@/utils/event';
 import { getFileExtFromMimeType } from '@/libs/document';
 import { OPDSFeed, OPDSPublication, OPDSSearch } from '@/types/opds';
-import { useThemeStore } from '@/store/themeStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useTheme } from '@/hooks/useTheme';
 import { READUP_OPDS_USER_AGENT } from '@/services/constants';
@@ -51,7 +50,6 @@ export default function BrowserPage() {
   const router = useRouter();
   const { appService } = useEnv();
   const { libraryLoaded } = useLibrary();
-  const { safeAreaInsets, isRoundedWindow } = useThemeStore();
   const { settings } = useSettingsStore();
   const [viewMode, setViewMode] = useState<ViewMode>('loading');
   const [state, setState] = useState<OPDSState>({
@@ -510,14 +508,10 @@ export default function BrowserPage() {
   return (
     <div
       className={clsx(
-        'bg-base-100 flex h-screen select-none flex-col',
-        appService?.hasRoundedWindow && isRoundedWindow && 'window-border rounded-window',
+        'opds-page text-base-content full-height flex select-none flex-col overflow-hidden',
       )}
     >
-      <div
-        className='relative top-0 z-40 w-full'
-        style={{ paddingTop: `${safeAreaInsets?.top || 0}px` }}
-      >
+      <div className='relative top-0 z-40 w-full'>
         <Navigation
           currentURL={state.currentURL}
           startURL={state.startURL}

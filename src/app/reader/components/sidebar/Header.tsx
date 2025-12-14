@@ -1,11 +1,11 @@
 import clsx from 'clsx';
-import { LuLibraryBig } from "react-icons/lu";
 import { FiSearch } from 'react-icons/fi';
 import { MdOutlineMenu, MdOutlinePushPin, MdPushPin, MdArrowBackIosNew } from 'react-icons/md';
 import { useResponsiveSize } from '@/hooks/useResponsiveSize';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useTrafficLight } from '@/hooks/useTrafficLight';
 import Dropdown from '@/components/Dropdown';
+import Logo from '@/components/Logo';
 import BookMenu from './BookMenu';
 
 const SidebarHeader: React.FC<{
@@ -43,7 +43,7 @@ const SidebarHeader: React.FC<{
           className='btn btn-ghost hidden h-8 min-h-8 w-8 p-0 sm:flex'
           onClick={onGoToLibrary}
         >
-          <LuLibraryBig className='fill-base-content' />
+          <Logo />
         </button>
       </div>
       <div className='flex min-w-24 max-w-32 items-center justify-between sm:size-[70%]'>

@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation';
 import { ImFeed } from "react-icons/im";
 import { BiLibrary } from 'react-icons/bi';
 import { SiProgress } from "react-icons/si";
-import { MdOutlineSettings } from 'react-icons/md';
 import { GrCatalog } from 'react-icons/gr';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useTrafficLight } from '@/hooks/useTrafficLight';
@@ -16,6 +15,7 @@ import { AboutWindow } from '@/components/AboutWindow';
 import { AuthWindow } from '@/components/AuthWindow';
 import { UpdaterWindow } from '@/components/UpdaterWindow';
 import WindowButtons from '@/components/WindowButtons';
+import Logo from '@/components/Logo';
 import { useThemeStore } from '@/store/themeStore';
 import SettingsMenu from './SettingsMenu';
 import { MigrateDataWindow } from './MigrateDataWindow';
@@ -61,7 +61,13 @@ export const NavTab: React.FC<{activeTab: string}> = ({ activeTab }) => {
       }}
     >
       <div className='flex font-bold items-center justify-start mx-1'>
-        {_(titleCase(activeTab))}
+        <Dropdown
+          className='exclude-title-bar-mousedown dropdown-bottom z-50'
+          buttonClassName='btn btn-ghost btn-xs'
+          toggleButton={<Logo />}
+        >
+          <SettingsMenu />
+        </Dropdown>
       </div>
       <div className='flex flex-wrap w-full items-center justify-end gap-1'>
         {tabs.map((tab) => (
@@ -72,28 +78,33 @@ export const NavTab: React.FC<{activeTab: string}> = ({ activeTab }) => {
           >
             <button 
               type='button'
-              className='btn btn-ghost btn-sm' 
+              className='btn btn-ghost btn-xs' 
               onClick={() => onTabNav(tab)}
             >
               {tab === 'library' ? (
-                <BiLibrary className={clsx('mx-auto', tab === activeTab && 'text-success')} />
+                <BiLibrary 
+                  size={18} 
+                  className={clsx('mx-auto', tab === activeTab && 'text-success')} 
+                />
               ) : tab === 'feed' ? (
-                <ImFeed className={clsx('mx-auto', tab === activeTab && 'text-success')} />
+                <ImFeed 
+                  size={18} 
+                  className={clsx('mx-auto', tab === activeTab && 'text-success')} 
+                />
               ) : tab === 'catalog' ? (
-                <GrCatalog className={clsx('mx-auto', tab === activeTab && 'text-success')} />  
+                <GrCatalog 
+                  size={18} 
+                  className={clsx('mx-auto', tab === activeTab && 'text-success')} 
+                />  
               ) : (
-                <SiProgress className={clsx('mx-auto', tab === activeTab && 'text-success')} />
+                <SiProgress 
+                  size={18} 
+                  className={clsx('mx-auto', tab === activeTab && 'text-success')} 
+                />
               )}
             </button>
           </div>
         ))}
-        <Dropdown
-          className='exclude-title-bar-mousedown dropdown-bottom dropdown-end z-50'
-          buttonClassName='btn btn-ghost btn-sm'
-          toggleButton={<MdOutlineSettings />}
-        >
-          <SettingsMenu />
-        </Dropdown>
         {appService?.hasWindowBar && (
           <WindowButtons
             headerRef={headerRef}

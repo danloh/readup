@@ -69,6 +69,9 @@
         },
         {
           "path": "**/Readup/**/*"
+        },
+        {
+          "path": "**/last-book-cover.png"
         }
       ]
     },
@@ -77,6 +80,9 @@
       "allow": [
         {
           "url": "https://*.readup.cc"
+        },
+        {
+          "url": "https://github.com/*"
         },
         {
           "url": "https://*.deepl.com"
@@ -94,7 +100,13 @@
           "url": "https://translate.googleapis.com"
         },
         {
+          "url": "http://*:*"
+        },
+        {
           "url": "https://*:*"
+        },
+        {
+          "url": "http://*"
         },
         {
           "url": "https://*"
@@ -128,6 +140,14 @@
     "oauth:allow-cancel",
     "sign-in-with-apple:default",
     "opener:default",
+    {
+      "identifier": "opener:allow-open-url",
+      "allow": [
+        {
+          "url": "alipays:*"
+        }
+      ]
+    },
     "haptics:allow-vibrate",
     "haptics:allow-impact-feedback",
     "haptics:allow-notification-feedback",

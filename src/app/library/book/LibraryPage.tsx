@@ -519,7 +519,7 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
         />
       </div>
       {loading && (
-        <div className='fixed inset-0 z-50 flex items-center justify-center'>
+        <div className='fixed inset-0 z-40 flex items-center justify-center'>
           <Spinner loading />
         </div>
       )}
