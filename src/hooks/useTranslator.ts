@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { getTranslator, getTranslators, TranslatorName } from '@/services/translators';
 import { getFromCache, storeInCache, UseTranslatorOptions } from '@/services/translators';
 import { polish, preprocess } from '@/services/translators';
+import { getLocale } from '@/utils/misc';
 import { eventDispatcher } from '@/utils/event';
 import { useTranslation } from './useTranslation';
 
@@ -38,7 +39,7 @@ export function useTranslator({
       options?: { source?: string; target?: string; useCache?: boolean },
     ): Promise<string[]> => {
       const sourceLanguage = options?.source || sourceLang;
-      const targetLanguage = options?.target || targetLang;
+      const targetLanguage = options?.target || targetLang || getLocale();
       const useCache = options?.useCache ?? false;
       const textsToTranslate = enablePreprocessing ? preprocess(input) : input;
 
