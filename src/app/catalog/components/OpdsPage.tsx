@@ -73,6 +73,7 @@ export default function BrowserPage() {
   const loadingOPDSRef = useRef(false);
   const historyIndexRef = useRef(-1);
   const isNavigatingHistoryRef = useRef(false);
+  const searchTermRef = useRef('');
 
   useTheme({ systemUIVisible: false });
 
@@ -102,6 +103,40 @@ export default function BrowserPage() {
     },
     [],
   );
+
+  const quickSearch = useCallback((search: OPDSSearch, baseURL: string, searchTerms: string) => {
+    if (searchTerms) {
+      const formData: Record<string, string> = {};
+      search.params?.forEach((param) => {
+        if (param.name === 'count') {
+          formData[param.name] = '20';
+        } else if (param.name === 'startPage') {
+          formData[param.name] = '1';
+        } else if (param.name === 'searchTerms') {
+          formData[param.name] = searchTerms;
+        } else {
+          formData[param.name] = param.value || '';
+        }
+      });
+      const map = new Map<string | null, Map<string | null, string>>();
+
+      for (const param of search.params || []) {
+        const value = formData[param.name] || '';
+        const ns = param.ns ?? null;
+
+        if (map.has(ns)) {
+          map.get(ns)!.set(param.name, value);
+        } else {
+          map.set(ns, new Map([[param.name, value]]));
+        }
+      }
+
+      const searchURL = search.search(map);
+      const resolvedURL = resolveURL(searchURL, baseURL);
+      handleNavigate(resolvedURL, true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const loadOPDS = useCallback(
     async (url: string, options: { skipHistory?: boolean; isSearch?: boolean } = {}) => {
@@ -194,8 +229,12 @@ export default function BrowserPage() {
               startURL: currentStartURL || responseURL,
             };
             setState(newState);
-            setViewMode('search');
-            setSelectedPublication(null);
+            if (searchTermRef.current) {
+              quickSearch(search, responseURL, searchTermRef.current);
+            } else {
+              setViewMode('search');
+              setSelectedPublication(null);
+            }
 
             if (!skipHistory) {
               addToHistory(url, newState, 'search', null);
@@ -249,7 +288,7 @@ export default function BrowserPage() {
         loadingOPDSRef.current = false;
       }
     },
-    [_, router, addToHistory],
+    [_, router, quickSearch, addToHistory],
   );
 
   useEffect(() => {
@@ -287,54 +326,65 @@ export default function BrowserPage() {
     [loadOPDS],
   );
 
+  const handleGoStart = useCallback(() => {
+    if (startURLRef.current) {
+      handleNavigate(startURLRef.current);
+    }
+    searchTermRef.current = '';
+  }, [startURLRef, handleNavigate]);
+
   const hasSearch = useMemo(() => {
     return !!state.feed?.links?.find(isSearchLink);
   }, [state.feed]);
 
-  const handleSearch = useCallback(() => {
-    if (!state.feed) return;
+  const handleSearch = useCallback(
+    (queryTerm: string) => {
+      if (!state.feed) return;
 
-    const searchLink = state.feed.links?.find(isSearchLink);
+      searchTermRef.current = queryTerm;
 
-    if (searchLink && searchLink.href) {
-      const searchURL = resolveURL(searchLink.href, state.baseURL);
-      if (searchLink.type === MIME.OPENSEARCH) {
-        handleNavigate(searchURL, true);
-      } else if (searchLink.type === MIME.ATOM) {
-        const search: OPDSSearch = {
-          metadata: {
-            title: _('Search'),
-            description: state.feed.metadata?.title
-              ? _('Search in {{title}}', { title: state.feed.metadata.title })
-              : undefined,
-          },
-          params: [
-            {
-              name: 'searchTerms',
-              required: true,
+      const searchLink = state.feed.links?.find(isSearchLink);
+      if (searchLink && searchLink.href) {
+        const searchURL = resolveURL(searchLink.href, state.baseURL);
+        if (searchLink.type === MIME.OPENSEARCH) {
+          handleNavigate(searchURL, true);
+        } else if (searchLink.type === MIME.ATOM) {
+          const search: OPDSSearch = {
+            metadata: {
+              title: _('Search'),
+              description: state.feed.metadata?.title
+                ? _('Search in {{title}}', { title: state.feed.metadata.title })
+                : undefined,
             },
-          ],
-          search: (map: Map<string | null, Map<string | null, string>>) => {
-            const defaultParams = map.get(null);
-            const searchTerms = defaultParams?.get('searchTerms') || '';
-            const decodedURL = decodeURIComponent(searchURL);
-            return decodedURL.replace('{searchTerms}', encodeURIComponent(searchTerms));
-          },
-        };
-        const newState: OPDSState = {
-          feed: state.feed,
-          search,
-          baseURL: state.baseURL,
-          currentURL: state.currentURL,
-          startURL: state.startURL,
-        };
-        setState(newState);
-        setViewMode('search');
-        setSelectedPublication(null);
-        addToHistory(state.currentURL, newState, 'search', null);
+            params: [
+              {
+                name: 'searchTerms',
+                required: true,
+              },
+            ],
+            search: (map: Map<string | null, Map<string | null, string>>) => {
+              const defaultParams = map.get(null);
+              const searchTerms = defaultParams?.get('searchTerms') || '';
+              const decodedURL = decodeURIComponent(searchURL);
+              return decodedURL.replace('{searchTerms}', encodeURIComponent(searchTerms));
+            },
+          };
+          const newState: OPDSState = {
+            feed: state.feed,
+            search,
+            baseURL: state.baseURL,
+            currentURL: state.currentURL,
+            startURL: state.startURL,
+          };
+          setState(newState);
+          setSelectedPublication(null);
+          setViewMode('search');
+          addToHistory(state.currentURL, newState, 'search', null);
+        }
       }
-    }
-  }, [_, state, handleNavigate, addToHistory]);
+    },
+    [_, state, handleNavigate, addToHistory],
+  );
 
   const handleDownload = useCallback(
     async (
@@ -513,15 +563,14 @@ export default function BrowserPage() {
     >
       <div className='relative top-0 z-40 w-full'>
         <Navigation
-          currentURL={state.currentURL}
-          startURL={state.startURL}
-          onNavigate={handleNavigate}
+          onGoStart={handleGoStart}
           onBack={handleBack}
           onForward={handleForward}
           canGoBack={canGoBack}
           canGoForward={canGoForward}
           onShowCatalog={() => setShowCatalogManager(true)}
           onSearch={handleSearch}
+          searchTerm={searchTermRef.current}
           hasSearch={hasSearch}
         />
       </div>

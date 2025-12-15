@@ -146,6 +146,9 @@ importers:
       react-responsive:
         specifier: 10.0.1
         version: 10.0.1(react@19.2.3)
+      react-virtuoso:
+        specifier: ^4.17.0
+        version: 4.17.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       react-window:
         specifier: ^1.8.11
         version: 1.8.11(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -4163,6 +4166,12 @@ packages:
     engines: {node: '>=14'}
     peerDependencies:
       react: '>=16.8.0'
+
+  react-virtuoso@4.17.0:
+    resolution: {integrity: sha512-od3pi2v13v31uzn5zPXC2u3ouISFCVhjFVFch2VvS2Cx7pWA2F1aJa3XhNTN2F07M3lhfnMnsmGeH+7wZICr7w==}
+    peerDependencies:
+      react: '>=16 || >=17 || >= 18 || >= 19'
+      react-dom: '>=16 || >=17 || >= 18 || >=19'
 
   react-window@1.8.11:
     resolution: {integrity: sha512-+SRbUVT2scadgFSWx+R1P754xHPEqvcfSfVX10QYg6POOz+WNgkN48pS+BtZNIMGiL1HYrSEiCkwsMS15QogEQ==}
@@ -9291,6 +9300,11 @@ snapshots:
       prop-types: 15.8.1
       react: 19.2.3
       shallow-equal: 3.1.0
+
+  react-virtuoso@4.17.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
+    dependencies:
+      react: 19.2.3
+      react-dom: 19.2.3(react@19.2.3)
 
   react-window@1.8.11(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
     dependencies:

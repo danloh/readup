@@ -126,6 +126,7 @@ async function handleRequest(request: NextRequest, method: 'GET' | 'HEAD') {
           'Access-Control-Allow-Origin': '*',
           'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
           'Access-Control-Allow-Headers': 'Content-Type',
+          'Access-Control-Expose-Headers': 'X-Content-Length',
         },
       });
     } else {
