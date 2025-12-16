@@ -74,7 +74,7 @@ export const navigateToLogin = (router: ReturnType<typeof useRouter>) => {
 };
 
 export const navigateToProfile = (router: ReturnType<typeof useRouter>) => {
-  router.push('/user');
+  router.push('/streak');
 };
 
 export const navigateToLibrary = (

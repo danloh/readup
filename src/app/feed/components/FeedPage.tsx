@@ -32,7 +32,7 @@ export default function FeedPage() {
 
   const loadFeed = async (link: string) => {
     const res = await dataAgent.fetchFeed(link);
-    console.log('current articles', res);
+    // console.log('current articles', res);
     setCurrentArticles(res.articles || []);
   };
 

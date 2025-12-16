@@ -73,7 +73,7 @@ export const webFetchFeed = async (url: string): Promise<FeedType> => {
     const articleUrl = entry.link;
     if (articleUrl && articleUrl.trim()) {
       const data = await articleExtract(articleUrl);
-      console.log(data)
+      // console.log(data)
       if (data) {
         let newArticle: ArticleType = {
           title: data.title || '',
