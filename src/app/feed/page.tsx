@@ -1,6 +1,6 @@
 'use client';
 
-import FeedPage from './FeedPage';
+import FeedPage from './components/FeedPage';
 import NavBar from '../NavBar';
 
 export default function Library() {

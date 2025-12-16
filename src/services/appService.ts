@@ -62,7 +62,7 @@ import { ClosableFile } from '@/utils/file';
 import { ProgressHandler } from '@/utils/transfer';
 import { TxtToEpubConverter } from '@/utils/txt';
 import { svg2png } from '@/utils/svg';
-import { ArticleType, FeedType } from '@/app/feed/dataAgent';
+import { ArticleType, FeedType } from '@/app/feed/components/dataAgent';
 import { BOOK_FILE_NOT_FOUND_ERROR } from './errors';
 
 export abstract class BaseAppService implements AppService {

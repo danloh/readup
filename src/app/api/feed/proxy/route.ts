@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { FeedResponse, webFetchFeed } from '@/app/feed/dataAgent';
+import { FeedResponse, webFetchFeed } from '@/app/feed/components/dataAgent';
 
 function createResponse<T>(
   success: boolean,

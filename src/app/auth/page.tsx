@@ -1,50 +1,43 @@
 'use client';
-import clsx from 'clsx';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import type { FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
-import { IoArrowBack } from 'react-icons/io5';
 
-import { useAuth } from '@/context/AuthContext';
-import { useEnv } from '@/context/EnvContext';
-import { useTheme } from '@/hooks/useTheme';
-import { useThemeStore } from '@/store/themeStore';
-import { useSettingsStore } from '@/store/settingsStore';
+import { FormEvent, useCallback, useState } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
-import { useTrafficLightStore } from '@/store/trafficLightStore';
-import { isTauriAppPlatform } from '@/services/environment';
-import { onOpenUrl } from '@tauri-apps/plugin-deep-link';
-import { start, cancel, onUrl, onInvalidUrl } from '@fabianlars/tauri-plugin-oauth';
-import WindowButtons from '@/components/WindowButtons';
+import { useAuth } from '@/context/AuthContext';
+import { eventDispatcher } from '@/utils/event';
 
+type Props = {
+ handleClose?: () => void;
+};
 
-export default function AuthPage() {
+export default function AuthPage({handleClose}: Props) {
   const _ = useTranslation();
-  const router = useRouter();
   const { login } = useAuth();
-  //const { envConfig, appService } = useEnv();
-  const { safeAreaInsets } = useThemeStore();
-  const { isTrafficLightVisible } = useTrafficLightStore();
-
-  useTheme({ systemUIVisible: false });
-
-  const [host, setHost] = useState('');
+  const [host, setHost] = useState('bsky.social');
   const [handle, setHandle] = useState('');
   const [password, setPassword] = useState('');
 
   const onSubmit = useCallback(
     async (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
-      // TODO      
+      const res = await login(handle, password, host); 
+      if (res) {
+        handleClose && handleClose();
+      } else {
+        // toast 
+        eventDispatcher.dispatch('toast', {
+          message: 'Failed Signing in',
+          timeout: 2000,
+          type: 'warning',
+        });
+      }
     },
-    [handle, password]
+    [host, handle, password]
   );
 
-  
   return (
-    <div style={{ maxWidth: '420px', margin: 'auto', padding: '2rem', paddingTop: '4rem' }}>
-      <div className="card mx-auto py-8 px-4 w-full mx-auto max-w-md">
-        <h1 className="title text-center text-2xl mb-4">Welcome to Readup</h1>
+    <div className='auth-content flex flex-col items-center justify-center'>
+      <h1 className="title text-center text-2xl my-4">{_('Welcome to Readup')}</h1>
+      <div className="card mx-auto p-4 w-full mx-auto max-w-md">
         <form
           className="flex flex-col gap-4" 
           onSubmit={onSubmit}
@@ -57,7 +50,7 @@ export default function AuthPage() {
               id="host" 
               placeholder="such as: bsky.social"
               value="bsky.social" 
-              onChange={(event) => setPassword(event.target.value)}
+              onChange={(event) => setHost(event.target.value || 'bsky.social')}
               className="grow" 
             />
           </label>
@@ -69,7 +62,7 @@ export default function AuthPage() {
               id="handle" 
               placeholder="e.g. my.bsky.social"
               className="grow" 
-              onChange={(event) => setHost(event.target.value)}
+              onChange={(event) => setHandle(event.target.value)}
               required
             />
           </label>
@@ -86,17 +79,24 @@ export default function AuthPage() {
             />
           </label>
           <a 
-            className="text-sm text-success" 
+            className="text-sm text-success px-2" 
             href="https://bsky.app/settings/app-passwords" 
             target="_blank"
           >
-            Go to generate the app password
+            {_('Go to generate the app password')}
           </a>
-          <button type="submit" className="btn btn-neutral" >
-            Log In
+          <button type="submit" className="btn btn-primary">
+            {_('Sign in with Bluesky')}
           </button>
+          <a 
+            className="text-xs text-success text-center px-1" 
+            href="https://bsky.app" 
+            target="_blank"
+          >
+            {_("No ATmosphere account? Let's start with Bluesky")}
+          </a>
         </form>
       </div>
     </div>
   );
-}
+};
