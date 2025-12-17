@@ -23,6 +23,15 @@ export type FileItem = {
   size: number;
 };
 
+export type FileInfo = {
+  isFile: boolean;
+  isDirectory: boolean;
+  size: number;
+  mtime: Date | null;
+  atime: Date | null;
+  birthtime: Date | null;
+};
+
 export interface FileSystem {
   resolvePath(path: string, base: BaseDir): ResolvedPath;
   getURL(path: string): string;
@@ -37,6 +46,7 @@ export interface FileSystem {
   createDir(path: string, base: BaseDir, recursive?: boolean): Promise<void>;
   removeDir(path: string, base: BaseDir, recursive?: boolean): Promise<void>;
   exists(path: string, base: BaseDir): Promise<boolean>;
+  stats(path: string, base: BaseDir): Promise<FileInfo>;
   getPrefix(base: BaseDir): Promise<string>;
 }
 

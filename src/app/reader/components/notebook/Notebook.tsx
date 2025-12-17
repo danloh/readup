@@ -16,7 +16,7 @@ import { BookNote } from '@/types/book';
 import { uniqueId } from '@/utils/misc';
 import { eventDispatcher } from '@/utils/event';
 import { getBookDirFromLanguage } from '@/utils/book';
-
+import { saveSysSettings } from '@/helpers/settings';
 import BooknoteItem from '../sidebar/BooknoteItem';
 import NotebookHeader from './Header';
 import NoteEditor from './NoteEditor';
@@ -87,7 +87,9 @@ const Notebook: React.FC = ({}) => {
 
   const handleTogglePin = () => {
     toggleNotebookPin();
-    settings.globalReadSettings.isNotebookPinned = !isNotebookPinned;
+    const globalReadSettings = settings.globalReadSettings;
+    const newGlobalReadSettings = { ...globalReadSettings, isNotebookPinned: !isNotebookPinned };
+    saveSysSettings(envConfig, 'globalReadSettings', newGlobalReadSettings);
   };
 
   const handleClickOverlay = (event: React.MouseEvent) => {
