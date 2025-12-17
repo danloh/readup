@@ -85,7 +85,7 @@ const ViewMenu: React.FC<ViewMenuProps> = ({ setIsDropdownOpen }) => {
           onClick={() => handleSetViewMode(option.value as LibraryViewModeType)}
         />
       ))}
-      <hr className='border-base-200 my-1' />
+      <hr aria-hidden='true' className='border-base-200 my-1' />
       <MenuItem
         label={_('Sort by...')}
         buttonClass='h-8'
@@ -101,7 +101,7 @@ const ViewMenu: React.FC<ViewMenuProps> = ({ setIsDropdownOpen }) => {
           onClick={() => handleSetSortBy(option.value as LibrarySortByType)}
         />
       ))}
-      <hr className='border-base-200 my-1' />
+      <hr aria-hidden='true' className='border-base-200 my-1' />
       {sortingOptions.map((option) => (
         <MenuItem
           key={option.value.toString()}

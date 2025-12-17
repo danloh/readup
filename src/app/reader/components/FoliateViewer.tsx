@@ -22,6 +22,8 @@ import {
 import { mountAdditionalFonts } from '@/styles/font';
 import { getBookDirFromLanguage, getBookDirFromWritingMode } from '@/utils/book';
 import { useUICSS } from '@/hooks/useUICSS';
+import { useTranslation } from '@/hooks/useTranslation';
+import { useAutoFocus } from '@/hooks/useAutoFocus';
 import { getMaxInlineSize } from '@/utils/config';
 import { getDirFromUILanguage } from '@/utils/rtl';
 import { isCJKLang } from '@/utils/lang';
@@ -30,6 +32,7 @@ import { lockScreenOrientation } from '@/utils/bridge';
 import { manageSyntaxHighlighting } from '@/utils/highlightjs';
 import { getViewInsets } from '@/utils/insets';
 import Spinner from '@/components/Spinner';
+import { removeTabIndex } from '@/utils/a11y';
 import { transformContent } from '../transformers/transformService';
 import { useMouseEvent, useTouchEvent } from '../hooks/useIframeEvents';
 import { usePagination } from '../hooks/usePagination';
@@ -62,6 +65,7 @@ const FoliateViewer: React.FC<{
   config: BookConfig;
   contentInsets: Insets;
 }> = ({ bookKey, bookDoc, config, contentInsets: insets }) => {
+  const _ = useTranslation();
   const { getView, setView: setFoliateView, setViewInited, setProgress } = useReaderStore();
   const { getViewSettings, setViewSettings } = useReaderStore();
   const { getParallels } = useParallelViewStore();
@@ -77,6 +81,8 @@ const FoliateViewer: React.FC<{
   const [toastMessage, setToastMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const docLoaded = useRef(false);
+
+  useAutoFocus<HTMLDivElement>({ ref: containerRef });
 
   useEffect(() => {
     const timer = setTimeout(() => setToastMessage(''), 2000);
@@ -167,6 +173,7 @@ const FoliateViewer: React.FC<{
       applyThemeModeClass(detail.doc, isDarkMode);
       applyScrollModeClass(detail.doc, viewSettings.scrolled || false);
       keepTextAlignment(detail.doc);
+      removeTabIndex(detail.doc);
 
       // Inline scripts in tauri platforms are not executed by default
       if (viewSettings.allowScript && isTauriAppPlatform()) {
@@ -410,7 +417,10 @@ const FoliateViewer: React.FC<{
     <>
       <div
         ref={containerRef}
-        className='foliate-viewer h-[100%] w-[100%]'
+        tabIndex={-1}
+        role='document'
+        aria-label={_('Book Content')}
+        className='foliate-viewer h-[100%] w-[100%] focus:outline-none'
         {...mouseHandlers}
         {...touchHandlers}
       />

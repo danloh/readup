@@ -20,6 +20,7 @@ const SettingsToggler = () => {
       onClick={handleToggleSettings}
       tooltip={_('Font & Layout')}
       tooltipDirection='bottom'
+      label={_('Font & Layout')}
     ></Button>
   );
 };

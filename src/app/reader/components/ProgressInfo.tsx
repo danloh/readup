@@ -5,6 +5,7 @@ import { useEnv } from '@/context/EnvContext';
 import { useReaderStore } from '@/store/readerStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PageInfo, TimeInfo } from '@/types/book';
+import { useBookDataStore } from '@/store/bookDataStore';
 
 function formatReadingProgress(
   current: number | undefined,
@@ -23,7 +24,6 @@ function formatReadingProgress(
 
 interface PageInfoProps {
   bookKey: string;
-  bookFormat: string;
   section?: PageInfo;
   pageinfo?: PageInfo;
   timeinfo?: TimeInfo;
@@ -34,7 +34,6 @@ interface PageInfoProps {
 
 const ProgressInfoView: React.FC<PageInfoProps> = ({
   bookKey,
-  bookFormat,
   section,
   pageinfo,
   timeinfo,
@@ -47,7 +46,8 @@ const ProgressInfoView: React.FC<PageInfoProps> = ({
   const { getView, getViewSettings } = useReaderStore();
   const view = getView(bookKey);
   const viewSettings = getViewSettings(bookKey)!;
-
+  const { getBookData } = useBookDataStore();
+  const bookData = getBookData(bookKey); 
   const showDoubleBorder = viewSettings.vertical && viewSettings.doubleBorder;
   const isScrolled = viewSettings.scrolled;
   const isVertical = viewSettings.vertical;
@@ -56,9 +56,8 @@ const ProgressInfoView: React.FC<PageInfoProps> = ({
     ? '{current} · {total} · {percent}%'
     : '{current} / {total} / {percent}%';
 
-  const progressInfo = ['PDF', 'CBZ'].includes(bookFormat)
-    ? formatReadingProgress(section?.current, section?.total, formatTemplate)
-    : formatReadingProgress(pageinfo?.current, pageinfo?.total, formatTemplate);
+  const progress = bookData?.isFixedLayout ? section : pageinfo;
+  const progressInfo = formatReadingProgress(progress?.current, progress?.total, formatTemplate);
 
   const timeLeft = timeinfo ? _('{{time}}m', { time: Math.round(timeinfo.section) }) : '';
   const { page = 0, pages = 0 } = view?.renderer || {};
@@ -67,12 +66,27 @@ const ProgressInfoView: React.FC<PageInfoProps> = ({
 
   return (
     <div
+      role='presentation'
       className={clsx(
         'progressinfo absolute flex items-center justify-between font-sans',
         'pointer-events-none bottom-0 text-neutral-content text-xs font-extralight',
         isVertical ? 'writing-vertical-rl' : 'w-full',
         isScrolled && !isVertical && 'bg-base-100',
       )}
+      aria-label={
+        [
+          progress
+            ? _('On {{current}} of {{total}} page', {
+                current: progress.current + 1,
+                total: progress.total,
+              })
+            : '',
+          timeLeft,
+          pageLeft,
+        ]
+        .filter(Boolean)
+        .join(', ')
+      }
       style={
         isVertical
           ? {

@@ -201,7 +201,7 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
           />
         </>
       )}
-      <hr className='border-base-200 my-1' />
+      <hr aria-hidden='true' className='border-base-200 my-1' />
       {appService?.hasWindow && (
         <MenuItem 
           label={_('Fullscreen')} 
@@ -261,7 +261,7 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
         Icon={RxReload}
         onClick={handleReloadPage} 
       />
-      <hr className='border-base-200 my-1' />
+      <hr aria-hidden='true' className='border-base-200 my-1' />
       <MenuItem
         label={_('Help improve Readup')}
         description={isTelemetryEnabled ? _('Sharing anonymized statistics') : ''}
@@ -287,7 +287,7 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
         Icon={FaInfo}
         onClick={showAboutReadup} 
       />
-      <hr className='border-base-200 my-1' />
+      <hr aria-hidden='true' className='border-base-200 my-1' />
       <div className='flex items-end justify-between'>  
         <LangSelect />
       </div>

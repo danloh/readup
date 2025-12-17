@@ -9,6 +9,7 @@ import { useLibraryStore } from '@/store/libraryStore';
 import { navigateToLibrary, navigateToReader } from '@/utils/nav';
 import { formatTitle } from '@/utils/book';
 import { useAutoFocus } from '@/hooks/useAutoFocus';
+import { useTranslation } from '@/hooks/useTranslation';
 import Spinner from '@/components/Spinner';
 import BookshelfItem, { generateBookshelfItems } from './BookshelfItem';
 import { createBookFilter, createBookSorter } from './libraryUtils';
@@ -22,6 +23,7 @@ const Bookshelf: React.FC<BookshelfProps> = ({
   libraryBooks,
   handleShowDetailsBook,
 }) => {
+  const _ = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { appService } = useEnv();
@@ -133,12 +135,15 @@ const Bookshelf: React.FC<BookshelfProps> = ({
     <div className='bookshelf'>
       <div
         ref={autofocusRef}
+        tabIndex={-1}
         className={clsx(
-          'bookshelf-items transform-wrapper',
+          'bookshelf-items transform-wrapper focus:outline-none',
           viewMode === 'grid' && 'grid flex-1 grid-cols-3 gap-x-4 px-4 sm:gap-x-0 sm:px-2',
           viewMode === 'grid' && 'sm:grid-cols-4 md:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-12',
           viewMode === 'list' && 'flex flex-col',
         )}
+        role='main'
+        aria-label={_('Bookshelf')}
       >
         {sortedBookshelfItems.map((item) => (
           <BookshelfItem

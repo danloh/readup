@@ -1,13 +1,35 @@
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-import js from "@eslint/js";
-import { FlatCompat } from "@eslint/eslintrc";
+import { defineConfig, globalIgnores } from 'eslint/config';
+import next from 'eslint-config-next';
+import nextVitals from 'eslint-config-next/core-web-vitals';
+import tseslint from 'eslint-config-next/typescript';
+import jsxA11y from 'eslint-plugin-jsx-a11y';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const compat = new FlatCompat({
-    baseDirectory: __dirname,
-    recommendedConfig: js.configs.recommended,
-    allConfig: js.configs.all
-});
-export default [...compat.extends("next/core-web-vitals", "next/typescript")];
+const eslintConfig = defineConfig([
+  ...tseslint,
+  ...next,
+  ...nextVitals,
+  {
+    rules: {
+      ...jsxA11y.configs.recommended.rules,
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+        },
+      ],
+    },
+  },
+  globalIgnores([
+    'node_modules/**',
+    '.next/**',
+    '.open-next/**',
+    'out/**',
+    'build/**',
+    'public/**',
+    'next-env.d.ts',
+  ]),
+]);
+
+export default eslintConfig;

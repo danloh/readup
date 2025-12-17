@@ -10,6 +10,7 @@ import { useSidebarStore } from '@/store/sidebarStore';
 import { useTrafficLightStore } from '@/store/trafficLightStore';
 import { useTrafficLight } from '@/hooks/useTrafficLight';
 import { useResponsiveSize } from '@/hooks/useResponsiveSize';
+import { useTranslation } from '@/hooks/useTranslation';
 import WindowButtons from '@/components/WindowButtons';
 import Dropdown from '@/components/Dropdown';
 import SidebarToggler from './SidebarToggler';
@@ -34,6 +35,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
   gridInsets,
   onCloseBook,
 }) => {
+  const _ = useTranslation();
   const { appService } = useEnv();
   const headerRef = useRef<HTMLDivElement>(null);
   const { isTrafficLightVisible } = useTrafficLight();
@@ -85,6 +87,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
       }}
     >
       <div
+        role='none'
         className={clsx('absolute top-0 z-10 h-11 w-full')}
         onClick={() => setHoveredBookKey(bookKey)}
         onMouseEnter={() => !appService?.isMobile && setHoveredBookKey(bookKey)}
@@ -102,6 +105,8 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
       />
       <div
         ref={headerRef}
+        role='group'
+        aria-label={_('Header Bar')}
         className={clsx(
           `header-bar bg-base-100 absolute top-0 z-10 flex h-11 w-full items-center pr-4`,
           `shadow-xs transition-[opacity,margin-top] duration-300`,
@@ -117,6 +122,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
             ? `${Math.max(gridInsets.top, statusBarHeight)}px`
             : `${gridInsets.top}px`,
         }}
+        onFocus={() => !appService?.isMobile && setHoveredBookKey(bookKey)}
         onMouseLeave={(e) => {
           if (!appService?.isMobile && isMouseOutsideHeader(e.clientX, e.clientY)) {
             setHoveredBookKey('');
@@ -130,12 +136,15 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
         </div>
 
         <div
+          role='contentinfo'
+          aria-label={_('Title') + ' - ' + bookTitle}
           className={clsx(
             'header-title z-15 bg-base-100 pointer-events-none hidden flex-1 items-center justify-center sm:flex',
             !windowButtonVisible && 'absolute inset-0',
           )}
         >
           <h2
+            aria-hidden='true'
             className={clsx(
               'line-clamp-1 text-center text-xs font-semibold',
               !windowButtonVisible && 'max-w-[50%]',

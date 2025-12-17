@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { navigateToLibrary, navigateToReader, showReaderWindow } from '@/utils/nav';
 import { useEnv } from '@/context/EnvContext';
@@ -67,8 +67,6 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
   const { envConfig, appService } = useEnv();
   const { settings } = useSettingsStore();
   const { updateBook } = useLibraryStore();
-
-  const [keyboardFocused, setKeyboardFocused] = useState(false);
 
   const showBookDetailsModal = async (book: Book) => {
     if (await makeBookAvailable(book)) {
@@ -195,7 +193,7 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
     [settings.localBooksDir],
   );
 
-  const { pressing, hasPointerEventsRef, handlers } = useLongPress({
+  const { pressing, handlers } = useLongPress({
     onTap: () => {
       handleOpenItem();
     },
@@ -208,30 +206,32 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
     },
   }, [handleOpenItem, handleContextMenu]);
 
-  const handleFocus = () => {
-    if (!hasPointerEventsRef.current) {
-      setKeyboardFocused(true);
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleOpenItem();
     }
-  };
-
-  const handleBlur = () => {
-    setKeyboardFocused(false);
+    if (e.key === 'ContextMenu' || (e.shiftKey && e.key === 'F10')) {
+      e.preventDefault();
+      handleContextMenu();
+    }
   };
 
   return (
     <div className={clsx(mode === 'list' && 'sm:hover:bg-base-300/50 px-4 sm:px-6')}>
       <div
         className={clsx(
-          'group',
+          'visible-focus-inset-2 group',
           mode === 'grid' && 'sm:hover:bg-base-300/50 flex h-full flex-col px-0 py-4 sm:px-4',
           mode === 'list' && 'border-base-300 flex flex-col border-b py-2',
-          keyboardFocused && 'focus-inset-2',
           appService?.isMobileApp && 'no-context-menu',
           pressing && mode === 'grid' ? 'scale-95' : 'scale-100',
         )}
+        role='button'
+        tabIndex={0}
+        aria-label={'format' in item ? item.title : item.name}
         style={{ transition: 'transform 0.2s', }}
-        onFocus={handleFocus}
-        onBlur={handleBlur}
+        onKeyDown={handleKeyDown}
         {...handlers}
       >
         <div className='flex h-full flex-col justify-end'>

@@ -35,6 +35,7 @@ const SidebarToggler: React.FC<SidebarTogglerProps> = ({ bookKey }) => {
       onClick={handleToggleSidebar}
       tooltip={_('Sidebar')}
       tooltipDirection='bottom'
+      label={_('Toggle Sidebar')}
     />
   );
 };

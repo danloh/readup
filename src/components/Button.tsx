@@ -9,6 +9,7 @@ interface ButtonProps {
   tooltip?: string;
   tooltipDirection?: 'top' | 'bottom' | 'left' | 'right';
   className?: string;
+  label?: string;
 }
 
 const Button: React.FC<ButtonProps> = ({
@@ -18,6 +19,7 @@ const Button: React.FC<ButtonProps> = ({
   tooltip,
   tooltipDirection = 'top',
   className,
+  label = '',
 }) => {
   const { appService } = useEnv();
   return (
@@ -36,6 +38,7 @@ const Button: React.FC<ButtonProps> = ({
           disabled && 'btn-disabled !bg-transparent opacity-50',
           className,
         )}
+        aria-label={label}
         onClick={disabled ? undefined : onClick}
         disabled={disabled}
       >

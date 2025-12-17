@@ -504,11 +504,17 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
   return (
     <div
       ref={pageRef}
+      aria-label='Your Library'
       className={clsx(
         'library-page text-base-content full-height flex select-none flex-col overflow-hidden',
       )}
     >
-      <div className='top-0 z-40 w-full'>
+      <div 
+        className='relative top-0 z-40 w-full' 
+        role='banner'
+        tabIndex={-1}
+        aria-label={_('Library Header')}
+      >
         <LibraryHeader 
           onImportBooksFromFiles={handleImportBooksFromFiles}
           onImportBooksFromDirectory={
@@ -527,6 +533,7 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
         (libraryBooks.some((book) => !book.deletedAt) ? (
           <OverlayScrollbarsComponent
             defer
+            aria-label=''
             ref={osRef}
             className='flex-grow'
             options={{ scrollbars: { autoHide: 'scroll' } }}

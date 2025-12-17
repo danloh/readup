@@ -239,7 +239,7 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
               disabled={spreadMode === 'none'}
             />
           </>
-          <hr className='border-base-300 my-1' />
+          <hr aria-hidden='true' className='border-base-300 my-1' />
         </>
       )}
       
@@ -267,7 +267,7 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
         Icon={invertImgColor ? BiCheckboxChecked : BiCheckbox}
         onClick={() => setInvertImgColor(!invertImgColor)}
       />
-      <hr className='border-base-200 my-1' />
+      <hr aria-hidden='true' className='border-base-200 my-1' />
       <MenuItem
         label={
           !user

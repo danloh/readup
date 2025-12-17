@@ -198,6 +198,7 @@ const FooterBar: React.FC<FooterBarProps> = ({
   return (
     <>
       <div
+        role='none'
         className={clsx(
           'absolute bottom-0 left-0 z-10 flex h-[52px] w-full',
           needHorizontalScroll && 'sm:!bottom-3 sm:!h-7',
@@ -208,6 +209,8 @@ const FooterBar: React.FC<FooterBarProps> = ({
         onTouchStart={() => !isMobile && setHoveredBookKey(bookKey)}
       />
       <div
+        role='group'
+        aria-label={_('Footer Bar')}
         className={clsx(
           'footer-bar shadow-xs absolute bottom-0 z-30 flex w-full flex-col',
           'sm:h-[52px] sm:justify-center',
@@ -225,7 +228,6 @@ const FooterBar: React.FC<FooterBarProps> = ({
         dir={viewSettings?.rtl ? 'rtl' : 'ltr'}
         onFocus={() => !appService?.isMobile && setHoveredBookKey(bookKey)}
         onMouseLeave={() => window.innerWidth >= 640 && setHoveredBookKey('')}
-        aria-hidden={!isVisible}
       >
         {/*  footer progress bar */}
         <div

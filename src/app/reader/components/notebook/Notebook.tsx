@@ -21,6 +21,7 @@ import BooknoteItem from '../sidebar/BooknoteItem';
 import NotebookHeader from './Header';
 import NoteEditor from './NoteEditor';
 import SearchBar from './SearchBar';
+import { Overlay } from '@/components/Overlay';
 
 const MIN_NOTEBOOK_WIDTH = 0.15;
 const MAX_NOTEBOOK_WIDTH = 0.45;
@@ -92,9 +93,7 @@ const Notebook: React.FC = ({}) => {
     saveSysSettings(envConfig, 'globalReadSettings', newGlobalReadSettings);
   };
 
-  const handleClickOverlay = (event: React.MouseEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
+  const handleClickOverlay = () => {
     setNotebookVisible(false);
     setNotebookNewAnnotation(null);
     setNotebookEditAnnotation(null);
@@ -202,7 +201,10 @@ const Notebook: React.FC = ({}) => {
   return isNotebookVisible ? (
     <>
       {!isNotebookPinned && (
-        <div className='overlay fixed inset-0 z-[45] bg-black/20' onClick={handleClickOverlay} />
+        <Overlay
+          className={clsx('z-[45] bg-black/20')}
+          onDismiss={handleClickOverlay}
+        />
       )}
       <div
         className={clsx(
@@ -211,6 +213,8 @@ const Notebook: React.FC = ({}) => {
           appService?.hasRoundedWindow && 'rounded-window-top-right rounded-window-bottom-right',
           isNotebookPinned ? 'z-20' : 'z-[45] shadow-2xl',
         )}
+        role='group'
+        aria-label={_('Notebook')}
         dir={viewSettings?.rtl && languageDir === 'rtl' ? 'rtl' : 'ltr'}
         style={{
           width: `${notebookWidth}`,
@@ -232,6 +236,11 @@ const Notebook: React.FC = ({}) => {
             'drag-bar absolute -left-2 top-0 h-full w-0.5 cursor-col-resize p-2',
             isNotebookPinned ? 'bg-base-100' : 'bg-transparent',
           )}
+          role='slider'
+          tabIndex={0}
+          aria-label={_('Resize Notebook')}
+          aria-orientation='horizontal'
+          aria-valuenow={parseFloat(notebookWidth)}
           onMouseDown={handleDragStart}
           onTouchStart={handleDragStart}
         />
@@ -278,7 +287,13 @@ const Notebook: React.FC = ({}) => {
             {filteredExcerptNotes.map((item, index) => (
               <li key={`${index}-${item.id}`} className='my-2'>
                 <div
+                  role='button'
                   tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Backspace' || e.key === 'Delete') {
+                      handleEditNote(item, true);
+                    }
+                  }}
                   className='collapse-arrow border-base-300 bg-base-100 collapse border'
                 >
                   <div
@@ -301,6 +316,7 @@ const Notebook: React.FC = ({}) => {
                       <div
                         className='font-size-xs cursor-pointer align-bottom text-red-500 hover:text-red-600'
                         onClick={handleEditNote.bind(null, item, true)}
+                        aria-label={_('Delete')}
                       >
                         {_('Delete')}
                       </div>

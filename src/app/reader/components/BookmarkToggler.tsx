@@ -123,6 +123,7 @@ const BookmarkToggler: React.FC<BookmarkTogglerProps> = ({ bookKey }) => {
       onClick={toggleBookmark}
       tooltip={_('Bookmark')}
       tooltipDirection='top'
+      label={isBookmarked ? _('Remove Bookmark') : _('Add Bookmark')}
     ></Button>
   );
 };

@@ -5,6 +5,7 @@ import { Book } from '@/types/book';
 import { useResponsiveSize } from '@/hooks/useResponsiveSize';
 import { LibraryViewModeType } from '@/types/settings';
 import { formatAuthors } from '@/utils/book';
+import { useTranslation } from '@/hooks/useTranslation';
 import BookCover from '@/app/library/book/BookCover';
 import ReadingProgress from './ReadingProgress';
 
@@ -19,6 +20,7 @@ const BookItem: React.FC<BookItemProps> = ({
   mode,
   showBookDetailsModal,
 }) => {
+  const _ = useTranslation();
   const iconSize18 = useResponsiveSize(18);
 
   return (
@@ -68,6 +70,7 @@ const BookItem: React.FC<BookItemProps> = ({
           {book.progress && <ReadingProgress book={book} />}
           <div className='flex items-center justify-center gap-x-2'>
             <button
+              aria-label={_('Show Book Details')}
               className='show-detail-button -m-2 p-2'
               onPointerDown={(e) => e.stopPropagation()}
               onClick={(e) => {

@@ -53,6 +53,7 @@ const SectionInfo: React.FC<SectionInfoProps> = ({
           isVertical ? 'writing-vertical-rl max-h-[85%]' : 'top-0 h-[44px]',
           isScrolled && !isVertical && 'bg-base-100',
         )}
+        role='none'
         style={
           isVertical
             ? {
@@ -71,6 +72,7 @@ const SectionInfo: React.FC<SectionInfoProps> = ({
         }
       >
         <span
+          aria-label={`${bookTitle ? `${bookTitle} § ` : ''}${section || ''}`}
           className={clsx(
             'text-center',
             isVertical ? '' : 'line-clamp-1',
