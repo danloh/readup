@@ -25,6 +25,7 @@ import { Toast } from '@/components/Toast';
 import { getLocale } from '@/utils/misc';
 import { initDayjs } from '@/utils/time';
 import ReaderContent from './ReaderContent';
+import ReplacementRulesWindow from './ReplacementRulesWindow';
 
 const Reader: React.FC<{ ids?: string }> = ({ ids }) => {
   const router = useRouter();
@@ -117,6 +118,7 @@ const Reader: React.FC<{ ids?: string }> = ({ ids }) => {
         <ReaderContent ids={ids} settings={settings} />
         <AuthWindow />
         <UpdaterWindow />
+        <ReplacementRulesWindow />
         <Toast />
       </Suspense>
     </div>

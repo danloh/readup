@@ -1,5 +1,4 @@
 import clsx from 'clsx';
-import React, { useState } from 'react';
 
 interface PopupButtonProps {
   showTooltip: boolean;
@@ -16,27 +15,18 @@ const PopupButton: React.FC<PopupButtonProps> = ({
   Icon,
   onClick,
 }) => {
-  const [buttonClicked, setButtonClicked] = useState(false);
-  const handleClick = () => {
-    setButtonClicked(true);
-    onClick();
-  };
   return (
-    <div
-      className='lg:tooltip lg:tooltip-bottom'
-      data-tip={!buttonClicked && showTooltip ? tooltipText : null}
+    <button
+      onClick={onClick}
+      className={clsx(
+        'flex h-8 min-h-8 w-8 items-center justify-center p-0',
+        disabled ? 'cursor-not-allowed opacity-50' : 'rounded-md hover:bg-gray-500',
+      )}
+      disabled={disabled}
+      title={showTooltip ? tooltipText : ''}
     >
-      <button
-        onClick={handleClick}
-        className={clsx(
-          'flex h-8 min-h-8 w-8 items-center justify-center p-0',
-          disabled ? 'cursor-not-allowed opacity-50' : 'rounded-md hover:bg-gray-500',
-        )}
-        disabled={disabled}
-      >
-        <Icon />
-      </button>
-    </div>
+      <Icon />
+    </button>
   );
 };
 
