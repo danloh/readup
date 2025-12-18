@@ -9,6 +9,8 @@ import { useResponsiveSize } from '@/hooks/useResponsiveSize';
 import { impactFeedback } from '@tauri-apps/plugin-haptics';
 import { getDirFromUILanguage } from '@/utils/rtl';
 import { eventDispatcher } from '@/utils/event';
+import { Overlay } from './Overlay';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const VELOCITY_THRESHOLD = 0.5;
 const SNAP_THRESHOLD = 0.2;
@@ -40,6 +42,7 @@ const Dialog: React.FC<DialogProps> = ({
   contentClassName,
   onClose,
 }) => {
+  const _ = useTranslation();
   const { appService } = useEnv();
   const { systemUIVisible, statusBarHeight, safeAreaInsets } = useThemeStore();
   const { acquireBackKeyInterception, releaseBackKeyInterception } = useDeviceControlStore();
@@ -153,19 +156,21 @@ const Dialog: React.FC<DialogProps> = ({
       ref={dialogRef}
       id={id ?? 'dialog'}
       open={isOpen}
+      aria-hidden={!isOpen}
+      tabIndex={-1}
       className={clsx(
         'modal sm:min-w-90 z-50 h-full w-full !items-start !bg-transparent sm:w-full sm:!items-center',
         className,
       )}
       dir={isRtl ? 'rtl' : undefined}
     >
-      <div
+      <Overlay
         className={clsx(
-          'overlay fixed inset-0 z-10 bg-black/50 sm:bg-black/50',
+          'z-10 bg-black/50 sm:bg-black/50',
           appService?.hasRoundedWindow && 'rounded-window',
           bgClassName,
         )}
-        onClick={onClose}
+        onDismiss={onClose}
       />
       <div
         className={clsx(
@@ -200,7 +205,7 @@ const Dialog: React.FC<DialogProps> = ({
           ) : (
             <div className='flex h-11 w-full items-center justify-between'>
               <button
-                tabIndex={-1}
+                aria-label={_('Close')}
                 onClick={onClose}
                 className={
                   'btn btn-ghost btn-circle flex h-8 min-h-8 w-8 hover:bg-transparent focus:outline-none sm:hidden'
@@ -216,7 +221,7 @@ const Dialog: React.FC<DialogProps> = ({
                 <span className='line-clamp-1 text-center font-bold'>{title ?? ''}</span>
               </div>
               <button
-                tabIndex={-1}
+                aria-label={_('Close')}
                 onClick={onClose}
                 className={
                   'bg-base-300/65 btn btn-ghost btn-circle ml-auto hidden h-6 min-h-6 w-6 focus:outline-none sm:flex'

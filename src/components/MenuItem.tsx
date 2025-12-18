@@ -33,6 +33,8 @@ const MenuItem: React.FC<MenuItemProps> = ({
   const iconSize = useResponsiveSize(16);
   const menuButton = (
     <button
+      role={disabled ? 'none' : 'menuitem'}
+      tabIndex={disabled ? -1 : 0}
       className={clsx(
         'hover:bg-base-300 text-base-content flex w-full flex-col items-center justify-center rounded-md p-1 py-[10px]',
         disabled && 'btn-disabled text-gray-400',

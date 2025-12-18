@@ -10,7 +10,7 @@ import { CSPostHogProvider } from '@/context/PHContext';
 import { SyncProvider } from '@/context/SyncContext';
 import { useDefaultIconSize } from '@/hooks/useResponsiveSize';
 import { useSafeAreaInsets } from '@/hooks/useSafeAreaInsets';
-import { initSystemThemeListener, useThemeStore } from '@/store/themeStore';
+import { initSystemThemeListener, loadDataTheme, useThemeStore } from '@/store/themeStore';
 import { getDirFromUILanguage } from '@/utils/rtl';
 import { getLocale } from '@/utils/misc';
 
@@ -41,6 +41,7 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   useEffect(() => {
+    loadDataTheme();
     if (appService) {
       initSystemThemeListener(appService);
       setUILang(uiLang); // init ui lang 

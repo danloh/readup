@@ -11,6 +11,9 @@ import { eventDispatcher } from '@/utils/event';
 import { getBookDirFromLanguage } from '@/utils/book';
 import { useEnv } from '@/context/EnvContext';
 import { useDrag } from '@/hooks/useDrag';
+import useShortcuts from '@/hooks/useShortcuts';
+import { useTranslation } from '@/hooks/useTranslation';
+import { Overlay } from '@/components/Overlay';
 import { useThemeStore } from '@/store/themeStore';
 import SidebarHeader from './Header';
 import SidebarContent from './Content';
@@ -18,7 +21,6 @@ import BookCard from './BookCard';
 import useSidebar from '../../hooks/useSidebar';
 import SearchBar from './SearchBar';
 import SearchResults from './SearchResults';
-import useShortcuts from '@/hooks/useShortcuts';
 
 const MIN_SIDEBAR_WIDTH = 0.05;
 const MAX_SIDEBAR_WIDTH = 0.45;
@@ -28,6 +30,7 @@ const VELOCITY_THRESHOLD = 0.5;
 const SideBar: React.FC<{
   onGoToLibrary: () => void;
 }> = ({ onGoToLibrary }) => {
+  const _ = useTranslation();
   const { appService } = useEnv();
   const { updateAppTheme, safeAreaInsets } = useThemeStore();
   const { settings } = useSettingsStore();
@@ -208,10 +211,7 @@ const SideBar: React.FC<{
   return isSideBarVisible ? (
     <>
       {!isSideBarPinned && (
-        <div
-          className='overlay fixed inset-0 z-[45] bg-black/50 sm:bg-black/20'
-          onClick={handleClickOverlay}
-        />
+        <Overlay className='z-[45] bg-black/50 sm:bg-black/20' onDismiss={handleClickOverlay} />
       )}
       <div
         className={clsx(
@@ -220,6 +220,8 @@ const SideBar: React.FC<{
           appService?.hasRoundedWindow && 'rounded-window-top-left rounded-window-bottom-left',
           isSideBarPinned ? 'z-20' : 'z-[45] shadow-2xl',
         )}
+        role='group'
+        aria-label={_('Sidebar')}
         dir={viewSettings?.rtl && languageDir === 'rtl' ? 'rtl' : 'ltr'}
         style={{
           width: `${sideBarWidth}`,
@@ -247,6 +249,11 @@ const SideBar: React.FC<{
         <div className='flex-shrink-0'>
           {isMobile && (
             <div
+              role='slider'
+              tabIndex={0}
+              aria-label={_('Resize Sidebar')}
+              aria-orientation='vertical'
+              //aria-valuenow={sidebarHeight.current}
               className='drag-handle flex h-10 w-full cursor-row-resize items-center justify-center'
               onMouseDown={handleVerticalDragStart}
               onTouchStart={handleVerticalDragStart}
@@ -290,10 +297,15 @@ const SideBar: React.FC<{
         )}
         <div
           className={clsx(
-            'drag-bar absolute right-0 top-0 -m-2 h-full w-0.5 cursor-col-resize p-1',
+            'drag-bar absolute -right-2 top-0 h-full w-0.5 cursor-col-resize bg-transparent p-2',
             isSideBarPinned ? 'bg-base-100' : 'bg-transparent',
             isMobile && 'hidden',
           )}
+          role='slider'
+          tabIndex={0}
+          aria-label={_('Resize Sidebar')}
+          aria-orientation='horizontal'
+          aria-valuenow={parseFloat(sideBarWidth)}
           onMouseDown={handleHorizontalDragStart}
           onTouchStart={handleHorizontalDragStart}
         ></div>

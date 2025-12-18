@@ -93,57 +93,33 @@ const ThemeEditor: React.FC<ThemeEditorProps> = ({ customTheme, onSave, onDelete
   };
 
   return (
-    <div className='mt-6 rounded-lg'>
-      <div className='mb-4'>
-        <div className='w-full mb-4 flex flex-wrap items-center justify-center gap-2'>
-          <button
-            className='btn btn-sm text-success px-2'
-            onClick={() => onSave(getCustomTheme())}
-          >
-            {_('Save')}
-          </button>
-          {settings.globalReadSettings.customThemes.find(
-            (theme) => theme.name === md5Fingerprint(themeName),
-          ) && (
-            <button
-              className={clsx('btn btn-warning btn-xs px-2')}
-              onClick={() => onDelete(getCustomTheme())}
-            >
-              {_('Delete')}
-            </button>
-          )}
-          <button className='btn btn-sm text-warning px-2' onClick={onCancel}>
-            {_('Cancel')}
-          </button>
-        </div>
-        <div className='w-full mb-4 flex items-center justify-between'>
-          <input
-            type='text'
-            value={themeName}
-            onChange={(e) => setThemeName(e.target.value)}
-            className='bg-base-100 text-base-content border-base-200 w-full rounded border p-2 text-sm'
-          />
-        </div>
+    <div className='mt-2 rounded-sm'>
+      <div className='w-full mb-4 flex items-center justify-between'>
+        <input
+          type='text'
+          value={themeName}
+          onChange={(e) => setThemeName(e.target.value)}
+          className='bg-base-100 text-base-content border-base-200 w-full rounded border p-2 text-sm'
+        />
       </div>
-
-      <div className='grid grid-cols-2 gap-4'>
-        <div className='bg-base-200 rounded-lg p-3'>
+      <div className='grid grid-cols-2 gap-2'>
+        <div className='bg-base-200 rounded-lg p-2'>
           <h3 className='mb-3 text-center font-medium'>{_('Light Mode')}</h3>
-
-          <ColorInput label={_('Text Color')} value={lightTextColor} onChange={setLightTextColor} />
-
+          <ColorInput 
+            label={_('Text Color')} 
+            value={lightTextColor} 
+            onChange={setLightTextColor} 
+          />
           <ColorInput
             label={_('Background Color')}
             value={lightBackgroundColor}
             onChange={setLightBackgroundColor}
           />
-
           <ColorInput
             label={_('Link Color')}
             value={lightPrimaryColor}
             onChange={setLightPrimaryColor}
           />
-
           <ThemePreview
             textColor={lightTextColor}
             backgroundColor={lightBackgroundColor}
@@ -151,24 +127,23 @@ const ThemeEditor: React.FC<ThemeEditorProps> = ({ customTheme, onSave, onDelete
             label={_('Preview')}
           />
         </div>
-
-        <div className='bg-base-300 rounded-lg p-3'>
+        <div className='bg-base-300 rounded-lg p-2'>
           <h3 className='mb-3 text-center font-medium'>{_('Dark Mode')}</h3>
-
-          <ColorInput label={_('Text Color')} value={darkTextColor} onChange={setDarkTextColor} />
-
+          <ColorInput 
+            label={_('Text Color')} 
+            value={darkTextColor} 
+            onChange={setDarkTextColor} 
+          />
           <ColorInput
             label={_('Background Color')}
             value={darkBackgroundColor}
             onChange={setDarkBackgroundColor}
           />
-
           <ColorInput
             label={_('Link Color')}
             value={darkPrimaryColor}
             onChange={setDarkPrimaryColor}
           />
-
           <ThemePreview
             textColor={darkTextColor}
             backgroundColor={darkBackgroundColor}
@@ -176,6 +151,27 @@ const ThemeEditor: React.FC<ThemeEditorProps> = ({ customTheme, onSave, onDelete
             label={_('Preview')}
           />
         </div>
+      </div>
+      <div className='w-full my-4 flex flex-wrap items-center justify-center gap-2'>
+        <button
+          className='btn btn-sm text-success px-2'
+          onClick={() => onSave(getCustomTheme())}
+        >
+          {_('Save')}
+        </button>
+        {settings.globalReadSettings.customThemes.find(
+          (theme) => theme.name === md5Fingerprint(themeName),
+        ) && (
+          <button
+            className={clsx('btn btn-warning btn-xs px-2')}
+            onClick={() => onDelete(getCustomTheme())}
+          >
+            {_('Delete')}
+          </button>
+        )}
+        <button className='btn btn-sm text-warning px-2' onClick={onCancel}>
+          {_('Cancel')}
+        </button>
       </div>
     </div>
   );

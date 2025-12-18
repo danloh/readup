@@ -30,14 +30,14 @@ const BooknoteItem: React.FC<BooknoteItemProps> = ({ bookKey, item }) => {
 
   const { text, cfi, note } = item;
   const editorRef = useRef<TextEditorRef>(null);
-  const editorDraftRef = useRef<string>(text || '');
+  const [editorDraft, setEditorDraft] = useState(text || '');
   const [inlineEditMode, setInlineEditMode] = useState(false);
   const separatorWidth = useResponsiveSize(3);
 
   const progress = getProgress(bookKey);
   const { isCurrent, viewRef } = useScrollToItem(cfi, progress);
 
-  const handleClickItem = (event: React.MouseEvent) => {
+  const handleClickItem = (event: React.MouseEvent | React.KeyboardEvent) => {
     event.preventDefault();
     eventDispatcher.dispatch('navigate', { bookKey, cfi });
 
@@ -71,19 +71,20 @@ const BooknoteItem: React.FC<BooknoteItemProps> = ({ bookKey, item }) => {
   };
 
   const editBookmark = () => {
+    setEditorDraft(text || '');
     setInlineEditMode(true);
   };
 
   const handleSaveBookmark = () => {
     setInlineEditMode(false);
     const config = getConfig(bookKey);
-    if (!config || !editorDraftRef.current) return;
+    if (!config || !editorDraft) return;
 
     const { booknotes: annotations = [] } = config;
     const existingIndex = annotations.findIndex((annotation) => item.id === annotation.id);
     if (existingIndex === -1) return;
     annotations[existingIndex]!.updatedAt = Date.now();
-    annotations[existingIndex]!.text = editorDraftRef.current;
+    annotations[existingIndex]!.text = editorDraft;
     const updatedConfig = updateBooknotes(bookKey, annotations);
     if (updatedConfig) {
       saveConfig(envConfig, bookKey, updatedConfig, settings);
@@ -103,8 +104,8 @@ const BooknoteItem: React.FC<BooknoteItemProps> = ({ bookKey, item }) => {
           <TextEditor
             className='!leading-normal'
             ref={editorRef}
-            value={editorDraftRef.current}
-            onChange={(value) => (editorDraftRef.current = value)}
+            value={editorDraft}
+            onChange={setEditorDraft}
             onSave={handleSaveBookmark}
             onEscape={() => setInlineEditMode(false)}
             autoFocus={true}
@@ -113,7 +114,7 @@ const BooknoteItem: React.FC<BooknoteItemProps> = ({ bookKey, item }) => {
         </div>
         <div className='flex justify-end space-x-3 p-2' dir='ltr'>
           <TextButton onClick={() => setInlineEditMode(false)}>{_('Cancel')}</TextButton>
-          <TextButton onClick={handleSaveBookmark} disabled={!editorDraftRef.current}>
+          <TextButton onClick={handleSaveBookmark} disabled={!editorDraft}>
             {_('Save')}
           </TextButton>
         </div>
@@ -124,13 +125,23 @@ const BooknoteItem: React.FC<BooknoteItemProps> = ({ bookKey, item }) => {
   return (
     <li
       ref={viewRef}
+      role='button'
       className={clsx(
         'border-base-300 content group relative my-2 cursor-pointer rounded-lg p-2',
-        isCurrent ? 'bg-base-300/85 hover:bg-base-300' : 'hover:bg-base-300/55 bg-base-100',
         'transition-all duration-300 ease-in-out',
+        isCurrent
+          ? 'bg-base-300/85 hover:bg-base-300 focus:bg-base-300'
+          : 'hover:bg-base-300/55 focus:bg-base-300/55 bg-base-100',
       )}
       tabIndex={0}
       onClick={handleClickItem}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          handleClickItem(e);
+        } else {
+          e.stopPropagation();
+        }
+      }}
     >
       <div
         className={clsx('min-h-4 p-0 transition-all duration-300 ease-in-out')}
@@ -179,6 +190,7 @@ const BooknoteItem: React.FC<BooknoteItemProps> = ({ bookKey, item }) => {
           'max-h-0 overflow-hidden p-0',
           'transition-[max-height] duration-300 ease-in-out',
           'group-hover:max-h-8 group-hover:overflow-visible',
+          'group-focus-within:max-h-8 group-focus-within:overflow-visible',
         )}
         style={
           {
@@ -198,7 +210,7 @@ const BooknoteItem: React.FC<BooknoteItemProps> = ({ bookKey, item }) => {
               <TextButton
                 onClick={item.type === 'bookmark' ? editBookmark : editNote.bind(null, item)}
                 variant='primary'
-                className='opacity-0 transition duration-300 ease-in-out group-hover:opacity-100'
+                className='opacity-0 transition duration-300 ease-in-out group-hover:opacity-100 group-focus-within:opacity-100'
               >
                 {_('Edit')}
               </TextButton>
@@ -207,7 +219,7 @@ const BooknoteItem: React.FC<BooknoteItemProps> = ({ bookKey, item }) => {
             <TextButton
               onClick={deleteNote.bind(null, item)}
               variant='danger'
-              className='opacity-0 transition duration-300 ease-in-out group-hover:opacity-100'
+              className='opacity-0 transition duration-300 ease-in-out group-hover:opacity-100 group-focus-within:opacity-100'
             >
               {_('Delete')}
             </TextButton>

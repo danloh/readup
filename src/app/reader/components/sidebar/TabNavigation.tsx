@@ -36,12 +36,24 @@ const TabNavigation: React.FC<{
       {tabs.map((tab) => (
         <div
           key={tab}
+          tabIndex={0}
+          role='button'
           className='tooltip tooltip-top z-20 m-1 flex-1 cursor-pointer rounded-md p-2'
           data-tip={
             tab === 'toc' ? _('TOC') : tab === 'annotations' ? _('Annotate') : _('Bookmark')
           }
+          onClick={() => onTabChange(tab)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onTabChange(tab);
+            }
+          }}
+          aria-label={
+            tab === 'toc' ? _('TOC') : tab === 'annotations' ? _('Annotate') : _('Bookmark')
+          }
         >
-          <div className={clsx('flex h-6 items-center')} onClick={() => onTabChange(tab)}>
+          <div className={clsx('m-0 flex h-6 items-center p-0')}>
             {tab === 'toc' ? (
               <TOCIcon className='mx-auto' />
             ) : tab === 'annotations' ? (

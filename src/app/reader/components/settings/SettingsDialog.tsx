@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { RiFontSize } from 'react-icons/ri';
 import { VscSymbolColor } from 'react-icons/vsc';
 import { PiDotsThreeVerticalBold } from 'react-icons/pi';
-import { MdArrowBackIosNew, MdArrowForwardIos } from 'react-icons/md';
+import { MdArrowBackIosNew, MdArrowForwardIos, MdClose } from 'react-icons/md';
 import { FaLanguage } from "react-icons/fa";
 import { BiCustomize, BiLayout } from "react-icons/bi";
 import { GiClick } from "react-icons/gi";
@@ -119,6 +119,7 @@ const SettingsDialog: React.FC<{ bookKey: string; config: BookConfig }> = ({ boo
           <div className='flex w-full flex-row items-center justify-between'>
             <button
               tabIndex={-1}
+              aria-label={_('Close')}
               onClick={handleClose}
               className={
                 'btn btn-ghost btn-circle flex h-8 min-h-8 w-8 hover:bg-transparent focus:outline-none sm:hidden'
@@ -126,7 +127,11 @@ const SettingsDialog: React.FC<{ bookKey: string; config: BookConfig }> = ({ boo
             >
               {isRtl ? <MdArrowForwardIos /> : <MdArrowBackIosNew />}
             </button>
-            <div className={clsx('dialog-tabs ms-1 flex h-10 w-full items-center gap-1 sm:ms-0')}>
+            <div 
+              role='group'
+              aria-label={_('Settings Panels') + ' - ' + (currentPanel?.label || '')}
+              className={clsx('dialog-tabs ms-1 flex h-10 w-full items-center gap-1 sm:ms-0')}
+            >
               {tabConfig.map(({ tab, icon: Icon, label }) => (
                 <div key={tab} className="tooltip tooltip-bottom" data-tip={label}>
                   <button
@@ -159,22 +164,13 @@ const SettingsDialog: React.FC<{ bookKey: string; config: BookConfig }> = ({ boo
                 />
               </Dropdown>
               <button
+                aria-label={_('Close')}
                 onClick={handleClose}
                 className={
                   'bg-base-300/65 btn btn-ghost btn-circle h-6 min-h-6 w-6 p-0 hidden sm:flex'
                 }
               >
-                <svg
-                  xmlns='http://www.w3.org/2000/svg'
-                  width='1em'
-                  height='1em'
-                  viewBox='0 0 24 24'
-                >
-                  <path
-                    fill='currentColor'
-                    d='M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12z'
-                  />
-                </svg>
+                <MdClose size={16} />
               </button>
             </div>
           </div>

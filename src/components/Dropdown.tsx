@@ -1,5 +1,6 @@
 import clsx from 'clsx';
 import React, { useState, isValidElement, ReactElement } from 'react';
+import { Overlay } from './Overlay';
 
 interface DropdownProps {
   label?: string;
@@ -42,10 +43,22 @@ const Dropdown: React.FC<DropdownProps> = ({
 
   return (
     <div className='dropdown-container flex'>
-      {isOpen && (
-        <div className='fixed inset-0 bg-transparent' onClick={() => setIsDropdownOpen(false)} />
-      )}
-      <div className={clsx('dropdown', className)}>
+      {isOpen && (<Overlay onDismiss={() => setIsDropdownOpen(false)} />)}
+      <div
+        tabIndex={0}
+        role='button'
+        aria-label={'Menu'}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            if (!isOpen) toggleDropdown();
+          } else if (e.key === 'Escape' && isOpen) {
+            toggleDropdown();
+          } else {
+            e.stopPropagation();
+          }
+        }}
+        className={clsx('dropdown', className)}
+      >
         <div
           title={label}
           tabIndex={-1}
