@@ -18,24 +18,27 @@ import { useReaderStore } from '@/store/readerStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useResponsiveSize } from '@/hooks/useResponsiveSize';
-import { CODE_LANGUAGES, CodeLanguage, manageSyntaxHighlighting } from '@/utils/highlightjs';
+import { 
+  CODE_LANGUAGES, CodeLanguage, manageSyntaxHighlighting 
+} from '@/utils/highlightjs';
 import Select from '@/components/Select';
 import { HighlightColor } from '@/types/book';
 import { HIGHLIGHT_COLOR_HEX } from '@/services/constants';
 import { saveViewSettings } from '@/helpers/settings';
-import { useResetViewSettings } from '../../hooks/useResetSettings';
+import { useResetViewSettings } from '@/hooks/useResetSettings';
 import ThemeEditor from './ThemeEditor';
 import ColorInput from './ColorInput';
 import { SettingsPanelPanelProp } from './SettingsDialog';
 
 const ColorPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset }) => {
   const _ = useTranslation();
-  const { themeMode, themeColor, isDarkMode, setThemeMode, setThemeColor, saveCustomTheme } =
-    useThemeStore();
+  const { 
+    themeMode, themeColor, isDarkMode, setThemeMode, setThemeColor, saveCustomTheme 
+  } = useThemeStore();
   const { envConfig } = useEnv();
   const { settings, setSettings } = useSettingsStore();
   const { getView, getViewSettings } = useReaderStore();
-  const viewSettings = getViewSettings(bookKey)!;
+  const viewSettings = getViewSettings(bookKey) || settings.globalViewSettings;
   const [invertImgColor, setInvertImgColor] = useState(
     viewSettings.invertImgColor,
   );
@@ -45,10 +48,10 @@ const ColorPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset
   const [editTheme, setEditTheme] = useState<CustomTheme | null>(null);
   const [customThemes, setCustomThemes] = useState<Theme[]>([]);
   const [showCustomThemeEditor, setShowCustomThemeEditor] = useState(false);
-  const [overrideColor, setOverrideColor] = useState(viewSettings.overrideColor!);
+  const [overrideColor, setOverrideColor] = useState(viewSettings.overrideColor);
   const [ttsHighlightColor, setTtsHighlightColor] = useState(viewSettings.ttsHighlightColor);
-  const [codeHighlighting, setcodeHighlighting] = useState(viewSettings.codeHighlighting!);
-  const [codeLanguage, setCodeLanguage] = useState(viewSettings.codeLanguage!);
+  const [codeHighlighting, setcodeHighlighting] = useState(viewSettings.codeHighlighting);
+  const [codeLanguage, setCodeLanguage] = useState(viewSettings.codeLanguage);
   const [customHighlightColors, setCustomHighlightColors] = useState(
     settings.globalReadSettings.customHighlightColors,
   );

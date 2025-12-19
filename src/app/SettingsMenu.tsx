@@ -1,7 +1,7 @@
 import clsx from 'clsx';
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { PiUserCircle } from 'react-icons/pi';
+import { PiPaletteBold, PiUserCircle } from 'react-icons/pi';
 import { MdCheckBox, MdCheckBoxOutlineBlank } from 'react-icons/md';
 import { GrSystem } from "react-icons/gr";
 import { BiData, BiMoon, BiSun } from 'react-icons/bi';
@@ -43,7 +43,7 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
   const { envConfig, appService } = useEnv();
   const { user } = useAuth();
   const { themeMode, setThemeMode } = useThemeStore();
-  const { settings } = useSettingsStore();
+  const { settings, setFontLayoutSettingsDialogOpen } = useSettingsStore();
   const [isAutoCheckUpdates, setIsAutoCheckUpdates] = useState(settings.autoCheckUpdates);
   const [isAlwaysOnTop, setIsAlwaysOnTop] = useState(settings.alwaysOnTop);
   const [isAlwaysShowStatusBar, setIsAlwaysShowStatusBar] = useState(settings.alwaysShowStatusBar);
@@ -166,6 +166,11 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
     setAlwaysInForeground(requestAlwaysInForeground);
   };
 
+  const openSettingsDialog = () => {
+    setIsDropdownOpen?.(false);
+    setFontLayoutSettingsDialogOpen(true);
+  };
+
   return (
     <Menu
       label={_('Settings Menu')}
@@ -191,6 +196,7 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
         Icon={themeMode === 'dark' ? BiMoon : themeMode === 'light' ? BiSun : GrSystem}
         onClick={cycleThemeMode}
       />
+      <MenuItem label={_('Settings')} Icon={PiPaletteBold} onClick={openSettingsDialog} />
       {appService?.canCustomizeRootDir && (
         <>
           <hr aria-hidden='true' className='border-base-200 my-1' />

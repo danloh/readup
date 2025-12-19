@@ -1,10 +1,10 @@
 import { ViewSettings } from '@/types/book';
+import { SystemSettings } from '@/types/settings';
 import { EnvConfigType } from '@/services/environment';
 import { useBookDataStore } from '@/store/bookDataStore';
 import { useReaderStore } from '@/store/readerStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { getStyles } from '@/styles/style';
-import { SystemSettings } from '@/types/settings';
 
 export const saveViewSettings = async <K extends keyof ViewSettings>(
   envConfig: EnvConfigType,
@@ -14,27 +14,31 @@ export const saveViewSettings = async <K extends keyof ViewSettings>(
   skipGlobal = false,
   applyStyles = true,
 ) => {
-  const { settings, isFontLayoutSettingsGlobal, setSettings, saveSettings } =
-    useSettingsStore.getState();
+  const { settings, isFontLayoutSettingsGlobal, setSettings, saveSettings } = useSettingsStore.getState();
   const { getView, getViewSettings, setViewSettings } = useReaderStore.getState();
   const { getConfig, saveConfig } = useBookDataStore.getState();
-  const viewSettings = getViewSettings(bookKey)!;
-  const config = getConfig(bookKey)!;
-  if (viewSettings[key] !== value) {
+  const viewSettings = getViewSettings(bookKey);
+  if (bookKey && viewSettings && viewSettings[key] !== value) {
     viewSettings[key] = value;
     if (applyStyles) {
       const view = getView(bookKey);
       view?.renderer.setStyles?.(getStyles(viewSettings));
     }
   }
-  setViewSettings(bookKey, viewSettings);
 
   if (isFontLayoutSettingsGlobal && !skipGlobal) {
     settings.globalViewSettings[key] = value;
     setSettings(settings);
+    await saveSettings(envConfig, settings);
   }
-  await saveConfig(envConfig, bookKey, config, settings);
-  await saveSettings(envConfig, settings);
+
+  if (bookKey && viewSettings) {
+    setViewSettings(bookKey, viewSettings);
+    const config = getConfig(bookKey);
+    if (config) {
+      await saveConfig(envConfig, bookKey, config, settings);
+    }
+  }
 };
 
 export const saveSysSettings = async <K extends keyof SystemSettings>(

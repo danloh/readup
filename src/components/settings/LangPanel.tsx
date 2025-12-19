@@ -2,25 +2,27 @@ import React, { useEffect, useState } from 'react';
 import { useEnv } from '@/context/EnvContext';
 import { useReaderStore } from '@/store/readerStore';
 import { useThemeStore } from '@/store/themeStore';
+import { useSettingsStore } from '@/store/settingsStore';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useResetViewSettings } from '@/hooks/useResetSettings';
 import { RELOAD_BEFORE_SAVED_TIMEOUT_MS,TRANSLATOR_LANGS } from '@/services/constants';
 import Select, { getLangOptions, LangSelect } from '@/components/Select';
 import { getTranslators } from '@/services/translators';
 import { saveViewSettings } from '@/helpers/settings';
 import { SettingsPanelPanelProp } from './SettingsDialog';
-import { useResetViewSettings } from '../../hooks/useResetSettings';
 
 const LangPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset }) => {
   const _ = useTranslation();
   const { envConfig } = useEnv();
   const { getViewSettings, setViewSettings, recreateViewer } = useReaderStore();
+  const { settings } = useSettingsStore();
   const { setUILang } = useThemeStore();
-  const viewSettings = getViewSettings(bookKey)!;
+  const viewSettings = getViewSettings(bookKey) || settings.globalViewSettings;
 
-  const [translationEnabled, setTranslationEnabled] = useState(viewSettings.translationEnabled!);
-  const [translationProvider, setTranslationProvider] = useState(viewSettings.translationProvider!);
-  const [translateTargetLang, setTranslateTargetLang] = useState(viewSettings.translateTargetLang!);
-  const [showTranslateSource, setShowTranslateSource] = useState(viewSettings.showTranslateSource!);
+  const [translationEnabled, setTranslationEnabled] = useState(viewSettings.translationEnabled);
+  const [translationProvider, setTranslationProvider] = useState(viewSettings.translationProvider);
+  const [translateTargetLang, setTranslateTargetLang] = useState(viewSettings.translateTargetLang);
+  const [showTranslateSource, setShowTranslateSource] = useState(viewSettings.showTranslateSource);
   const [ttsReadAloudText, setTtsReadAloudText] = useState(viewSettings.ttsReadAloudText);
 
   const resetToDefaults = useResetViewSettings();

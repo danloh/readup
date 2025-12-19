@@ -16,6 +16,7 @@ import { AiOutlineColumnWidth, AiOutlineColumnHeight } from "react-icons/ai";
 import { useEnv } from '@/context/EnvContext';
 import { useReaderStore } from '@/store/readerStore';
 import { useBookDataStore } from '@/store/bookDataStore';
+import { useSettingsStore } from '@/store/settingsStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { isCJKEnv } from '@/utils/misc';
 import { getStyles } from '@/styles/style';
@@ -24,56 +25,57 @@ import { lockScreenOrientation } from '@/utils/bridge';
 import { getBookDirFromWritingMode, getBookLangCode } from '@/utils/book';
 import { MIGHT_BE_RTL_LANGS, RELOAD_BEFORE_SAVED_TIMEOUT_MS } from '@/services/constants';
 import { saveViewSettings } from '@/helpers/settings';
-import { useResetViewSettings } from '../../hooks/useResetSettings';
+import { useResetViewSettings } from '@/hooks/useResetSettings';
 import { SettingsPanelPanelProp } from './SettingsDialog';
 import NumberInput from './NumberInput';
 
 const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset }) => {
   const _ = useTranslation();
   const { envConfig, appService } = useEnv();
+  const { settings } = useSettingsStore();
   const { getView, getViewSettings, getGridInsets } = useReaderStore();
   const { setViewSettings, recreateViewer } = useReaderStore();
   const { getBookData } = useBookDataStore();
   const view = getView(bookKey);
-  const bookData = getBookData(bookKey)!;
-  const viewSettings = getViewSettings(bookKey)!;
-  const gridInsets = getGridInsets(bookKey)!;
+  const bookData = getBookData(bookKey);
+  const viewSettings = getViewSettings(bookKey) || settings.globalViewSettings;
+  const gridInsets = getGridInsets(bookKey) || { top: 0, bottom: 0, left: 0, right: 0 };
 
-  const [paragraphMargin, setParagraphMargin] = useState(viewSettings.paragraphMargin!);
-  const [lineHeight, setLineHeight] = useState(viewSettings.lineHeight!);
-  const [wordSpacing, setWordSpacing] = useState(viewSettings.wordSpacing!);
-  const [letterSpacing, setLetterSpacing] = useState(viewSettings.letterSpacing!);
+  const [paragraphMargin, setParagraphMargin] = useState(viewSettings.paragraphMargin);
+  const [lineHeight, setLineHeight] = useState(viewSettings.lineHeight);
+  const [wordSpacing, setWordSpacing] = useState(viewSettings.wordSpacing);
+  const [letterSpacing, setLetterSpacing] = useState(viewSettings.letterSpacing);
   const [textIndent, setTextIndent] = useState(viewSettings.textIndent!);
-  const [fullJustification, setFullJustification] = useState(viewSettings.fullJustification!);
-  const [hyphenation, setHyphenation] = useState(viewSettings.hyphenation!);
+  const [fullJustification, setFullJustification] = useState(viewSettings.fullJustification);
+  const [hyphenation, setHyphenation] = useState(viewSettings.hyphenation);
   const [marginTopPx, setMarginTopPx] = useState(
-    viewSettings.marginPx || viewSettings.marginTopPx!,
+    viewSettings.marginPx || viewSettings.marginTopPx,
   );
-  const [marginBottomPx, setMarginBottomPx] = useState(viewSettings.marginBottomPx!);
-  const [marginLeftPx, setMarginLeftPx] = useState(viewSettings.marginLeftPx!);
-  const [marginRightPx, setMarginRightPx] = useState(viewSettings.marginRightPx!);
+  const [marginBottomPx, setMarginBottomPx] = useState(viewSettings.marginBottomPx);
+  const [marginLeftPx, setMarginLeftPx] = useState(viewSettings.marginLeftPx);
+  const [marginRightPx, setMarginRightPx] = useState(viewSettings.marginRightPx);
   const [compactMarginTopPx, setCompactMarginTopPx] = useState(
-    viewSettings.compactMarginPx || viewSettings.compactMarginTopPx!,
+    viewSettings.compactMarginPx || viewSettings.compactMarginTopPx,
   );
   const [compactMarginBottomPx, setCompactMarginBottomPx] = useState(
-    viewSettings.compactMarginBottomPx!,
+    viewSettings.compactMarginBottomPx,
   );
-  const [gapPercent, setGapPercent] = useState(viewSettings.gapPercent!);
-  const [compactMarginLeftPx, setCompactMarginLeftPx] = useState(viewSettings.compactMarginLeftPx!);
+  const [gapPercent, setGapPercent] = useState(viewSettings.gapPercent);
+  const [compactMarginLeftPx, setCompactMarginLeftPx] = useState(viewSettings.compactMarginLeftPx);
   const [compactMarginRightPx, setCompactMarginRightPx] = useState(
-    viewSettings.compactMarginRightPx!,
+    viewSettings.compactMarginRightPx,
   );
-  const [maxColumnCount, setMaxColumnCount] = useState(viewSettings.maxColumnCount!);
-  const [maxInlineSize, setMaxInlineSize] = useState(viewSettings.maxInlineSize!);
-  const [maxBlockSize, setMaxBlockSize] = useState(viewSettings.maxBlockSize!);
-  const [writingMode, setWritingMode] = useState(viewSettings.writingMode!);
-  const [overrideLayout, setOverrideLayout] = useState(viewSettings.overrideLayout!);
-  const [doubleBorder, setDoubleBorder] = useState(viewSettings.doubleBorder!);
-  const [borderColor, setBorderColor] = useState(viewSettings.borderColor!);
-  const [showHeader, setShowHeader] = useState(viewSettings.showHeader!);
-  const [showFooter, setShowFooter] = useState(viewSettings.showFooter!);
-  const [showBarsOnScroll, setShowBarsOnScroll] = useState(viewSettings.showBarsOnScroll!);
-  const [screenOrientation, setScreenOrientation] = useState(viewSettings.screenOrientation!);
+  const [maxColumnCount, setMaxColumnCount] = useState(viewSettings.maxColumnCount);
+  const [maxInlineSize, setMaxInlineSize] = useState(viewSettings.maxInlineSize);
+  const [maxBlockSize, setMaxBlockSize] = useState(viewSettings.maxBlockSize);
+  const [writingMode, setWritingMode] = useState(viewSettings.writingMode);
+  const [overrideLayout, setOverrideLayout] = useState(viewSettings.overrideLayout);
+  const [doubleBorder, setDoubleBorder] = useState(viewSettings.doubleBorder);
+  const [borderColor, setBorderColor] = useState(viewSettings.borderColor);
+  const [showHeader, setShowHeader] = useState(viewSettings.showHeader);
+  const [showFooter, setShowFooter] = useState(viewSettings.showFooter);
+  const [showBarsOnScroll, setShowBarsOnScroll] = useState(viewSettings.showBarsOnScroll);
+  const [screenOrientation, setScreenOrientation] = useState(viewSettings.screenOrientation);
 
   const resetToDefaults = useResetViewSettings();
 
@@ -345,7 +347,7 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [screenOrientation]);
 
-  const langCode = getBookLangCode(bookData.bookDoc?.metadata?.language);
+  const langCode = getBookLangCode(bookData?.bookDoc?.metadata?.language);
   const mightBeRTLBook = MIGHT_BE_RTL_LANGS.includes(langCode) || isCJKEnv();
   const isVertical = viewSettings.vertical || writingMode.includes('vertical');
 

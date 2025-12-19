@@ -15,8 +15,10 @@ import { AboutWindow } from '@/components/AboutWindow';
 import { AuthWindow } from '@/components/AuthWindow';
 import { UpdaterWindow } from '@/components/UpdaterWindow';
 import WindowButtons from '@/components/WindowButtons';
+import SettingsDialog from '@/components/settings/SettingsDialog';
 import Logo from '@/components/Logo';
 import { useThemeStore } from '@/store/themeStore';
+import { useSettingsStore } from '@/store/settingsStore';
 import SettingsMenu from './SettingsMenu';
 import { MigrateDataWindow } from './MigrateDataWindow';
 
@@ -34,6 +36,7 @@ export const NavTab: React.FC<{activeTab: string}> = ({ activeTab }) => {
   const headerRef = useRef<HTMLDivElement>(null);
   const { safeAreaInsets: insets } = useThemeStore();
   const { systemUIVisible, statusBarHeight } = useThemeStore();
+  const { isFontLayoutSettingsDialogOpen } = useSettingsStore();
   const { isTrafficLightVisible } = useTrafficLight();
 
   const windowButtonVisible = appService?.hasWindowBar && !isTrafficLightVisible;
@@ -118,10 +121,10 @@ export const NavTab: React.FC<{activeTab: string}> = ({ activeTab }) => {
       <AuthWindow />
       <UpdaterWindow />
       <MigrateDataWindow />
+      {isFontLayoutSettingsDialogOpen && <SettingsDialog bookKey={''} />}
     </div>
   );
 };
-
 
 export default function NavBar({ tab, children }: { tab: string; children: React.ReactNode }) {
   const { appService } = useEnv();
