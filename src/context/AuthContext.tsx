@@ -2,7 +2,7 @@
 
 import { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 // import posthog from 'posthog-js';
-import { AuthToken, createSession, refreshSession, resolveDid, User } from '@/helpers/auth';
+import { AuthToken, createSession, refreshSession, resolveDid, User } from '@/services/bsky/auth';
 
 interface AuthContextType {
   user: User | null;

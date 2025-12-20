@@ -1,10 +1,11 @@
 //  Upload, list, and manage files on AT Protocol PDS
 
 import { lookup } from "mime-types";
-import { AtpAgent } from "@atproto/api";
+import { AtpAgent, AtpSessionData } from "@atproto/api";
 import { getBaseFilename } from "@/utils/path";
 import { calculateChecksum, getFileMetadata } from "./utils";
 import type { AtFile } from "./types";
+import { AuthToken } from "./auth";
 
 /**
  * Options for uploading a file to the PDS
@@ -12,10 +13,8 @@ import type { AtFile } from "./types";
 interface UploadOptions {
   /** The URL of the PDS service (e.g., "https://bsky.social") */
   serviceUrl: string;
-  /** AT Protocol handle (e.g., "alice.bsky.social") or DID */
-  handle: string;
-  /** App Password from https://bsky.app/settings/app-passwords */
-  password: string;
+  /** sessionData */
+  session: AuthToken;
   /** Path to the file to upload */
   filePath: string;
 }
@@ -33,64 +32,6 @@ interface UploadResult {
     /** The CID (Content Identifier) of the record */
     cid: string;
   };
-}
-
-/**
- * Options for deleting a file record from the PDS
- */
-interface DeleteOptions {
-  /** The URL of the PDS service */
-  serviceUrl: string;
-  /** AT Protocol handle or DID for authentication */
-  handle: string;
-  /** App Password from https://bsky.app/settings/app-passwords */
-  password: string;
-  /** The record key (rkey) of the file to delete */
-  rkey: string;
-}
-
-/**
- * Options for listing file records from the PDS
- */
-interface ListOptions {
-  /** The URL of the PDS service */
-  serviceUrl: string;
-  /** AT Protocol handle or DID for authentication */
-  handle: string;
-  /** App Password from https://bsky.app/settings/app-passwords */
-  password: string;
-  /** Maximum number of records to retrieve. Defaults to 100 */
-  limit?: number;
-}
-
-/**
- * Options for showing file record metadata
- */
-interface ShowOptions {
-  /** The URL of the PDS service */
-  serviceUrl: string;
-  /** AT Protocol handle or DID for authentication */
-  handle: string;
-  /** App Password from https://bsky.app/settings/app-passwords */
-  password: string;
-  /** The record key (rkey) of the file to show */
-  rkey: string;
-}
-
-/**
- * Options for retrieving file content
- */
-interface GetOptions {
-  /** The URL of the PDS service */
-  serviceUrl: string;
-  /** AT Protocol handle or DID for authentication */
-  handle: string;
-  /** App Password from https://bsky.app/settings/app-passwords */
-  password: string;
-  /** The record key (rkey) of the file to retrieve */
-  rkey: string;
-  /** Optional output file path. If not provided, outputs to stdout */
-  outputPath?: string;
 }
 
 /**
@@ -119,14 +60,11 @@ interface GetOptions {
  * ```
  */
 async function uploadFile(options: UploadOptions, data: Uint8Array): Promise<UploadResult> {
-  const { serviceUrl, handle, password, filePath } = options;
+  const { serviceUrl, session, filePath } = options;
 
   // Initialize agent
   const agent = new AtpAgent({ service: serviceUrl });
-
-  // Login
-  await agent.login({ identifier: handle, password: password });
-  console.log(`✓ Logged in as ${handle}`);
+  await agent.resumeSession(session as AtpSessionData);
 
   // Read file  FIXME
   // const data = await fs.readFile(filePath);
@@ -167,7 +105,7 @@ async function uploadFile(options: UploadOptions, data: Uint8Array): Promise<Upl
   const recordData: AtFile.Main = {
     $type: "cc.readup.rfile",
     blob: blob as unknown as AtFile.Main["blob"],
-    checksum,
+    // checksum,
     createdAt: new Date().toISOString(),
     file: fileMetadata,
   };
@@ -200,6 +138,18 @@ async function uploadFile(options: UploadOptions, data: Uint8Array): Promise<Upl
 }
 
 /**
+ * Options for listing file records from the PDS
+ */
+interface ListOptions {
+  /** The URL of the PDS service */
+  serviceUrl: string;
+  /** sessionData */
+  session: AuthToken;
+  /** Maximum number of records to retrieve. Defaults to 100 */
+  limit?: number;
+}
+
+/**
  * List all aqfile records for the authenticated user
  *
  * Retrieves and displays all file records stored under the cc.readup.rfile
@@ -211,13 +161,11 @@ async function uploadFile(options: UploadOptions, data: Uint8Array): Promise<Upl
  * @throws {Error} If authentication fails or the PDS is unreachable
  */
 async function listRecords(options: ListOptions): Promise<void> {
-  const { serviceUrl, handle, password, limit = 100 } = options;
+  const { serviceUrl, session, limit = 100 } = options;
 
   // Initialize agent
   const agent = new AtpAgent({ service: serviceUrl });
-
-  // Login
-  await agent.login({ identifier: handle, password: password });
+  await agent.resumeSession(session as AtpSessionData);
 
   // Get DID
   const did = agent.session?.did;
@@ -272,87 +220,15 @@ async function listRecords(options: ListOptions): Promise<void> {
 }
 
 /**
- * Delete an aqfile record and its associated blob
- *
- * Removes a file record from the PDS by its record key (rkey). The associated
- * blob will be marked for garbage collection by the PDS. Note that the actual
- * blob deletion is handled by the PDS garbage collector and occurs when no other
- * records reference the blob.
- *
- * @param options - Delete configuration options including authentication and rkey
- * @returns A promise that resolves when the record is deleted
- * @throws {Error} If authentication fails, record is not found, or deletion fails
- *
- * @example
- * ```ts
- * await deleteRecord({
- *   serviceUrl: "https://bsky.social",
- *   identifier: "alice.bsky.social",
- *   password: "app-password",
- *   rkey: "3m35jjrc5b62d"
- * });
- * // Outputs:
- * // ✓ Logged in as alice.bsky.social
- * // 🗑  Deleting record 3m35jjrc5b62d...
- * // ✓ Record deleted
- * // ℹ  Blob bafkreic... will be cleaned up by PDS garbage collection
- * ```
+ * Options for showing file record metadata
  */
-async function deleteRecord(options: DeleteOptions): Promise<void> {
-  const { serviceUrl, handle, password, rkey } = options;
-
-  // Initialize agent
-  const agent = new AtpAgent({ service: serviceUrl });
-
-  // Login
-  await agent.login({ identifier: handle, password: password });
-  console.log(`✓ Logged in as ${handle}`);
-
-  // Get DID
-  const did = agent.session?.did;
-  if (!did) {
-    throw new Error("Could not determine DID from session");
-  }
-
-  const collection = "cc.readup.rfile";
-
-  // Get the record first to extract blob reference
-  try {
-    const recordResponse = await agent.com.atproto.repo.getRecord({
-      repo: did,
-      collection,
-      rkey,
-    });
-
-    const record = recordResponse.data.value as AtFile.Main;
-    const blob = record.blob;
-
-    // Delete the record
-    console.log(`🗑  Deleting record ${rkey}...`);
-    await agent.com.atproto.repo.deleteRecord({
-      repo: did,
-      collection,
-      rkey,
-    });
-    console.log(`✓ Record deleted`);
-
-    // Note: Blob deletion is handled automatically by PDS when no records reference it
-    // Individual blob deletion API is not available in @atproto/api
-    if (blob && typeof blob === "object" && "ref" in blob) {
-      const blobRef = blob.ref;
-      const cid = typeof blobRef === "object" && blobRef && "$link" in blobRef
-        ? blobRef.$link
-        : blobRef;
-      console.log(
-        `ℹ  Blob ${cid} will be cleaned up by PDS garbage collection`,
-      );
-    }
-  } catch (error) {
-    if (error instanceof Error && error.message.includes("not found")) {
-      throw new Error(`Record not found: ${rkey}`);
-    }
-    throw error;
-  }
+interface ShowOptions {
+  /** The URL of the PDS service */
+  serviceUrl: string;
+  /** sessionData */
+  session: AuthToken;
+  /** The record key (rkey) of the file to show */
+  rkey: string;
 }
 
 /**
@@ -376,13 +252,11 @@ async function deleteRecord(options: DeleteOptions): Promise<void> {
  * ```
  */
 async function showRecord(options: ShowOptions): Promise<void> {
-  const { serviceUrl, handle, password, rkey } = options;
+  const { serviceUrl, session, rkey } = options;
 
   // Initialize agent
   const agent = new AtpAgent({ service: serviceUrl });
-
-  // Login
-  await agent.login({ identifier: handle, password: password });
+  await agent.resumeSession(session as AtpSessionData);
 
   // Get DID
   const did = agent.session?.did;
@@ -459,6 +333,20 @@ async function showRecord(options: ShowOptions): Promise<void> {
 }
 
 /**
+ * Options for retrieving file content
+ */
+interface GetOptions {
+  /** The URL of the PDS service */
+  serviceUrl: string;
+  /** sessionData */
+  session: AuthToken;
+  /** The record key (rkey) of the file to retrieve */
+  rkey: string;
+  /** Optional output file path. If not provided, outputs to stdout */
+  outputPath?: string;
+}
+
+/**
  * Retrieve file content from a record
  *
  * Downloads the blob content associated with a file record and either outputs
@@ -490,13 +378,11 @@ async function showRecord(options: ShowOptions): Promise<void> {
  * ```
  */
 async function getRecord(options: GetOptions): Promise<void> {
-  const { serviceUrl, handle, password, rkey, outputPath } = options;
+  const { serviceUrl, session, rkey, outputPath } = options;
 
   // Initialize agent
   const agent = new AtpAgent({ service: serviceUrl });
-
-  // Login
-  await agent.login({ identifier: handle, password: password });
+  await agent.resumeSession(session as AtpSessionData);
 
   // Get DID
   const did = agent.session?.did;
@@ -570,4 +456,97 @@ async function getRecord(options: GetOptions): Promise<void> {
   const isContentBinary = isBinary(blobData);
   const mimeType = record.file?.mimeType || "application/octet-stream";
   const fileName = record.file?.name || rkey;
+}
+
+/**
+ * Options for deleting a file record from the PDS
+ */
+interface DeleteOptions {
+  /** The URL of the PDS service */
+  serviceUrl: string;
+  /** sessionData */
+  session: AuthToken;
+  /** The record key (rkey) of the file to delete */
+  rkey: string;
+}
+
+/**
+ * Delete an aqfile record and its associated blob
+ *
+ * Removes a file record from the PDS by its record key (rkey). The associated
+ * blob will be marked for garbage collection by the PDS. Note that the actual
+ * blob deletion is handled by the PDS garbage collector and occurs when no other
+ * records reference the blob.
+ *
+ * @param options - Delete configuration options including authentication and rkey
+ * @returns A promise that resolves when the record is deleted
+ * @throws {Error} If authentication fails, record is not found, or deletion fails
+ *
+ * @example
+ * ```ts
+ * await deleteRecord({
+ *   serviceUrl: "https://bsky.social",
+ *   identifier: "alice.bsky.social",
+ *   password: "app-password",
+ *   rkey: "3m35jjrc5b62d"
+ * });
+ * // Outputs:
+ * // ✓ Logged in as alice.bsky.social
+ * // 🗑  Deleting record 3m35jjrc5b62d...
+ * // ✓ Record deleted
+ * // ℹ  Blob bafkreic... will be cleaned up by PDS garbage collection
+ * ```
+ */
+async function deleteRecord(options: DeleteOptions): Promise<void> {
+  const { serviceUrl, session, rkey } = options;
+
+  // Initialize agent
+  const agent = new AtpAgent({ service: serviceUrl });
+  await agent.resumeSession(session as AtpSessionData);
+
+  // Get DID
+  const did = agent.session?.did;
+  if (!did) {
+    throw new Error("Could not determine DID from session");
+  }
+
+  const collection = "cc.readup.rfile";
+
+  // Get the record first to extract blob reference
+  try {
+    const recordResponse = await agent.com.atproto.repo.getRecord({
+      repo: did,
+      collection,
+      rkey,
+    });
+
+    const record = recordResponse.data.value as AtFile.Main;
+    const blob = record.blob;
+
+    // Delete the record
+    console.log(`🗑  Deleting record ${rkey}...`);
+    await agent.com.atproto.repo.deleteRecord({
+      repo: did,
+      collection,
+      rkey,
+    });
+    console.log(`✓ Record deleted`);
+
+    // Note: Blob deletion is handled automatically by PDS when no records reference it
+    // Individual blob deletion API is not available in @atproto/api
+    if (blob && typeof blob === "object" && "ref" in blob) {
+      const blobRef = blob.ref;
+      const cid = typeof blobRef === "object" && blobRef && "$link" in blobRef
+        ? blobRef.$link
+        : blobRef;
+      console.log(
+        `ℹ  Blob ${cid} will be cleaned up by PDS garbage collection`,
+      );
+    }
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("not found")) {
+      throw new Error(`Record not found: ${rkey}`);
+    }
+    throw error;
+  }
 }

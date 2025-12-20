@@ -1,10 +1,13 @@
 
+// to store active sessions
 export interface AuthToken {
   did: string;
   handle: string;
   accessJwt: string;
   refreshJwt: string;
+  active?: boolean;
   email?: string;
+  status?: string;
 }
 
 export type User = {

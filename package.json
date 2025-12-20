@@ -64,6 +64,7 @@
     "foliate-js": "workspace:*",
 
     "@atproto/api": "0.18.8",
+    "@atproto/common-web": "0.4.7",
     "mime-types": "3.0.2",
 
     "@extractus/feed-extractor": "7.1.7",

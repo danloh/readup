@@ -11,9 +11,12 @@ importers:
       '@atproto/api':
         specifier: 0.18.8
         version: 0.18.8
+      '@atproto/common-web':
+        specifier: 0.4.7
+        version: 0.4.7
       '@ducanh2912/next-pwa':
         specifier: ^10.2.9
-        version: 10.2.9(@types/babel__core@7.20.5)(next@16.0.10(@babel/core@7.28.5)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(webpack@5.100.0)
+        version: 10.2.9(@types/babel__core@7.20.5)(next@16.0.10(@babel/core@7.28.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(webpack@5.100.0)
       '@extractus/article-extractor':
         specifier: 8.0.20
         version: 8.0.20
@@ -118,7 +121,7 @@ importers:
         version: 3.0.2
       next:
         specifier: 16.0.10
-        version: 16.0.10(@babel/core@7.28.5)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+        version: 16.0.10(@babel/core@7.28.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       overlayscrollbars:
         specifier: 2.13.0
         version: 2.13.0
@@ -160,7 +163,7 @@ importers:
         version: 18.4.0(@types/node@22.16.2)
       styled-jsx:
         specifier: ^5.1.7
-        version: 5.1.7(@babel/core@7.28.5)(react@19.2.3)
+        version: 5.1.7(@babel/core@7.28.0)(react@19.2.3)
       tinycolor2:
         specifier: ^1.6.0
         version: 1.6.0
@@ -6030,10 +6033,10 @@ snapshots:
 
   '@discoveryjs/json-ext@0.5.7': {}
 
-  '@ducanh2912/next-pwa@10.2.9(@types/babel__core@7.20.5)(next@16.0.10(@babel/core@7.28.5)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(webpack@5.100.0)':
+  '@ducanh2912/next-pwa@10.2.9(@types/babel__core@7.20.5)(next@16.0.10(@babel/core@7.28.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(webpack@5.100.0)':
     dependencies:
       fast-glob: 3.3.2
-      next: 16.0.10(@babel/core@7.28.5)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      next: 16.0.10(@babel/core@7.28.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       semver: 7.6.3
       webpack: 5.100.0
       workbox-build: 7.1.1(@types/babel__core@7.20.5)
@@ -8940,7 +8943,7 @@ snapshots:
 
   neo-async@2.6.2: {}
 
-  next@16.0.10(@babel/core@7.28.5)(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
+  next@16.0.10(@babel/core@7.28.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
     dependencies:
       '@next/env': 16.0.10
       '@swc/helpers': 0.5.15
@@ -8948,7 +8951,7 @@ snapshots:
       postcss: 8.4.31
       react: 19.2.3
       react-dom: 19.2.3(react@19.2.3)
-      styled-jsx: 5.1.6(@babel/core@7.28.5)(react@19.2.3)
+      styled-jsx: 5.1.6(@babel/core@7.28.0)(react@19.2.3)
     optionalDependencies:
       '@next/swc-darwin-arm64': 16.0.10
       '@next/swc-darwin-x64': 16.0.10
@@ -9789,19 +9792,19 @@ snapshots:
 
   strnum@2.1.1: {}
 
-  styled-jsx@5.1.6(@babel/core@7.28.5)(react@19.2.3):
+  styled-jsx@5.1.6(@babel/core@7.28.0)(react@19.2.3):
     dependencies:
       client-only: 0.0.1
       react: 19.2.3
     optionalDependencies:
-      '@babel/core': 7.28.5
+      '@babel/core': 7.28.0
 
-  styled-jsx@5.1.7(@babel/core@7.28.5)(react@19.2.3):
+  styled-jsx@5.1.7(@babel/core@7.28.0)(react@19.2.3):
     dependencies:
       client-only: 0.0.1
       react: 19.2.3
     optionalDependencies:
-      '@babel/core': 7.28.5
+      '@babel/core': 7.28.0
 
   subarg@1.0.0:
     dependencies:

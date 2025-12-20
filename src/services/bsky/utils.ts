@@ -1,6 +1,7 @@
 // Utility functions for file operations
 
 import * as crypto from "node:crypto";
+import { TID } from '@atproto/common-web';
 import type { AtFile } from "./types";
 
 /**
@@ -65,4 +66,10 @@ export async function getFileMetadata(
     mimeType,
     modifiedAt: new Date().toISOString(),
   };
+}
+
+export function gen_tid(prev?: string) {
+  const newTid: string = TID.nextStr(prev);
+  // console.log(newTid); // Example output: 3kmtfck6kq22s
+  return newTid;
 }
