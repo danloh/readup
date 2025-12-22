@@ -78,9 +78,10 @@ const BookCover: React.FC<BookCoverProps> = ({
       </div>
       <div
         className={clsx(
-          'fallback-cover invisible absolute inset-0 rounded-none p-2',
+          'fallback-cover invisible absolute inset-0 p-2',
           'text-neutral-content text-center font-serif font-medium',
           isPreview ? 'bg-base-200/50' : 'bg-base-100',
+          imageClassName,
         )}
       >
         <div className='flex h-1/2 items-center justify-center'>
