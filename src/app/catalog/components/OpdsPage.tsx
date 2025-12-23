@@ -19,7 +19,7 @@ import { OPDSFeed, OPDSPublication, OPDSSearch } from '@/types/opds';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useTheme } from '@/hooks/useTheme';
 import { READUP_OPDS_USER_AGENT } from '@/services/constants';
-import { isSearchLink, MIME, parseMediaType, resolveURL } from '../utils/opdsUtils';
+import { getFileExtFromPath, isSearchLink, MIME, parseMediaType, resolveURL } from '../utils/opdsUtils';
 import { getProxiedURL, fetchWithAuth, probeAuth, needsProxy } from '../utils/opdsReq';
 import { CatalogDialog } from './OPDSDialog';
 import { FeedView } from './FeedView';
@@ -404,8 +404,9 @@ export default function BrowserPage() {
           }
           return;
         } else {
-          const ext = parsed?.mediaType ? getFileExtFromMimeType(parsed.mediaType) : '';
-          const basename = new URL(url).pathname.replaceAll('/', '_');
+          const pathname = new URL(url).pathname;
+          const ext = getFileExtFromMimeType(parsed?.mediaType) || getFileExtFromPath(pathname);
+          const basename = pathname.replaceAll('/', '_');
           const filename = ext ? `${basename}.${ext}` : basename;
           const dstFilePath = await appService?.resolveFilePath(filename, 'Cache');
           if (dstFilePath) {
