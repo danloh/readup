@@ -11,13 +11,15 @@ export interface AuthToken {
 }
 
 export type User = {
-  host: string;
 	did: string;
 	handle: string;
-  email: string;
-	access: string;
-	refresh: string;
+	accessJwt: string;
+  refreshJwt: string;
+  host: string;
 	service: string;
+  active?: boolean;
+  email?: string;
+  status?: string;
 };
 
 export async function createSession(handle: string, pass: string, host: string) {
@@ -53,6 +55,7 @@ export async function getSession(host: string, accessToken: string) {
   return response.ok;
 }
 
+/** return user or throw erro */
 export async function refreshSession() {
   const userJson = localStorage.getItem('user');
   const usr = userJson ? JSON.parse(userJson) as User : null;
@@ -60,15 +63,15 @@ export async function refreshSession() {
     throw new Error(`Need to log in`);
   }
   const host = usr.host;
-  const access = usr.access;
-  const refresh = usr.refresh;
+  const access = usr.accessJwt;
+  const refresh = usr.refreshJwt;
   const hasSession = await getSession(host, access);
   if (!hasSession) {
     const res = await refreshToken(host, refresh);
     const newUser: User = {
       ...usr,
-      access: res.accessJwt,
-      refresh: res.refreshJwt,
+      accessJwt: res.accessJwt,
+      refreshJwt: res.refreshJwt,
     };
     return newUser;
   } else {

@@ -10,7 +10,7 @@ import { AuthToken } from "./auth";
 /**
  * Options for uploading a file to the PDS
  */
-interface UploadOptions {
+export interface UploadOptions {
   /** The URL of the PDS service (e.g., "https://bsky.social") */
   serviceUrl: string;
   /** sessionData */
@@ -22,7 +22,7 @@ interface UploadOptions {
 /**
  * Result returned after successfully uploading a file
  */
-interface UploadResult {
+export interface UploadResult {
   /** The uploaded blob reference */
   blob: unknown;
   /** The created record information */
@@ -59,7 +59,10 @@ interface UploadResult {
  * console.log(`Uploaded: ${result.record.uri}`);
  * ```
  */
-async function uploadFile(options: UploadOptions, data: Uint8Array): Promise<UploadResult> {
+export async function uploadFile(
+  options: UploadOptions, 
+  data: Uint8Array
+): Promise<UploadResult> {
   const { serviceUrl, session, filePath } = options;
 
   // Initialize agent
@@ -116,6 +119,7 @@ async function uploadFile(options: UploadOptions, data: Uint8Array): Promise<Upl
   const createRes = await agent.com.atproto.repo.createRecord({
     repo: did,
     collection,
+    // rkey: book.hash,
     record: recordData,
   });
 

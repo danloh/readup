@@ -61,8 +61,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           did: res.did,
           handle: res.handle,
           email: res.email || '',
-          access: res.accessJwt,
-          refresh: res.refreshJwt,
+          accessJwt: res.accessJwt,
+          refreshJwt: res.refreshJwt,
           service: serv,
         };
 

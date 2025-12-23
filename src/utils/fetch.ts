@@ -1,4 +1,4 @@
-import { getAccessToken } from './access';
+import { getAuth } from './access';
 
 export const fetchWithTimeout = (url: string, options: RequestInit = {}, timeout = 10000) => {
   const controller = new AbortController();
@@ -11,7 +11,7 @@ export const fetchWithTimeout = (url: string, options: RequestInit = {}, timeout
 };
 
 export const fetchWithAuth = async (url: string, options: RequestInit) => {
-  const token = await getAccessToken();
+  const token = (await getAuth()).accessJwt;
   if (!token) {
     throw new Error('Not authenticated');
   }

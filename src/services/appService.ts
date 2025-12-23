@@ -404,7 +404,12 @@ export abstract class BaseAppService implements AppService {
     }
   }
 
-  async uploadFileToCloud(lfp: string, cfp: string, handleProgress: ProgressHandler, hash: string) {
+  async uploadFileToCloud(
+    lfp: string, // local file
+    cfp: string, // clould file
+    handleProgress: ProgressHandler, 
+    hash: string
+  ) {
     console.log('Uploading file:', lfp, 'to', cfp);
     const file = await this.fs.openFile(lfp, 'Books', cfp);
     const localFullpath = `${this.localBooksDir}/${lfp}`;
