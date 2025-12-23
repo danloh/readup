@@ -239,6 +239,7 @@ const getLayoutStyles = (
   }
   html, body {
     ${writingMode === 'auto' ? '' : `writing-mode: ${writingMode} !important;`}
+    ${vertical ? 'font-feature-settings: "vrt2" 1, "vert" 1; text-orientation: upright;' : ''}
     text-align: var(--default-text-align);
     max-height: unset;
   }
@@ -402,6 +403,10 @@ const getLayoutStyles = (
   div.right *, p.right * { text-align: right; }
   div.center *, p.center * { text-align: center; }
   div.justify *, p.justify * { text-align: justify; }
+
+  .br {
+    display: flow-root;
+  }
 
   .h5_mainbody {
     overflow: unset !important;
