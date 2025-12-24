@@ -195,23 +195,24 @@ export interface ScreenConfig {
   screenOrientation: 'auto' | 'portrait' | 'landscape';
 }
 
-export interface ReplacementRule {
+export type ProofreadScope = 'selection' | 'book' | 'library';
+
+export interface ProofreadRule {
   id: string;
+  scope: ProofreadScope;
   pattern: string;
   replacement: string;
+  cfi?: string;
+  sectionHref?: string;
   enabled: boolean;
   isRegex: boolean;
   order: number; // Lower numbers apply first
-  singleInstance?: boolean; // If true, only replace the specific occurrence
-  sectionHref?: string; // Section where the single-instance replacement applies
-  occurrenceIndex?: number; // Which occurrence in the section (0-based)
   wholeWord?: boolean; // Match whole words only (uses \b word boundaries)
   caseSensitive?: boolean; // Case-sensitive matching (default true)
-  global?: boolean; // Marks global-scope rules explicitly
 }
 
-export interface ReplacementRulesConfig {
-  replacementRules?: ReplacementRule[];
+export interface ProofreadRulesConfig {
+  proofreadRules?: ProofreadRule[];
 }
 
 export interface ViewSettings
@@ -223,7 +224,7 @@ export interface ViewSettings
     TTSConfig,
     TranslatorConfig,
     ScreenConfig,
-    ReplacementRulesConfig {}
+    ProofreadRulesConfig {}
 
 export interface BookProgress {
   location: string;

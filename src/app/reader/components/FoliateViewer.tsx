@@ -124,6 +124,7 @@ const FoliateViewer: React.FC<{
               height,
               primaryLanguage: bookData.book?.primaryLanguage,
               content: data,
+              sectionHref: detail.name,
               transformers: [
                 'style',
                 'punctuation',
@@ -131,9 +132,8 @@ const FoliateViewer: React.FC<{
                 'whitespace',
                 'language',
                 'sanitizer',
-                'replacement',
+                'proofread',
               ],
-              sectionHref: detail.name, // Pass section href for single-instance replacements
             };
             return Promise.resolve(transformContent(ctx));
           }

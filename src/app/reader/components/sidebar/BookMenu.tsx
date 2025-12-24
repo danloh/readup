@@ -11,7 +11,7 @@ import { eventDispatcher } from '@/utils/event';
 import MenuItem from '@/components/MenuItem';
 import Menu from '@/components/Menu';
 import useBooksManager from '../../hooks/useBooksManager';
-import { setReplacementRulesWindowVisible } from '../ReplacementRulesWindow';
+import { setProofreadRulesVisibility } from '../ProofreadRules';
 
 interface BookMenuProps {
   menuClassName?: string;
@@ -65,8 +65,8 @@ const BookMenu: React.FC<BookMenuProps> = ({ menuClassName, setIsDropdownOpen })
     setIsDropdownOpen?.(false);
   };
 
-  const showReplacementRulesWindow = () => {
-    setReplacementRulesWindowVisible(true);
+  const showProofreadRulesWindow = () => {
+    setProofreadRulesVisibility(true);
     setIsDropdownOpen?.(false);
   };
 
@@ -127,7 +127,7 @@ const BookMenu: React.FC<BookMenuProps> = ({ menuClassName, setIsDropdownOpen })
         Icon={isSortedTOC ? MdCheck : undefined}
         onClick={handleToggleSortTOC}
       />
-      <MenuItem label={_('Replacement Rules')} onClick={showReplacementRulesWindow} />
+      <MenuItem label={_('Proofread')} onClick={showProofreadRulesWindow} />
       <MenuItem label={_('Reload Page')} shortcut='Shift+R' onClick={handleReloadPage} />
       <hr className='border-base-200 my-1' />
       <MenuItem label={_('Export Annotations')} onClick={handleExportAnnotations} />

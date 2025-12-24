@@ -23,7 +23,7 @@ const PopupButton: React.FC<PopupButtonProps> = ({
         disabled ? 'cursor-not-allowed opacity-50' : 'rounded-md hover:bg-gray-500',
       )}
       disabled={disabled}
-      title={showTooltip ? tooltipText : ''}
+      title={showTooltip ? tooltipText : undefined}
     >
       <Icon />
     </button>
