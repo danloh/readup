@@ -1,23 +1,9 @@
 //  Upload, list, and manage files on AT Protocol PDS
 
-import { lookup } from "mime-types";
 import { AtpAgent, AtpSessionData } from "@atproto/api";
-import { getBaseFilename } from "@/utils/path";
-import { calculateChecksum, getFileMetadata } from "./utils";
 import type { AtFile } from "./types";
-import { AuthToken } from "./auth";
-
-/**
- * Options for uploading a file to the PDS
- */
-export interface UploadOptions {
-  /** The URL of the PDS service (e.g., "https://bsky.social") */
-  serviceUrl: string;
-  /** sessionData */
-  session: AuthToken;
-  /** Path to the file to upload */
-  filePath: string;
-}
+import { AuthToken, refreshSession } from "./auth";
+import { Book } from "@/types/book";
 
 /**
  * Result returned after successfully uploading a file
@@ -60,22 +46,24 @@ export interface UploadResult {
  * ```
  */
 export async function uploadFile(
-  options: UploadOptions, 
-  data: Uint8Array
+  file: File,
+  book: Book,
 ): Promise<UploadResult> {
-  const { serviceUrl, session, filePath } = options;
+  const usr = await refreshSession();
+  const host = usr.host;
+  
+  // const data = await file.bytes(); // limited availability
+  const arrayBuffer = await file.arrayBuffer();
+  const data = new Uint8Array(arrayBuffer);
 
   // Initialize agent
-  const agent = new AtpAgent({ service: serviceUrl });
-  await agent.resumeSession(session as AtpSessionData);
+  const agent = new AtpAgent({ service: host });
+  await agent.resumeSession(usr as AtpSessionData);
 
-  // Read file  FIXME
-  // const data = await fs.readFile(filePath);
-  const fileName = getBaseFilename(filePath);
-  const mimeType = lookup(filePath) || "application/octet-stream";
+  const mimeType = "application/octet-stream";
 
   // Upload blob
-  console.log(`⬆ Uploading ${fileName} (${data.length} bytes, ${mimeType})...`);
+  console.log(`⬆ Uploading ${book.title} (${data.length} bytes, ${mimeType})...`);
   const uploadRes = await agent.uploadBlob(data, { encoding: mimeType });
   const blob = uploadRes.data?.blob;
 
@@ -87,12 +75,6 @@ export async function uploadFile(
   console.log(`✓ Blob uploaded: ${blobCid}`);
 
   console.log("Blob structure:", JSON.stringify(blob, null, 2));
-
-  // Calculate checksum
-  const checksum = calculateChecksum(data);
-
-  // Get file metadata
-  const fileMetadata = await getFileMetadata(filePath, fileName, mimeType);
 
   // Get DID
   const did = agent.session?.did;
@@ -107,10 +89,9 @@ export async function uploadFile(
   // The blob from uploadBlob already has the correct structure
   const recordData: AtFile.Main = {
     $type: "cc.readup.rfile",
+    name: book.title,
     blob: blob as unknown as AtFile.Main["blob"],
-    // checksum,
     createdAt: new Date().toISOString(),
-    file: fileMetadata,
   };
 
   console.log("Record data:", JSON.stringify(recordData, null, 2));
@@ -119,21 +100,12 @@ export async function uploadFile(
   const createRes = await agent.com.atproto.repo.createRecord({
     repo: did,
     collection,
-    // rkey: book.hash,
+    rkey: book.hash,
     record: recordData,
   });
 
   console.log(`✓ Record created: ${createRes.data.uri}`);
   console.log(`  CID: ${createRes.data.cid}`);
-
-  // Show inspection links
-  console.log(`\n🔍 Inspect your upload:`);
-  console.log(`   https://pdsls.dev/${createRes.data.uri}`);
-  console.log(
-    `   https://atproto-browser.vercel.app/${
-      createRes.data.uri.replace("at://", "at/")
-    }`,
-  );
 
   return {
     blob,

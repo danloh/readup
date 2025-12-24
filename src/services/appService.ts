@@ -53,7 +53,7 @@ import { getOSPlatform, getTargetLang, isCJKEnv, isContentURI, isValidURL } from
 import { deserializeConfig, serializeConfig } from '@/utils/serializer';
 import {
   downloadFile,
-  uploadFile,
+  //uploadFile,
   deleteFile,
   createProgressHandler,
   batchGetDownloadUrls,
@@ -64,6 +64,7 @@ import { TxtToEpubConverter } from '@/utils/txt';
 import { svg2png } from '@/utils/svg';
 import { ArticleType, FeedType } from '@/app/feed/components/dataAgent';
 import { BOOK_FILE_NOT_FOUND_ERROR } from './errors';
+import { uploadFile } from './bsky/atfile';
 
 export abstract class BaseAppService implements AppService {
   osPlatform: OsPlatform = getOSPlatform();
@@ -406,14 +407,12 @@ export abstract class BaseAppService implements AppService {
 
   async uploadFileToCloud(
     lfp: string, // local file
-    cfp: string, // clould file
-    handleProgress: ProgressHandler, 
-    hash: string
+    book: Book,
+    handleProgress?: ProgressHandler, 
   ) {
-    console.log('Uploading file:', lfp, 'to', cfp);
-    const file = await this.fs.openFile(lfp, 'Books', cfp);
-    const localFullpath = `${this.localBooksDir}/${lfp}`;
-    await uploadFile(file, localFullpath, handleProgress, hash);
+    console.log('Uploading file:', lfp);
+    const file = await this.fs.openFile(lfp, 'Books');
+    await uploadFile(file, book);
     const f = file as ClosableFile;
     if (f && f.close) {
       await f.close();
@@ -442,18 +441,17 @@ export abstract class BaseAppService implements AppService {
 
     const handleProgress = createProgressHandler(toUploadFpCount, completedFiles, onProgress);
 
-    if (coverExist) {
-      const lfp = getCoverFilename(book);
-      const cfp = `${CLOUD_BOOKS_SUBDIR}/${getCoverFilename(book)}`;
-      await this.uploadFileToCloud(lfp, cfp, handleProgress, book.hash);
-      uploaded = true;
-      completedFiles.count++;
-    }
+    // FIXME, UPLOAD COVER
+    // if (coverExist) {
+    //   const lfp = getCoverFilename(book);
+    //   await this.uploadFileToCloud(lfp, book, handleProgress);
+    //   uploaded = true;
+    //   completedFiles.count++;
+    // }
 
     if (bookFileExist) {
       const lfp = getLocalBookFilename(book);
-      const cfp = `${CLOUD_BOOKS_SUBDIR}/${getRemoteBookFilename(book)}`;
-      await this.uploadFileToCloud(lfp, cfp, handleProgress, book.hash);
+      await this.uploadFileToCloud(lfp, book, handleProgress);
       uploaded = true;
       completedFiles.count++;
     }

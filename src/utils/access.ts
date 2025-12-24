@@ -1,6 +1,6 @@
 import { User } from "@/services/bsky/auth";
 
-export const getAuth = async (): Promise<User> => {
+export const getAuth = (): User => {
   const user = localStorage.getItem('user') ?? '{}';
   return JSON.parse(user) as User;
 };

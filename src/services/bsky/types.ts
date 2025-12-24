@@ -147,8 +147,10 @@ export namespace AtFile {
 
   export type Main = {
     $type: "cc.readup.rfile";
+    name: string;
     blob: BlobRef;
-    file: File;
+    // meta?: 
+    file?: File;
     checksum?: Checksum;
     createdAt: string;
     attribution?: string;
