@@ -64,8 +64,7 @@ import { TxtToEpubConverter } from '@/utils/txt';
 import { svg2png } from '@/utils/svg';
 import { ArticleType, FeedType } from '@/app/feed/components/dataAgent';
 import { BOOK_FILE_NOT_FOUND_ERROR } from './errors';
-import { uploadBookFile, uploadFile, UploadResult } from './bsky/atfile';
-import { BlobRef } from '@atproto/api';
+import { uploadBookFile, UploadResult } from './bsky/atfile';
 
 export abstract class BaseAppService implements AppService {
   osPlatform: OsPlatform = getOSPlatform();
@@ -426,6 +425,15 @@ export abstract class BaseAppService implements AppService {
 
     // upload and create a book record on PDS
     const res: UploadResult = await uploadBookFile(book, bookFile, coverFile);
+    // close files
+    const cf = coverFile as ClosableFile;
+    if (cf && cf.close) {
+      await cf.close();
+    }
+    const bf = bookFile as ClosableFile;
+    if (bf && bf.close) {
+      await bf.close();
+    }
 
     if (res.success) {
       book.deletedAt = null;
