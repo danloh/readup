@@ -22,7 +22,7 @@
       "required": ["algo", "hash"]
     },
 
-    "file": {
+    "metadata": {
       "type": "object",
       "description": "File metadata describing the uploaded blob.",
       "properties": {
@@ -48,7 +48,7 @@
           "description": "Client-side last-modified timestamp."
         }
       },
-      "required": ["name", "size"]
+      "required": ["name"]
     },
 
     "main": {
@@ -77,9 +77,9 @@
             "description": "Handle or DID of the account to attribute this upload to."
           },
 
-          "file": {
+          "metadata": {
             "type": "ref",
-            "ref": "#file",
+            "ref": "#metadata",
             "description": "Metadata about the file."
           },
 
@@ -89,7 +89,7 @@
             "description": "Optional cryptographic checksum for integrity verification."
           }
         },
-        "required": ["blob", "createdAt", "file"]
+        "required": ["checksum", "blob", "metadata", "createdAt"]
       }
     }
   }

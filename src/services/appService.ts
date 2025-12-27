@@ -64,7 +64,8 @@ import { TxtToEpubConverter } from '@/utils/txt';
 import { svg2png } from '@/utils/svg';
 import { ArticleType, FeedType } from '@/app/feed/components/dataAgent';
 import { BOOK_FILE_NOT_FOUND_ERROR } from './errors';
-import { uploadFile } from './bsky/atfile';
+import { uploadBookFile, uploadFile, UploadResult } from './bsky/atfile';
+import { BlobRef } from '@atproto/api';
 
 export abstract class BaseAppService implements AppService {
   osPlatform: OsPlatform = getOSPlatform();
@@ -405,58 +406,28 @@ export abstract class BaseAppService implements AppService {
     }
   }
 
-  async uploadFileToCloud(
-    lfp: string, // local file
-    book: Book,
-    handleProgress?: ProgressHandler, 
-  ) {
-    console.log('Uploading file:', lfp);
-    const file = await this.fs.openFile(lfp, 'Books');
-    await uploadFile(file, book);
-    const f = file as ClosableFile;
-    if (f && f.close) {
-      await f.close();
-    }
-  }
-
-  // TODO
   async uploadBook(book: Book, onProgress?: ProgressHandler): Promise<void> {
-    let uploaded = false;
-    const completedFiles = { count: 0 };
-    let toUploadFpCount = 0;
-    const coverExist = await this.fs.exists(getCoverFilename(book), 'Books');
-    let bookFileExist = await this.fs.exists(getLocalBookFilename(book), 'Books');
-    if (coverExist) {
-      toUploadFpCount++;
-    }
+    const coverfp = getCoverFilename(book);
+    const coverExist = await this.fs.exists(coverfp, 'Books');
+    const coverFile = coverExist ? await this.fs.openFile(coverfp, 'Books') : undefined;
+
+    const bookfp = getLocalBookFilename(book);
+    let bookFileExist = await this.fs.exists(bookfp, 'Books');
+    let bookFile: File | undefined = undefined;
     if (bookFileExist) {
-      toUploadFpCount++;
-    }
-    if (!bookFileExist && book.url) {
+      bookFile = await this.fs.openFile(bookfp, 'Books');
+    } else if (!bookFileExist && book.url) {
       // download the book from the URL
-      const fileobj = await this.fs.openFile(book.url, 'None');
-      await this.fs.writeFile(getLocalBookFilename(book), 'Books', await fileobj.arrayBuffer());
-      bookFileExist = true;
+      bookFile = await this.fs.openFile(book.url, 'None');
+      await this.fs.writeFile(bookfp, 'Books', await bookFile.arrayBuffer());
     }
 
-    const handleProgress = createProgressHandler(toUploadFpCount, completedFiles, onProgress);
+    // const handleProgress = createProgressHandler(toUploadFpCount, completedFiles, onProgress);
 
-    // FIXME, UPLOAD COVER
-    // if (coverExist) {
-    //   const lfp = getCoverFilename(book);
-    //   await this.uploadFileToCloud(lfp, book, handleProgress);
-    //   uploaded = true;
-    //   completedFiles.count++;
-    // }
+    // upload and create a book record on PDS
+    const res: UploadResult = await uploadBookFile(book, bookFile, coverFile);
 
-    if (bookFileExist) {
-      const lfp = getLocalBookFilename(book);
-      await this.uploadFileToCloud(lfp, book, handleProgress);
-      uploaded = true;
-      completedFiles.count++;
-    }
-
-    if (uploaded) {
+    if (res.success) {
       book.deletedAt = null;
       book.updatedAt = Date.now();
       book.uploadedAt = Date.now();

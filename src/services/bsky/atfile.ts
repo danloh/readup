@@ -1,16 +1,18 @@
 //  Upload, list, and manage files on AT Protocol PDS
 
-import { AtpAgent, AtpSessionData } from "@atproto/api";
-import type { AtFile } from "./types";
+import { AtpAgent, AtpSessionData, BlobRef } from "@atproto/api";
+import type { AtBook, AtFile } from "./types";
 import { AuthToken, refreshSession } from "./auth";
 import { Book } from "@/types/book";
 
 /**
- * Result returned after successfully uploading a file
+ * Result returned after successfully uploading a book
  */
 export interface UploadResult {
+  success: boolean;
   /** The uploaded blob reference */
-  blob: unknown;
+  coverblob: unknown;
+  bookblob: unknown;
   /** The created record information */
   record: {
     /** The AT URI of the created record */
@@ -21,60 +23,53 @@ export interface UploadResult {
 }
 
 /**
- * Upload a file to AT Protocol PDS and create a record
+ * Upload a file to AT Protocol PDS
  *
- * This function handles the complete upload workflow:
- * 1. Authenticates with the PDS
- * 2. Reads and uploads the file as a blob
- * 3. Calculates file checksum (SHA256)
- * 4. Gathers file metadata
- * 5. Creates a record with all information
+ * @returns A promise that resolves to the upload result containing blob and record info or null
  *
- * @param options - Upload configuration options
- * @returns A promise that resolves to the upload result containing blob and record info
- * @throws {Error} If authentication fails, file is not found, or record creation fails
- *
- * @example
- * ```ts
- * const result = await uploadFile({
- *   serviceUrl: "https://bsky.social",
- *   identifier: "alice.bsky.social",
- *   password: "app-password",
- *   filePath: "./photo.jpg"
- * });
- * console.log(`Uploaded: ${result.record.uri}`);
- * ```
  */
-export async function uploadFile(
-  file: File,
-  book: Book,
-): Promise<UploadResult> {
-  const usr = await refreshSession();
-  const host = usr.host;
-  
+export async function uploadFile(file: File, agent: AtpAgent): Promise<BlobRef| undefined> {
   // const data = await file.bytes(); // limited availability
   const arrayBuffer = await file.arrayBuffer();
   const data = new Uint8Array(arrayBuffer);
-
-  // Initialize agent
-  const agent = new AtpAgent({ service: host });
-  await agent.resumeSession(usr as AtpSessionData);
-
-  const mimeType = "application/octet-stream";
+  const mimeType = file.type || "application/octet-stream";
 
   // Upload blob
-  console.log(`⬆ Uploading ${book.title} (${data.length} bytes, ${mimeType})...`);
+  console.log(`⬆ Uploading ${file.name} (${data.length} bytes, ${mimeType})...`);
   const uploadRes = await agent.uploadBlob(data, { encoding: mimeType });
   const blob = uploadRes.data?.blob;
 
-  if (!blob) {
-    throw new Error("Upload failed: no blob returned");
-  }
-
   const blobCid = blob.ref?.["$link"] ?? blob.ref;
   console.log(`✓ Blob uploaded: ${blobCid}`);
-
   console.log("Blob structure:", JSON.stringify(blob, null, 2));
+
+  if (!blob) {
+    console.error("Upload failed: no blob returned");
+    return undefined;
+  }
+
+  return blob;
+}
+
+/**
+ * Upload book and cover file to PDS and create a book record
+ * @returns A promise that resolves to result containing blobs, record and if success
+ */
+export async function uploadBookFile(
+  book: Book,
+  bookFile?: File,
+  coverFile?: File,
+): Promise<UploadResult> {
+  const usr = await refreshSession();
+  const host = usr.host;
+  // Initialize agent
+  const agent = new AtpAgent({ service: host });
+  await agent.resumeSession(usr as AtpSessionData);
+  
+  // upload cover
+  const coverBlob = coverFile ? await uploadFile(coverFile, agent) : undefined;
+  // upload book doc
+  const bookBlob = bookFile ? await uploadFile(bookFile, agent) : undefined;
 
   // Get DID
   const did = agent.session?.did;
@@ -87,10 +82,14 @@ export async function uploadFile(
 
   // Build the record with proper typing
   // The blob from uploadBlob already has the correct structure
-  const recordData: AtFile.Main = {
-    $type: "cc.readup.rfile",
+  const recordData: AtBook.RBook = {
+    $type: "cc.readup.rbook",
     name: book.title,
-    blob: blob as unknown as AtFile.Main["blob"],
+    coverblob: coverBlob,
+    docblob: bookBlob,
+    // metadata: bookmetadata
+    // config: book cofig
+    checksum: book.hash,
     createdAt: new Date().toISOString(),
   };
 
@@ -108,7 +107,9 @@ export async function uploadFile(
   console.log(`  CID: ${createRes.data.cid}`);
 
   return {
-    blob,
+    success: createRes.success,
+    coverblob: coverBlob,
+    bookblob: bookBlob,
     record: createRes.data,
   };
 }
@@ -168,12 +169,12 @@ async function listRecords(options: ListOptions): Promise<void> {
   // Print each record
   for (const record of records) {
     const rkey = record.uri.split("/").pop() || "unknown";
-    const value = record.value as AtFile.Main;
+    const value = record.value as AtFile.RFile;
 
     // Extract relevant info
-    const fileName = value.file?.name || "unknown";
-    const fileSize = value.file?.size || 0;
-    const mimeType = value.file?.mimeType || "unknown";
+    const fileName = value.metadata?.name || "unknown";
+    const fileSize = value.metadata?.size || 0;
+    const mimeType = value.metadata?.mimeType || "unknown";
 
     // Format size for readability
     const formatSize = (bytes: number): string => {
@@ -250,7 +251,7 @@ async function showRecord(options: ShowOptions): Promise<void> {
       rkey,
     });
 
-    const record = recordResponse.data.value as AtFile.Main;
+    const record = recordResponse.data.value as AtFile.RFile;
     const uri = recordResponse.data.uri;
     const cid = recordResponse.data.cid;
 
@@ -260,22 +261,21 @@ async function showRecord(options: ShowOptions): Promise<void> {
     console.log(`CID:          ${cid}`);
     console.log(`Created:      ${record.createdAt}`);
 
-    if (record.file) {
+    if (record.metadata) {
       console.log(`\nFile Information:`);
-      console.log(`  Name:       ${record.file.name}`);
-      console.log(`  Size:       ${record.file.size} bytes`);
-      if (record.file.mimeType) {
-        console.log(`  MIME Type:  ${record.file.mimeType}`);
+      console.log(`  Name:       ${record.metadata.name}`);
+      console.log(`  Size:       ${record.metadata.size} bytes`);
+      if (record.metadata.mimeType) {
+        console.log(`  MIME Type:  ${record.metadata.mimeType}`);
       }
-      if (record.file.modifiedAt) {
-        console.log(`  Modified:   ${record.file.modifiedAt}`);
+      if (record.metadata.modifiedAt) {
+        console.log(`  Modified:   ${record.metadata.modifiedAt}`);
       }
     }
 
     if (record.checksum) {
       console.log(`\nChecksum:`);
-      console.log(`  Algorithm:  ${record.checksum.algo}`);
-      console.log(`  Hash:       ${record.checksum.hash}`);
+      console.log(`  Hash:       ${record.checksum}`);
     }
 
     if (record.attribution) {
@@ -369,7 +369,7 @@ async function getRecord(options: GetOptions): Promise<void> {
   const collection = "cc.readup.rfile";
 
   // Get the record
-  let record: AtFile.Main;
+  let record: AtFile.RFile;
   let blobCid: string;
 
   try {
@@ -379,7 +379,7 @@ async function getRecord(options: GetOptions): Promise<void> {
       rkey,
     });
 
-    record = recordResponse.data.value as AtFile.Main;
+    record = recordResponse.data.value as AtFile.RFile;
 
     // Extract blob CID
     const blob = record.blob;
@@ -430,8 +430,8 @@ async function getRecord(options: GetOptions): Promise<void> {
   };
 
   const isContentBinary = isBinary(blobData);
-  const mimeType = record.file?.mimeType || "application/octet-stream";
-  const fileName = record.file?.name || rkey;
+  const mimeType = record.metadata?.mimeType || "application/octet-stream";
+  const fileName = record.metadata?.name || rkey;
 }
 
 /**
@@ -496,7 +496,7 @@ async function deleteRecord(options: DeleteOptions): Promise<void> {
       rkey,
     });
 
-    const record = recordResponse.data.value as AtFile.Main;
+    const record = recordResponse.data.value as AtFile.RFile;
     const blob = record.blob;
 
     // Delete the record

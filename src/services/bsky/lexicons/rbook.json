@@ -1,0 +1,101 @@
+{
+  "lexicon": 1,
+  "id": "cc.readup.rfile",
+  "description": "A record for uploading and tracking binary blob files with metadata.",
+  "defs": {
+    "metadata": {
+      "type": "object",
+      "description": "Book metadata describing the uploaded book.",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "User-visible book name.",
+          "maxLength": 512
+        },
+        "subtitle": {
+          "type": "string",
+          "maxLength": 512
+        },
+        "size": {
+          "type": "integer",
+          "description": "File size in bytes.",
+          "minimum": 0,
+          "maximum": 1000000000
+        },
+        "format": {
+          "type": "string",
+          "description": "Book format, e.g. 'PDF, epub'.",
+          "maxLength": 255
+        },
+        "author": {
+          "type": "string"
+        },
+        "language": {
+          "type": "string"
+        },
+        "identifier": {
+          "type": "string"
+        }
+      },
+      "required": ["title", "language", "format", "size"]
+    },
+
+    "main": {
+      "type": "record",
+      "description": "A record representing an uploaded book.",
+      "key": "any",
+      "record": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name of the book."
+          },
+          "coverblob": {
+            "type": "blob",
+            "accept": ["*/*"],
+            "maxSize": 1000000000,
+            "description": "The uploaded blob reference of book cover. Note: Individual PDS instances may enforce lower size limits."
+          },
+
+          "bookblob": {
+            "type": "blob",
+            "accept": ["*/*"],
+            "maxSize": 1000000000,
+            "description": "The uploaded blob reference of book doc. Note: Individual PDS instances may enforce lower size limits."
+          },
+
+          "createdAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Timestamp when this record was created."
+          },
+
+          "attribution": {
+            "type": "string",
+            "format": "at-identifier",
+            "description": "Handle or DID of the account to attribute this upload to."
+          },
+
+          "metadata": {
+            "type": "ref",
+            "ref": "#metadata",
+            "description": "Metadata about the book."
+          },
+
+          "config": {
+            "type": "ref",
+            "ref": "#config",
+            "description": "Config about the book."
+          },
+
+          "checksum": {
+            "type": "string",
+            "description": "cryptographic checksum for integrity verification."
+          }
+        },
+        "required": ["name", "createdAt"]
+      }
+    }
+  }
+}
