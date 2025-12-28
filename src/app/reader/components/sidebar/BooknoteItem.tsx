@@ -4,6 +4,7 @@ import React, { useRef, useState } from 'react';
 import { marked } from 'marked';
 import { useEnv } from '@/context/EnvContext';
 import { BookNote } from '@/types/book';
+import { NOTE_PREFIX } from '@/types/view';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useReaderStore } from '@/store/readerStore';
 import { useNotebookStore } from '@/store/notebookStore';
@@ -11,9 +12,9 @@ import { useBookDataStore } from '@/store/bookDataStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useResponsiveSize } from '@/hooks/useResponsiveSize';
 import { eventDispatcher } from '@/utils/event';
-import useScrollToItem from '../../hooks/useScrollToItem';
 import TextButton from '@/components/TextButton';
 import TextEditor, { TextEditorRef } from '@/components/TextEditor';
+import useScrollToItem from '../../hooks/useScrollToItem';
 
 interface BooknoteItemProps {
   bookKey: string;
@@ -56,7 +57,9 @@ const BooknoteItem: React.FC<BooknoteItemProps> = ({ bookKey, item }) => {
       if (item.id === note.id) {
         item.deletedAt = Date.now();
         const views = getViewsById(bookKey.split('-')[0]!);
-        views.forEach((view) => view?.addAnnotation(item, true));
+        views.forEach((view) =>
+          view?.addAnnotation({ ...item, value: `${NOTE_PREFIX}${item.cfi}` }, true),
+        );
       }
     });
     const updatedConfig = updateBooknotes(bookKey, booknotes);
