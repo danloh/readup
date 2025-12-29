@@ -58,6 +58,9 @@ const FooterBar: React.FC<FooterBarProps> = ({
   const viewSettings = getViewSettings(bookKey);
   const viewState = getViewState(bookKey);
 
+  const docs = view?.renderer.getContents() ?? [];
+  const pointerInDoc = docs.some(({ doc }) => doc.body.style.cursor === 'pointer');
+
   const handleProgressChange = (value: number) => {
     view?.goToFraction(value / 100.0);
   };
@@ -202,7 +205,7 @@ const FooterBar: React.FC<FooterBarProps> = ({
         className={clsx(
           'absolute bottom-0 left-0 z-10 flex h-[52px] w-full',
           needHorizontalScroll && 'sm:!bottom-3 sm:!h-7',
-          isMobile ? 'pointer-events-none' : '',
+          isMobile || pointerInDoc ? 'pointer-events-none' : '',
         )}
         onClick={() => setHoveredBookKey(bookKey)}
         onMouseEnter={() => !isMobile && setHoveredBookKey(bookKey)}
