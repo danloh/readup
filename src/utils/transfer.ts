@@ -15,11 +15,23 @@ export interface ProgressPayload {
 
 export type ProgressHandler = (progress: ProgressPayload) => void;
 
-export const webUpload = (file: File, uploadUrl: string, onProgress?: ProgressHandler) => {
+export const webUpload = (
+  file: File, 
+  uploadUrl: string, 
+  onProgress?: ProgressHandler,
+  headers?: Record<string, string>,
+) => {
   return new Promise<void>((resolve, reject) => {
     const startTime = Date.now();
     const xhr = new XMLHttpRequest();
     xhr.open('PUT', uploadUrl, true);
+    
+    if (headers) {
+      for (const [key, val] of Object.entries(headers)) {
+        console.log(`${key}: ${val}`);
+        xhr.setRequestHeader(key, val);
+      }
+    }
 
     xhr.upload.onprogress = (event) => {
       if (onProgress && event.lengthComputable) {

@@ -12,7 +12,7 @@ type Props = {
 export default function AuthPage({handleClose}: Props) {
   const _ = useTranslation();
   const { login } = useAuth();
-  const [host, setHost] = useState('bsky.social');
+  const [host, setHost] = useState('https://bsky.social');
   const [handle, setHandle] = useState('');
   const [password, setPassword] = useState('');
 
@@ -48,9 +48,9 @@ export default function AuthPage({handleClose}: Props) {
               type="text"
               name="host"
               id="host" 
-              placeholder="such as: bsky.social"
-              value="bsky.social" 
-              onChange={(event) => setHost(event.target.value || 'bsky.social')}
+              placeholder="such as: https://bsky.social"
+              value="https://bsky.social" 
+              onChange={(event) => setHost(event.target.value || 'https://bsky.social')}
               className="grow" 
             />
           </label>

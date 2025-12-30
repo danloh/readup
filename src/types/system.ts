@@ -111,7 +111,6 @@ export interface AppService {
     redownload?: boolean,
     onProgress?: ProgressHandler,
   ): Promise<void>;
-  downloadBookCovers(books: Book[], redownload?: boolean): Promise<void>;
   isBookAvailable(book: Book): Promise<boolean>;
   getBookFileSize(book: Book): Promise<number | null>;
   loadBookConfig(book: Book, settings: SystemSettings): Promise<BookConfig>;

@@ -451,43 +451,7 @@ export abstract class BaseAppService implements AppService {
     const dstPath = `${this.localBooksDir}/${lfp}`;
     await downloadFile({ appService: this, cfp, dst: dstPath, onProgress });
   }
-
-  async downloadBookCovers(books: Book[]): Promise<void> {
-    const booksLfps = new Map(
-      books.map((book) => {
-        const lfp = getCoverFilename(book);
-        return [lfp, book];
-      }),
-    );
-    const filePaths = books.map((book) => ({
-      lfp: getCoverFilename(book),
-      cfp: `${CLOUD_BOOKS_SUBDIR}/${getCoverFilename(book)}`,
-    }));
-    const downloadUrls = await batchGetDownloadUrls(filePaths);
-    await Promise.all(
-      books.map(async (book) => {
-        if (!(await this.fs.exists(getDir(book), 'Books'))) {
-          await this.fs.createDir(getDir(book), 'Books');
-        }
-      }),
-    );
-    await Promise.all(
-      downloadUrls.map(async (file) => {
-        try {
-          const dst = `${this.localBooksDir}/${file.lfp}`;
-          if (!file.downloadUrl) return;
-          await downloadFile({ appService: this, dst, cfp: file.cfp, url: file.downloadUrl });
-          const book = booksLfps.get(file.lfp);
-          if (book && !book.coverDownloadedAt) {
-            book.coverDownloadedAt = Date.now();
-          }
-        } catch (error) {
-          console.log(`Failed to download cover file for book: '${file.lfp}'`, error);
-        }
-      }),
-    );
-  }
-
+  
   async downloadBook(
     book: Book,
     onlyCover = false,

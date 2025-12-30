@@ -158,9 +158,9 @@ export namespace AtBook {
     createdAt: string;
     coverblob?: BlobRef;
     docblob?: BlobRef;
+    config?: BookConfig;
     metadata?: BookMetadata;
     checksum?: string; // md5 hash
-    config?: BookConfig;
     attribution?: string;
   };
 }

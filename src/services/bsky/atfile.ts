@@ -4,6 +4,7 @@ import { AtpAgent, AtpSessionData, BlobRef } from "@atproto/api";
 import type { AtBook, AtFile } from "./types";
 import { AuthToken, refreshSession } from "./auth";
 import { Book } from "@/types/book";
+import { webDownload } from "@/utils/transfer";
 
 /**
  * Result returned after successfully uploading a book
@@ -77,13 +78,13 @@ export async function uploadBookFile(
     throw new Error("Could not determine DID from session");
   }
 
-  // Create record according to cc.readup.rfile lexicon (corrected collection name)
-  const collection = "cc.readup.rfile";
+  // Create record according to cc.readup.rbook lexicon (corrected collection name)
+  const collection = "cc.readup.rbook";
 
   // Build the record with proper typing
   // The blob from uploadBlob already has the correct structure
   const recordData: AtBook.RBook = {
-    $type: "cc.readup.rbook",
+    $type: collection,
     name: book.title,
     coverblob: coverBlob,
     docblob: bookBlob,
@@ -94,17 +95,15 @@ export async function uploadBookFile(
   };
 
   console.log("Record data:", JSON.stringify(recordData, null, 2));
-
-  console.log(`📝 Creating record in ${collection}...`);
-  const createRes = await agent.com.atproto.repo.createRecord({
+  console.log(`Creating record in ${collection}...`);
+  const createRes = await agent.com.atproto.repo.putRecord({
     repo: did,
     collection,
     rkey: book.hash,
     record: recordData,
   });
 
-  console.log(`✓ Record created: ${createRes.data.uri}`);
-  console.log(`  CID: ${createRes.data.cid}`);
+  console.log(`✓ Record created: URI: ${createRes.data.uri} | CID: ${createRes.data.cid}`);
 
   return {
     success: createRes.success,
@@ -323,6 +322,54 @@ interface GetOptions {
 }
 
 /**
+ * Result returned after successfully uploading a book
+ */
+export interface DownloadResult {
+  rkey: string;
+  /** The download data */
+  coverData?: Blob;
+  docData?: Blob;
+  /** The download record information */
+  record: AtBook.RBook;
+}
+
+// Determine if content is binary
+const isBinary = (data: Uint8Array): boolean => {
+  // Check first 8KB for null bytes or high proportion of non-text chars
+  const sample = data.slice(0, Math.min(8192, data.length));
+  let nonTextCount = 0;
+
+  for (let i = 0; i < sample.length; i++) {
+    const byte = sample[i];
+    // Null byte is definite binary
+    if (!byte || byte === 0) return true;
+    // Count non-printable, non-whitespace characters
+    if (byte < 32 && byte !== 9 && byte !== 10 && byte !== 13) {
+      nonTextCount++;
+    }
+  }
+
+  // If more than 30% non-text characters, consider it binary
+  return (nonTextCount / sample.length) > 0.3;
+};
+
+export async function downloadFile(blobUrl: string): Promise<ArrayBuffer | undefined> {
+  const response = await fetch(blobUrl);
+
+  if (!response.ok) {
+    throw new Error(`Failed to download blob: ${response.statusText}`);
+  }
+
+  const blobData = await response.arrayBuffer();
+
+  // const isContentBinary = isBinary(blobData);
+  // const mimeType = record.metadata?.mimeType || "application/octet-stream";
+  // const fileName = record.metadata?.name || rkey;
+
+  return blobData;
+}
+
+/**
  * Retrieve file content from a record
  *
  * Downloads the blob content associated with a file record and either outputs
@@ -353,12 +400,12 @@ interface GetOptions {
  * });
  * ```
  */
-async function getRecord(options: GetOptions): Promise<void> {
-  const { serviceUrl, session, rkey, outputPath } = options;
-
+async function getRecord(rkey: string): Promise<DownloadResult> {
+  const usr = await refreshSession();
+  const serv = usr.service;
   // Initialize agent
-  const agent = new AtpAgent({ service: serviceUrl });
-  await agent.resumeSession(session as AtpSessionData);
+  const agent = new AtpAgent({ service: usr.host });
+  await agent.resumeSession(usr as AtpSessionData);
 
   // Get DID
   const did = agent.session?.did;
@@ -366,72 +413,59 @@ async function getRecord(options: GetOptions): Promise<void> {
     throw new Error("Could not determine DID from session");
   }
 
-  const collection = "cc.readup.rfile";
+  const collection = "cc.readup.rbook";
 
   // Get the record
-  let record: AtFile.RFile;
-  let blobCid: string;
+  let coverCid: string = '';
+  let docCid: string = '';
 
-  try {
-    const recordResponse = await agent.com.atproto.repo.getRecord({
-      repo: did,
-      collection,
-      rkey,
-    });
+  const recordResponse = await agent.com.atproto.repo.getRecord({
+    repo: did,
+    collection,
+    rkey,
+  });
 
-    record = recordResponse.data.value as AtFile.RFile;
+  const record = recordResponse.data.value as AtBook.RBook;
 
-    // Extract blob CID
-    const blob = record.blob;
-    if (!blob || typeof blob !== "object" || !("ref" in blob)) {
-      throw new Error("No blob found in record");
-    }
-
-    const blobRef = blob.ref;
-    blobCid = typeof blobRef === "object" && blobRef && "$link" in blobRef
-      ? blobRef.$link as string
-      : blobRef as string;
-  } catch (error) {
-    if (error instanceof Error && error.message.includes("not found")) {
-      throw new Error(`Record not found: ${rkey}`);
-    }
-    throw error;
+  // Extract cover blob CID
+  const coverblob = record.coverblob;
+  if (!coverblob || typeof coverblob !== "object" || !("ref" in coverblob)) {
+    console.error("No Cover blob found in record");
+  } else {
+    const coverRef = coverblob.ref;
+    coverCid = typeof coverRef === "object" && coverRef && "$link" in coverRef
+      ? coverRef.$link as string
+      : coverRef as string;
   }
 
-  // Download the blob
-  const blobUrl =
-    `${serviceUrl}/xrpc/com.atproto.sync.getBlob?did=${did}&cid=${blobCid}`;
-  const response = await fetch(blobUrl);
-
-  if (!response.ok) {
-    throw new Error(`Failed to download blob: ${response.statusText}`);
+  // Extract cover blob CID
+  const docblob = record.docblob;
+  if (!docblob || typeof docblob !== "object" || !("ref" in docblob)) {
+    console.error("No Doc blob found in record");
+  } else {
+    const docRef = docblob.ref;
+    docCid = typeof docRef === "object" && docRef && "$link" in docRef
+      ? docRef.$link as string
+      : docRef as string;
   }
 
-  const blobData = new Uint8Array(await response.arrayBuffer());
+  // Download the cover blob
+  const coverUrl = coverCid
+    ? `${serv}/xrpc/com.atproto.sync.getBlob?did=${did}&cid=${coverCid}`
+    : undefined;
+  const coverData = coverUrl ? await webDownload(coverUrl) : undefined;
+  // Download the book doc blob
+  const docUrl = docCid
+    ? `${serv}/xrpc/com.atproto.sync.getBlob?did=${did}&cid=${docCid}`
+    : undefined;
+  const docData = docUrl ? await webDownload(docUrl) : undefined;
 
-  // Determine if content is binary
-  const isBinary = (data: Uint8Array): boolean => {
-    // Check first 8KB for null bytes or high proportion of non-text chars
-    const sample = data.slice(0, Math.min(8192, data.length));
-    let nonTextCount = 0;
-
-    for (let i = 0; i < sample.length; i++) {
-      const byte = sample[i];
-      // Null byte is definite binary
-      if (!byte || byte === 0) return true;
-      // Count non-printable, non-whitespace characters
-      if (byte < 32 && byte !== 9 && byte !== 10 && byte !== 13) {
-        nonTextCount++;
-      }
-    }
-
-    // If more than 30% non-text characters, consider it binary
-    return (nonTextCount / sample.length) > 0.3;
+  return {
+    rkey,
+    coverData,
+    docData,
+    record,
   };
-
-  const isContentBinary = isBinary(blobData);
-  const mimeType = record.metadata?.mimeType || "application/octet-stream";
-  const fileName = record.metadata?.name || rkey;
 }
 
 /**
