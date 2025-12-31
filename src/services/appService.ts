@@ -30,6 +30,22 @@ import {
 import { md5, partialMD5 } from '@/utils/md5';
 import { getBaseFilename, getFilename } from '@/utils/path';
 import { BookDoc, DocumentLoader, EXTS } from '@/libs/document';
+import { getOSPlatform, getTargetLang, isCJKEnv, isContentURI, isValidURL } from '@/utils/misc';
+import { deserializeConfig, serializeConfig } from '@/utils/serializer';
+import {
+  downloadFile,
+  //uploadFile,
+  deleteFile,
+  createProgressHandler,
+  batchGetDownloadUrls,
+} from '@/libs/storage';
+import { ClosableFile } from '@/utils/file';
+import { ProgressHandler } from '@/utils/transfer';
+import { TxtToEpubConverter } from '@/utils/txt';
+import { svg2png } from '@/utils/svg';
+import { ArticleType, FeedType } from '@/app/feed/components/dataAgent';
+import { BOOK_FILE_NOT_FOUND_ERROR } from './errors';
+import { uploadBookFile, UploadResult } from './bsky/atfile';
 import {
   DEFAULT_BOOK_LAYOUT,
   DEFAULT_BOOK_STYLE,
@@ -48,23 +64,8 @@ import {
   DEFAULT_SCREEN_CONFIG,
   DEFAULT_TRANSLATOR_CONFIG,
   SETTINGS_FILENAME,
+  DEFAULT_ANNOTATOR_CONFIG,
 } from './constants';
-import { getOSPlatform, getTargetLang, isCJKEnv, isContentURI, isValidURL } from '@/utils/misc';
-import { deserializeConfig, serializeConfig } from '@/utils/serializer';
-import {
-  downloadFile,
-  //uploadFile,
-  deleteFile,
-  createProgressHandler,
-  batchGetDownloadUrls,
-} from '@/libs/storage';
-import { ClosableFile } from '@/utils/file';
-import { ProgressHandler } from '@/utils/transfer';
-import { TxtToEpubConverter } from '@/utils/txt';
-import { svg2png } from '@/utils/svg';
-import { ArticleType, FeedType } from '@/app/feed/components/dataAgent';
-import { BOOK_FILE_NOT_FOUND_ERROR } from './errors';
-import { uploadBookFile, UploadResult } from './bsky/atfile';
 
 export abstract class BaseAppService implements AppService {
   osPlatform: OsPlatform = getOSPlatform();
@@ -176,6 +177,7 @@ export abstract class BaseAppService implements AppService {
       ...DEFAULT_VIEW_CONFIG,
       ...DEFAULT_TTS_CONFIG,
       ...DEFAULT_SCREEN_CONFIG,
+      ...DEFAULT_ANNOTATOR_CONFIG,
       ...{ ...DEFAULT_TRANSLATOR_CONFIG, translateTargetLang: getTargetLang() },
     };
   }

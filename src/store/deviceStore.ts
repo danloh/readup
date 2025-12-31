@@ -1,10 +1,12 @@
 import { create } from 'zustand';
 import { interceptKeys, getScreenBrightness, setScreenBrightness } from '@/utils/bridge';
 import { eventDispatcher } from '@/utils/event';
+import { NativeTouchEventType } from '@/types/system';
 
 declare global {
   interface Window {
     onNativeKeyDown?: (keyName: string) => void;
+    onNativeTouch?: (event: NativeTouchEventType) => void;
   }
 }
 
@@ -29,6 +31,7 @@ type DeviceControlState = {
   releaseVolumeKeyInterception: () => void;
   acquireBackKeyInterception: () => void;
   releaseBackKeyInterception: () => void;
+  listenToNativeTouchEvents: () => void;
 };
 
 export const useDeviceControlStore = create<DeviceControlState>((set, get) => ({
@@ -84,5 +87,11 @@ export const useDeviceControlStore = create<DeviceControlState>((set, get) => ({
 
   setScreenBrightness: async (brightness: number) => {
     await setScreenBrightness({ brightness });
+  },
+
+  listenToNativeTouchEvents: () => {
+    window.onNativeTouch = (event: NativeTouchEventType) => {
+      return eventDispatcher.dispatch('native-touch', event);
+    };
   },
 }));

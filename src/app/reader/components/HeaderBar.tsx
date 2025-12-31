@@ -2,6 +2,8 @@ import clsx from 'clsx';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { PiDotsThreeVerticalBold } from 'react-icons/pi';
 
+import { saveViewSettings } from '@/helpers/settings';
+import { AnnotationToolType } from '@/types/annotator';
 import { Insets } from '@/types/misc';
 import { useEnv } from '@/context/EnvContext';
 import { useThemeStore } from '@/store/themeStore';
@@ -17,6 +19,8 @@ import SidebarToggler from './SidebarToggler';
 import NotebookToggler from './NotebookToggler';
 import SettingsToggler from './SettingsToggler';
 import ViewMenu from './ViewMenu';
+import { annotationToolQuickActions } from './annotator/AnnotationTools';
+import QuickActionMenu from './annotator/QuickActionMenu';
 
 interface HeaderBarProps {
   bookKey: string;
@@ -36,19 +40,33 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
   onCloseBook,
 }) => {
   const _ = useTranslation();
-  const { appService } = useEnv();
+  const { envConfig, appService } = useEnv();
   const headerRef = useRef<HTMLDivElement>(null);
   const { isTrafficLightVisible } = useTrafficLight();
   const { trafficLightInFullscreen, setTrafficLightVisibility } = useTrafficLightStore();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const { bookKeys, hoveredBookKey, setHoveredBookKey, getView } = useReaderStore();
+  const { bookKeys, hoveredBookKey, getView, getViewSettings, setHoveredBookKey } = useReaderStore();
   const { systemUIVisible, statusBarHeight } = useThemeStore();
   const { isSideBarVisible } = useSidebarStore();
   const iconSize16 = useResponsiveSize(16);
 
+  const viewSettings = getViewSettings(bookKey);
   const view = getView(bookKey);
   const docs = view?.renderer.getContents() ?? [];
   const pointerInDoc = docs.some(({ doc }) => doc.body.style.cursor === 'pointer');
+
+  const enableAnnotationQuickActions = viewSettings?.enableAnnotationQuickActions;
+  const annotationQuickActionButton =
+    annotationToolQuickActions.find(
+      (button) => button.type === viewSettings?.annotationQuickAction,
+    ) || annotationToolQuickActions[0]!;
+  const annotationQuickAction = viewSettings?.annotationQuickAction;
+  const AnnotationToolQuickActionIcon = annotationQuickActionButton.Icon;
+
+  const handleAnnotationQuickActionSelect = (action: AnnotationToolType | null) => {
+    if (viewSettings?.annotationQuickAction === action) action = null;
+    saveViewSettings(envConfig, bookKey, 'annotationQuickAction', action, false, true);
+  };
 
   const windowButtonVisible = appService?.hasWindowBar && !isTrafficLightVisible;
 
@@ -137,6 +155,27 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
           <div className='hidden sm:flex'>
             <SidebarToggler bookKey={bookKey} />
           </div>
+          {enableAnnotationQuickActions && (
+            <Dropdown
+              label={
+                annotationQuickAction
+                  ? _('Disable Quick Action')
+                  : _('Enable Quick Action on Selection')
+              }
+              className='exclude-title-bar-mousedown dropdown-bottom'
+              buttonClassName={clsx(
+                'btn btn-ghost h-8 min-h-8 w-8 p-0',
+                viewSettings?.annotationQuickAction && 'bg-base-300/50',
+              )}
+              toggleButton={<AnnotationToolQuickActionIcon size={iconSize16} />}
+              onToggle={handleToggleDropdown}
+            >
+              <QuickActionMenu
+                selectedAction={viewSettings.annotationQuickAction}
+                onActionSelect={handleAnnotationQuickActionSelect}
+              />
+            </Dropdown>
+          )}
         </div>
 
         <div

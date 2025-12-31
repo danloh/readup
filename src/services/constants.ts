@@ -1,4 +1,5 @@
 import {
+  AnnotatorConfig,
   BookFont,
   BookLayout,
   BookSearchConfig,
@@ -196,6 +197,12 @@ export const DEFAULT_TRANSLATOR_CONFIG: TranslatorConfig = {
   translateTargetLang: '',
   showTranslateSource: true,
   ttsReadAloudText: 'both',
+};
+
+export const DEFAULT_ANNOTATOR_CONFIG: AnnotatorConfig = {
+  enableAnnotationQuickActions: true,
+  annotationQuickAction: null,
+  copyToNotebook: false,
 };
 
 export const DEFAULT_SCREEN_CONFIG: ScreenConfig = {

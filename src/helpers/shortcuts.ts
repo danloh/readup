@@ -15,6 +15,7 @@ const DEFAULT_SHORTCUTS = {
   onTranslateSelection: ['ctrl+t', 'cmd+t'],
   onDictionarySelection: ['ctrl+d', 'cmd+d'],
   onWikipediaSelection: ['ctrl+w', 'cmd+w'],
+  onProofreadSelection: ['ctrl+p', 'cmd+p'],
   onReadAloudSelection: ['ctrl+r', 'cmd+r'],
   onOpenFontLayoutSettings: ['shift+f', 'ctrl+,', 'cmd+,'],
   onOpenBooks: ['ctrl+o'],

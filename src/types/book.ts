@@ -1,4 +1,5 @@
 import { BookMetadata } from '@/libs/document';
+import { AnnotationToolType } from './annotator';
 export type BookFormat = 'EPUB' | 'PDF' | 'MOBI' | 'AZW' | 'AZW3' | 'CBZ' | 'FB2' | 'FBZ';
 export type BookNoteType = 'bookmark' | 'annotation' | 'excerpt';
 export type HighlightStyle = 'highlight' | 'underline' | 'squiggly';
@@ -215,6 +216,12 @@ export interface ProofreadRulesConfig {
   proofreadRules?: ProofreadRule[];
 }
 
+export interface AnnotatorConfig {
+  enableAnnotationQuickActions: boolean;
+  annotationQuickAction: AnnotationToolType | null;
+  copyToNotebook: boolean;
+}
+
 export interface ViewSettings
   extends BookLayout,
     BookStyle,
@@ -224,7 +231,8 @@ export interface ViewSettings
     TTSConfig,
     TranslatorConfig,
     ScreenConfig,
-    ProofreadRulesConfig {}
+    ProofreadRulesConfig,
+    AnnotatorConfig {}
 
 export interface BookProgress {
   location: string;

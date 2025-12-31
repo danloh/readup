@@ -11,6 +11,16 @@ export type DeleteAction = 'cloud' | 'local' | 'both';
 export type SelectDirectoryMode = 'read' | 'write';
 export type DistChannel = 'readup' | 'playstore' | 'appstore' | 'unknown';
 
+export type NativeTouchEventType = {
+  type: 'touchstart' | 'touchcancel' | 'touchend';
+  pointerId: number;
+  x: number;
+  y: number;
+  pressure: number;
+  pointerCount: number;
+  timestamp: number;
+};
+
 export type ResolvedPath = {
   baseDir: number;
   basePrefix: () => Promise<string>;

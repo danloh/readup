@@ -1,20 +1,18 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { FiSearch, FiCopy } from 'react-icons/fi';
-import { PiFeatherDuotone } from 'react-icons/pi';
-import { FaWikipediaW } from 'react-icons/fa';
-import { BsTranslate } from 'react-icons/bs';
-import { TbHighlight, TbHighlightOff, TbHexagonLetterD, TbZoomReplace } from "react-icons/tb";
-import { RiSpeakAiLine } from "react-icons/ri";
+import { TbHighlightOff } from "react-icons/tb";
 import * as CFI from 'foliate-js/epubcfi.js';
 import { Overlayer } from 'foliate-js/overlayer.js';
+
 import { useEnv } from '@/context/EnvContext';
 import { BookNote, BooknoteGroup, HighlightColor, HighlightStyle } from '@/types/book';
 import { NOTE_PREFIX } from '@/types/view';
+import { NativeTouchEventType } from '@/types/system';
 import { getOSPlatform, uniqueId } from '@/utils/misc';
 import { useBookDataStore } from '@/store/bookDataStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useReaderStore } from '@/store/readerStore';
 import { useNotebookStore } from '@/store/notebookStore';
+import { useDeviceControlStore } from '@/store/deviceStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useResponsiveSize } from '@/hooks/useResponsiveSize';
 import useShortcuts from '@/hooks/useShortcuts';
@@ -23,10 +21,11 @@ import { eventDispatcher } from '@/utils/event';
 import { findTocItemBS } from '@/utils/toc';
 import { throttle } from '@/utils/throttle';
 import { getWordCount } from '@/utils/word';
-import { HIGHLIGHT_COLOR_HEX } from '@/services/constants';
 import { useFoliateEvents } from '../../hooks/useFoliateEvents';
 // import { useNotesSync } from '../../hooks/useNotesSync';
 import { useTextSelector } from '../../hooks/useTextSelector';
+import { getHighlightColorHex } from '../../utils/annotatorUtil';
+import { annotationToolButtons } from './AnnotationTools';
 import AnnotationPopup from './AnnotationPopup';
 import WiktionaryPopup from './WiktionaryPopup';
 import WikipediaPopup from './WikipediaPopup';
@@ -40,6 +39,7 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
   const { getConfig, saveConfig, getBookData, updateBooknotes } = useBookDataStore();
   const { getProgress, getView, getViewsById, getViewSettings } = useReaderStore();
   const { setNotebookVisible, setNotebookNewAnnotation } = useNotebookStore();
+  const { listenToNativeTouchEvents } = useDeviceControlStore();
 
   // useNotesSync(bookKey);  // FIXME
 
@@ -156,12 +156,8 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
     [],
   );
 
-  const handleDismissPopupAndSelection = () => {
-    handleDismissPopup();
-    view?.deselect();
-  };
-
   const {
+    isTextSelected,
     handleScroll,
     handleTouchStart,
     handleTouchEnd,
@@ -173,6 +169,12 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
     handleContextmenu,
   } = useTextSelector(bookKey, setSelection, handleDismissPopup);
 
+  const handleDismissPopupAndSelection = () => {
+    handleDismissPopup();
+    view?.deselect();
+    isTextSelected.current = false;
+  };
+
   const onLoad = (event: Event) => {
     const detail = (event as CustomEvent).detail;
     const { doc, index } = detail;
@@ -182,6 +184,21 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
       // To make the popup not follow the selection while dragging
       setShowAnnotPopup(false);
     };
+
+    const handleNativeTouch = (event: CustomEvent) => {
+      const ev = event.detail as NativeTouchEventType;
+      if (ev.type === 'touchstart') {
+        handleTouchStart();
+      } else if (ev.type === 'touchend') {
+        handleTouchEnd();
+        handlePointerup(doc, index);
+      }
+    };
+
+    if (appService?.isAndroidApp) {
+      listenToNativeTouchEvents();
+      eventDispatcher.on('native-touch', handleNativeTouch);
+    }
 
     // Attach generic selection listeners for all formats, including PDF.
     // For PDF we only guarantee Copy & Translate; highlight/annotate may be limited by CFI support.
@@ -197,7 +214,7 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
     detail.doc?.addEventListener('pointerup', (ev: PointerEvent) =>
       handlePointerup(doc, index, ev),
     );
-    detail.doc?.addEventListener('selectionchange', () => handleSelectionchange(doc, index));
+    detail.doc?.addEventListener('selectionchange', () => handleSelectionchange(doc));
 
     // For PDF selections, enable right-click context menu to directly open translator popup.
     if (bookData.book?.format === 'PDF') {
@@ -235,10 +252,7 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
     const detail = (event as CustomEvent).detail;
     const { draw, annotation, doc, range } = detail;
     const { style, color } = annotation as BookNote;
-    const customColors = settings.globalReadSettings.customHighlightColors;
-    const hexColor = color && customColors 
-      ? customColors[color] 
-      : color ? HIGHLIGHT_COLOR_HEX[color] : color;
+    const hexColor = getHighlightColorHex(settings, color);
       
     if (annotation.note) {
       const { defaultView } = doc;
@@ -356,6 +370,32 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const handleQuickAction = () => {
+    const action = viewSettings.annotationQuickAction;
+    switch (action) {
+      case 'copy':
+        handleCopy(false);
+        handleDismissPopupAndSelection();
+        break;
+      case 'highlight':
+        handleHighlight();
+        handleDismissPopupAndSelection();
+        break;
+      case 'dictionary':
+        handleDictionary();
+        break;
+      case 'wikipedia':
+        handleWikipedia();
+        break;
+      case 'translate':
+        handleTranslation();
+        break;
+      case 'tts':
+        handleSpeakText(true);
+        break;
+    }
+  };
+
   useEffect(() => {
     setHighlightOptionsVisible(!!(selection && selection.annotated));
     if (selection && selection.text.trim().length > 0) {
@@ -402,9 +442,16 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
       setProofreadPopupPosition(proofreadPopupPos);
       setTrianglePosition(triangPos);
       handleShowAnnotPopup();
+
+      const { enableAnnotationQuickActions, annotationQuickAction } = viewSettings;
+      if (enableAnnotationQuickActions && annotationQuickAction && isTextSelected.current) {
+        handleQuickAction();
+      } else {
+        handleShowAnnotPopup();
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selection, bookKey]);
+  }, [selection?.cfi, bookKey]);
 
   useEffect(() => {
     if (!progress) return;
@@ -460,7 +507,7 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
     setShowWikipediaPopup(false);
   };
 
-  const handleCopy = (copyToNotebook = true, dismissPopup = true) => {
+  const handleCopy = (dismissPopup = true) => {
     if (!selection || !selection.text) return;
 
     setTimeout(() => {
@@ -472,7 +519,7 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
       handleDismissPopupAndSelection();
     }
 
-    if (!copyToNotebook) return;
+    if (!viewSettings?.copyToNotebook) return;
 
     eventDispatcher.dispatch('toast', {
       type: 'info',
@@ -513,6 +560,7 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
   };
 
   const handleHighlight = (update = false, highlightStyle?: HighlightStyle) => {
+    console.log("click highlight", update);
     if (!selection || !selection.text) return;
     setHighlightOptionsVisible(true);
     const { booknotes: annotations = [] } = config;
@@ -595,14 +643,14 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
     setShowTsPopup(true);
   };
 
-  const handleSpeakText = async () => {
+  const handleSpeakText = async (oneTime = false) => {
     if (!selection || !selection.text) return;
     setShowAnnotPopup(false);
-    eventDispatcher.dispatch('tts-speak', { bookKey, range: selection.range });
+    eventDispatcher.dispatch('tts-speak', { bookKey, range: selection.range, oneTime });
     eventDispatcher.dispatch('tts-popup');
   };
 
-  const handleShowProofreadOptions = () => {
+  const handleProofread = () => {
     if (!selection || !selection.text) return;
     setShowAnnotPopup(false);
     setShowProofreadPopup(true);
@@ -633,7 +681,7 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
         handleSearch();
       },
       onCopySelection: () => {
-        handleCopy(false, false);
+        handleCopy(false);
       },
       onTranslateSelection: () => {
         handleTranslation();
@@ -646,6 +694,9 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
       },
       onReadAloudSelection: () => {
         handleSpeakText();
+      },
+      onProofreadSelection: () => {
+        handleProofread();
       },
     },
     [selection?.text],
@@ -737,42 +788,55 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
   };
 
   const selectionAnnotated = selection?.annotated;
-  const buttons = [
-    { tooltipText: _('Copy'), Icon: FiCopy, onClick: handleCopy },
-    {
-      tooltipText: selectionAnnotated ? _('Delete Highlight') : _('Highlight'),
-      Icon: selectionAnnotated ? TbHighlightOff : TbHighlight,
-      onClick: handleHighlight,
-      disabled: bookData.book?.format === 'PDF',
-    },
-    {
-      tooltipText: _('Annotate'),
-      Icon: PiFeatherDuotone,
-      onClick: handleAnnotate,
-      disabled: bookData.book?.format === 'PDF',
-    },
-    {
-      tooltipText: _('Search'),
-      Icon: FiSearch,
-      onClick: handleSearch,
-      disabled: bookData.book?.format === 'PDF',
-    },
-    { tooltipText: _('Dictionary'), Icon: TbHexagonLetterD, onClick: handleDictionary },
-    { tooltipText: _('Wikipedia'), Icon: FaWikipediaW, onClick: handleWikipedia },
-    { tooltipText: _('Translate'), Icon: BsTranslate, onClick: handleTranslation },
-    {
-      tooltipText: _('Audio'),
-      Icon: RiSpeakAiLine,
-      onClick: handleSpeakText,
-      disabled: bookData.book?.format === 'PDF',
-    },
-    {
-      tooltipText: _('Proofread'),
-      Icon: TbZoomReplace,
-      onClick: handleShowProofreadOptions,
-      disabled: bookData.book?.format !== 'EPUB',
-    },
-  ];
+  const toolButtons = annotationToolButtons.map(({ type, label, Icon }) => {
+    switch (type) {
+      case 'copy':
+        return { tooltipText: _(label), Icon, onClick: handleCopy };
+      case 'highlight':
+        return {
+          tooltipText: selectionAnnotated ? _('Delete Highlight') : _(label),
+          Icon: selectionAnnotated ? TbHighlightOff : Icon,
+          onClick: handleHighlight,
+          disabled: bookData.book?.format === 'PDF',
+        };
+      case 'annotate':
+        return {
+          tooltipText: _(label),
+          Icon,
+          onClick: handleAnnotate,
+          disabled: bookData.book?.format === 'PDF',
+        };
+      case 'search':
+        return {
+          tooltipText: _(label),
+          Icon,
+          onClick: handleSearch,
+          disabled: bookData.book?.format === 'PDF',
+        };
+      case 'dictionary':
+        return { tooltipText: _(label), Icon, onClick: handleDictionary };
+      case 'wikipedia':
+        return { tooltipText: _(label), Icon, onClick: handleWikipedia };
+      case 'translate':
+        return { tooltipText: _(label), Icon, onClick: handleTranslation };
+      case 'tts':
+        return {
+          tooltipText: _(label),
+          Icon,
+          onClick: handleSpeakText,
+          disabled: bookData.book?.format === 'PDF',
+        };
+      case 'proofread':
+        return {
+          tooltipText: _(label),
+          Icon,
+          onClick: handleProofread,
+          disabled: bookData.book?.format !== 'EPUB',
+        };
+      default:
+        return { tooltipText: '', Icon, onClick: () => {} };
+    }
+  });
 
   return (
     <div ref={containerRef} role='toolbar' tabIndex={-1}>
@@ -824,7 +888,7 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
           bookKey={bookKey}
           dir={viewSettings.rtl ? 'rtl' : 'ltr'}
           isVertical={viewSettings.vertical}
-          buttons={buttons}
+          buttons={toolButtons}
           notes={annotationNotes}
           position={annotPopupPosition}
           trianglePosition={trianglePosition}
