@@ -45,6 +45,8 @@ import BookDetailModal from './metadata/BookDetailModal';
 import LibraryHeader from './LibraryHeader';
 import Bookshelf from './Bookshelf';
 import { requestStoragePermission } from '@/utils/permission';
+import { useTransferQueue } from '@/hooks/useTransferQueue';
+// import { transferManager } from '@/services/transferManager';
 
 const LibraryPageWithSearchParams = () => {
   const searchParams = useSearchParams();
@@ -83,6 +85,7 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
   useUICSS();
 
   useOpenWithBooks();
+  useTransferQueue(libraryLoaded);
 
   // usePullToRefresh(containerRef, pullLibrary);
   useScreenWakeLock(settings.screenWakeLock);
@@ -399,6 +402,11 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
           // book.groupId = getGroupId(groupName);
           await updateBook(envConfig, book);
         }
+        // TODO
+        // if (user && book && !book.uploadedAt) {
+        //   console.log('Queueing upload for book:', book.title);
+        //   transferManager.queueUpload(book);
+        // }
 
         if (book) {
           successfulImports.push(book.title);

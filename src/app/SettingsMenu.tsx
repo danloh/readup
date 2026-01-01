@@ -5,7 +5,7 @@ import { PiPaletteBold, PiUserCircle } from 'react-icons/pi';
 import { MdCheckBox, MdCheckBoxOutlineBlank } from 'react-icons/md';
 import { GrSystem } from "react-icons/gr";
 import { BiData, BiMoon, BiSun } from 'react-icons/bi';
-import { AiOutlineFullscreen } from 'react-icons/ai';
+import { AiOutlineCloudSync, AiOutlineFullscreen } from 'react-icons/ai';
 import { RxReload } from 'react-icons/rx';
 import { IoCloudDownloadOutline } from 'react-icons/io5';
 import { FaInfo } from 'react-icons/fa';
@@ -23,6 +23,7 @@ import { useEnv } from '@/context/EnvContext';
 import { useThemeStore } from '@/store/themeStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useTransferQueue } from '@/hooks/useTransferQueue';
 import { navigateToProfile } from '@/utils/nav';
 import { tauriHandleSetAlwaysOnTop, tauriHandleToggleFullScreen } from '@/utils/window';
 import { optInTelemetry, optOutTelemetry } from '@/utils/telemetry';
@@ -54,6 +55,13 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
   );
   const [isTelemetryEnabled, setIsTelemetryEnabled] = useState(settings.telemetryEnabled);
   const [alwaysInForeground, setAlwaysInForeground] = useState(settings.alwaysInForeground);
+
+  const { stats, hasActiveTransfers, setIsTransferQueueOpen } = useTransferQueue();
+
+  const openTransferQueue = () => {
+    setIsTransferQueueOpen(true);
+    setIsDropdownOpen?.(false);
+  };
 
   const showAboutReadup = () => {
     setAboutDialogVisible(true);
@@ -266,6 +274,22 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
         label={_('Reload Page')} 
         Icon={RxReload}
         onClick={handleReloadPage} 
+      />
+      <hr aria-hidden='true' className='border-base-200 my-1' />
+      <MenuItem
+        label={_('File Transfers')}
+        Icon={AiOutlineCloudSync}
+        description={
+          hasActiveTransfers
+            ? _('{{activeCount}} active, {{pendingCount}} pending', {
+                activeCount: stats.active,
+                pendingCount: stats.pending,
+              })
+            : stats.failed > 0
+              ? _('{{failedCount}} failed', { failedCount: stats.failed })
+              : ''
+        }
+        onClick={openTransferQueue}
       />
       <hr aria-hidden='true' className='border-base-200 my-1' />
       <MenuItem

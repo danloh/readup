@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useEnv } from '@/context/EnvContext';
 import { useTheme } from '@/hooks/useTheme';
 import { useLibrary } from '@/hooks/useLibrary';
+import { useTransferQueue } from '@/hooks/useTransferQueue';
 import { useThemeStore } from '@/store/themeStore';
 import { useReaderStore } from '@/store/readerStore';
 import { useSidebarStore } from '@/store/sidebarStore';
@@ -44,6 +45,7 @@ const Reader: React.FC<{ ids?: string }> = ({ ids }) => {
 
   useTheme({ systemUIVisible: settings.alwaysShowStatusBar, appThemeColor: 'base-100' });
   useScreenWakeLock(settings.screenWakeLock);
+  useTransferQueue(libraryLoaded, 5000);
 
   useEffect(() => {
     mountAdditionalFonts(document);

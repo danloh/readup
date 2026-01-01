@@ -6,13 +6,16 @@ import { LibraryViewModeType } from '@/types/settings';
 import { useEnv } from '@/context/EnvContext';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useLibraryStore } from '@/store/libraryStore';
+import { useTransferStore } from '@/store/transferStore';
 import { navigateToLibrary, navigateToReader } from '@/utils/nav';
 import { formatTitle } from '@/utils/book';
 import { useAutoFocus } from '@/hooks/useAutoFocus';
 import { useTranslation } from '@/hooks/useTranslation';
 import Spinner from '@/components/Spinner';
+import ModalPortal from '@/components/ModalPortal';
 import BookshelfItem, { generateBookshelfItems } from './BookshelfItem';
 import { createBookFilter, createBookSorter } from './libraryUtils';
+import TransferQueuePanel from './TransferQueuePanel';
 
 interface BookshelfProps {
   libraryBooks: Book[];
@@ -41,6 +44,8 @@ const Bookshelf: React.FC<BookshelfProps> = ({
   const isImportingBook = useRef(false);
   const autofocusRef = useAutoFocus<HTMLDivElement>();
   const { setCurrentBookshelf, setLibrary } = useLibraryStore();
+
+  const { isTransferQueueOpen } = useTransferStore();
 
   const uiLanguage = localStorage?.getItem('i18nextLng') || '';
 
@@ -159,6 +164,11 @@ const Bookshelf: React.FC<BookshelfProps> = ({
         <div className='fixed inset-0 z-50 flex items-center justify-center'>
           <Spinner loading />
         </div>
+      )}
+      {isTransferQueueOpen && (
+        <ModalPortal>
+          <TransferQueuePanel />
+        </ModalPortal>
       )}
     </div>
   );
