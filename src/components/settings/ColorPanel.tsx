@@ -26,6 +26,7 @@ import { HighlightColor } from '@/types/book';
 import { HIGHLIGHT_COLOR_HEX } from '@/services/constants';
 import { saveViewSettings } from '@/helpers/settings';
 import { useResetViewSettings } from '@/hooks/useResetSettings';
+import { useEinkMode } from '@/hooks/useEinkMode';
 import ThemeEditor from './ThemeEditor';
 import ColorInput from './ColorInput';
 import { SettingsPanelPanelProp } from './SettingsDialog';
@@ -35,13 +36,13 @@ const ColorPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset
   const { 
     themeMode, themeColor, isDarkMode, setThemeMode, setThemeColor, saveCustomTheme 
   } = useThemeStore();
-  const { envConfig } = useEnv();
+  const { envConfig, appService } = useEnv();
   const { settings, setSettings } = useSettingsStore();
   const { getView, getViewSettings } = useReaderStore();
   const viewSettings = getViewSettings(bookKey) || settings.globalViewSettings;
-  const [invertImgColor, setInvertImgColor] = useState(
-    viewSettings.invertImgColor,
-  );
+  const { applyEinkMode } = useEinkMode();
+  const [isEink, setIsEink] = useState(viewSettings.isEink);
+  const [invertImgColor, setInvertImgColor] = useState(viewSettings.invertImgColor);
 
   const iconSize16 = useResponsiveSize(16);
   const iconSize24 = useResponsiveSize(24);
@@ -64,6 +65,7 @@ const ColorPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset
       invertImgColor: setInvertImgColor,
       codeHighlighting: setcodeHighlighting,
       codeLanguage: setCodeLanguage,
+      isEink: setIsEink,
     });
     setThemeColor('default');
     setThemeMode('auto');
@@ -74,6 +76,17 @@ const ColorPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset
     onRegisterReset(handleReset);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    saveViewSettings(envConfig, bookKey, 'isEink', isEink);
+    if (isEink) {
+      getView(bookKey)?.renderer.setAttribute('eink', '');
+    } else {
+      getView(bookKey)?.renderer.removeAttribute('eink');
+    }
+    applyEinkMode(isEink);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEink]);
 
   useEffect(() => {
     if (invertImgColor === viewSettings.invertImgColor) return;
@@ -185,6 +198,18 @@ const ColorPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset
               </div>
             </div>
           </div>
+
+          {(appService?.isAndroidApp || appService?.appPlatform === 'web') && (
+            <div className='flex items-center justify-between'>
+              <b className=''>{_('E-Ink Mode')}</b>
+              <input
+                type='checkbox'
+                className='toggle toggle-success h-5'
+                checked={isEink}
+                onChange={() => setIsEink(!isEink)}
+              />
+            </div>
+          )}
 
           <div className='flex items-center justify-between'>
             <b className=''>{_('Invert Image Colors')}</b>
