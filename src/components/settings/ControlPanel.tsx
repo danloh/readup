@@ -7,13 +7,14 @@ import { useBookDataStore } from '@/store/bookDataStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useResetViewSettings } from '@/hooks/useResetSettings';
+import { useEinkMode } from '@/hooks/useEinkMode';
 import { getStyles } from '@/styles/style';
 import { RELOAD_BEFORE_SAVED_TIMEOUT_MS } from '@/services/constants';
 import { getMaxInlineSize } from '@/utils/config';
 import { saveViewSettings } from '@/helpers/settings';
+import { annotationToolQuickActions } from '@/app/reader/components/annotator/AnnotationTools';
 import { SettingsPanelPanelProp } from './SettingsDialog';
 import NumberInput from './NumberInput';
-import { annotationToolQuickActions } from '@/app/reader/components/annotator/AnnotationTools';
 import Select from '../Select';
 
 const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset }) => {
@@ -22,6 +23,7 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
   const { getView, getViewSettings, recreateViewer } = useReaderStore();
   const { getBookData } = useBookDataStore();
   const { settings } = useSettingsStore();
+  const { applyEinkMode } = useEinkMode();
   const { acquireVolumeKeyInterception, releaseVolumeKeyInterception } = useDeviceControlStore();
   const bookData = getBookData(bookKey);
   const viewSettings = getViewSettings(bookKey) || settings.globalViewSettings;
@@ -40,6 +42,7 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
     useState(viewSettings.disableDoubleClick);
   const [swapClickArea, setSwapClickArea] = useState(viewSettings.swapClickArea);
   const [animated, setAnimated] = useState(viewSettings.animated);
+  const [isEink, setIsEink] = useState(viewSettings.isEink);
   const [allowScript, setAllowScript] = useState(viewSettings.allowScript);
   const [enableAnnotationQuickActions, setEnableAnnotationQuickActions] = useState(
     viewSettings.enableAnnotationQuickActions,
@@ -60,6 +63,7 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
       disableClick: setIsDisableClick,
       swapClickArea: setSwapClickArea,
       animated: setAnimated,
+      isEink: setIsEink,
       allowScript: setAllowScript,
       fullscreenClickArea: setFullscreenClickArea,
       disableDoubleClick: setIsDisableDoubleClick,
@@ -137,6 +141,17 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [animated]);
+
+  useEffect(() => {
+    saveViewSettings(envConfig, bookKey, 'isEink', isEink);
+    if (isEink) {
+      getView(bookKey)?.renderer.setAttribute('eink', '');
+    } else {
+      getView(bookKey)?.renderer.removeAttribute('eink');
+    }
+    applyEinkMode(isEink);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEink]);
 
   useEffect(() => {
     if (viewSettings.allowScript === allowScript) return;
@@ -314,6 +329,37 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
           </div>
         </div>
       </div>
+
+      {(appService?.isMobileApp || appService?.appPlatform === 'web') && (
+        <div className='w-full'>
+          <div className='card border-base-200 bg-base-100 border shadow'>
+            <div className='divide-base-200 divide-y'>
+              {(appService?.isAndroidApp || appService?.appPlatform === 'web') && (
+                <div className='config-item'>
+                  <b className=''>{_('E-Ink Mode')}</b>
+                  <input
+                    type='checkbox'
+                    className='toggle toggle-success h-5'
+                    checked={isEink}
+                    onChange={() => setIsEink(!isEink)}
+                  />
+                </div>
+              )}
+              {/* {appService?.isMobileApp && (
+                <div className='config-item'>
+                  <span className=''>{_('Auto Screen Brightness')}</span>
+                  <input
+                    type='checkbox'
+                    className='toggle'
+                    checked={autoScreenBrightness}
+                    onChange={() => setAutoScreenBrightness(!autoScreenBrightness)}
+                  />
+                </div>
+              )} */}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className='w-full'>
         <div className='card border-base-200 bg-base-100 border shadow'>

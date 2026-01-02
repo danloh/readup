@@ -6,6 +6,7 @@ import { PiDotsThreeCircle } from 'react-icons/pi';
 import { LiaFileImportSolid } from 'react-icons/lia';
 import { MdArrowBackIosNew } from 'react-icons/md';
 import { IoMdCloseCircle } from 'react-icons/io';
+import { IoFileTray } from 'react-icons/io5';
 
 import { useTranslation } from '@/hooks/useTranslation';
 import { useLibraryStore } from '@/store/libraryStore';
@@ -13,8 +14,8 @@ import { useResponsiveSize } from '@/hooks/useResponsiveSize';
 import { navigateToLibrary } from '@/utils/nav';
 import { debounce } from '@/utils/debounce';
 import Dropdown from '@/components/Dropdown';
+import { useSettingsStore } from '@/store/settingsStore';
 import ViewMenu from './ViewMenu';
-import { IoFileTray } from 'react-icons/io5';
 
 interface LibraryHeaderProps {
   onImportBooksFromFiles: () => void;
@@ -28,9 +29,10 @@ const LibraryHeader: React.FC<LibraryHeaderProps> = (
   const router = useRouter();
   const searchParams = useSearchParams();
   const { currentBookshelf } = useLibraryStore();
+  const { settings } = useSettingsStore();
+  const viewSettings = settings.globalViewSettings;
 
   const [searchQuery, setSearchQuery] = useState(searchParams?.get('q') ?? '');
-
   const iconSize20 = useResponsiveSize(20);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -92,10 +94,13 @@ const LibraryHeader: React.FC<LibraryHeaderProps> = (
               onChange={handleSearchChange}
               spellCheck='false'
               className={clsx(
-                'input rounded-badge bg-base-300/50 h-9 w-full pl-10 pr-10 sm:h-7',
+                'input rounded-badge h-9 w-full pl-10 pr-10 sm:h-7',
+                viewSettings?.isEink
+                  ? 'border-1 border-base-content focus:border-base-content'
+                  : 'bg-base-300/45 border-none',
                 'font-sans text-sm font-light',
-                'placeholder:text-base-content/50',
-                'border-none focus:outline-none focus:ring-0',
+                'placeholder:text-base-content/50 truncate',
+                'focus:outline-none focus:ring-0',
               )}
             />
           </div>

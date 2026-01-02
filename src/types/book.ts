@@ -106,7 +106,7 @@ export interface BookLayout {
   maxInlineSize: number;
   maxBlockSize: number;
   animated: boolean;
-  // isEink: boolean;  // TODO
+  isEink: boolean; 
   writingMode: WritingMode;
   vertical: boolean;
   rtl: boolean;

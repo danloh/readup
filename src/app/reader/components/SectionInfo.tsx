@@ -12,6 +12,7 @@ interface SectionInfoProps {
   showDoubleBorder: boolean;
   isScrolled: boolean;
   isVertical: boolean;
+  isEink: boolean;
   horizontalGap: number;
   contentInsets: Insets;
   gridInsets: Insets;
@@ -24,6 +25,7 @@ const SectionInfo: React.FC<SectionInfoProps> = ({
   showDoubleBorder,
   isScrolled,
   isVertical,
+  isEink,
   horizontalGap,
   contentInsets,
   gridInsets,
@@ -48,8 +50,8 @@ const SectionInfo: React.FC<SectionInfoProps> = ({
       <div
         onClick={() => setHoveredBookKey(bookKey)}
         className={clsx(
-          'sectioninfo absolute flex items-center overflow-hidden',
-          'text-neutral-content font-sans text-xs font-light',
+          'sectioninfo absolute flex items-center overflow-hidden font-sans',
+          isEink ? 'text-sm font-normal' : 'text-neutral-content text-xs font-light',
           isVertical ? 'writing-vertical-rl max-h-[85%]' : 'top-0 h-[44px]',
           isScrolled && !isVertical && 'bg-base-100',
         )}

@@ -10,6 +10,7 @@ import { CSPostHogProvider } from '@/context/PHContext';
 import { SyncProvider } from '@/context/SyncContext';
 import { useDefaultIconSize } from '@/hooks/useResponsiveSize';
 import { useSafeAreaInsets } from '@/hooks/useSafeAreaInsets';
+import { useEinkMode } from '@/hooks/useEinkMode';
 import { initSystemThemeListener, loadDataTheme, useThemeStore } from '@/store/themeStore';
 import { getDirFromUILanguage } from '@/utils/rtl';
 import { getLocale } from '@/utils/misc';
@@ -17,6 +18,7 @@ import { getLocale } from '@/utils/misc';
 const Providers = ({ children }: { children: React.ReactNode }) => {
   const { appService } = useEnv();
   const { uiLang, setUILang } = useThemeStore();
+  const { applyEinkMode } = useEinkMode();
   const iconSize = useDefaultIconSize();
   useSafeAreaInsets(); // Initialize safe area insets
 
@@ -45,6 +47,12 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
     if (appService) {
       initSystemThemeListener(appService);
       setUILang(uiLang); // init ui lang 
+      appService.loadSettings().then((settings) => {
+        const globalViewSettings = settings.globalViewSettings;
+        if (globalViewSettings.isEink) {
+          applyEinkMode(true);
+        }
+      });
     }
   }, [appService]);
 

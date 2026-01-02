@@ -33,11 +33,12 @@ export const NavTab: React.FC<{activeTab: string}> = ({ activeTab }) => {
   const _ = useTranslation();
   const router = useRouter();
   const { appService } = useEnv();
-  const headerRef = useRef<HTMLDivElement>(null);
   const { safeAreaInsets: insets } = useThemeStore();
   const { systemUIVisible, statusBarHeight } = useThemeStore();
   const { isFontLayoutSettingsDialogOpen } = useSettingsStore();
   const { isTrafficLightVisible } = useTrafficLight();
+
+  const headerRef = useRef<HTMLDivElement>(null);
 
   const windowButtonVisible = appService?.hasWindowBar && !isTrafficLightVisible;
 
@@ -129,12 +130,14 @@ export const NavTab: React.FC<{activeTab: string}> = ({ activeTab }) => {
 export default function NavBar({ tab, children }: { tab: string; children: React.ReactNode }) {
   const { appService } = useEnv();
   const { isRoundedWindow } = useThemeStore();
+  const { settings } = useSettingsStore();
+  const viewSettings = settings.globalViewSettings;
 
   return (
     <div 
       className={clsx(
         'nav-page full-height bg-base-200 text-base-content flex select-none flex-col overflow-hidden',
-        // viewSettings?.isEink ? 'bg-base-100' : 'bg-base-200',
+        viewSettings?.isEink ? 'bg-base-100' : 'bg-base-200',
         appService?.hasRoundedWindow && isRoundedWindow && 'window-border rounded-window',
       )}
     >

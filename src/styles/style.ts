@@ -111,6 +111,7 @@ const getColorStyles = (
   overrideColor: boolean,
   invertImgColor: boolean,
   themeCode: ThemeCode,
+  isEink: boolean,
 ) => {
   const { bg, fg, primary, isDarkMode } = themeCode;
   const colorStyles = `
@@ -142,7 +143,7 @@ const getColorStyles = (
     }
     a:any-link {
       ${overrideColor ? `color: ${primary};` : isDarkMode ? `color: lightblue;` : ''}
-      text-decoration: none;
+      text-decoration: ${isEink ? 'underline' : 'none'};
     }
     body.pbg {
       ${isDarkMode ? `background-color: ${bg} !important;` : ''}
@@ -437,6 +438,8 @@ export const getFootnoteStyles = () => `
   }
 
   a:any-link {
+    cursor: default;
+    pointer-events: none;
     text-decoration: none;
     padding: unset;
     margin: unset;
@@ -576,6 +579,7 @@ export const getStyles = (viewSettings: ViewSettings, themeCode?: ThemeCode) => 
     viewSettings.overrideColor!,
     viewSettings.invertImgColor!,
     themeCode,
+    viewSettings.isEink,
   );
   const translationStyles = getTranslationStyles(viewSettings.showTranslateSource!);
   const userStylesheet = viewSettings.userStylesheet!;

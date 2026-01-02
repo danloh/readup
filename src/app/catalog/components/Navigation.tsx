@@ -9,6 +9,7 @@ import { RiToolsFill } from 'react-icons/ri';
 import { useEnv } from '@/context/EnvContext';
 import { useTranslation } from '@/hooks/useTranslation';
 import { debounce } from '@/utils/debounce';
+import { useSettingsStore } from '@/store/settingsStore';
 
 interface NavigationProps {
   onBack?: () => void;
@@ -35,6 +36,8 @@ export function Navigation({
 }: NavigationProps) {
   const _ = useTranslation();
   const { appService } = useEnv();
+  const { settings } = useSettingsStore();
+  const viewSettings = settings.globalViewSettings;
 
   const inputRef = useRef<HTMLInputElement>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -118,7 +121,7 @@ export function Navigation({
             spellCheck='false'
             className={clsx(
               'input rounded-badge h-9 w-full pl-10 pr-4 sm:h-7',
-              false // viewSettings?.isEink
+              viewSettings?.isEink
                 ? 'border-1 border-base-content focus:border-base-content'
                 : 'bg-base-300/45 border-none',
               'font-sans text-sm font-light',

@@ -77,6 +77,8 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
   const [showDetailsBook, setShowDetailsBook] = useState<Book | null>(null);
   const [pendingNavigationBookIds, setPendingNavigationBookIds] = useState<string[] | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+
+  const viewSettings = settings.globalViewSettings;
   const osRef = useRef<OverlayScrollbarsComponentRef>(null);
   const containerRef: React.RefObject<HTMLDivElement | null> = useRef(null);
   const pageRef = useRef<HTMLDivElement>(null);
@@ -515,6 +517,7 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
       aria-label='Your Library'
       className={clsx(
         'library-page text-base-content full-height flex select-none flex-col overflow-hidden',
+        viewSettings?.isEink ? 'bg-base-100' : 'bg-base-200',
       )}
     >
       <div 
