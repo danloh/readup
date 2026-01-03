@@ -24,7 +24,7 @@ import { useThemeStore } from '@/store/themeStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useTransferQueue } from '@/hooks/useTransferQueue';
-import { navigateToProfile } from '@/utils/nav';
+import { navigateToLogin, navigateToProfile } from '@/utils/nav';
 import { tauriHandleSetAlwaysOnTop, tauriHandleToggleFullScreen } from '@/utils/window';
 import { optInTelemetry, optOutTelemetry } from '@/utils/telemetry';
 import { saveSysSettings } from '@/helpers/settings';
@@ -50,6 +50,7 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
   const [isAlwaysShowStatusBar, setIsAlwaysShowStatusBar] = useState(settings.alwaysShowStatusBar);
   const [isScreenWakeLock, setIsScreenWakeLock] = useState(settings.screenWakeLock);
   const [isOpenLastBooks, setIsOpenLastBooks] = useState(settings.openLastBooks);
+  const [isAutoUpload, setIsAutoUpload] = useState(settings.autoUpload);
   const [isAutoImportBooksOnOpen, setIsAutoImportBooksOnOpen] = useState(
     settings.autoImportBooksOnOpen,
   );
@@ -115,6 +116,16 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
     const newValue = !settings.alwaysShowStatusBar;
     await saveSysSettings(envConfig, 'alwaysShowStatusBar', newValue);
     setIsAlwaysShowStatusBar(newValue);
+  };
+
+  const toggleAutoUploadBooks = () => {
+    const newValue = !settings.autoUpload;
+    saveSysSettings(envConfig, 'autoUpload', newValue);
+    setIsAutoUpload(newValue);
+
+    if (newValue && !user) {
+      navigateToLogin(router);
+    }
   };
 
   const toggleAutoImportBooksOnOpen = async () => {
@@ -237,6 +248,7 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
           onClick={toggleOpenLastBooks}
         />
       )}
+
       {isTauriAppPlatform() && !appService?.isMobile && (
         <MenuItem
           label={_('Auto Import on File Open')}
@@ -277,20 +289,27 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
       />
       <hr aria-hidden='true' className='border-base-200 my-1' />
       <MenuItem
-        label={_('File Transfers')}
-        Icon={AiOutlineCloudSync}
-        description={
-          hasActiveTransfers
-            ? _('{{activeCount}} active, {{pendingCount}} pending', {
-                activeCount: stats.active,
-                pendingCount: stats.pending,
-              })
-            : stats.failed > 0
-              ? _('{{failedCount}} failed', { failedCount: stats.failed })
-              : ''
-        }
-        onClick={openTransferQueue}
+        label={_('Auto Upload Books to PDS')}
+        Icon={isAutoUpload ? MdCheckBox : MdCheckBoxOutlineBlank}
+        onClick={toggleAutoUploadBooks}
       />
+      {user && (
+        <MenuItem
+          label={_('File Sync Transfers')}
+          Icon={AiOutlineCloudSync}
+          description={
+            hasActiveTransfers
+              ? _('{{activeCount}} active, {{pendingCount}} pending', {
+                  activeCount: stats.active,
+                  pendingCount: stats.pending,
+                })
+              : stats.failed > 0
+                ? _('{{failedCount}} failed', { failedCount: stats.failed })
+                : ''
+          }
+          onClick={openTransferQueue}
+        />
+      )}
       <hr aria-hidden='true' className='border-base-200 my-1' />
       <MenuItem
         label={_('Help improve Readup')}

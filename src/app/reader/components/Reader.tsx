@@ -31,7 +31,7 @@ import { ProofreadRulesManager } from './ProofreadRules';
 const Reader: React.FC<{ ids?: string }> = ({ ids }) => {
   const router = useRouter();
   const { appService } = useEnv();
-  const { hoveredBookKey, getView } = useReaderStore();
+  const { hoveredBookKey } = useReaderStore();
   const { settings } = useSettingsStore();
   const { 
     isSideBarVisible, getIsSideBarVisible, setSideBarVisible, sideBarBookKey 
@@ -58,14 +58,11 @@ const Reader: React.FC<{ ids?: string }> = ({ ids }) => {
   }, []);
 
   const handleKeyDown = (event: CustomEvent) => {
-    const view = getView(sideBarBookKey!);
     if (event.detail.keyName === 'Back') {
       if (getIsSideBarVisible()) {
         setSideBarVisible(false);
       } else if (getIsNotebookVisible()) {
         setNotebookVisible(false);
-      } else if (view?.history.canGoBack) {
-        view.history.back();
       } else {
         eventDispatcher.dispatch('close-reader');
         router.back();

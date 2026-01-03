@@ -1,16 +1,15 @@
 import clsx from 'clsx';
 import { useCallback, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+
 import { Book } from '@/types/book';
 import { formatAuthors, formatTitle, getPrimaryLanguage } from '@/utils/book';
 import { isWebAppPlatform } from '@/services/environment';
+import { transferManager } from '@/services/transferManager';
 import { useLibraryStore } from '@/store/libraryStore';
 import { eventDispatcher } from '@/utils/event';
-import { navigateToLogin } from '@/utils/nav';
 import { BookMetadata } from '@/libs/document';
 import { useEnv } from '@/context/EnvContext';
 import { useThemeStore } from '@/store/themeStore';
-import { useSettingsStore } from '@/store/settingsStore';
 import { useBookDataStore } from '@/store/bookDataStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import Alert from '@/components/Alert';
@@ -36,14 +35,12 @@ const BookDetailModal: React.FC<BookDetailModalProps> = ({
 }) => {
   const _ = useTranslation();
   const { envConfig, appService } = useEnv();
-  const router = useRouter();
   const { safeAreaInsets } = useThemeStore();
   const [loading, setLoading] = useState(false);
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [bookMeta, setBookMeta] = useState<BookMetadata | null>(null);
   const [fileSize, setFileSize] = useState<number | null>(null);
-  const { settings, setSettings } = useSettingsStore();
   const { updateBook } = useLibraryStore();
   const { clearBookData } = useBookDataStore();
 
@@ -177,66 +174,62 @@ const BookDetailModal: React.FC<BookDetailModalProps> = ({
     setShowDeleteAlert(false);
   };
 
-  const onBookUpload = async (book: Book) => {
-    try {
-      await appService?.uploadBook(book);
-      await updateBook(envConfig, book);
-
-      eventDispatcher.dispatch('toast', {
-        type: 'info',
-        timeout: 2000,
-        message: _('Book uploaded: {{title}}', {
-          title: book.title,
-        }),
-      });
-      return true;
-    } catch (err) {
-      if (err instanceof Error) {
-        if (err.message.includes('Not authenticated') && settings.keepLogin) {
-          settings.keepLogin = false;
-          setSettings(settings);
-          navigateToLogin(router);
-          return false;
-        } else if (err.message.includes('Insufficient storage quota')) {
-          eventDispatcher.dispatch('toast', {
-            type: 'error',
-            message: _('Insufficient storage quota'),
-          });
-          return false;
-        }
-      }
-      eventDispatcher.dispatch('toast', {
-        type: 'error',
-        message: _('Failed to upload book: {{title}}', {
-          title: book.title,
-        }),
-      });
-      return false;
-    }
-  };
-
-  const onBookDownload = useCallback(
-    async (book: Book, redownload = false) => {
-      try {
-        await appService?.downloadBook(book, false, redownload);
-        await updateBook(envConfig, book);
+  const handleBookUpload = useCallback(
+    async (book: Book, _syncBooks = true) => {
+      // Use transfer queue for uploads - priority 1 for manual uploads (higher priority)
+      const transferId = transferManager.queueUpload(book, 1);
+      if (transferId) {
         eventDispatcher.dispatch('toast', {
           type: 'info',
           timeout: 2000,
-          message: _('Book downloaded: {{title}}', {
+          message: _('Upload queued: {{title}}', {
             title: book.title,
           }),
         });
         return true;
-      } catch {
+      }
+      return false;
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
+
+  // TODO: likely No need download whhen view on book modal 
+  const handleBookDownload = useCallback(
+    async (book: Book, downloadOptions: { redownload?: boolean; queued?: boolean } = {}) => {
+      const { redownload = false, queued = false } = downloadOptions;
+      if (redownload || !queued) {
+        try {
+          await appService?.downloadBook(book, false, redownload);
+          await updateBook(envConfig, book);
+          eventDispatcher.dispatch('toast', {
+            type: 'info',
+            timeout: 2000,
+            message: _('Book downloaded: {{title}}', { title: book.title }),
+          });
+          return true;
+        } catch {
+          eventDispatcher.dispatch('toast', {
+            message: _('Failed to download book: {{title}}', { title: book.title }),
+            type: 'error',
+          });
+          return false;
+        }
+      }
+
+      // Use transfer queue for normal downloads - priority 1 for manual downloads
+      const transferId = transferManager.queueDownload(book, 1);
+      if (transferId) {
         eventDispatcher.dispatch('toast', {
-          message: _('Failed to download book: {{title}}', {
+          type: 'info',
+          timeout: 2000,
+          message: _('Download queued: {{title}}', {
             title: book.title,
           }),
-          type: 'error',
         });
-        return false;
+        return true;
       }
+      return false;
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [appService],
@@ -244,12 +237,12 @@ const BookDetailModal: React.FC<BookDetailModalProps> = ({
 
   const handleRedownload = async () => {
     handleClose();
-    onBookDownload(book, true);
+    handleBookDownload(book, { redownload: true, queued: false });
   };
 
   const handleReupload = async () => {
     handleClose();
-    onBookUpload(book);
+    handleBookUpload(book);
   };
 
   if (!bookMeta)

@@ -42,6 +42,7 @@ export const IMAGE_ACCEPT_FORMATS = SUPPORTED_IMAGE_EXTS.map((ext) => `.${ext}`)
 
 export const DEFAULT_SYSTEM_SETTINGS: Partial<SystemSettings> = {
   keepLogin: false,
+  autoUpload: false,
   alwaysOnTop: false,
   alwaysShowStatusBar: false,
   alwaysInForeground: false,

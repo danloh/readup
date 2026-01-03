@@ -27,6 +27,7 @@ export interface SystemSettings {
   customRootDir?: string;
 
   keepLogin: boolean;
+  autoUpload: boolean;
   alwaysOnTop: boolean;
   autoCheckUpdates: boolean;
   screenWakeLock: boolean;

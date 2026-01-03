@@ -19,6 +19,7 @@ import { parseOpenWithFiles } from '@/helpers/openWith';
 import { isTauriAppPlatform } from '@/services/environment';
 import { checkForAppUpdates, checkAppReleaseNotes } from '@/helpers/updater';
 import { BOOK_ACCEPT_FORMATS, SUPPORTED_BOOK_EXTS } from '@/services/constants';
+import { transferManager } from '@/services/transferManager';
 import { useEnv } from '@/context/EnvContext';
 import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -31,7 +32,9 @@ import { useScreenWakeLock } from '@/hooks/useScreenWakeLock';
 import { SelectedFile, useFileSelector } from '@/hooks/useFileSelector';
 import { useOpenWithBooks } from '@/hooks/useOpenWithBooks';
 import useShortcuts from '@/hooks/useShortcuts';
+import { useTransferQueue } from '@/hooks/useTransferQueue';
 import { lockScreenOrientation, selectDirectory } from '@/utils/bridge';
+import { requestStoragePermission } from '@/utils/permission';
 import {
   tauriHandleClose,
   tauriHandleSetAlwaysOnTop,
@@ -44,9 +47,6 @@ import Spinner from '@/components/Spinner';
 import BookDetailModal from './metadata/BookDetailModal';
 import LibraryHeader from './LibraryHeader';
 import Bookshelf from './Bookshelf';
-import { requestStoragePermission } from '@/utils/permission';
-import { useTransferQueue } from '@/hooks/useTransferQueue';
-// import { transferManager } from '@/services/transferManager';
 
 const LibraryPageWithSearchParams = () => {
   const searchParams = useSearchParams();
@@ -268,6 +268,13 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
           if (book) {
             bookIds.push(book.hash);
           }
+          if (user && book && !temp && !book.uploadedAt && settings.autoUpload) {
+            setTimeout(() => {
+              console.log('Queueing upload for book:', book.title);
+              transferManager.queueUpload(book);
+              // wait for the initialization of the transfer manager and opening of the book
+            }, 3000);
+          }
         } catch (error) {
           console.log('Failed to import book:', file, error);
         }
@@ -404,11 +411,10 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
           // book.groupId = getGroupId(groupName);
           await updateBook(envConfig, book);
         }
-        // TODO
-        // if (user && book && !book.uploadedAt) {
-        //   console.log('Queueing upload for book:', book.title);
-        //   transferManager.queueUpload(book);
-        // }
+        if (user && book && !book.uploadedAt && settings.autoUpload) {
+          console.log('Queueing upload for book:', book.title);
+          transferManager.queueUpload(book);
+        }
 
         if (book) {
           successfulImports.push(book.title);
@@ -474,6 +480,7 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
     console.log('Importing books from directory...');
     let importDirectory: string | undefined = '';
     if (appService.isAndroidApp) {
+      // FIXME on sync 
       if (!(await requestStoragePermission())) return;
       const response = await selectDirectory();
       importDirectory = response.path;

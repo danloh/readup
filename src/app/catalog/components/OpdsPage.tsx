@@ -6,7 +6,9 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { isOPDSCatalog, getPublication, getFeed, getOpenSearch } from 'foliate-js/opds.js';
 import { md5 } from 'js-md5';
 import { openUrl } from '@tauri-apps/plugin-opener';
+
 import { useEnv } from '@/context/EnvContext';
+import { useAuth } from '@/context/AuthContext';
 import { isWebAppPlatform } from '@/services/environment';
 import { downloadFile } from '@/libs/storage';
 import { Toast } from '@/components/Toast';
@@ -18,7 +20,9 @@ import { getFileExtFromMimeType } from '@/libs/document';
 import { OPDSFeed, OPDSPublication, OPDSSearch } from '@/types/opds';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useTheme } from '@/hooks/useTheme';
+import { useTransferQueue } from '@/hooks/useTransferQueue';
 import { READUP_OPDS_USER_AGENT } from '@/services/constants';
+import { transferManager } from '@/services/transferManager';
 import { getFileExtFromPath, isSearchLink, MIME, parseMediaType, resolveURL } from '../utils/opdsUtils';
 import { getProxiedURL, fetchWithAuth, probeAuth, needsProxy } from '../utils/opdsReq';
 import { CatalogDialog } from './OPDSDialog';
@@ -49,6 +53,7 @@ export default function BrowserPage() {
   const _ = useTranslation();
   const router = useRouter();
   const { appService } = useEnv();
+  const { user } = useAuth();
   const { libraryLoaded } = useLibrary();
   const { settings } = useSettingsStore();
   const [viewMode, setViewMode] = useState<ViewMode>('loading');
@@ -76,6 +81,7 @@ export default function BrowserPage() {
   const searchTermRef = useRef('');
 
   useTheme({ systemUIVisible: false });
+  useTransferQueue(libraryLoaded);
 
   useEffect(() => {
     startURLRef.current = state.startURL;
@@ -436,6 +442,11 @@ export default function BrowserPage() {
             });
             const { library, setLibrary } = useLibraryStore.getState();
             const book = await appService.importBook(dstFilePath, library);
+            if (user && book && !book.uploadedAt && settings.autoUpload) {
+              setTimeout(() => {
+                transferManager.queueUpload(book);
+              }, 3000);
+            }
             setLibrary(library);
             appService.saveLibraryBooks(library);
             return book;
@@ -447,7 +458,7 @@ export default function BrowserPage() {
       }
       return;
     },
-    [state.baseURL, appService, libraryLoaded],
+    [user, state.baseURL, appService, libraryLoaded],
   );
 
   const handleGenerateCachedImageUrl = useCallback(

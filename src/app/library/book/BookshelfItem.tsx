@@ -74,6 +74,7 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
     }
   };
 
+  // Download book to makeBookAvailable
   const handleBookDownload = async (book: Book) => {
     try {
       await appService?.downloadBook(book, false);
@@ -81,16 +82,12 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
       eventDispatcher.dispatch('toast', {
         type: 'info',
         timeout: 2000,
-        message: _('Book downloaded: {{title}}', {
-          title: book.title,
-        }),
+        message: _('Book downloaded: {{title}}', { title: book.title }),
       });
       return true;
     } catch {
       eventDispatcher.dispatch('toast', {
-        message: _('Failed to download book: {{title}}', {
-          title: book.title,
-        }),
+        message: _('Failed to download book: {{title}}', { title: book.title }),
         type: 'error',
       });
       return false;
