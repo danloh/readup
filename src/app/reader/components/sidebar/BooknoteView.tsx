@@ -13,7 +13,7 @@ const BooknoteView: React.FC<{
   toc: TOCItem[];
 }> = ({ type, bookKey, toc }) => {
   const { getConfig } = useBookDataStore();
-  const { setActiveBooknoteType, setBooknoteResults } = useSidebarStore();
+  const { clearSearch, setActiveBooknoteType, setBooknoteResults } = useSidebarStore();
   const config = getConfig(bookKey)!;
 
   const { booknotes: allNotes = [] } = config;
@@ -45,6 +45,7 @@ const BooknoteView: React.FC<{
     if (booknotes.length === 0) return;
 
     const sorted = [...booknotes].sort((a, b) => CFI.compare(a.cfi, b.cfi));
+    clearSearch(bookKey); // to close search result nav bar
     setActiveBooknoteType(bookKey, type);
     setBooknoteResults(bookKey, sorted);
   };

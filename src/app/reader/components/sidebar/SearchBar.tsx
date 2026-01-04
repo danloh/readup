@@ -36,7 +36,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const { getBookData } = useBookDataStore();
   const { getConfig, saveConfig } = useBookDataStore();
   const { getView, getProgress } = useReaderStore();
-  const { getSearchNavState, setSearchTerm, setSearchResults } = useSidebarStore();
+  const { getSearchNavState, setSearchTerm, setSearchResults, setActiveBooknoteType } = 
+    useSidebarStore();
   const searchNavState = getSearchNavState(bookKey);
   const { searchTerm } = searchNavState;
   const queuedSearchTerm = useRef('');
@@ -132,6 +133,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
           if (typeof result === 'string') {
             if (result === 'done') {
               setSearchResults(bookKey, [...results]);
+              setActiveBooknoteType(bookKey, null); // to close booknotes nav bar
               console.log('search done');
             }
           } else {
@@ -149,6 +151,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
             } else {
               results.push(result);
               setSearchResults(bookKey, [...results]);
+              setActiveBooknoteType(bookKey, null); // to close booknotes nav bar
             }
           }
 
