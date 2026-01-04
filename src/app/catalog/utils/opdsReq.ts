@@ -205,7 +205,7 @@ export const probeAuth = async (
   const fetchURL = useProxy ? getProxiedURL(cleanUrl) : cleanUrl;
   const headers: Record<string, string> = {
     'User-Agent': READUP_OPDS_USER_AGENT,
-    Accept: 'application/atom+xml, application/xml, text/xml',
+    Accept: 'application/atom+xml, application/xml, text/xml, */*',
   };
 
   // Probe with HEAD request
@@ -238,7 +238,8 @@ export const probeAuth = async (
     }
   }
 
-  return null;
+  // Komga returns 200 even if requires auth, so we return Basic auth header in this case
+  return createBasicAuth(finalUsername, finalPassword);
 };
 
 /**
@@ -263,7 +264,7 @@ export const fetchWithAuth = async (
   const fetchURL = useProxy ? getProxiedURL(cleanUrl) : cleanUrl;
   const headers: Record<string, string> = {
     'User-Agent': READUP_OPDS_USER_AGENT,
-    Accept: 'application/atom+xml, application/xml, text/xml',
+    Accept: 'application/atom+xml, application/xml, text/xml, */*',
     ...(options.headers as Record<string, string>),
   };
 
