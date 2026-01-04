@@ -59,7 +59,7 @@ const FooterBar: React.FC<FooterBarProps> = ({
   const viewState = getViewState(bookKey);
 
   const docs = view?.renderer.getContents() ?? [];
-  const pointerInDoc = docs.some(({ doc }) => doc.body.style.cursor === 'pointer');
+  const pointerInDoc = docs.some(({ doc }) => doc?.body?.style.cursor === 'pointer');
 
   const handleProgressChange = (value: number) => {
     view?.goToFraction(value / 100.0);

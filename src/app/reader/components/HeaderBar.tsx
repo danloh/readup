@@ -53,7 +53,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
   const viewSettings = getViewSettings(bookKey);
   const view = getView(bookKey);
   const docs = view?.renderer.getContents() ?? [];
-  const pointerInDoc = docs.some(({ doc }) => doc.body?.style.cursor === 'pointer');
+  const pointerInDoc = docs.some(({ doc }) => doc?.body?.style.cursor === 'pointer');
 
   const enableAnnotationQuickActions = viewSettings?.enableAnnotationQuickActions;
   const annotationQuickActionButton =

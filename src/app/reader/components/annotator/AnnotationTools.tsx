@@ -48,7 +48,13 @@ export const annotationToolButtons = createAnnotationToolButtons([
     tooltip: _('Annotate text after selection'),
     Icon: PiNotePencil,
   },
-  { type: 'search', label: _('Search'), tooltip: _('Search text after selection'), Icon: FiSearch },
+  {
+    type: 'search',
+    label: _('Search'),
+    tooltip: _('Search text after selection'),
+    Icon: FiSearch,
+    quickAction: true,
+  },
   {
     type: 'dictionary',
     label: _('Dictionary'),

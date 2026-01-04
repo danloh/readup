@@ -13,7 +13,7 @@ import { throttle } from '@/utils/throttle';
 import { fetchImageAsBase64 } from '@/utils/image';
 import { invokeUseBackgroundAudio } from '@/utils/bridge';
 import { getLocale } from '@/utils/misc';
-import { CFI } from '@/libs/document';
+import { isCfiInLocation } from '@/utils/cfi';
 import { getMediaSession, TauriMediaSession } from '@/libs/mediaSession';
 import { Overlay } from '@/components/Overlay';
 import Popup from '@/components/Popup';
@@ -283,9 +283,7 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey, iconRef }) => {
     if (!ttsFromRange && viewSettings.ttsLocation) {
       const { location } = progress;
       const ttsCfi = viewSettings.ttsLocation;
-      const start = CFI.collapse(location);
-      const end = CFI.collapse(location, true);
-      if (CFI.compare(start, ttsCfi) * CFI.compare(end, ttsCfi) <= 0) {
+      if (isCfiInLocation(ttsCfi, location)) {
         const { index, anchor } = view.resolveCFI(ttsCfi);
         const { doc } = view.renderer.getContents().find((x) => x.index === index) || {};
         if (doc) {

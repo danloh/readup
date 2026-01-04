@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { FaSearch, FaChevronDown } from 'react-icons/fa';
 
 import { useEnv } from '@/context/EnvContext';
@@ -14,6 +14,7 @@ import { isCJKStr } from '@/utils/lang';
 import { createRejectFilter } from '@/utils/node';
 import Dropdown from '@/components/Dropdown';
 import SearchOptions from './SearchOptions';
+import { useSidebarStore } from '@/store/sidebarStore';
 
 const MINIMUM_SEARCH_TERM_LENGTH_DEFAULT = 2;
 const MINIMUM_SEARCH_TERM_LENGTH_CJK = 1;
@@ -21,16 +22,12 @@ const MINIMUM_SEARCH_TERM_LENGTH_CJK = 1;
 interface SearchBarProps {
   isVisible: boolean;
   bookKey: string;
-  searchTerm: string;
-  onSearchResultChange: (results: BookSearchResult[]) => void;
   onHideSearchBar: () => void;
 }
 
 const SearchBar: React.FC<SearchBarProps> = ({
   isVisible,
   bookKey,
-  searchTerm: term,
-  onSearchResultChange,
   onHideSearchBar,
 }) => {
   const _ = useTranslation();
@@ -39,7 +36,9 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const { getBookData } = useBookDataStore();
   const { getConfig, saveConfig } = useBookDataStore();
   const { getView, getProgress } = useReaderStore();
-  const [searchTerm, setSearchTerm] = useState(term);
+  const { getSearchNavState, setSearchTerm, setSearchResults } = useSidebarStore();
+  const searchNavState = getSearchNavState(bookKey);
+  const { searchTerm } = searchNavState;
   const queuedSearchTerm = useRef('');
   const inputRef = useRef<HTMLInputElement>(null);
   const inputFocusedRef = useRef(false);
@@ -57,15 +56,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   useEffect(() => {
     handleSearchTermChange(searchTerm);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bookKey]);
-
-  // to handle search triggled from annotator
-  useEffect(() => {
-    setSearchTerm(term);
-    handleSearchTermChange(term);
-    queuedSearchTerm.current = term;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [term]);
+  }, [bookKey, searchTerm]);
 
   useEffect(() => {
     if (isVisible && inputRef.current) {
@@ -101,7 +92,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    setSearchTerm(value);
+    setSearchTerm(bookKey, value);
     handleSearchTermChange(value);
     queuedSearchTerm.current = value;
   };
@@ -140,7 +131,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
         for await (const result of generator) {
           if (typeof result === 'string') {
             if (result === 'done') {
-              onSearchResultChange([...results]);
+              setSearchResults(bookKey, [...results]);
               console.log('search done');
             }
           } else {
@@ -157,7 +148,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
               }
             } else {
               results.push(result);
-              onSearchResultChange([...results]);
+              setSearchResults(bookKey, [...results]);
             }
           }
 
@@ -168,14 +159,13 @@ const SearchBar: React.FC<SearchBarProps> = ({
       processResults();
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [progress, searchConfig],
+    [progress, searchConfig, setSearchResults],
   );
 
   const resetSearch = useCallback(() => {
-    onSearchResultChange([]);
+    setSearchResults(bookKey, []);
     view?.clearSearch();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [view]);
+  }, [bookKey, view, setSearchResults]);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const handleSearchTermChange = useCallback(

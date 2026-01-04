@@ -21,6 +21,8 @@ import Annotator from './annotator/Annotator';
 import FootnotePopup from './FootnotePopup';
 import HintInfo from './HintInfo';
 import DoubleBorder from './DoubleBorder';
+import SearchResultsNav from './sidebar/SearchResultsNav';
+import BooknotesNav from './sidebar/BooknotesNav';
 
 interface BooksGridProps {
   bookKeys: string[];
@@ -198,6 +200,8 @@ const BooksGrid: React.FC<BooksGridProps> = ({ bookKeys, onCloseBook }) => {
               />
             )}
             <Annotator bookKey={bookKey} />
+            <SearchResultsNav bookKey={bookKey} gridInsets={gridInsets} />
+            <BooknotesNav bookKey={bookKey} gridInsets={gridInsets} toc={bookDoc.toc || []} />
             <FootnotePopup bookKey={bookKey} bookDoc={bookDoc} />
             <FooterBar
               bookKey={bookKey}
