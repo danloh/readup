@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { TbHighlightOff } from "react-icons/tb";
 import * as CFI from 'foliate-js/epubcfi.js';
 import { Overlayer } from 'foliate-js/overlayer.js';
@@ -16,7 +16,7 @@ import { useDeviceControlStore } from '@/store/deviceStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useResponsiveSize } from '@/hooks/useResponsiveSize';
 import useShortcuts from '@/hooks/useShortcuts';
-import { getPopupPosition, getPosition, Position, TextSelection } from '@/utils/sel';
+import { getPopupPosition, getPosition, getTextFromRange, Position, TextSelection } from '@/utils/sel';
 import { eventDispatcher } from '@/utils/event';
 import { findTocItemBS } from '@/utils/toc';
 import { throttle } from '@/utils/throttle';
@@ -32,6 +32,9 @@ import WiktionaryPopup from './WiktionaryPopup';
 import WikipediaPopup from './WikipediaPopup';
 import TranslatorPopup from './TranslatorPopup';
 import ProofreadPopup from './ProofreadPopup';
+import { TransformContext } from '../../transformers/types';
+import { transformContent } from '../../transformers/transformService';
+import AnnotationRangeEditor from './AnnotationRangeEditor';
 
 const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
   const _ = useTranslation();
@@ -50,6 +53,7 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
   const bookData = getBookData(bookKey)!;
   const view = getView(bookKey);
   const viewSettings = getViewSettings(bookKey)!;
+  const primaryLang = bookData.book?.primaryLanguage || 'en';
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -67,6 +71,7 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
   const [showProofreadPopup, setShowProofreadPopup] = useState(false);
   const [showAnnotationNotes, setShowAnnotationNotes] = useState(false);
   const [annotationNotes, setAnnotationNotes] = useState<BookNote[]>([]);
+  const [editingAnnotation, setEditingAnnotation] = useState<BookNote | null>(null);
 
   const [selectedStyle, setSelectedStyle] = useState<HighlightStyle>(
     settings.globalReadSettings.highlightStyle,
@@ -74,6 +79,13 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
   const [selectedColor, setSelectedColor] = useState<HighlightColor>(
     settings.globalReadSettings.highlightStyles[selectedStyle],
   );
+
+  const showingPopup =
+    showAnnotPopup ||
+    showWiktionaryPopup ||
+    showWikipediaPopup ||
+    showTsPopup ||
+    showProofreadPopup;
 
   const popupPadding = useResponsiveSize(10);
   const trianglePadding = popupPadding * 2 + 6;
@@ -144,6 +156,27 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
     setSelectedColor(settings.globalReadSettings.highlightStyles[selectedStyle]);
   }, [settings.globalReadSettings.highlightStyles, selectedStyle]);
 
+  const transformCtx: TransformContext = useMemo(
+    () => ({
+      bookKey,
+      viewSettings: getViewSettings(bookKey)!,
+      // userLocale: getLocale(),
+      content: '',
+      transformers: ['punctuation'],
+      reversePunctuationTransform: true,
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
+
+  const getAnnotationText = useCallback(
+    async (range: Range) => {
+      transformCtx['content'] = getTextFromRange(range, primaryLang.startsWith('ja') ? ['rt'] : []);
+      return await transformContent(transformCtx);
+    },
+    [primaryLang, transformCtx],
+  );
+
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const handleDismissPopup = useCallback(
     throttle(() => {
@@ -153,6 +186,7 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
       setShowWikipediaPopup(false);
       setShowTsPopup(false);
       setShowProofreadPopup(false);
+      setEditingAnnotation(null);
     }, 500),
     [],
   );
@@ -168,7 +202,7 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
     handleShowPopup,
     handleUpToPopup,
     handleContextmenu,
-  } = useTextSelector(bookKey, setSelection, handleDismissPopup);
+  } = useTextSelector(bookKey, setSelection, getAnnotationText, handleDismissPopup);
 
   const handleDismissPopupAndSelection = () => {
     handleDismissPopup();
@@ -308,12 +342,16 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
     if (isNote) {
       setShowAnnotationNotes(true);
       setHighlightOptionsVisible(false);
+      setEditingAnnotation(null);
     } else {
       setShowAnnotationNotes(false);
       setAnnotationNotes([]);
       if (style && color) {
         setSelectedStyle(style);
         setSelectedColor(color);
+      }
+      if (style && range) {
+        setEditingAnnotation(annotation);
       }
     }
     setSelection(selection);
@@ -323,28 +361,16 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
   useFoliateEvents(view, { onLoad, onDrawAnnotation, onShowAnnotation });
 
   useEffect(() => {
-    handleShowPopup(
-      showAnnotPopup ||
-      showWiktionaryPopup ||
-      showWikipediaPopup ||
-      showTsPopup ||
-      showProofreadPopup,
-    );
+    handleShowPopup(showingPopup);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showAnnotPopup, showWiktionaryPopup, showWikipediaPopup, showTsPopup, showProofreadPopup]);
+  }, [showingPopup]);
 
   // When popups are visible, update their positions on scroll events
   useEffect(() => {
     const view = getView(bookKey);
     if (!view?.renderer) return;
     const onScroll = () => {
-      if (
-        showAnnotPopup ||
-        showWiktionaryPopup ||
-        showWikipediaPopup ||
-        showTsPopup ||
-        showProofreadPopup
-      ) {
+      if (showingPopup) {
         repositionPopups();
       }
     };
@@ -353,15 +379,7 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
       view.renderer.removeEventListener('scroll', onScroll);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    bookKey,
-    showAnnotPopup,
-    showWiktionaryPopup,
-    showWikipediaPopup,
-    showTsPopup,
-    showProofreadPopup,
-    repositionPopups,
-  ]);
+  }, [bookKey, showingPopup, repositionPopups]);
 
   useEffect(() => {
     eventDispatcher.on('export-annotations', handleExportMarkdown);
@@ -599,7 +617,7 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
         views.forEach((view) => view?.addAnnotation(annotation));
       } else {
         annotations[existingIndex]!.deletedAt = Date.now();
-        setShowAnnotPopup(false);
+        handleDismissPopup();
       }
     } else {
       annotations.push(annotation);
@@ -669,6 +687,10 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
       return;
     }
   };
+
+  const handleStartEditAnnotation = useCallback(() => {
+    setShowAnnotPopup(false);
+  }, []);
 
   // Keyboard shortcuts: trigger actions only if there's an active selection and popup hidden
   useShortcuts(
@@ -886,6 +908,16 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
           popupWidth={proofreadPopupWidth}
           popupHeight={proofreadPopupHeight}
           onDismiss={handleDismissPopupAndSelection}
+        />
+      )}
+      {editingAnnotation && editingAnnotation.color && selection && (
+        <AnnotationRangeEditor
+          bookKey={bookKey}
+          annotation={editingAnnotation}
+          selection={selection}
+          getAnnotationText={getAnnotationText}
+          setSelection={setSelection}
+          onStartEdit={handleStartEditAnnotation}
         />
       )}
       {showAnnotPopup && trianglePosition && annotPopupPosition && (
