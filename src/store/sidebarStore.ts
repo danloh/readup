@@ -1,11 +1,14 @@
 import { create } from 'zustand';
-import { BookNote, BookNoteType, BookSearchResult } from '@/types/book';
+import { BookNote, BookNoteType, BookSearchMatch, BookSearchResult } from '@/types/book';
+
+type SearchStatus = 'searching' | 'completed' | 'terminated';
 
 // Per-book search navigation state
 interface SearchNavState {
   searchTerm: string;
-  searchResults: BookSearchResult[] | null;
+  searchResults: BookSearchResult[] | BookSearchMatch[] | null;
   searchResultIndex: number;
+  searchProgress: number; // 0 to 1, where 1 means search complete
 }
 
 // Per-book booknotes navigation state
@@ -23,6 +26,7 @@ interface SidebarState {
   // Per-book navigation states
   searchNavStates: Record<string, SearchNavState>;
   booknotesNavStates: Record<string, BooknotesNavState>;
+  searchStatuses: Record<string, SearchStatus>;
   getIsSideBarVisible: () => boolean;
   getSideBarWidth: () => string;
   setSideBarBookKey: (key: string) => void;
@@ -34,8 +38,14 @@ interface SidebarState {
   // Search actions (per bookKey)
   getSearchNavState: (bookKey: string) => SearchNavState;
   setSearchTerm: (bookKey: string, term: string) => void;
-  setSearchResults: (bookKey: string, results: BookSearchResult[] | null) => void;
+  setSearchStatus: (bookKey: string, status: SearchStatus) => void;
+  getSearchStatus: (bookKey: string) => SearchStatus | null;
+  setSearchResults: (
+    bookKey: string,
+    results: BookSearchResult[] | BookSearchMatch[] | null,
+  ) => void;
   setSearchResultIndex: (bookKey: string, index: number) => void;
+  setSearchProgress: (bookKey: string, progress: number) => void;
   clearSearch: (bookKey: string) => void;
   // Booknotes navigation actions (per bookKey)
   getBooknotesNavState: (bookKey: string) => BooknotesNavState;
@@ -49,6 +59,7 @@ const defaultSearchNavState: SearchNavState = {
   searchTerm: '',
   searchResults: null,
   searchResultIndex: 0,
+  searchProgress: 1,
 };
 
 const defaultBooknotesNavState: BooknotesNavState = {
@@ -65,6 +76,7 @@ export const useSidebarStore = create<SidebarState>((set, get) => ({
   // Per-book navigation states
   searchNavStates: {},
   booknotesNavStates: {},
+  searchStatuses: {},
   getIsSideBarVisible: () => get().isSideBarVisible,
   getSideBarWidth: () => get().sideBarWidth,
   setSideBarBookKey: (key: string) => set({ sideBarBookKey: key }),
@@ -74,6 +86,9 @@ export const useSidebarStore = create<SidebarState>((set, get) => ({
   setSideBarVisible: (visible: boolean) => set({ isSideBarVisible: visible }),
   setSideBarPin: (pinned: boolean) => set({ isSideBarPinned: pinned }),
   // Search actions
+  getSearchStatus: (bookKey: string) => {
+    return get().searchStatuses[bookKey] || null;
+  },
   getSearchNavState: (bookKey: string) => {
     return get().searchNavStates[bookKey] || defaultSearchNavState;
   },
@@ -87,7 +102,7 @@ export const useSidebarStore = create<SidebarState>((set, get) => ({
         },
       },
     })),
-  setSearchResults: (bookKey: string, results: BookSearchResult[] | null) =>
+  setSearchResults: (bookKey: string, results: BookSearchResult[] | BookSearchMatch[] | null) =>
     set((state) => ({
       searchNavStates: {
         ...state.searchNavStates,
@@ -107,11 +122,32 @@ export const useSidebarStore = create<SidebarState>((set, get) => ({
         },
       },
     })),
+  setSearchProgress: (bookKey: string, progress: number) =>
+    set((state) => ({
+      searchNavStates: {
+        ...state.searchNavStates,
+        [bookKey]: {
+          ...(state.searchNavStates[bookKey] || defaultSearchNavState),
+          searchProgress: progress,
+        },
+      },
+    })),
   clearSearch: (bookKey: string) =>
     set((state) => ({
       searchNavStates: {
         ...state.searchNavStates,
         [bookKey]: { ...defaultSearchNavState },
+      },
+      searchStatuses: {
+        ...state.searchStatuses,
+        [bookKey]: 'terminated',
+      },
+    })),
+  setSearchStatus: (bookKey: string, status: SearchStatus) =>
+    set((state) => ({
+      searchStatuses: {
+        ...state.searchStatuses,
+        [bookKey]: status,
       },
     })),
   // Booknotes navigation actions

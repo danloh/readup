@@ -253,6 +253,8 @@ export interface BookSearchConfig {
   index?: number;
   query?: string;
   acceptNode?: (node: Node) => number;
+  // pre-cached search results
+  results?: BookSearchResult[] | BookSearchMatch[] | null;
 }
 
 export interface SearchExcerpt {
@@ -267,6 +269,7 @@ export interface BookSearchMatch {
 }
 
 export interface BookSearchResult {
+  index?: number;
   label: string;
   subitems: BookSearchMatch[];
   progress?: number;

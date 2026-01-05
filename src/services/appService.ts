@@ -117,6 +117,10 @@ export abstract class BaseAppService implements AppService {
     return await this.fs.copyFile(srcPath, dstPath, base);
   }
 
+  async readFile(path: string, base: BaseDir, mode: 'text' | 'binary') {
+    return await this.fs.readFile(path, base, mode);
+  }
+
   async createDir(path: string, base: BaseDir, recursive: boolean = true): Promise<void> {
     return await this.fs.createDir(path, base, recursive);
   }

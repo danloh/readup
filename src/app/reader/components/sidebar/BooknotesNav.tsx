@@ -49,6 +49,7 @@ const BooknotesNav: React.FC<BooknotesNavProps> = ({ bookKey, gridInsets, toc })
       gridInsets={gridInsets}
       title={getShowResultsTitle()}
       section={currentSection}
+      progress={1}
       hasPrevious={hasPreviousPage}
       hasNext={hasNextPage}
       previousTitle={_('Previous')}
