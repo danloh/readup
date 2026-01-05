@@ -16,7 +16,9 @@ import { useDeviceControlStore } from '@/store/deviceStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useResponsiveSize } from '@/hooks/useResponsiveSize';
 import useShortcuts from '@/hooks/useShortcuts';
-import { getPopupPosition, getPosition, getTextFromRange, Position, TextSelection } from '@/utils/sel';
+import { 
+  getPopupPosition, getPosition, getTextFromRange, Position, TextSelection 
+} from '@/utils/sel';
 import { eventDispatcher } from '@/utils/event';
 import { findTocItemBS } from '@/utils/toc';
 import { throttle } from '@/utils/throttle';
@@ -26,14 +28,14 @@ import { useFoliateEvents } from '../../hooks/useFoliateEvents';
 // import { useNotesSync } from '../../hooks/useNotesSync';
 import { useTextSelector } from '../../hooks/useTextSelector';
 import { getHighlightColorHex } from '../../utils/annotatorUtil';
+import { TransformContext } from '../../transformers/types';
+import { transformContent } from '../../transformers/transformService';
 import { annotationToolButtons } from './AnnotationTools';
 import AnnotationPopup from './AnnotationPopup';
 import WiktionaryPopup from './WiktionaryPopup';
 import WikipediaPopup from './WikipediaPopup';
 import TranslatorPopup from './TranslatorPopup';
 import ProofreadPopup from './ProofreadPopup';
-import { TransformContext } from '../../transformers/types';
-import { transformContent } from '../../transformers/transformService';
 import AnnotationRangeEditor from './AnnotationRangeEditor';
 
 const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {

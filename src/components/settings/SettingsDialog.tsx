@@ -7,6 +7,7 @@ import { MdArrowBackIosNew, MdArrowForwardIos, MdClose } from 'react-icons/md';
 import { FaLanguage } from "react-icons/fa";
 import { BiCustomize, BiLayout } from "react-icons/bi";
 import { GiClick } from "react-icons/gi";
+
 import { useEnv } from '@/context/EnvContext';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -72,7 +73,18 @@ const SettingsDialog: React.FC<{ bookKey: string }> = ({ bookKey }) => {
     },
   ] as TabConfig[];
 
-  const [activePanel, setActivePanel] = useState<SettingsPanelType>('Font');
+  const [activePanel, setActivePanel] = useState<SettingsPanelType>(() => {
+    const lastPanel = localStorage.getItem('lastConfigPanel');
+    if (lastPanel && tabConfig.some((tab) => tab.tab === lastPanel)) {
+      return lastPanel as SettingsPanelType;
+    }
+    return 'Font' as SettingsPanelType;
+  });
+
+  const handleSetActivePanel = (tab: SettingsPanelType) => {
+    setActivePanel(tab);
+    localStorage.setItem('lastConfigPanel', tab);
+  };
 
   const [resetFunctions, setResetFunctions] = useState<
     Record<SettingsPanelType, (() => void) | null>
@@ -139,7 +151,7 @@ const SettingsDialog: React.FC<{ bookKey: string }> = ({ bookKey }) => {
                       'btn btn-ghost text-base-content btn-sm gap-1 px-2',
                       activePanel === tab ? 'btn-active' : '',
                     )}
-                    onClick={() => setActivePanel(tab)}
+                    onClick={() => handleSetActivePanel(tab)}
                   >
                     <Icon className='mr-0' />
                   </button>
