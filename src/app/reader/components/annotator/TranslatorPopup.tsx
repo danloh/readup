@@ -192,7 +192,7 @@ const TranslatorPopup: React.FC<TranslatorPopupProps> = ({
             {provider &&
               !loading &&
               !error &&
-              _('Translated by {{provider}}.', {
+              _('By {{provider}}.', {
                 provider: providers.find((p) => p.name === provider)?.label,
               })}
           </div>

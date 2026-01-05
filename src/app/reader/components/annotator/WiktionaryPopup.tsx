@@ -145,9 +145,7 @@ const WiktionaryPopup: React.FC<WiktionaryPopupProps> = ({
         h1.className = 'text-lg font-bold';
 
         const p = document.createElement('p');
-        p.innerHTML = `Unable to load the word. Try searching directly on <a href="https://en.wiktionary.org/w/index.php?search=${encodeURIComponent(
-          word,
-        )}" target="_blank" rel="noopener noreferrer" class="text-primary underline">Wiktionary</a>.`;
+        p.innerHTML = `Unable to find the word. Try searching directly on <a href="https://en.wiktionary.org/w/index.php?search=${encodeURIComponent(word)}" target="_blank" rel="noopener noreferrer" class="text-primary underline">Wiktionary</a>.`;
 
         div.append(h1, p);
         main.append(div);
@@ -171,9 +169,14 @@ const WiktionaryPopup: React.FC<WiktionaryPopupProps> = ({
         <div className='flex h-full flex-col'>
           <main className='flex-grow overflow-y-auto p-4 font-sans' />
           <footer className='mt-auto hidden data-[state=loaded]:block data-[state=error]:hidden data-[state=loading]:hidden'>
-            <div className='flex items-center px-4 py-2 text-sm opacity-60'>
+            <a 
+              className='flex items-center p-2 text-xs opacity-60 link'
+              href={`https://en.wiktionary.org/wiki/${encodeURIComponent(lookupWord)}`}
+              target="_blank" 
+              rel="noopener noreferrer"
+            >
               Source: Wiktionary (CC BY-SA)
-            </div>
+            </a>
           </footer>
         </div>
       </Popup>

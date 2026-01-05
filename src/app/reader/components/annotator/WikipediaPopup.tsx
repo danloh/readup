@@ -23,6 +23,9 @@ const WikipediaPopup: React.FC<WikipediaPopupProps> = ({
 }) => {
   const isLoading = useRef(false);
 
+  const bookLang = typeof lang === 'string' ? lang : lang?.[0];
+  const langCode = bookLang ? bookLang.split('-')[0]! : 'en';
+
   useEffect(() => {
     if (isLoading.current) {
       return;
@@ -88,9 +91,7 @@ const WikipediaPopup: React.FC<WikipediaPopupProps> = ({
         h1.innerText = 'Error';
 
         const errorMsg = document.createElement('p');
-        errorMsg.innerHTML = `Unable to load the article. Try searching directly on <a href="https://${language}.wikipedia.org/w/index.php?search=${encodeURIComponent(
-          query,
-        )}" target="_blank" rel="noopener noreferrer" class="text-primary underline">Wikipedia</a>.`;
+        errorMsg.innerHTML = `Unable to find the article. Try searching directly on <a href="https://${language}.wikipedia.org/w/index.php?search=${encodeURIComponent(query)}" target="_blank" rel="noopener noreferrer" class="text-primary underline">Wikipedia</a>.`;
 
         errorDiv.append(h1, errorMsg);
         main.appendChild(errorDiv);
@@ -98,10 +99,8 @@ const WikipediaPopup: React.FC<WikipediaPopupProps> = ({
       }
     };
 
-    const bookLang = typeof lang === 'string' ? lang : lang?.[0];
-    const langCode = bookLang ? bookLang.split('-')[0]! : 'en';
     fetchSummary(text, langCode);
-  }, [text, lang]);
+  }, [text, langCode]);
 
   return (
     <div>
@@ -116,9 +115,14 @@ const WikipediaPopup: React.FC<WikipediaPopupProps> = ({
         <div className='text-base-content flex h-full flex-col pt-2'>
           <main className='flex-grow overflow-y-auto px-2 font-sans'></main>
           <footer className='mt-auto hidden data-[state=loaded]:block data-[state=error]:hidden data-[state=loading]:hidden'>
-            <div className='flex items-center px-4 py-2 text-sm opacity-60'>
+            <a 
+              className='flex items-center p-2 text-xs opacity-60 link'
+              href={`https://${lang}.wikipedia.org/wiki/${encodeURIComponent(text)}`}
+              target="_blank" 
+              rel="noopener noreferrer"
+            >
               Source: Wikipedia (CC BY-SA)
-            </div>
+            </a>
           </footer>
         </div>
       </Popup>
