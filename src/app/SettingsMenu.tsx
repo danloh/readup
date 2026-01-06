@@ -293,7 +293,7 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
         Icon={isAutoUpload ? MdCheckBox : MdCheckBoxOutlineBlank}
         onClick={toggleAutoUploadBooks}
       />
-      {user && (
+      {/* user &&  */(
         <MenuItem
           label={_('File Sync Transfers')}
           Icon={AiOutlineCloudSync}

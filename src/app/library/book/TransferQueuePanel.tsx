@@ -18,6 +18,7 @@ import { useResponsiveSize } from '@/hooks/useResponsiveSize';
 import { useKeyDownActions } from '@/hooks/useKeyDownActions';
 import { useLibraryStore } from '@/store/libraryStore';
 import { TransferItem, TransferStatus, useTransferStore } from '@/store/transferStore';
+import { Book } from '@/types/book';
 
 const formatBytes = (bytes: number): string => {
   if (bytes === 0) return '0 B';
@@ -77,8 +78,9 @@ const TransferItemRow: React.FC<{
   transfer: TransferItem;
   onCancel: (id: string) => void;
   onRetry: (id: string) => void;
+  onQueue: (book: Book, priority?: number) => void;
   iconSize: number;
-}> = ({ transfer, onCancel, onRetry, iconSize }) => {
+}> = ({ transfer, onCancel, onRetry, onQueue, iconSize }) => {
   const _ = useTranslation();
 
   return (
@@ -135,12 +137,24 @@ const TransferItemRow: React.FC<{
             <MdClose size={iconSize} />
           </button>
         )}
+        {transfer.status === 'can' && (
+          <button
+            onClick={() => onQueue(transfer.book!)}
+            className='btn btn-ghost btn-sm btn-circle'
+            aria-label={_('Queue')}
+          >
+            {transfer.type === 'upload' 
+              ? (<MdCloudUpload size={iconSize} />) 
+              : (<MdCloudDownload size={iconSize} />)
+            }
+          </button>
+        )}
       </div>
     </div>
   );
 };
 
-type FilterType = 'all' | 'active' | 'completed' | 'failed';
+type FilterType = 'all' | 'active' | 'pending' | 'completed' | 'failed';
 
 const TransferQueuePanel: React.FC = () => {
   const _ = useTranslation();
@@ -167,6 +181,28 @@ const TransferQueuePanel: React.FC = () => {
   const onClose = () => setIsOpen(false);
   const divRef = useKeyDownActions({ onCancel: onClose, onConfirm: onClose });
 
+  // all books as temp tranfer items
+  const allCanTransfer = getVisibleLibrary().map(
+    (book) => {
+      const canTransfer: TransferItem = {
+        id: book.hash,
+        bookHash: book.hash,
+        bookTitle: book.title,
+        type: 'upload',
+        status: 'can',
+        progress: 0,
+        totalBytes: 0,
+        transferredBytes: 0,
+        transferSpeed: 0,
+        retryCount: 0,
+        maxRetries: 3,
+        createdAt: book.createdAt,
+        priority: 100,
+        book,
+      };
+      return canTransfer;
+    }
+  );
   const booksToUpload = getVisibleLibrary().filter(
     (book) => book.downloadedAt && !book.uploadedAt,
   );
@@ -182,11 +218,14 @@ const TransferQueuePanel: React.FC = () => {
     booksToDownload.forEach((book) => queueDownload(book));
   };
 
-  const filteredTransfers = transfers
+  const toFilterItems = filter === 'all' ? allCanTransfer : transfers;
+  const filteredTransfers = toFilterItems
     .filter((t) => {
       switch (filter) {
         case 'active':
           return ['pending', 'in_progress'].includes(t.status);
+        case 'pending':
+          return t.status === 'pending';
         case 'completed':
           return t.status === 'completed';
         case 'failed':
@@ -203,6 +242,7 @@ const TransferQueuePanel: React.FC = () => {
         failed: 2,
         cancelled: 3,
         completed: 4,
+        can: 10, // just for temp 
       };
       const statusDiff = statusOrder[a.status] - statusOrder[b.status];
       if (statusDiff !== 0) return statusDiff;
@@ -212,8 +252,24 @@ const TransferQueuePanel: React.FC = () => {
   const filterLabels: Record<FilterType, string> = {
     all: _('All'),
     active: _('Active'),
+    pending: _('Pending'),
     completed: _('Completed'),
     failed: _('Failed'),
+  };
+
+  const getStat = (f: FilterType) => {
+    switch (f) {
+      case 'active':
+        return stats.active;
+      case 'pending':
+        return stats.pending;
+      case 'completed':
+        return stats.completed;
+      case 'failed':
+        return stats.failed;
+      default:
+        return allCanTransfer.length;
+    }
   };
 
   return (
@@ -272,34 +328,18 @@ const TransferQueuePanel: React.FC = () => {
           </div>
         </div>
 
-        {/* Stats bar */}
-        <div className='bg-base-200 flex items-center gap-4 px-4 py-2 text-sm'>
-          <span>
-            {_('Active')}: {stats.active}
-          </span>
-          <span>
-            {_('Pending')}: {stats.pending}
-          </span>
-          <span>
-            {_('Completed')}: {stats.completed}
-          </span>
-          <span>
-            {_('Failed')}: {stats.failed}
-          </span>
-        </div>
-
         {/* Filter tabs */}
-        <div className='border-base-300 flex gap-2 border-b p-4'>
-          {(['all', 'active', 'completed', 'failed'] as const).map((f) => (
+        <div className='border-base-300 flex gap-2 border-b p-2'>
+          {(['all', 'active', 'pending', 'completed', 'failed'] as const).map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
               className={clsx(
-                'rounded-lg px-3 py-1 text-sm transition-colors',
+                'rounded-sm px-2 py-1 text-sm transition-colors',
                 filter === f ? 'bg-primary text-primary-content' : 'bg-base-200 hover:bg-base-300',
               )}
             >
-              {filterLabels[f]}
+              {filterLabels[f]}: {getStat(f)}
             </button>
           ))}
         </div>
@@ -315,6 +355,7 @@ const TransferQueuePanel: React.FC = () => {
                 transfer={transfer}
                 onCancel={cancelTransfer}
                 onRetry={retryTransfer}
+                onQueue={transfer.type === 'upload' ? queueUpload : queueDownload}
                 iconSize={iconSize}
               />
             ))

@@ -1,7 +1,9 @@
 import { create } from 'zustand';
+import { Book } from '@/types/book';
 
 export type TransferType = 'upload' | 'download';
-export type TransferStatus = 'pending' | 'in_progress' | 'completed' | 'failed' | 'cancelled';
+export type TransferStatus = 
+  'pending' | 'in_progress' | 'completed' | 'failed' | 'cancelled' | 'can';
 
 export interface TransferItem {
   id: string;
@@ -20,6 +22,7 @@ export interface TransferItem {
   startedAt?: number;
   completedAt?: number;
   priority: number; // Lower = higher priority
+  book?: Book;  // for temp
 }
 
 interface TransferState {
