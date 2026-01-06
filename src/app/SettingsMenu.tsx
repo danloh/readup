@@ -227,6 +227,29 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
         </>
       )}
       <hr aria-hidden='true' className='border-base-200 my-1' />
+      <MenuItem
+        label={_('Auto Upload Books to PDS')}
+        Icon={isAutoUpload ? MdCheckBox : MdCheckBoxOutlineBlank}
+        onClick={toggleAutoUploadBooks}
+      />
+      {/* user &&  */(
+        <MenuItem
+          label={_('File Sync Transfers')}
+          Icon={AiOutlineCloudSync}
+          description={
+            hasActiveTransfers
+              ? _('{{activeCount}} active, {{pendingCount}} pending', {
+                  activeCount: stats.active,
+                  pendingCount: stats.pending,
+                })
+              : stats.failed > 0
+                ? _('{{failedCount}} failed', { failedCount: stats.failed })
+                : ''
+          }
+          onClick={openTransferQueue}
+        />
+      )}
+      <hr aria-hidden='true' className='border-base-200 my-1' />
       {appService?.hasWindow && (
         <MenuItem 
           label={_('Fullscreen')} 
@@ -287,29 +310,6 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
         Icon={RxReload}
         onClick={handleReloadPage} 
       />
-      <hr aria-hidden='true' className='border-base-200 my-1' />
-      <MenuItem
-        label={_('Auto Upload Books to PDS')}
-        Icon={isAutoUpload ? MdCheckBox : MdCheckBoxOutlineBlank}
-        onClick={toggleAutoUploadBooks}
-      />
-      {/* user &&  */(
-        <MenuItem
-          label={_('File Sync Transfers')}
-          Icon={AiOutlineCloudSync}
-          description={
-            hasActiveTransfers
-              ? _('{{activeCount}} active, {{pendingCount}} pending', {
-                  activeCount: stats.active,
-                  pendingCount: stats.pending,
-                })
-              : stats.failed > 0
-                ? _('{{failedCount}} failed', { failedCount: stats.failed })
-                : ''
-          }
-          onClick={openTransferQueue}
-        />
-      )}
       <hr aria-hidden='true' className='border-base-200 my-1' />
       <MenuItem
         label={_('Help improve Readup')}

@@ -137,7 +137,7 @@ const TransferItemRow: React.FC<{
             <MdClose size={iconSize} />
           </button>
         )}
-        {transfer.status === 'can' && (
+        {transfer.status === 'can' && transfer.book && !transfer.book.uploadedAt && (
           <button
             onClick={() => onQueue(transfer.book!)}
             className='btn btn-ghost btn-sm btn-circle'

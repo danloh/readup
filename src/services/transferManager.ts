@@ -219,7 +219,9 @@ class TransferManager {
       }
 
       if (transfer.type === 'upload') {
+        console.log("transfer: to upload");
         await this.appService.uploadBook(book, progressHandler);
+        console.log("transfer: uploaded");
         book.uploadedAt = Date.now();
       } else {
         await this.appService.downloadBook(book, false, false, progressHandler);
@@ -267,12 +269,8 @@ class TransferManager {
             type: 'error',
             message: _('Please log in to continue'),
           });
-        } else if (errorMessage.includes('Insufficient storage quota')) {
-          eventDispatcher.dispatch('toast', {
-            type: 'error',
-            message: _('Insufficient storage quota'),
-          });
         } else {
+          console.log("transfer error: ", errorMessage);
           eventDispatcher.dispatch('toast', {
             type: 'error',
             message:

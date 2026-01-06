@@ -430,7 +430,7 @@ export abstract class BaseAppService implements AppService {
     // const handleProgress = createProgressHandler(toUploadFpCount, completedFiles, onProgress);
 
     // upload and create a book record on PDS
-    const res: UploadResult = await uploadBookFile(book, bookFile, coverFile);
+    const res: UploadResult = await uploadBookFile(book, bookFile, coverFile, onProgress);
     // close files
     const cf = coverFile as ClosableFile;
     if (cf && cf.close) {

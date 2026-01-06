@@ -2,9 +2,13 @@
 
 import { AtpAgent, AtpSessionData, BlobRef } from "@atproto/api";
 import type { AtBook, AtFile } from "./types";
-import { AuthToken, refreshSession } from "./auth";
+import { AuthToken, refreshSession, User } from "./auth";
 import { Book } from "@/types/book";
-import { webDownload } from "@/utils/transfer";
+import { ProgressHandler, webDownload } from "@/utils/transfer";
+
+export interface BlobResp {
+  blob: BlobRef;
+}
 
 /**
  * Result returned after successfully uploading a book
@@ -52,6 +56,65 @@ export async function uploadFile(file: File, agent: AtpAgent): Promise<BlobRef| 
   return blob;
 }
 
+export async function xhrUploadFile(
+  file: File, 
+  usr: User,
+  onProgress?: ProgressHandler,
+): Promise<BlobRef | undefined> {
+  const startTime = Date.now();
+  // const data = await file.bytes(); // limited availability
+  // const arrayBuffer = await file.arrayBuffer();
+  // const data = new Uint8Array(arrayBuffer);
+  console.log("User info: ", usr);
+  const mimeType = file.type || "application/octet-stream";
+  // Upload url
+  const pdsUrl = `${usr.service}/xrpc/com.atproto.repo.uploadBlob`;
+
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', pdsUrl, true);
+
+    // Set necessary headers
+    xhr.setRequestHeader('Authorization', 'Bearer ' + usr.accessJwt);
+    xhr.setRequestHeader('Content-Type', mimeType); 
+
+    xhr.upload.onprogress = (event) => {
+      if (onProgress && event.lengthComputable) {
+        onProgress({
+          progress: event.loaded,
+          total: event.total,
+          transferSpeed: event.loaded / ((Date.now() - startTime) / 1000),
+        });
+      }
+    };
+
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        console.log("xhr upload resp: ", xhr.response);
+        console.log("xhr upload resp text: ", xhr.responseText);
+        const resp: BlobResp = JSON.parse(xhr.responseText); 
+        const blob = resp.blob;
+        const blobCid = blob.ref?.["$link"] ?? blob.ref;
+        console.log(`✓ Blob uploaded: ${blobCid}`);
+        console.log("Blob structure:", JSON.stringify(blob, null, 2));
+
+        if (!blob) {
+          console.error("Upload failed: no blob returned");
+          reject(new Error(`Upload failed: no blob returned. ${xhr.status}`));
+        }
+
+        resolve(blob);
+      } else {
+        reject(new Error(`Upload failed with status ${xhr.status}`));
+      }
+    };
+
+    xhr.onerror = () => reject(new Error('Upload failed'));
+
+    xhr.send(file);
+  });
+}
+
 /**
  * Upload book and cover file to PDS and create a book record
  * @returns A promise that resolves to result containing blobs, record and if success
@@ -60,17 +123,20 @@ export async function uploadBookFile(
   book: Book,
   bookFile?: File,
   coverFile?: File,
+  onProgress?: ProgressHandler,
 ): Promise<UploadResult> {
   const usr = await refreshSession();
-  const host = usr.host;
   // Initialize agent
-  const agent = new AtpAgent({ service: host });
+  const agent = new AtpAgent({ service: `https://${usr.host}` });
   await agent.resumeSession(usr as AtpSessionData);
   
+  console.log("Agent: ", agent);
   // upload cover
   const coverBlob = coverFile ? await uploadFile(coverFile, agent) : undefined;
+  //const coverBlob = coverFile ? await xhrUploadFile(coverFile, usr, onProgress) : undefined;
   // upload book doc
-  const bookBlob = bookFile ? await uploadFile(bookFile, agent) : undefined;
+  //const bookBlob = bookFile ? await uploadFile(bookFile, agent) : undefined;
+  const bookBlob = bookFile ? await xhrUploadFile(bookFile, usr, onProgress) : undefined;
 
   // Get DID
   const did = agent.session?.did;
@@ -103,6 +169,7 @@ export async function uploadBookFile(
     record: recordData,
   });
 
+  console.log("put record resp: ", createRes);
   console.log(`✓ Record created: URI: ${createRes.data.uri} | CID: ${createRes.data.cid}`);
 
   return {
@@ -404,7 +471,7 @@ async function getRecord(rkey: string): Promise<DownloadResult> {
   const usr = await refreshSession();
   const serv = usr.service;
   // Initialize agent
-  const agent = new AtpAgent({ service: usr.host });
+  const agent = new AtpAgent({ service: `https://${usr.host}` });
   await agent.resumeSession(usr as AtpSessionData);
 
   // Get DID
