@@ -16,6 +16,7 @@ const BooknotesNav: React.FC<BooknotesNavProps> = ({ bookKey, gridInsets, toc })
   const {
     activeBooknoteType,
     currentSection,
+    totalResults,
     showBooknotesNav,
     hasPreviousPage,
     hasNextPage,
@@ -50,6 +51,7 @@ const BooknotesNav: React.FC<BooknotesNavProps> = ({ bookKey, gridInsets, toc })
       title={getShowResultsTitle()}
       section={currentSection}
       progress={1}
+      totalNum={totalResults}
       hasPrevious={hasPreviousPage}
       hasNext={hasNextPage}
       previousTitle={_('Previous')}

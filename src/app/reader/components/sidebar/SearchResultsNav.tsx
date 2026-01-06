@@ -16,6 +16,7 @@ const SearchResultsNav: React.FC<SearchResultsNavProps> = ({ bookKey, gridInsets
     searchTerm,
     searchProgress,
     currentSection,
+    totalResults,
     showSearchNav,
     hasPreviousPage,
     hasNextPage,
@@ -37,6 +38,7 @@ const SearchResultsNav: React.FC<SearchResultsNavProps> = ({ bookKey, gridInsets
       title={_("Search '{{term}}'", { term: searchTerm })}
       section={currentSection}
       progress={searchProgress}
+      totalNum={totalResults}
       hasPrevious={hasPreviousPage}
       hasNext={hasNextPage}
       previousTitle={_('Previous Result')}

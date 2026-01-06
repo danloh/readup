@@ -15,6 +15,7 @@ interface ContentNavBarProps {
   title: string;
   section?: string;
   progress?: number; // 0 to 1, where 1 means complete
+  totalNum?: number; // totalResults length
   showListButton?: boolean;
   hasPrevious: boolean;
   hasNext: boolean;
@@ -34,6 +35,7 @@ const ContentNavBar: React.FC<ContentNavBarProps> = ({
   title,
   section,
   progress,
+  totalNum,
   showListButton = true,
   hasPrevious,
   hasNext,
@@ -112,7 +114,9 @@ const ContentNavBar: React.FC<ContentNavBarProps> = ({
         </div>
 
         <div className='relative z-10 flex flex-1 flex-col items-center px-2'>
-          <span className='line-clamp-1 text-sm font-medium'>{title}</span>
+          <span className='line-clamp-1 text-sm font-medium'>
+            {totalNum !== undefined ? `${title} - ${totalNum}` : title}
+          </span>
           {section && showSection && (
             <span className='text-base-content/70 line-clamp-1 text-xs'>{section}</span>
           )}
