@@ -6,6 +6,9 @@ import { AuthToken, refreshSession, User } from "./auth";
 import { Book } from "@/types/book";
 import { ProgressHandler, webDownload } from "@/utils/transfer";
 
+// Create record according to cc.readup.rbook lexicon (corrected collection name)
+const COLLECTION = "cc.readup.rbook";
+
 export interface BlobResp {
   blob: BlobRef;
 }
@@ -144,13 +147,10 @@ export async function uploadBookFile(
     throw new Error("Could not determine DID from session");
   }
 
-  // Create record according to cc.readup.rbook lexicon (corrected collection name)
-  const collection = "cc.readup.rbook";
-
   // Build the record with proper typing
   // The blob from uploadBlob already has the correct structure
   const recordData: AtBook.RBook = {
-    $type: collection,
+    $type: COLLECTION,
     name: book.title,
     coverblob: coverBlob,
     docblob: bookBlob,
@@ -161,10 +161,10 @@ export async function uploadBookFile(
   };
 
   console.log("Record data:", JSON.stringify(recordData, null, 2));
-  console.log(`Creating record in ${collection}...`);
+  console.log(`Creating record in ${COLLECTION}...`);
   const createRes = await agent.com.atproto.repo.putRecord({
     repo: did,
-    collection,
+    collection: COLLECTION,
     rkey: book.hash,
     record: recordData,
   });
@@ -180,35 +180,40 @@ export async function uploadBookFile(
   };
 }
 
+
 /**
- * Options for listing file records from the PDS
+ * Result returned after successfully download a book
  */
-interface ListOptions {
-  /** The URL of the PDS service */
-  serviceUrl: string;
-  /** sessionData */
-  session: AuthToken;
-  /** Maximum number of records to retrieve. Defaults to 100 */
-  limit?: number;
+export interface DownloadResult {
+  rkey: string;
+  /** The download data */
+  coverData?: Blob;
+  docData?: Blob;
+  /** The download record information */
+  record: AtBook.RBook;
 }
 
 /**
- * List all aqfile records for the authenticated user
+ * Retrieve book file content from a record
  *
- * Retrieves and displays all file records stored under the cc.readup.rfile
- * collection for the authenticated user. The output is formatted as a table
- * showing the record key, file size, MIME type, and filename.
+ * Downloads the blob contents(cover, doc, ) associated with a book record
  *
- * @param options - List configuration options including authentication and limit
- * @returns A promise that resolves when the list is displayed
- * @throws {Error} If authentication fails or the PDS is unreachable
+ * @param rkey - usually, it is book hash
+ * @returns A promise that resolves when the content is retrieved
+ * @throws {Error} If authentication fails, record is not found, or download fails
+ *
  */
-async function listRecords(options: ListOptions): Promise<void> {
-  const { serviceUrl, session, limit = 100 } = options;
-
+export async function downloadBookFile(
+  rkey: string,
+  needCover: boolean,
+  needDoc: boolean,
+  onProgress?: ProgressHandler,
+): Promise<DownloadResult> {
+  const usr = await refreshSession();
+  const serv = usr.service;
   // Initialize agent
-  const agent = new AtpAgent({ service: serviceUrl });
-  await agent.resumeSession(session as AtpSessionData);
+  const agent = new AtpAgent({ service: `https://${usr.host}` });
+  await agent.resumeSession(usr as AtpSessionData);
 
   // Get DID
   const did = agent.session?.did;
@@ -216,51 +221,216 @@ async function listRecords(options: ListOptions): Promise<void> {
     throw new Error("Could not determine DID from session");
   }
 
-  const collection = "cc.readup.rfile";
+  // Get the record
+  let coverCid: string = '';
+  let docCid: string = '';
+
+  const recordResponse = await agent.com.atproto.repo.getRecord({
+    repo: did,
+    collection: COLLECTION,
+    rkey,
+  });
+
+  const record = recordResponse.data.value as AtBook.RBook;
+
+  // Extract cover blob CID
+  const coverblob = record.coverblob;
+  if (!needCover) {
+    console.log("No cover blob needed");
+  } else if (!coverblob || typeof coverblob !== "object" || !("ref" in coverblob)) {
+    console.error("No Cover blob found in record");
+  } else {
+    const coverRef = coverblob.ref;
+    coverCid = typeof coverRef === "object" && coverRef && "$link" in coverRef
+      ? coverRef.$link as string
+      : coverRef as string;
+  }
+
+  // Extract book doc blob CID
+  const docblob = record.docblob;
+  if (!needDoc) {
+    console.log("No Doc blob needed");
+  } else if (!docblob || typeof docblob !== "object" || !("ref" in docblob)) {
+    console.error("No Doc blob found in record");
+  } else {
+    const docRef = docblob.ref;
+    docCid = typeof docRef === "object" && docRef && "$link" in docRef
+      ? docRef.$link as string
+      : docRef as string;
+  }
+
+  // Download the cover blob
+  const coverUrl = coverCid
+    ? `${serv}/xrpc/com.atproto.sync.getBlob?did=${did}&cid=${coverCid}`
+    : undefined;
+  const coverData = coverUrl ? await webDownload(coverUrl, onProgress) : undefined;
+  // Download the book doc blob
+  const docUrl = docCid
+    ? `${serv}/xrpc/com.atproto.sync.getBlob?did=${did}&cid=${docCid}`
+    : undefined;
+  const docData = docUrl ? await webDownload(docUrl, onProgress) : undefined;
+
+  return {
+    rkey,
+    coverData,
+    docData,
+    record,
+  };
+}
+
+/**
+ * item of the list record
+ */
+export interface RecordItem {
+  uri: string;  // at-uri
+  cid: string;
+  value: AtBook.RBook;
+}
+
+/**
+ * List all rbook records for the authenticated user
+ *
+ * Retrieves and displays all file records stored under the cc.readup.rbook
+
+ *
+ * @param limit - Maximum number of records to retrieve. Defaults to 100
+ * @returns A promise that resolves when the list is displayed
+ * @throws {Error} If authentication fails or the PDS is unreachable
+ */
+export async function listRecords(limit = 100): Promise<RecordItem[]> {
+  const usr = await refreshSession();
+  // Initialize agent
+  const agent = new AtpAgent({ service: `https://${usr.host}` });
+  await agent.resumeSession(usr as AtpSessionData);
+
+  // Get DID
+  const did = agent.session?.did;
+  if (!did) {
+    throw new Error("Could not determine DID from session");
+  }
 
   // List records
   const response = await agent.com.atproto.repo.listRecords({
     repo: did,
-    collection,
+    collection: COLLECTION,
     limit,
   });
 
-  const records = response.data.records;
+  const records = response.data.records as RecordItem[];
 
   if (records.length === 0) {
-    console.log("No aqfile records found.");
-    return;
+    console.log("No rbook records found.");
+    return [];
   }
 
-  // Print each record
-  for (const record of records) {
-    const rkey = record.uri.split("/").pop() || "unknown";
-    const value = record.value as AtFile.RFile;
+  return records;
 
-    // Extract relevant info
-    const fileName = value.metadata?.name || "unknown";
-    const fileSize = value.metadata?.size || 0;
-    const mimeType = value.metadata?.mimeType || "unknown";
+  // // Print each record
+  // for (const record of records) {
+  //   const rkey = record.uri.split("/").pop() || "unknown";
+  //   const value = record.value as AtBook.RBook;
 
-    // Format size for readability
-    const formatSize = (bytes: number): string => {
-      if (bytes < 1024) return `${bytes}B`;
-      if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}KB`;
-      if (bytes < 1024 * 1024 * 1024) {
-        return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
-      }
-      return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)}GB`;
-    };
+  //   // Extract relevant info
+  //   const fileName = value.metadata?.name || "unknown";
+  //   const fileSize = value.metadata?.size || 0;
+  //   const mimeType = value.metadata?.mimeType || "unknown";
 
-    // Print row with fixed widths
-    const rkeyStr = rkey.padEnd(13);
-    const sizeStr = formatSize(fileSize).padEnd(11);
-    const mimeStr = mimeType.slice(0, 28).padEnd(29);
-    const nameStr = fileName.slice(0, 40);
+  //   // Format size for readability
+  //   const formatSize = (bytes: number): string => {
+  //     if (bytes < 1024) return `${bytes}B`;
+  //     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}KB`;
+  //     if (bytes < 1024 * 1024 * 1024) {
+  //       return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
+  //     }
+  //     return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)}GB`;
+  //   };
 
-    console.log(`${rkeyStr} ${sizeStr} ${mimeStr} ${nameStr}`);
+  //   // Print row with fixed widths
+  //   const rkeyStr = rkey.padEnd(13);
+  //   const sizeStr = formatSize(fileSize).padEnd(11);
+  //   const mimeStr = mimeType.slice(0, 28).padEnd(29);
+  //   const nameStr = fileName.slice(0, 40);
+
+  //   console.log(`${rkeyStr} ${sizeStr} ${mimeStr} ${nameStr}`);
+  // }
+}
+
+
+/**
+ * Delete an rbook record and its associated blob
+ *
+ * Removes a rbook record from the PDS by its record key (rkey). The associated
+ * blob will be marked for garbage collection by the PDS. Note that the actual
+ * blob deletion is handled by the PDS garbage collector and occurs when no other
+ * records reference the blob.
+ *
+ * @param rkey 
+ * @returns A promise that resolves when the record is deleted
+ * @throws {Error} If authentication fails, record is not found, or deletion fails
+ */
+export async function deleteRecord(rkey: string): Promise<void> {
+  const usr = await refreshSession();
+  // Initialize agent
+  const agent = new AtpAgent({ service: `https://${usr.host}` });
+  await agent.resumeSession(usr as AtpSessionData);
+
+  // Get DID
+  const did = agent.session?.did;
+  if (!did) {
+    throw new Error("Could not determine DID from session");
+  }
+
+  // Get the record first to extract blob reference
+  try {
+    const recordResponse = await agent.com.atproto.repo.getRecord({
+      repo: did,
+      collection: COLLECTION,
+      rkey,
+    });
+
+    const record = recordResponse.data.value as AtBook.RBook;
+    const docblob = record.docblob;
+    const coverblob = record.coverblob;
+
+    // Delete the record
+    console.log(`🗑  Deleting record ${rkey}...`);
+    await agent.com.atproto.repo.deleteRecord({
+      repo: did,
+      collection: COLLECTION,
+      rkey,
+    });
+
+    console.log(`✓ Record deleted`);
+
+    // Note: Blob deletion is handled automatically by PDS when no records reference it
+    // Individual blob deletion API is not available in @atproto/api
+    if (coverblob && typeof coverblob === "object" && "ref" in coverblob) {
+      const cblobRef = coverblob.ref;
+      const coverCid = typeof cblobRef === "object" && cblobRef && "$link" in cblobRef
+        ? cblobRef.$link
+        : cblobRef;
+      console.log(
+        `ℹ  Cover Blob ${coverCid} will be cleaned up by PDS garbage collection`,
+      );
+    }
+    if (docblob && typeof docblob === "object" && "ref" in docblob) {
+      const dblobRef = docblob.ref;
+      const docCid = typeof dblobRef === "object" && dblobRef && "$link" in dblobRef
+        ? dblobRef.$link
+        : dblobRef;
+      console.log(
+        `ℹ  Doc Blob ${docCid} will be cleaned up by PDS garbage collection`,
+      );
+    }
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("not found")) {
+      throw new Error(`Record not found: ${rkey}`);
+    }
+    throw error;
   }
 }
+
+// ================================================================== TODO: del
 
 /**
  * Options for showing file record metadata
@@ -388,17 +558,7 @@ interface GetOptions {
   outputPath?: string;
 }
 
-/**
- * Result returned after successfully uploading a book
- */
-export interface DownloadResult {
-  rkey: string;
-  /** The download data */
-  coverData?: Blob;
-  docData?: Blob;
-  /** The download record information */
-  record: AtBook.RBook;
-}
+
 
 // Determine if content is binary
 const isBinary = (data: Uint8Array): boolean => {
@@ -420,7 +580,7 @@ const isBinary = (data: Uint8Array): boolean => {
   return (nonTextCount / sample.length) > 0.3;
 };
 
-export async function downloadFile(blobUrl: string): Promise<ArrayBuffer | undefined> {
+async function downloadFile(blobUrl: string): Promise<ArrayBuffer | undefined> {
   const response = await fetch(blobUrl);
 
   if (!response.ok) {
@@ -437,105 +597,6 @@ export async function downloadFile(blobUrl: string): Promise<ArrayBuffer | undef
 }
 
 /**
- * Retrieve file content from a record
- *
- * Downloads the blob content associated with a file record and either outputs
- * it to stdout or saves it to a file. In interactive mode, warns if attempting
- * to output binary content to the terminal.
- *
- * @param options - Get configuration options including authentication, rkey, and output path
- * @returns A promise that resolves when the content is retrieved
- * @throws {Error} If authentication fails, record is not found, or download fails
- *
- * @example
- * ```ts
- * // Output to stdout
- * await getRecord({
- *   serviceUrl: "https://bsky.social",
- *   handle: "alice.bsky.social",
- *   password: "app-password",
- *   rkey: "3m35jjrc5b62d"
- * });
- *
- * // Save to file
- * await getRecord({
- *   serviceUrl: "https://bsky.social",
- *   handle: "alice.bsky.social",
- *   password: "app-password",
- *   rkey: "3m35jjrc5b62d",
- *   outputPath: "downloaded.txt"
- * });
- * ```
- */
-async function getRecord(rkey: string): Promise<DownloadResult> {
-  const usr = await refreshSession();
-  const serv = usr.service;
-  // Initialize agent
-  const agent = new AtpAgent({ service: `https://${usr.host}` });
-  await agent.resumeSession(usr as AtpSessionData);
-
-  // Get DID
-  const did = agent.session?.did;
-  if (!did) {
-    throw new Error("Could not determine DID from session");
-  }
-
-  const collection = "cc.readup.rbook";
-
-  // Get the record
-  let coverCid: string = '';
-  let docCid: string = '';
-
-  const recordResponse = await agent.com.atproto.repo.getRecord({
-    repo: did,
-    collection,
-    rkey,
-  });
-
-  const record = recordResponse.data.value as AtBook.RBook;
-
-  // Extract cover blob CID
-  const coverblob = record.coverblob;
-  if (!coverblob || typeof coverblob !== "object" || !("ref" in coverblob)) {
-    console.error("No Cover blob found in record");
-  } else {
-    const coverRef = coverblob.ref;
-    coverCid = typeof coverRef === "object" && coverRef && "$link" in coverRef
-      ? coverRef.$link as string
-      : coverRef as string;
-  }
-
-  // Extract cover blob CID
-  const docblob = record.docblob;
-  if (!docblob || typeof docblob !== "object" || !("ref" in docblob)) {
-    console.error("No Doc blob found in record");
-  } else {
-    const docRef = docblob.ref;
-    docCid = typeof docRef === "object" && docRef && "$link" in docRef
-      ? docRef.$link as string
-      : docRef as string;
-  }
-
-  // Download the cover blob
-  const coverUrl = coverCid
-    ? `${serv}/xrpc/com.atproto.sync.getBlob?did=${did}&cid=${coverCid}`
-    : undefined;
-  const coverData = coverUrl ? await webDownload(coverUrl) : undefined;
-  // Download the book doc blob
-  const docUrl = docCid
-    ? `${serv}/xrpc/com.atproto.sync.getBlob?did=${did}&cid=${docCid}`
-    : undefined;
-  const docData = docUrl ? await webDownload(docUrl) : undefined;
-
-  return {
-    rkey,
-    coverData,
-    docData,
-    record,
-  };
-}
-
-/**
  * Options for deleting a file record from the PDS
  */
 interface DeleteOptions {
@@ -545,85 +606,4 @@ interface DeleteOptions {
   session: AuthToken;
   /** The record key (rkey) of the file to delete */
   rkey: string;
-}
-
-/**
- * Delete an aqfile record and its associated blob
- *
- * Removes a file record from the PDS by its record key (rkey). The associated
- * blob will be marked for garbage collection by the PDS. Note that the actual
- * blob deletion is handled by the PDS garbage collector and occurs when no other
- * records reference the blob.
- *
- * @param options - Delete configuration options including authentication and rkey
- * @returns A promise that resolves when the record is deleted
- * @throws {Error} If authentication fails, record is not found, or deletion fails
- *
- * @example
- * ```ts
- * await deleteRecord({
- *   serviceUrl: "https://bsky.social",
- *   identifier: "alice.bsky.social",
- *   password: "app-password",
- *   rkey: "3m35jjrc5b62d"
- * });
- * // Outputs:
- * // ✓ Logged in as alice.bsky.social
- * // 🗑  Deleting record 3m35jjrc5b62d...
- * // ✓ Record deleted
- * // ℹ  Blob bafkreic... will be cleaned up by PDS garbage collection
- * ```
- */
-async function deleteRecord(options: DeleteOptions): Promise<void> {
-  const { serviceUrl, session, rkey } = options;
-
-  // Initialize agent
-  const agent = new AtpAgent({ service: serviceUrl });
-  await agent.resumeSession(session as AtpSessionData);
-
-  // Get DID
-  const did = agent.session?.did;
-  if (!did) {
-    throw new Error("Could not determine DID from session");
-  }
-
-  const collection = "cc.readup.rfile";
-
-  // Get the record first to extract blob reference
-  try {
-    const recordResponse = await agent.com.atproto.repo.getRecord({
-      repo: did,
-      collection,
-      rkey,
-    });
-
-    const record = recordResponse.data.value as AtFile.RFile;
-    const blob = record.blob;
-
-    // Delete the record
-    console.log(`🗑  Deleting record ${rkey}...`);
-    await agent.com.atproto.repo.deleteRecord({
-      repo: did,
-      collection,
-      rkey,
-    });
-    console.log(`✓ Record deleted`);
-
-    // Note: Blob deletion is handled automatically by PDS when no records reference it
-    // Individual blob deletion API is not available in @atproto/api
-    if (blob && typeof blob === "object" && "ref" in blob) {
-      const blobRef = blob.ref;
-      const cid = typeof blobRef === "object" && blobRef && "$link" in blobRef
-        ? blobRef.$link
-        : blobRef;
-      console.log(
-        `ℹ  Blob ${cid} will be cleaned up by PDS garbage collection`,
-      );
-    }
-  } catch (error) {
-    if (error instanceof Error && error.message.includes("not found")) {
-      throw new Error(`Record not found: ${rkey}`);
-    }
-    throw error;
-  }
 }

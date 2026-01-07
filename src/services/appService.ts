@@ -45,7 +45,7 @@ import { TxtToEpubConverter } from '@/utils/txt';
 import { svg2png } from '@/utils/svg';
 import { ArticleType, FeedType } from '@/app/feed/components/dataAgent';
 import { BOOK_FILE_NOT_FOUND_ERROR } from './errors';
-import { uploadBookFile, UploadResult } from './bsky/atfile';
+import { downloadBookFile, uploadBookFile, UploadResult } from './bsky/atfile';
 import {
   DEFAULT_BOOK_LAYOUT,
   DEFAULT_BOOK_STYLE,
@@ -484,30 +484,23 @@ export abstract class BaseAppService implements AppService {
       await this.fs.createDir(getDir(book), 'Books');
     }
 
-    try {
-      if (needDownCover) {
-        const lfp = getCoverFilename(book);
-        const cfp = `${CLOUD_BOOKS_SUBDIR}/${lfp}`;
-        await this.downloadCloudFile(lfp, cfp, handleProgress);
-        bookCoverDownloaded = true;
-      }
-    } catch (error) {
-      // don't throw error here since some books may not have cover images at all
-      console.log(`Failed to download cover file for book: '${book.title}'`, error);
-    } finally {
-      if (needDownCover) {
-        completedFiles.count++;
-      }
+    const rkey = book.hash;
+    const res = await downloadBookFile(rkey, needDownCover, needDownBook, handleProgress);
+    // FIXME: where to save book record data? metadata, config... 
+    const coverBlob = res.coverData;
+    const docBlob = res.docData;
+    // write data to local
+    if (needDownCover && coverBlob) {
+      const coverDst = `${this.localBooksDir}/${getCoverFilename(book)}`;
+      await this.writeFile(coverDst, 'None', await coverBlob.arrayBuffer());
+      bookCoverDownloaded = await this.fs.exists(coverDst, 'None');;
+    }
+    if (needDownBook && docBlob) {
+      const docDst = `${this.localBooksDir}/${getLocalBookFilename(book)}`;
+      await this.writeFile(docDst, 'None', await docBlob.arrayBuffer());
+      bookDownloaded = await this.fs.exists(docDst, 'None');
     }
 
-    if (needDownBook) {
-      const lfp = getLocalBookFilename(book);
-      const cfp = `${CLOUD_BOOKS_SUBDIR}/${getRemoteBookFilename(book)}`;
-      await this.downloadCloudFile(lfp, cfp, handleProgress);
-      const localFullpath = `${this.localBooksDir}/${lfp}`;
-      bookDownloaded = await this.fs.exists(localFullpath, 'None');
-      completedFiles.count++;
-    }
     // some books may not have cover image, so we need to check if the book is downloaded
     if (bookDownloaded || (!onlyCover && !needDownBook)) {
       book.downloadedAt = Date.now();
