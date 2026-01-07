@@ -194,52 +194,6 @@ const BookDetailModal: React.FC<BookDetailModalProps> = ({
     [],
   );
 
-  // TODO: likely No need download whhen view on book modal 
-  const handleBookDownload = useCallback(
-    async (book: Book, downloadOptions: { redownload?: boolean; queued?: boolean } = {}) => {
-      const { redownload = false, queued = false } = downloadOptions;
-      if (redownload || !queued) {
-        try {
-          await appService?.downloadBook(book, false, redownload);
-          await updateBook(envConfig, book);
-          eventDispatcher.dispatch('toast', {
-            type: 'info',
-            timeout: 2000,
-            message: _('Book downloaded: {{title}}', { title: book.title }),
-          });
-          return true;
-        } catch {
-          eventDispatcher.dispatch('toast', {
-            message: _('Failed to download book: {{title}}', { title: book.title }),
-            type: 'error',
-          });
-          return false;
-        }
-      }
-
-      // Use transfer queue for normal downloads - priority 1 for manual downloads
-      const transferId = transferManager.queueDownload(book, 1);
-      if (transferId) {
-        eventDispatcher.dispatch('toast', {
-          type: 'info',
-          timeout: 2000,
-          message: _('Download queued: {{title}}', {
-            title: book.title,
-          }),
-        });
-        return true;
-      }
-      return false;
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [appService],
-  );
-
-  const handleRedownload = async () => {
-    handleClose();
-    handleBookDownload(book, { redownload: true, queued: false });
-  };
-
   const handleReupload = async () => {
     handleClose();
     handleBookUpload(book);
@@ -292,7 +246,6 @@ const BookDetailModal: React.FC<BookDetailModalProps> = ({
                 fileSize={fileSize}
                 onEdit={handleEditMetadata}
                 onDelete={handleDelete}
-                onDownload={handleRedownload}
                 onUpload={handleReupload}
                 showBtns={showBtns}
               />

@@ -1,10 +1,5 @@
 import React from 'react';
-import {
-  MdOutlineCloudDownload,
-  MdOutlineCloudUpload,
-  MdOutlineDelete,
-  MdOutlineEdit,
-} from 'react-icons/md';
+import { MdOutlineCloudUpload,MdOutlineDelete,MdOutlineEdit } from 'react-icons/md';
 
 import { Book } from '@/types/book';
 import { BookMetadata } from '@/libs/document';
@@ -28,7 +23,6 @@ interface BookDetailViewProps {
   onDelete?: () => void;
   onDeleteCloudBackup?: () => void;
   onDeleteLocalCopy?: () => void;
-  onDownload?: () => void;
   onUpload?: () => void;
   showBtns?: boolean;
 }
@@ -39,7 +33,6 @@ const BookDetailView: React.FC<BookDetailViewProps> = ({
   fileSize,
   onEdit,
   onDelete,
-  onDownload,
   onUpload,
   showBtns = true,
 }) => {
@@ -76,13 +69,8 @@ const BookDetailView: React.FC<BookDetailViewProps> = ({
               </button>
             )}
             {onDelete && showBtns && (
-              <button onClick={onDownload} title={_('Delete from Device')}>
+              <button onClick={onDelete} title={_('Delete from Device')}>
                 <MdOutlineDelete className='fill-red-500 hover:fill-orange-500' />
-              </button>
-            )}
-            {book.uploadedAt && onDownload && showBtns && (
-              <button onClick={onDownload} title={_('Download from Cloud')}>
-                <MdOutlineCloudDownload className='fill-base-content hover:fill-blue-500' />
               </button>
             )}
             {book.downloadedAt && onUpload && showBtns && (
