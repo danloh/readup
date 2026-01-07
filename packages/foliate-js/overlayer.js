@@ -95,10 +95,18 @@ export class Overlayer {
         const arr = Array.from(this.#map.entries())
         // loop in reverse to hit more recently added items first
         for (let i = arr.length - 1; i >= 0; i--) {
+            const tolerance = 5
             const [key, obj] = arr[i]
-            for (const { left, top, right, bottom } of obj.rects)
-                if (top <= y && left <= x && bottom > y && right > x)
+            for (const { left, top, right, bottom } of obj.rects) {
+                if (
+                    top <= y + tolerance &&
+                    left <= x + tolerance &&
+                    bottom > y - tolerance &&
+                    right > x - tolerance
+                ) {
                     return [key, obj.range, { left, top, right, bottom }]
+                }
+            }
         }
         return []
     }
@@ -210,7 +218,7 @@ export class Overlayer {
         return g
     }
     static bubble(rects, options = {}) {
-        const { color = '#fbbf24', writingMode, opacity = 0.5, size = 20, padding = 10 } = options
+        const { color = '#fbbf24', writingMode, opacity = 0.85, size = 20, padding = 10 } = options
         const isVertical = writingMode === 'vertical-rl' || writingMode === 'vertical-lr'
         const g = createSVGElement('g')
         g.style.opacity = opacity
@@ -302,3 +310,4 @@ export class Overlayer {
         return image
     }
 }
+

@@ -197,9 +197,12 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
     isTextSelected,
     handleScroll,
     handleTouchStart,
+    handleTouchMove,
     handleTouchEnd,
-    handlePointerdown,
-    handlePointerup,
+    handlePointerDown,
+    handlePointerMove,
+    handlePointerCancel,
+    handlePointerUp,
     handleSelectionchange,
     handleShowPopup,
     handleUpToPopup,
@@ -216,10 +219,12 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
     const detail = (event as CustomEvent).detail;
     const { doc, index } = detail;
 
-    const handleTouchmove = () => {
+    const handleTouchmove = (ev: TouchEvent) => {
       // Available on iOS, on Android not fired
       // To make the popup not follow the selection while dragging
       setShowAnnotPopup(false);
+      setEditingAnnotation(null);
+      handleTouchMove(ev);
     };
 
     const handleNativeTouch = (event: CustomEvent) => {
@@ -228,7 +233,7 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
         handleTouchStart();
       } else if (ev.type === 'touchend') {
         handleTouchEnd();
-        handlePointerup(doc, index);
+        handlePointerUp(doc, index);
       }
     };
 
@@ -244,13 +249,14 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
     view?.renderer?.addEventListener('scroll', () => {
       repositionPopups();
     });
-    detail.doc?.addEventListener('touchstart', handleTouchStart);
-    detail.doc?.addEventListener('touchmove', handleTouchmove);
+    const opts = { passive: false };
+    detail.doc?.addEventListener('touchstart', handleTouchStart, opts);
+    detail.doc?.addEventListener('touchmove', handleTouchmove, opts);
     detail.doc?.addEventListener('touchend', handleTouchEnd);
-    detail.doc?.addEventListener('pointerdown', handlePointerdown);
-    detail.doc?.addEventListener('pointerup', (ev: PointerEvent) =>
-      handlePointerup(doc, index, ev),
-    );
+    detail.doc?.addEventListener('pointerdown', handlePointerDown.bind(null, doc, index), opts);
+    detail.doc?.addEventListener('pointermove', handlePointerMove.bind(null, doc, index), opts);
+    detail.doc?.addEventListener('pointercancel', handlePointerCancel.bind(null, doc, index));
+    detail.doc?.addEventListener('pointerup', handlePointerUp.bind(null, doc, index));
     detail.doc?.addEventListener('selectionchange', () => handleSelectionchange(doc));
 
     // For PDF selections, enable right-click context menu to directly open translator popup.
@@ -915,8 +921,10 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
       {editingAnnotation && editingAnnotation.color && selection && (
         <AnnotationRangeEditor
           bookKey={bookKey}
+          isVertical={viewSettings.vertical}
           annotation={editingAnnotation}
           selection={selection}
+          handleColor={selectedColor}
           getAnnotationText={getAnnotationText}
           setSelection={setSelection}
           onStartEdit={handleStartEditAnnotation}

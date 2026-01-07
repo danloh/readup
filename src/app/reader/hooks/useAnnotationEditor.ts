@@ -34,7 +34,7 @@ export const useAnnotationEditor = ({
   const [handlePositions, setHandlePositions] = useState<HandlePositions | null>(null);
 
   const getHandlePositionsFromRange = useCallback(
-    (range: Range): HandlePositions | null => {
+    (range: Range, isVertical: boolean): HandlePositions | null => {
       const gridFrame = document.querySelector(`#gridcell-${bookKey}`);
       if (!gridFrame) return null;
 
@@ -48,11 +48,11 @@ export const useAnnotationEditor = ({
 
       return {
         start: {
-          x: frameRect.left + firstRect.left,
+          x: frameRect.left + (isVertical ? firstRect.right : firstRect.left),
           y: frameRect.top + firstRect.top,
         },
         end: {
-          x: frameRect.left + lastRect.right,
+          x: frameRect.left + (isVertical ? lastRect.left : lastRect.right),
           y: frameRect.top + lastRect.bottom,
         },
       };
@@ -61,12 +61,13 @@ export const useAnnotationEditor = ({
   );
 
   const handleAnnotationRangeChange = useCallback(
-    async (startPoint: Point, endPoint: Point, isDragging: boolean) => {
+    async (startPoint: Point, endPoint: Point, isVertical: boolean, isDragging: boolean) => {
       if (!editingAnnotationRef.current || !view) return;
 
       const contents = view.renderer.getContents();
       if (!contents || contents.length === 0) return;
 
+      // the point is from viewport, need to adjust to each content's coordinate
       const findPositionAtPoint = (doc: Document, x: number, y: number) => {
         const frameElement = doc.defaultView?.frameElement;
         const frameRect = frameElement?.getBoundingClientRect() ?? { top: 0, left: 0 };
@@ -102,22 +103,11 @@ export const useAnnotationEditor = ({
           targetDoc = doc;
           targetIndex = index ?? 0;
           break;
-        } else if (sp && !startPos) {
-          startPos = sp;
-          targetDoc = doc;
-          targetIndex = index ?? 0;
-        } else if (ep && !endPos) {
-          endPos = ep;
-          if (!targetDoc) {
-            targetDoc = doc;
-            targetIndex = index ?? 0;
-          }
         }
       }
 
       if (!startPos || !endPos || !targetDoc) return;
 
-      // Create a new range from the positions
       const newRange = targetDoc.createRange();
       try {
         const positionComparison = startPos.node.compareDocumentPosition(endPos.node);
@@ -142,7 +132,7 @@ export const useAnnotationEditor = ({
         return;
       }
 
-      const newPositions = getHandlePositionsFromRange(newRange);
+      const newPositions = getHandlePositionsFromRange(newRange, isVertical);
       if (newPositions) {
         setHandlePositions(newPositions);
       }
