@@ -19,17 +19,10 @@ import { useKeyDownActions } from '@/hooks/useKeyDownActions';
 import { useLibraryStore } from '@/store/libraryStore';
 import { TransferItem, TransferStatus, useTransferStore } from '@/store/transferStore';
 import { Book } from '@/types/book';
-
-const formatBytes = (bytes: number): string => {
-  if (bytes === 0) return '0 B';
-  const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
-};
+import { formatBytes } from '@/utils/book';
 
 const formatSpeed = (bytesPerSec: number): string => {
-  return `${formatBytes(bytesPerSec)}/s`;
+  return `${formatBytes(bytesPerSec) || '0 B'}/s`;
 };
 
 const formatDateTime = (timestamp: number): string => {
@@ -90,6 +83,9 @@ const TransferItemRow: React.FC<{
       <div className='min-w-0 flex-1'>
         <div className='truncate font-medium'>{transfer.bookTitle}</div>
         <div className='text-base-content/60 text-xs'>
+          {(transfer.book?.fileSize || 0) > 0 && (
+            <span className='text-info'>{formatBytes(transfer.book?.fileSize)}</span>
+          )}
           {transfer.status === 'in_progress' && (
             <>
               {Math.round(transfer.progress)}% - {formatSpeed(transfer.transferSpeed)}
@@ -191,7 +187,7 @@ const TransferQueuePanel: React.FC = () => {
         type: 'upload',
         status: 'can',
         progress: 0,
-        totalBytes: 0,
+        totalBytes: book.fileSize || 0,
         transferredBytes: 0,
         transferSpeed: 0,
         retryCount: 0,

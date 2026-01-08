@@ -19,6 +19,9 @@ export interface Book {
   title: string; // editable title from metadata
   sourceTitle?: string; // parsed when the book is imported and used to locate the file
   author: string;
+  // file size in bytes
+  fileSize?: number;
+  
   group?: string; // deprecated in favor of groupId and groupName
   groupId?: string;
   groupName?: string;

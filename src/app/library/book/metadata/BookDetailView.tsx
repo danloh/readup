@@ -18,7 +18,7 @@ import BookCover from '../BookCover';
 interface BookDetailViewProps {
   book: Book;
   metadata: BookMetadata;
-  fileSize: number | null;
+  fileSize?: number;
   onEdit?: () => void;
   onDelete?: () => void;
   onDeleteCloudBackup?: () => void;

@@ -289,6 +289,7 @@ export abstract class BaseAppService implements AppService {
       }
 
       const primaryLanguage = getPrimaryLanguage(loadedBook.metadata.language);
+      const fileSize = fileobj.size;
       const book: Book = {
         hash,
         format,
@@ -296,6 +297,7 @@ export abstract class BaseAppService implements AppService {
         sourceTitle: formatTitle(loadedBook.metadata.title),
         primaryLanguage,
         author: formatAuthors(loadedBook.metadata.author, primaryLanguage),
+        fileSize,
         createdAt: existingBook ? existingBook.createdAt : Date.now(),
         uploadedAt: existingBook ? existingBook.uploadedAt : null,
         deletedAt: transient ? Date.now() : null,
@@ -308,6 +310,7 @@ export abstract class BaseAppService implements AppService {
         existingBook.title = existingBook.title.trim() ? existingBook.title.trim() : book.title;
         existingBook.sourceTitle = existingBook.sourceTitle ?? book.sourceTitle;
         existingBook.author = existingBook.author ?? book.author;
+        existingBook.fileSize = fileSize;
         existingBook.primaryLanguage = existingBook.primaryLanguage ?? book.primaryLanguage;
         existingBook.downloadedAt = Date.now();
       }
@@ -427,6 +430,9 @@ export abstract class BaseAppService implements AppService {
       await this.fs.writeFile(bookfp, 'Books', await bookFile.arrayBuffer());
     }
 
+    // record the file size in bytes of book
+    book.fileSize = bookFile?.size;
+
     // const handleProgress = createProgressHandler(toUploadFpCount, completedFiles, onProgress);
 
     // upload and create a book record on PDS
@@ -489,6 +495,7 @@ export abstract class BaseAppService implements AppService {
     // FIXME: where to save book record data? metadata, config... 
     const coverBlob = res.coverData;
     const docBlob = res.docData;
+    book.fileSize = docBlob?.size;
     // write data to local
     if (needDownCover && coverBlob) {
       const coverDst = `${this.localBooksDir}/${getCoverFilename(book)}`;
@@ -524,7 +531,8 @@ export abstract class BaseAppService implements AppService {
     return false;
   }
 
-  async getBookFileSize(book: Book): Promise<number | null> {
+  /* Get book file size in bytes */
+  async getBookFileSize(book: Book): Promise<number | undefined> {
     const fp = getLocalBookFilename(book);
     if (await this.fs.exists(fp, 'Books')) {
       const file = await this.fs.openFile(fp, 'Books');
@@ -535,7 +543,7 @@ export abstract class BaseAppService implements AppService {
       }
       return size;
     }
-    return null;
+    return undefined;
   }
 
   async loadBookContent(book: Book): Promise<BookContent> {

@@ -403,6 +403,7 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
       if (!file) return;
       try {
         const book = await appService?.importBook(file, library);
+        console.log('>> Imported book:', book);
         const { path, basePath } = selectedFile;
         if (book && path && basePath) {
           const rootPath = getDirPath(basePath);

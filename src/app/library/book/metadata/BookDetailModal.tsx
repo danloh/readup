@@ -40,7 +40,7 @@ const BookDetailModal: React.FC<BookDetailModalProps> = ({
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [bookMeta, setBookMeta] = useState<BookMetadata | null>(null);
-  const [fileSize, setFileSize] = useState<number | null>(null);
+  const [fileSize, setFileSize] = useState<number | undefined>(book.fileSize);
   const { updateBook } = useLibraryStore();
   const { clearBookData } = useBookDataStore();
 
@@ -70,8 +70,10 @@ const BookDetailModal: React.FC<BookDetailModalProps> = ({
       try {
         const details = book.metadata || (await appService.fetchBookDetails(book));
         setBookMeta(details);
-        const size = await appService.getBookFileSize(book);
-        setFileSize(size);
+        if (!fileSize) {
+          const size = await appService.getBookFileSize(book);
+          setFileSize(size);
+        }
       } finally {
         if (loadingTimeout) clearTimeout(loadingTimeout);
         setLoading(false);
