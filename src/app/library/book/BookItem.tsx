@@ -34,8 +34,9 @@ const BookItem: React.FC<BookItemProps> = ({
     >
       <div
         className={clsx(
-          'relative flex aspect-[28/41] items-center justify-center cursor-pointer rounded',
-          mode === 'list' && 'min-w-20',
+          'bookitem-main relative flex aspect-[28/41] items-center justify-center cursor-pointer rounded',
+          mode === 'grid' && 'items-end',
+          mode === 'list' && 'min-w-20 items-center',
         )}
       >
         <BookCover mode={mode} book={book} imageClassName='rounded shadow-md' />

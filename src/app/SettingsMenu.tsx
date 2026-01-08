@@ -194,7 +194,7 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
     <Menu
       label={_('Settings Menu')}
       className={clsx(
-        'settings-menu dropdown-content no-triangle border-base-100',
+        'settings-menu dropdown-content no-triangle',
         'z-20 mt-2 max-w-[90vw] shadow-2xl',
       )}
       onCancel={() => setIsDropdownOpen?.(false)}

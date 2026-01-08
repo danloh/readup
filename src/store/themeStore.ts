@@ -10,12 +10,19 @@ import i18n from '@/i18n/i18n';
 import { CustomTheme, Palette, ThemeMode } from '@/styles/themes';
 import { EnvConfigType, isWebAppPlatform } from '@/services/environment';
 
+declare global {
+  interface Window {
+    __READUP_IS_EINK?: boolean;
+  }
+}
+
 interface ThemeState {
   themeMode: ThemeMode;
   themeColor: string;
   systemIsDarkMode: boolean;
   themeCode: ThemeCode;
   isDarkMode: boolean;
+  isEinkMode: boolean;
   systemUIVisible: boolean;
   uiLang: string;
   statusBarHeight: number;
@@ -30,6 +37,7 @@ interface ThemeState {
   getIsDarkMode: () => boolean;
   setThemeMode: (mode: ThemeMode) => void;
   setThemeColor: (color: string) => void;
+  setIsEinkMode: (isEink: boolean) => void;
   updateAppTheme: (color: keyof Palette) => void;
   saveCustomTheme: (
     envConfig: EnvConfigType,
@@ -50,7 +58,8 @@ const getInitialThemeMode = (): ThemeMode => {
 
 const getInitialThemeColor = (): string => {
   if (typeof window !== 'undefined' && localStorage) {
-    return localStorage.getItem('themeColor') || 'default';
+    const defaultColor = window.__READUP_IS_EINK ? 'contrast' : 'default';
+    return localStorage.getItem('themeColor') || defaultColor;
   }
   return 'default';
 };
@@ -69,6 +78,7 @@ export const useThemeStore = create<ThemeState>((set, get) => {
     themeColor: initialThemeColor,
     systemIsDarkMode,
     isDarkMode,
+    isEinkMode: false,
     themeCode,
     systemUIVisible: false,
     uiLang: '',
@@ -109,6 +119,9 @@ export const useThemeStore = create<ThemeState>((set, get) => {
       );
       set({ themeColor: color });
       set({ themeCode: getThemeCode() });
+    },
+    setIsEinkMode: (isEink: boolean) => {
+      set({ isEinkMode: isEink });
     },
     updateAppTheme: (color) => {
       if (isWebAppPlatform()) {

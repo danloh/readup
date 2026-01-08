@@ -57,7 +57,7 @@ interface CMProps {
   closeDialog: () => void;
 }
 
-export function CatalogManager({ closeDialog}: CMProps) {
+export function CatalogManager({ closeDialog }: CMProps) {
   const _ = useTranslation();
   const router = useRouter();
   const { envConfig } = useEnv();
@@ -411,9 +411,6 @@ export function CatalogManager({ closeDialog}: CMProps) {
                 </div>
               </form>
             </div>
-            <form method='dialog' className='modal-backdrop'>
-              <button onClick={() => setShowAddDialog(false)}>{_('Close')}</button>
-            </form>
           </dialog>
         </ModalPortal>
       )}

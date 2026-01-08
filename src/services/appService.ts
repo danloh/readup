@@ -65,6 +65,7 @@ import {
   DEFAULT_TRANSLATOR_CONFIG,
   SETTINGS_FILENAME,
   DEFAULT_ANNOTATOR_CONFIG,
+  DEFAULT_EINK_VIEW_SETTINGS,
 } from './constants';
 
 export abstract class BaseAppService implements AppService {
@@ -80,6 +81,7 @@ export abstract class BaseAppService implements AppService {
   isMobileApp = false;
   isPortableApp = false;
   isDesktopApp = false;
+  isEink = false;
   hasTrafficLight = false;
   hasWindow = false;
   hasWindowBar = false;
@@ -178,6 +180,7 @@ export abstract class BaseAppService implements AppService {
       ...DEFAULT_BOOK_FONT,
       ...(this.isMobile ? DEFAULT_MOBILE_VIEW_SETTINGS : {}),
       ...(isCJKEnv() ? DEFAULT_CJK_VIEW_SETTINGS : {}),
+      ...(this.isEink ? DEFAULT_EINK_VIEW_SETTINGS : {}),
       ...DEFAULT_VIEW_CONFIG,
       ...DEFAULT_TTS_CONFIG,
       ...DEFAULT_SCREEN_CONFIG,

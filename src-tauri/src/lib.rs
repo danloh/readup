@@ -9,27 +9,34 @@ extern crate objc;
 #[cfg(target_os = "windows")]
 mod windows;
 
-use tauri::utils::config::BackgroundThrottlingPolicy;
+#[cfg(target_os = "android")]
+mod android;
 
 #[cfg(target_os = "macos")]
-use tauri::TitleBarStyle;
+mod macos;
+
+mod file;
+mod feed;
 
 use std::path::PathBuf;
 use tauri::{AppHandle, Manager};
 use tauri::{command, Emitter, WebviewUrl, WebviewWindowBuilder, Window};
+use tauri::utils::config::BackgroundThrottlingPolicy;
+use tauri_plugin_fs::FsExt;
+use tauri_plugin_oauth::start;
+
+#[cfg(target_os = "macos")]
+use tauri::TitleBarStyle;
 
 #[cfg(desktop)]
 use tauri::{Listener, Url};
 
-use tauri_plugin_fs::FsExt;
-use tauri_plugin_oauth::start;
 #[cfg(target_os = "android")]
 use tauri_plugin_native_bridge::register_select_directory_callback;
-
-#[cfg(target_os = "macos")]
-mod macos;
-mod file;
-mod feed;
+#[cfg(target_os = "android")]
+use tauri_plugin_native_bridge::{NativeBridgeExt, OpenExternalUrlRequest};
+#[cfg(not(target_os = "android"))]
+use tauri_plugin_opener::OpenerExt;
 
 #[cfg(desktop)]
 fn allow_file_in_scopes(app: &AppHandle, files: Vec<PathBuf>) {
@@ -144,9 +151,9 @@ struct SingleInstancePayload {
 pub fn run() {
     let builder = tauri::Builder::default()
         .plugin(tauri_plugin_process::init())
-        .plugin(tauri_plugin_oauth::init())
+        .plugin(tauri_plugin_oauth::init()) // TODO, del
         .invoke_handler(tauri::generate_handler![
-            start_server,
+            start_server, // for oauth, TODO: can del
             file::download_file,
             file::upload_file,
             feed::fetch_feed,
@@ -202,137 +209,205 @@ pub fn run() {
     #[cfg(any(target_os = "ios", target_os = "android"))]
     let builder = builder.plugin(tauri_plugin_haptics::init());
 
-    builder
-        .setup(|#[allow(unused_variables)] app| {
-            #[cfg(desktop)]
-            {
-                let files = get_files_from_argv(std::env::args().collect());
-                if !files.is_empty() {
-                    let app_handle = app.handle().clone();
-                    allow_file_in_scopes(&app_handle, files.clone());
-                    app.listen("window-ready", move |_| {
-                        println!("Window is ready, proceeding to handle files.");
-                        set_window_open_with_files(&app_handle, files.clone());
-                    });
-                }
-            }
-
-            #[cfg(desktop)]
-            {
-                allow_dir_in_scopes(app.handle(), &PathBuf::from(get_executable_dir()));
-            }
-
-            #[cfg(target_os = "android")]
-            register_select_directory_callback(app.handle(), move |app, path| {
-                allow_dir_in_scopes(app, path);
-            });
-
-            #[cfg(desktop)]
-            {
-                app.handle().plugin(tauri_plugin_cli::init())?;
-
+    builder.setup(|#[allow(unused_variables)] app| {
+        #[cfg(desktop)]
+        {
+            let files = get_files_from_argv(std::env::args().collect());
+            if !files.is_empty() {
                 let app_handle = app.handle().clone();
+                allow_file_in_scopes(&app_handle, files.clone());
                 app.listen("window-ready", move |_| {
-                    let webview = app_handle.get_webview_window("main").unwrap();
-                    webview
-                        .eval("window.__READUP_CLI_ACCESS = true;")
-                        .expect("Failed to set cli access config");
-
-                    #[cfg(target_os = "linux")]
-                    {
-                        let is_appimage = std::env::var("APPIMAGE").is_ok()
-                            || std::env::current_exe()
-                                .map(|path| path.to_string_lossy().contains("/tmp/.mount_"))
-                                .unwrap_or(false);
-
-                        let script =
-                            format!("window.__READUP_UPDATER_DISABLED = {};", !is_appimage);
-                        webview
-                            .eval(&script)
-                            .expect("Failed to set updater disabled config");
-                    }
+                    println!("Window is ready, proceeding to handle files.");
+                    set_window_open_with_files(&app_handle, files.clone());
                 });
             }
+        }
 
-            #[cfg(any(target_os = "windows", target_os = "linux"))]
-            {
-                use tauri_plugin_deep_link::DeepLinkExt;
-                let _ = app.deep_link().register_all();
-            }
+        #[cfg(desktop)]
+        {
+            allow_dir_in_scopes(app.handle(), &PathBuf::from(get_executable_dir()));
+        }
 
-            if let Err(e) = app.handle().plugin(
-                tauri_plugin_log::Builder::default()
-                    .level(log::LevelFilter::Info)
-                    .build(),
-            ) {
-                eprintln!("Failed to initialize tauri_plugin_log: {e}");
-            };
+        #[cfg(target_os = "android")]
+        register_select_directory_callback(app.handle(), move |app, path| {
+            allow_dir_in_scopes(app, path);
+        });
 
-            let win_builder = WebviewWindowBuilder::new(app, "main", WebviewUrl::default())
-                .background_throttling(BackgroundThrottlingPolicy::Disabled)
-                .background_color(tauri::window::Color(50, 49, 48, 255));
+        #[cfg(desktop)]
+        {
+            app.handle().plugin(tauri_plugin_cli::init())?;
 
-            #[cfg(desktop)]
-            let win_builder = win_builder.inner_size(800.0, 600.0).resizable(true);
+            let app_handle = app.handle().clone();
+            app.listen("window-ready", move |_| {
+                let webview = app_handle.get_webview_window("main").unwrap();
+                webview
+                    .eval("window.__READUP_CLI_ACCESS = true;")
+                    .expect("Failed to set cli access config");
 
-            #[cfg(target_os = "macos")]
-            let win_builder = win_builder
-                .decorations(true)
-                .title_bar_style(TitleBarStyle::Overlay)
-                .title("");
-
-            #[cfg(all(not(target_os = "macos"), desktop))]
-            let win_builder = {
-                let mut builder = win_builder
-                    .decorations(false)
-                    .visible(false)
-                    .shadow(true)
-                    .title("Readup");
-
-                #[cfg(target_os = "windows")]
-                {
-                    builder = builder.transparent(false);
-                }
                 #[cfg(target_os = "linux")]
                 {
-                    builder = builder
-                        .transparent(true)
-                        .background_color(tauri::window::Color(0, 0, 0, 0));
+                    let is_appimage = std::env::var("APPIMAGE").is_ok()
+                        || std::env::current_exe()
+                            .map(|path| path.to_string_lossy().contains("/tmp/.mount_"))
+                            .unwrap_or(false);
+
+                    let script =
+                        format!("window.__READUP_UPDATER_DISABLED = {};", !is_appimage);
+                    webview
+                        .eval(&script)
+                        .expect("Failed to set updater disabled config");
                 }
+            });
+        }
 
-                builder
-            };
+        #[cfg(any(target_os = "windows", target_os = "linux"))]
+        {
+            use tauri_plugin_deep_link::DeepLinkExt;
+            let _ = app.deep_link().register_all();
+        }
 
-            win_builder.build().unwrap();
-            // let win = win_builder.build().unwrap();
-            // win.open_devtools();
+        if let Err(e) = app.handle().plugin(
+            tauri_plugin_log::Builder::default()
+                .level(log::LevelFilter::Info)
+                .build(),
+        ) {
+            eprintln!("Failed to initialize tauri_plugin_log: {e}");
+        };
 
-            #[cfg(target_os = "macos")]
-            macos::menu::setup_macos_menu(app.handle())?;
+        // Check for e-ink device on Android before building the window
+        #[cfg(target_os = "android")]
+        let is_eink = android::is_eink_device();
+        #[cfg(not(target_os = "android"))]
+        let is_eink = false;
 
-            app.handle().emit("window-ready", ()).unwrap();
+        let eink_script = if is_eink {
+            "window.__READUP_IS_EINK = true;"
+        } else {
+            ""
+        };
 
-            Ok(())
-        })
-        .build(tauri::generate_context!())
-        .expect("error while running tauri application")
-        .run(
-            #[allow(unused_variables)]
-            |app_handle, event| {
-                #[cfg(target_os = "macos")]
-                if let tauri::RunEvent::Opened { urls } = event {
-                    let files = urls
-                        .into_iter()
-                        .filter_map(|url| url.to_file_path().ok())
-                        .collect::<Vec<_>>();
-
-                    let app_handler_clone = app_handle.clone();
-                    allow_file_in_scopes(app_handle, files.clone());
-                    app_handle.listen("window-ready", move |_| {
-                        println!("Window is ready, proceeding to handle files.");
-                        set_window_open_with_files(&app_handler_clone, files.clone());
-                    });
-                }
-            },
+        let init_script = format!(
+            r#"
+                {eink_script}
+                window.addEventListener('DOMContentLoaded', function() {{
+                    document.documentElement.classList.add('edge-to-edge');
+                    const isTauriLocal = window.location.protocol === 'tauri:' ||
+                                        window.location.protocol === 'about:' ||
+                                        window.location.hostname === 'tauri.localhost';
+                    const needsSafeArea = !isTauriLocal;
+                    if (needsSafeArea && !document.getElementById('safe-area-style')) {{
+                        const style = document.createElement('style');
+                        style.id = 'safe-area-style';
+                        style.textContent = `
+                            body {{
+                                padding-top: env(safe-area-inset-top) !important;
+                                padding-bottom: env(safe-area-inset-bottom) !important;
+                                padding-left: env(safe-area-inset-left) !important;
+                                padding-right: env(safe-area-inset-right) !important;
+                            }}
+                        `;
+                        document.head.appendChild(style);
+                    }}
+                }});
+            "#,
+            eink_script = eink_script
         );
+
+        let app_handle = app.handle().clone();
+        let win_builder = WebviewWindowBuilder::new(app, "main", WebviewUrl::default())
+            .background_throttling(BackgroundThrottlingPolicy::Disabled)
+            .background_color(if is_eink {
+                tauri::window::Color(255, 255, 255, 255)
+            } else {
+                tauri::window::Color(50, 49, 48, 255)
+            })
+            .initialization_script(&init_script)
+            .on_navigation(move |url| {
+                if url.scheme() == "alipays" || url.scheme() == "alipay" {
+                    let url_str = url.as_str().to_string();
+                    #[cfg(target_os = "android")]
+                    {
+                        let handle = app_handle.clone();
+                        tauri::async_runtime::spawn(async move {
+                            match handle
+                                .native_bridge()
+                                .open_external_url(OpenExternalUrlRequest { url: url_str })
+                            {
+                                Ok(result) => println!("Result: {:?}", result),
+                                Err(e) => eprintln!("Error: {:?}", e),
+                            }
+                        });
+                    }
+                    #[cfg(not(target_os = "android"))]
+                    {
+                        let _ = app_handle.opener().open_url(url_str, None::<&str>);
+                    }
+                    return false;
+                }
+                true
+            });
+
+        #[cfg(desktop)]
+        let win_builder = win_builder.inner_size(800.0, 600.0).resizable(true);
+
+        #[cfg(target_os = "macos")]
+        let win_builder = win_builder
+            .decorations(true)
+            .title_bar_style(TitleBarStyle::Overlay)
+            .title("");
+
+        #[cfg(all(not(target_os = "macos"), desktop))]
+        let win_builder = {
+            let mut builder = win_builder
+                .decorations(false)
+                .visible(false)
+                .shadow(true)
+                .title("Readup");
+
+            #[cfg(target_os = "windows")]
+            {
+                builder = builder.transparent(false);
+            }
+            #[cfg(target_os = "linux")]
+            {
+                builder = builder
+                    .transparent(true)
+                    .background_color(tauri::window::Color(0, 0, 0, 0));
+            }
+
+            builder
+        };
+
+        win_builder.build().unwrap();
+        // let win = win_builder.build().unwrap();
+        // win.open_devtools();
+
+        #[cfg(target_os = "macos")]
+        macos::menu::setup_macos_menu(app.handle())?;
+
+        app.handle().emit("window-ready", ()).unwrap();
+
+        Ok(())
+    })
+    .build(tauri::generate_context!())
+    .expect("error while running tauri application")
+    .run(
+        #[allow(unused_variables)]
+        |app_handle, event| {
+            #[cfg(target_os = "macos")]
+            if let tauri::RunEvent::Opened { urls } = event {
+                let files = urls
+                    .into_iter()
+                    .filter_map(|url| url.to_file_path().ok())
+                    .collect::<Vec<_>>();
+
+                let app_handler_clone = app_handle.clone();
+                allow_file_in_scopes(app_handle, files.clone());
+                app_handle.listen("window-ready", move |_| {
+                    println!("Window is ready, proceeding to handle files.");
+                    set_window_open_with_files(&app_handler_clone, files.clone());
+                });
+            }
+        },
+    );
 }

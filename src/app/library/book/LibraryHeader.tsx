@@ -14,7 +14,6 @@ import { useResponsiveSize } from '@/hooks/useResponsiveSize';
 import { navigateToLibrary } from '@/utils/nav';
 import { debounce } from '@/utils/debounce';
 import Dropdown from '@/components/Dropdown';
-import { useSettingsStore } from '@/store/settingsStore';
 import ViewMenu from './ViewMenu';
 
 interface LibraryHeaderProps {
@@ -29,8 +28,6 @@ const LibraryHeader: React.FC<LibraryHeaderProps> = (
   const router = useRouter();
   const searchParams = useSearchParams();
   const { currentBookshelf } = useLibraryStore();
-  const { settings } = useSettingsStore();
-  const viewSettings = settings.globalViewSettings;
 
   const [searchQuery, setSearchQuery] = useState(searchParams?.get('q') ?? '');
   const iconSize20 = useResponsiveSize(20);
@@ -78,7 +75,7 @@ const LibraryHeader: React.FC<LibraryHeaderProps> = (
             </button>
           )}
           <div className='relative flex h-9 w-full items-center sm:h-7'>
-            <span className='absolute left-3 text-base-content/50'>
+            <span className='text-base-content/50 absolute ps-3'>
               <FaSearch className='h-4 w-4' />
             </span>
             <input
@@ -94,10 +91,8 @@ const LibraryHeader: React.FC<LibraryHeaderProps> = (
               onChange={handleSearchChange}
               spellCheck='false'
               className={clsx(
-                'input rounded-badge h-9 w-full pl-10 pr-10 sm:h-7',
-                viewSettings?.isEink
-                  ? 'border-1 border-base-content focus:border-base-content'
-                  : 'bg-base-300/45 border-none',
+                'search-input input h-9 w-full rounded-full pr-[30%] ps-10 sm:h-7',
+                'bg-base-300/45 border-0',
                 'font-sans text-sm font-light',
                 'placeholder:text-base-content/50 truncate',
                 'focus:outline-none focus:ring-0',

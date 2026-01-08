@@ -97,7 +97,7 @@ export const AboutWindow = () => {
           <div className='h-5'>
             {!updateStatus && (
               <span
-                className='badge badge-primary cursor-pointer p-2'
+                className='btn btn-sm btn-primary cursor-pointer p-1 text-xs'
                 onClick={appService?.hasUpdater ? handleCheckUpdate : handleShowRecentUpdates}
               >
                 {_('Check Update')}

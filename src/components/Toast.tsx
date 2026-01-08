@@ -16,9 +16,9 @@ export const Toast = () => {
 
   const toastClassMap = {
     info: 'toast-info toast-center toast-middle',
-    success: 'toast-success toast-top sm:toast-end toast-center',
-    warning: 'toast-warning toast-top sm:toast-end toast-center',
-    error: 'toast-error toast-top sm:toast-end toast-center',
+    success: 'alert-success not-eink:from-green-500 not-eink:to-emerald-500',
+    warning: 'alert-warning not-eink:from-amber-500 not-eink:to-orange-500',
+    error: 'alert-error not-eink:from-red-500 not-eink:to-rose-500',
   };
 
   const alertClassMap = {
@@ -132,7 +132,9 @@ export const Toast = () => {
           className={clsx(
             'alert flex items-center gap-3 shadow-2xl backdrop-blur-sm',
             'min-h-0 rounded-2xl px-5 py-4',
+            'not-eink:bg-gradient-to-r border-0',
             alertClassMap[toastType],
+            'eink:bg-base-100 eink:border eink:border-base-content',
             toastType !== 'info' && 'text-white',
           )}
         >

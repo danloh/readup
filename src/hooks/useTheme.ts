@@ -21,6 +21,7 @@ export const useTheme = ({
   const {
     themeColor,
     isDarkMode,
+    isEinkMode,
     showSystemUI,
     dismissSystemUI,
     updateAppTheme,
@@ -118,8 +119,12 @@ export const useTheme = ({
     document.documentElement.setAttribute('data-theme', `${themeColor}-${colorScheme}`);
     document.documentElement.style.setProperty('color-scheme', colorScheme);
     document.documentElement.style.setProperty(
-      '--overlayer-highlight-blend-mode',
-      isDarkMode ? 'lighten' : 'normal',
+      '--overlayer-highlight-opacity',
+      isEinkMode ? '1.0' : '0.3',
     );
-  }, [themeColor, isDarkMode]);
+    document.documentElement.style.setProperty(
+      '--overlayer-highlight-blend-mode',
+      isEinkMode ? 'difference' : isDarkMode ? 'lighten' : 'normal',
+    );
+  }, [themeColor, isDarkMode, isEinkMode]);
 };

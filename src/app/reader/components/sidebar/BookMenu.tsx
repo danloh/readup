@@ -72,7 +72,7 @@ const BookMenu: React.FC<BookMenuProps> = ({ menuClassName, setIsDropdownOpen })
 
   return (
     <Menu
-      className={clsx('book-menu dropdown-content border-base-100 z-20 shadow-2xl', menuClassName)}
+      className={clsx('book-menu dropdown-content z-20 shadow-2xl', menuClassName)}
       onCancel={() => setIsDropdownOpen?.(false)}
     >
       <MenuItem

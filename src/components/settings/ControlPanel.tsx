@@ -172,7 +172,7 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
       },
       ...annotationToolQuickActions.map((button) => ({
         value: button.type,
-        label: button.label,
+        label: _(button.label),
       })),
     ];
   };
