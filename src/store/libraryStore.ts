@@ -1,6 +1,8 @@
 import { create } from 'zustand';
-import { Book, BooksGroup } from '@/types/book';
+import { Book, BookGroupType, BooksGroup } from '@/types/book';
 import { EnvConfigType, isTauriAppPlatform } from '@/services/environment';
+import { BOOK_UNGROUPED_NAME } from '@/services/constants';
+import { md5Fingerprint } from '@/utils/md5';
 
 interface LibraryState {
   library: Book[]; // might contain deleted books
@@ -13,6 +15,14 @@ interface LibraryState {
   setLibrary: (books: Book[]) => void;
   updateBook: (envConfig: EnvConfigType, book: Book) => void;
   setCurrentBookshelf: (bookshelf: (Book | BooksGroup)[]) => void;
+  groups: Record<string, string>;
+  refreshGroups: () => void;
+  addGroup: (name: string) => BookGroupType;
+  getGroups: () => BookGroupType[];
+  getGroupId: (path: string) => string | undefined;
+  getGroupName: (id: string) => string | undefined;
+  getParentPath: (path: string) => string | undefined;
+  getGroupsByParent: (parentPath?: string) => BookGroupType[];
 }
 
 export const useLibraryStore = create<LibraryState>((set, get) => ({
@@ -26,7 +36,11 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
   },
   setCheckOpenWithBooks: (check) => set({ checkOpenWithBooks: check }),
   setCheckLastOpenBooks: (check) => set({ checkLastOpenBooks: check }),
-  setLibrary: (books) => set({ library: books }),
+  setLibrary: (books) => {
+    const { refreshGroups } = get();
+    set({ library: books });
+    refreshGroups();
+  },
   updateBook: async (envConfig: EnvConfigType, book: Book) => {
     const appService = await envConfig.getAppService();
     const { library } = get();
@@ -36,5 +50,78 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
     }
     set({ library: [...library] });
     appService.saveLibraryBooks(library);
+  },
+  groups: {},
+  refreshGroups: () => {
+    const { library } = get();
+    const groups: Record<string, string> = {};
+
+    library.forEach((book) => {
+      if (book.groupName && book.groupName !== BOOK_UNGROUPED_NAME && !book.deletedAt) {
+        groups[md5Fingerprint(book.groupName)] = book.groupName;
+        let nextSlashIndex = book.groupName.indexOf('/', 0);
+        while (nextSlashIndex > 0) {
+          const groupName = book.groupName.substring(0, nextSlashIndex);
+          groups[md5Fingerprint(groupName)] = groupName;
+          nextSlashIndex = book.groupName.indexOf('/', nextSlashIndex + 1);
+        }
+      }
+    });
+
+    set({ groups });
+  },
+
+  addGroup: (name: string) => {
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      throw new Error('Group name cannot be empty');
+    }
+
+    const id = md5Fingerprint(trimmedName);
+    const { groups } = get();
+
+    set({ groups: { ...groups, [id]: trimmedName } });
+
+    return { id, name: trimmedName };
+  },
+
+  getGroups: () => {
+    const { groups } = get();
+    return Object.entries(groups)
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  },
+
+  getGroupId: (path: string) => {
+    const { groups } = get();
+
+    const directId = Object.entries(groups).find(([_, name]) => name === path)?.[0];
+    if (directId) {
+      return directId;
+    }
+
+    return md5Fingerprint(path);
+  },
+
+  getGroupName: (id: string) => {
+    return get().groups[id];
+  },
+
+  getParentPath: (path: string) => {
+    const lastSlashIndex = path.lastIndexOf('/');
+    if (lastSlashIndex === -1) return '';
+    return path.slice(0, lastSlashIndex);
+  },
+
+  getGroupsByParent: (parentPath?: string) => {
+    const { groups } = get();
+    const result: BookGroupType[] = [];
+    Object.entries(groups).forEach(([id, name]) => {
+      const groupParentPath = get().getParentPath(name);
+      if (groupParentPath === (parentPath || '')) {
+        result.push({ id, name });
+      }
+    });
+    return result;
   },
 }));

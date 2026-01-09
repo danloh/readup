@@ -14,7 +14,6 @@ import { useBookDataStore } from '@/store/bookDataStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import Alert from '@/components/Alert';
 import Dialog from '@/components/Dialog';
-import Spinner from '@/components/Spinner';
 import { useMetadataEdit } from './useMetadataEdit';
 import BookDetailView from './BookDetailView';
 import BookDetailEdit from './BookDetailEdit';
@@ -36,7 +35,6 @@ const BookDetailModal: React.FC<BookDetailModalProps> = ({
   const _ = useTranslation();
   const { envConfig, appService } = useEnv();
   const { safeAreaInsets } = useThemeStore();
-  const [loading, setLoading] = useState(false);
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [bookMeta, setBookMeta] = useState<BookMetadata | null>(null);
@@ -64,20 +62,19 @@ const BookDetailModal: React.FC<BookDetailModalProps> = ({
   } = useMetadataEdit(bookMeta);
 
   useEffect(() => {
-    const loadingTimeout = setTimeout(() => setLoading(true), 300);
     const fetchBookDetails = async () => {
       const appService = await envConfig.getAppService();
       try {
-        const details = book.metadata || (await appService.fetchBookDetails(book));
+        let details = book.metadata || null;
+        if (!details && book.downloadedAt) {
+          details = await appService.fetchBookDetails(book);
+        }
         setBookMeta(details);
         if (!fileSize) {
           const size = await appService.getBookFileSize(book);
           setFileSize(size);
         }
-      } finally {
-        if (loadingTimeout) clearTimeout(loadingTimeout);
-        setLoading(false);
-      }
+      } finally {}
     };
     fetchBookDetails();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -201,15 +198,6 @@ const BookDetailModal: React.FC<BookDetailModalProps> = ({
     handleBookUpload(book);
   };
 
-  if (!bookMeta)
-    return (
-      loading && (
-        <div className='fixed inset-0 z-50 flex items-center justify-center'>
-          <Spinner loading />
-        </div>
-      )
-    );
-
   return (
     <>
       <div className='fixed inset-0 z-50 flex items-center justify-center'>
@@ -224,7 +212,7 @@ const BookDetailModal: React.FC<BookDetailModalProps> = ({
           contentClassName='!px-6 !py-4'
         >
           <div className='flex w-full select-text items-start justify-center'>
-            {editMode ? (
+            {editMode && bookMeta ? (
               <BookDetailEdit
                 book={book}
                 metadata={editedMeta}

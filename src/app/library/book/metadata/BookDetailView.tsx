@@ -17,7 +17,7 @@ import BookCover from '../BookCover';
 
 interface BookDetailViewProps {
   book: Book;
-  metadata: BookMetadata;
+  metadata: BookMetadata | null;
   fileSize?: number;
   onEdit?: () => void;
   onDelete?: () => void;
@@ -50,10 +50,10 @@ const BookDetailView: React.FC<BookDetailViewProps> = ({
               {formatTitle(book.title) || _('Untitled')}
             </p>
             <p className='text-neutral-content mb-1 line-clamp-1'>
-              {formatTitle(metadata.subtitle || '')}
+              {formatTitle(metadata?.subtitle || '')}
             </p>
             <p className='text-neutral-content line-clamp-1'>
-              {metadata.series 
+              {metadata?.series 
                 ? `${metadata.series} ${metadata.seriesIndex || 1}/${metadata.seriesTotal || 1}` 
                 : ''
               }
@@ -64,8 +64,12 @@ const BookDetailView: React.FC<BookDetailViewProps> = ({
           </div>
           <div className='flex flex-wrap items-center gap-x-4'>
             {onEdit && showBtns && (
-              <button onClick={onEdit} title={_('Edit Metadata')}>
-                <MdOutlineEdit className='fill-base-content hover:fill-blue-500' />
+              <button
+                onClick={onEdit}
+                className={!metadata ? 'btn-disabled opacity-50' : ''}
+                title={_('Edit Metadata')}
+              >
+                <MdOutlineEdit className='hover:fill-blue-500' />
               </button>
             )}
             {onDelete && showBtns && (
@@ -87,25 +91,25 @@ const BookDetailView: React.FC<BookDetailViewProps> = ({
           <div className='overflow-hidden'>
             <span className='font-bold'>{_('Publisher')}</span>
             <p className='text-neutral-content text-sm'>
-              {formatPublisher(metadata.publisher || '') || _('Unknown')}
+              {formatPublisher(metadata?.publisher || '') || _('Unknown')}
             </p>
           </div>
           <div className='overflow-hidden'>
             <span className='font-bold'>{_('Published')}</span>
             <p className='text-neutral-content text-sm'>
-              {formatDate(metadata.published, true) || _('Unknown')}
+              {formatDate(metadata?.published, true) || _('Unknown')}
             </p>
           </div>
           <div className='overflow-hidden'>
             <span className='font-bold'>{_('Language')}</span>
             <p className='text-neutral-content text-sm'>
-              {formatLanguage(metadata.language) || _('Unknown')}
+              {formatLanguage(metadata?.language) || _('Unknown')}
             </p>
           </div>
           <div className='overflow-hidden'>
             <span className='font-bold'>{_('Identifier')}</span>
             <p className='text-neutral-content text-sm'>
-              {normalizeIdentifier(metadata.identifier || '') || _('Unknown')}
+              {normalizeIdentifier(metadata?.identifier || '') || _('Unknown')}
             </p>
           </div>
           <div className='overflow-hidden'>
@@ -127,7 +131,7 @@ const BookDetailView: React.FC<BookDetailViewProps> = ({
           <div className='overflow-hidden'>
             <span className='font-bold'>{_('Subjects')}</span>
             <p className='text-neutral-content line-clamp-3 text-sm'>
-              {formatAuthors(metadata.subject || '') || _('Unknown')}
+              {formatAuthors(metadata?.subject || '') || _('Unknown')}
             </p>
           </div>
         </div>
@@ -136,7 +140,7 @@ const BookDetailView: React.FC<BookDetailViewProps> = ({
           <p
             className='text-neutral-content prose prose-sm max-w-full text-sm'
             dangerouslySetInnerHTML={{
-              __html: metadata.description || _('No description available'),
+              __html: metadata?.description || _('No description available'),
             }}
           ></p>
         </div>

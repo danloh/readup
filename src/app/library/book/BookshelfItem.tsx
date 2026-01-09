@@ -69,9 +69,10 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
   const { updateBook } = useLibraryStore();
 
   const showBookDetailsModal = async (book: Book) => {
-    if (await makeBookAvailable(book)) {
-      handleShowDetailsBook(book);
-    }
+    // if (await makeBookAvailable(book)) {
+    //   handleShowDetailsBook(book);
+    // }
+    handleShowDetailsBook(book);
   };
 
   // Download book to makeBookAvailable

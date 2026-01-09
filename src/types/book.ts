@@ -22,7 +22,6 @@ export interface Book {
   // file size in bytes
   fileSize?: number;
   
-  group?: string; // deprecated in favor of groupId and groupName
   groupId?: string;
   groupName?: string;
   tags?: string[];

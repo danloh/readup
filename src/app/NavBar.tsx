@@ -1,7 +1,7 @@
 'use client';
 
 import clsx from 'clsx';
-import { useCallback, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { ImFeed } from "react-icons/im";
 import { BiLibrary } from 'react-icons/bi';
@@ -19,6 +19,14 @@ import SettingsDialog from '@/components/settings/SettingsDialog';
 import Logo from '@/components/Logo';
 import { useThemeStore } from '@/store/themeStore';
 import { useSettingsStore } from '@/store/settingsStore';
+import { checkAppReleaseNotes, checkForAppUpdates } from '@/helpers/updater';
+import { 
+  tauriHandleClose, tauriHandleSetAlwaysOnTop, tauriHandleToggleFullScreen, tauriQuitApp 
+} from '@/utils/window';
+import useShortcuts from '@/hooks/useShortcuts';
+import { isTauriAppPlatform } from '@/services/environment';
+import { useScreenWakeLock } from '@/hooks/useScreenWakeLock';
+import { lockScreenOrientation } from '@/utils/bridge';
 import SettingsMenu from './SettingsMenu';
 import { MigrateDataWindow } from './MigrateDataWindow';
 
@@ -128,10 +136,52 @@ export const NavTab: React.FC<{activeTab: string}> = ({ activeTab }) => {
 };
 
 export default function NavBar({ tab, children }: { tab: string; children: React.ReactNode }) {
+  const _ = useTranslation();
   const { appService } = useEnv();
   const { isRoundedWindow } = useThemeStore();
   const { settings } = useSettingsStore();
   const viewSettings = settings.globalViewSettings;
+
+  useEffect(() => {
+    if (appService?.isMobileApp) {
+      lockScreenOrientation({ orientation: 'auto' });
+    }
+  }, [appService]);
+
+  useEffect(() => {
+    const doCheckAppUpdates = async () => {
+      if (appService?.hasUpdater && settings.autoCheckUpdates) {
+        await checkForAppUpdates(_);
+      } else if (appService?.hasUpdater === false) {
+        checkAppReleaseNotes();
+      }
+    };
+    if (settings.alwaysOnTop) {
+      tauriHandleSetAlwaysOnTop(settings.alwaysOnTop);
+    }
+    doCheckAppUpdates();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [appService?.hasUpdater, settings]);
+
+  useScreenWakeLock(settings.screenWakeLock);
+
+  useShortcuts({
+    onToggleFullscreen: async () => {
+      if (isTauriAppPlatform()) {
+        await tauriHandleToggleFullScreen();
+      }
+    },
+    onCloseWindow: async () => {
+      if (isTauriAppPlatform()) {
+        await tauriHandleClose();
+      }
+    },
+    onQuitApp: async () => {
+      if (isTauriAppPlatform()) {
+        await tauriQuitApp();
+      }
+    },
+  });
 
   return (
     <div 

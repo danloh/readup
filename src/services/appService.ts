@@ -375,7 +375,7 @@ export abstract class BaseAppService implements AppService {
         await f.close();
       }
 
-      return book;
+      return existingBook || book;
     } catch (error) {
       console.error('Error importing book:', error);
       throw error;
