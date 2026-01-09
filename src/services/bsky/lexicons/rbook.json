@@ -12,15 +12,8 @@
           "description": "User-visible book name.",
           "maxLength": 512
         },
-        "subtitle": {
-          "type": "string",
-          "maxLength": 512
-        },
-        "size": {
-          "type": "integer",
-          "description": "File size in bytes.",
-          "minimum": 0,
-          "maximum": 1000000000
+        "hash": {
+          "type": "string"
         },
         "format": {
           "type": "string",
@@ -30,14 +23,23 @@
         "author": {
           "type": "string"
         },
-        "language": {
+        "fileSize": {
+          "type": "integer",
+          "description": "File size in bytes.",
+          "minimum": 0,
+          "maximum": 1000000000
+        },
+        "primaryLanguage": {
           "type": "string"
         },
-        "identifier": {
-          "type": "string"
+        "createdAt": {
+          "type": "integer"
+        },
+        "updatedAt": {
+          "type": "integer"
         }
       },
-      "required": ["title", "language", "format", "size"]
+      "required": ["title", "hash", "format", "author"]
     },
 
     "main": {
@@ -57,44 +59,39 @@
             "maxSize": 1000000000,
             "description": "The uploaded blob reference of book cover. Note: Individual PDS instances may enforce lower size limits."
           },
-
-          "bookblob": {
+          "docblob": {
             "type": "blob",
             "accept": ["*/*"],
             "maxSize": 1000000000,
             "description": "The uploaded blob reference of book doc. Note: Individual PDS instances may enforce lower size limits."
           },
-
+          "config": {
+            "type": "blob",
+            "accept": ["*/*"],
+            "maxSize": 1000000000,
+            "description": "The config json file blob reference of book including reading setting, progress, notes, etc. Note: Individual PDS instances may enforce lower size limits."
+          },
           "createdAt": {
             "type": "string",
             "format": "datetime",
             "description": "Timestamp when this record was created."
           },
-
-          "attribution": {
-            "type": "string",
-            "format": "at-identifier",
-            "description": "Handle or DID of the account to attribute this upload to."
-          },
-
-          "metadata": {
+          "bookmeta": {
             "type": "ref",
             "ref": "#metadata",
             "description": "Metadata about the book."
           },
-
-          "config": {
-            "type": "ref",
-            "ref": "#config",
-            "description": "Config about the book."
-          },
-
           "checksum": {
             "type": "string",
             "description": "cryptographic checksum for integrity verification."
+          },
+          "attribution": {
+            "type": "string",
+            "format": "at-identifier",
+            "description": "Handle or DID of the account to attribute this upload to."
           }
         },
-        "required": ["name", "createdAt"]
+        "required": ["name", "createdAt", "bookmeta"]
       }
     }
   }

@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   MdClose,
   MdRefresh,
@@ -17,9 +17,10 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useResponsiveSize } from '@/hooks/useResponsiveSize';
 import { useKeyDownActions } from '@/hooks/useKeyDownActions';
 import { useLibraryStore } from '@/store/libraryStore';
-import { TransferItem, TransferStatus, useTransferStore } from '@/store/transferStore';
+import { TransferItem, TransferStatus, TransferType, useTransferStore } from '@/store/transferStore';
 import { Book } from '@/types/book';
 import { formatBytes } from '@/utils/book';
+import { listRecords } from '@/services/bsky/atfile';
 
 const formatSpeed = (bytesPerSec: number): string => {
   return `${formatBytes(bytesPerSec) || '0 B'}/s`;
@@ -150,7 +151,7 @@ const TransferItemRow: React.FC<{
   );
 };
 
-type FilterType = 'all' | 'active' | 'pending' | 'completed' | 'failed';
+type FilterType = 'all' | 'active' | 'pending' | 'completed' | 'failed' | 'pds';
 
 const TransferQueuePanel: React.FC = () => {
   const _ = useTranslation();
@@ -177,14 +178,13 @@ const TransferQueuePanel: React.FC = () => {
   const onClose = () => setIsOpen(false);
   const divRef = useKeyDownActions({ onCancel: onClose, onConfirm: onClose });
 
-  // all books as temp tranfer items
-  const allCanTransfer = getVisibleLibrary().map(
+  const booksToTransfers = (books: Book[], typ: TransferType) => books.map(
     (book) => {
       const canTransfer: TransferItem = {
         id: book.hash,
         bookHash: book.hash,
         bookTitle: book.title,
-        type: 'upload',
+        type: typ,
         status: 'can',
         progress: 0,
         totalBytes: book.fileSize || 0,
@@ -192,18 +192,43 @@ const TransferQueuePanel: React.FC = () => {
         transferSpeed: 0,
         retryCount: 0,
         maxRetries: 3,
-        createdAt: book.createdAt,
+        createdAt: book.createdAt || Date.now(),
         priority: 100,
         book,
       };
       return canTransfer;
     }
   );
+
+  // all books as temp tranfer items
+  const allCanTransfer = booksToTransfers(getVisibleLibrary(), 'upload');
+  const [pdsBooksToDownload, setPdsBooksToDownload] = useState<Book[]>([]);
+  const [pdsCanTransfer, setPdsCanTransfer] = useState<TransferItem[]>([]);
   const booksToUpload = getVisibleLibrary().filter(
     (book) => book.downloadedAt && !book.uploadedAt,
   );
-  const booksToDownload = getVisibleLibrary().filter(
-    (book) => book.uploadedAt && !book.downloadedAt,
+
+  const listBooksInPds = async () => {
+    console.log('List books record in PDS...');
+    const records = await listRecords();
+    const books = records.map(rec => {
+      const val = rec.value;
+      const book = val.bookmeta as Book;
+      book.title = val.name;
+      if (val.checksum) book.hash = val.checksum;
+      return book;
+    });
+    setPdsBooksToDownload(books);
+    setPdsCanTransfer(booksToTransfers(books, 'download'));
+  };
+
+  const handleSetFilter = useCallback(
+    async (f: FilterType) => {
+      if (f === 'pds') {
+        await listBooksInPds();
+      }
+      setFilter(f);
+    }, [],
   );
 
   const handleUploadAll = () => {
@@ -211,10 +236,14 @@ const TransferQueuePanel: React.FC = () => {
   };
 
   const handleDownloadAll = () => {
-    booksToDownload.forEach((book) => queueDownload(book));
+    pdsBooksToDownload.forEach((book) => queueDownload(book));
   };
 
-  const toFilterItems = filter === 'all' ? allCanTransfer : transfers;
+  const toFilterItems = filter === 'all' 
+    ? allCanTransfer 
+    : filter === 'pds' 
+      ? pdsCanTransfer 
+      : transfers;
   const filteredTransfers = toFilterItems
     .filter((t) => {
       switch (filter) {
@@ -251,6 +280,7 @@ const TransferQueuePanel: React.FC = () => {
     pending: _('Pending'),
     completed: _('Completed'),
     failed: _('Failed'),
+    pds: _('PDS'),
   };
 
   const getStat = (f: FilterType) => {
@@ -263,6 +293,8 @@ const TransferQueuePanel: React.FC = () => {
         return stats.completed;
       case 'failed':
         return stats.failed;
+      case 'pds':
+        return pdsCanTransfer.length;
       default:
         return allCanTransfer.length;
     }
@@ -290,19 +322,19 @@ const TransferQueuePanel: React.FC = () => {
                 title={_('Upload All')}
                 aria-label={_('Upload All')}
               >
-                <MdCloudUpload size={iconSize} />
+                <MdCloudUpload size={iconSize} className='text-primary' />
                 <span className='text-xs'>{booksToUpload.length}</span>
               </button>
             )}
-            {booksToDownload.length > 0 && (
+            {pdsBooksToDownload.length > 0 && (
               <button
                 onClick={handleDownloadAll}
                 className='btn btn-ghost btn-sm gap-1'
                 title={_('Download All')}
                 aria-label={_('Download All')}
               >
-                <MdCloudDownload size={iconSize} />
-                <span className='text-xs'>{booksToDownload.length}</span>
+                <MdCloudDownload size={iconSize} className='text-secondary' />
+                <span className='text-xs'>{pdsBooksToDownload.length}</span>
               </button>
             )}
             <button
@@ -326,10 +358,10 @@ const TransferQueuePanel: React.FC = () => {
 
         {/* Filter tabs */}
         <div className='border-base-300 flex gap-2 border-b p-2'>
-          {(['all', 'active', 'pending', 'completed', 'failed'] as const).map((f) => (
+          {(['all', 'active', 'pending', 'completed', 'failed', 'pds'] as const).map((f) => (
             <button
               key={f}
-              onClick={() => setFilter(f)}
+              onClick={() => handleSetFilter(f)}
               className={clsx(
                 'rounded-sm px-2 py-1 text-sm transition-colors',
                 filter === f ? 'bg-primary text-primary-content' : 'bg-base-200 hover:bg-base-300',

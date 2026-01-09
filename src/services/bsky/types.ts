@@ -9,141 +9,29 @@
  */
 
 import { BlobRef } from "@atproto/api";
-
-/**
- * File metadata structure
- *
- * Contains information about the uploaded file including name, size,
- * MIME type, and modification timestamp.
- */
-// export interface Metadata {
-//   /** Type identifier for the file object */
-//   $type?: "cc.readup.rfile#file";
-//   /**
-//    * User-visible filename
-//    * @maxLength 512
-//    */
-//   name: string;
-//   /**
-//    * File size in bytes
-//    * @minimum 0
-//    * @maximum 1000000000
-//    */
-//   size: number;
-//   /**
-//    * MIME type (e.g., "video/mp4", "text/plain")
-//    * @maxLength 255
-//    */
-//   mimeType?: string;
-//   /**
-//    * Client-side last-modified timestamp (ISO 8601 format)
-//    */
-//   modifiedAt?: string;
-// }
-
-// /**
-//  * Blob reference structure
-//  *
-//  * References an uploaded blob in the AT Protocol system.
-//  */
-// export interface BlobReference {
-//   /** Type identifier */
-//   $type: "blob";
-//   /** Reference to the blob */
-//   ref: {
-//     /** Link to the blob */
-//     $link: string;
-//   };
-//   /** MIME type of the blob */
-//   mimeType: string;
-//   /** Size of the blob in bytes */
-//   size: number;
-// }
-
-// /**
-//  * Main record structure
-//  *
-//  * This is the complete record stored in the AT Protocol repository
-//  * for a file upload. It includes the blob reference, file metadata,
-//  * optional checksum, and creation timestamp.
-//  */
-// export interface RFile {
-//   /** Type identifier for the record */
-//   $type: "cc.readup.rfile";
-//   name: string;
-//   /**
-//    * The uploaded blob reference
-//    *
-//    * Note: Individual PDS instances may enforce lower size limits.
-//    * @accept *\/*
-//    * @maxSize 1000000000
-//    */
-//   blob: BlobReference;
-//   /**
-//    * Metadata about the file
-//    */
-//   metadata?: Metadata;
-//   /**
-//    * Optional cryptographic checksum for integrity verification
-//    */
-//   checksum: string;
-//   /**
-//    * Timestamp when this record was created (ISO 8601 format)
-//    */
-//   createdAt: string;
-//   /**
-//    * Handle or DID of the account to attribute this upload to
-//    */
-//   attribution?: string;
-// }
-
-/**
- * Namespace for types
- *
- * This provides the same structure as the generated lexicon types
- * without global augmentation.
- */
-
-export namespace AtFile {
-  export type FileMetadata = {
-    $type?: "cc.readup.rfile#metadata";
-    name: string;
-    size: number;
-    mimeType?: string;
-    modifiedAt?: string;
-  };
-
-  export type BlobReference = {
-    $type: "blob";
-    ref: {
-      $link: string;
-    };
-    mimeType: string;
-    size: number;
-  };
-
-  export type RFile = {
-    $type: "cc.readup.rfile";
-    name: string;
-    blob: BlobReference;
-    metadata?: FileMetadata;
-    checksum?: string; // md5 hash
-    createdAt: string;
-    attribution?: string;
-  };
-}
+import { BookMetadata } from "@/libs/document";
+import { BookFormat } from "@/types/book";
 
 export namespace AtBook {
-  export type BookMetadata = {
+  export type MetaData = {
     $type?: "cc.readup.rbook#metadata";
-    name: string;
-    author?: number;
-    format?: string;
-    identifier?: string;
-    // ...
+    // Partial md5 hash of the book file, used as the unique identifier
+    hash: string;
+    format: BookFormat;
+    title: string; 
+    author: string;
+    createdAt: number;
+    updatedAt: number;
+    // file size in bytes
+    fileSize?: number;
+    primaryLanguage?: string;
+    sourceTitle?: string;
+    metadata?: BookMetadata;
+    metaHash?: string;
+    progress?: [number, number]; 
   };
 
-  export type BookConfig = {
+  export type ConfigData = {
     $type?: "cc.readup.rbook#metadata";
     name: string;
     author?: number;
@@ -156,10 +44,10 @@ export namespace AtBook {
     $type: "cc.readup.rbook";
     name: string;
     createdAt: string;
+    bookmeta: MetaData;
     coverblob?: BlobRef;
     docblob?: BlobRef;
-    config?: BookConfig;
-    metadata?: BookMetadata;
+    config?: BlobRef; // TODO, as a text blob or ??
     checksum?: string; // md5 hash
     attribution?: string;
   };

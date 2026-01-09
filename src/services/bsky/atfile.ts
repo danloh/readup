@@ -1,8 +1,8 @@
 //  Upload, list, and manage files on AT Protocol PDS
 
 import { AtpAgent, AtpSessionData, BlobRef } from "@atproto/api";
-import type { AtBook, AtFile } from "./types";
-import { AuthToken, refreshSession, User } from "./auth";
+import type { AtBook } from "./types";
+import { refreshSession, User } from "./auth";
 import { Book } from "@/types/book";
 import { ProgressHandler, webDownload } from "@/utils/transfer";
 
@@ -149,13 +149,30 @@ export async function uploadBookFile(
 
   // Build the record with proper typing
   // The blob from uploadBlob already has the correct structure
+  const bookmeta: AtBook.MetaData = {
+    $type: "cc.readup.rbook#metadata",
+    hash: book.hash,
+    format: book.format,
+    title: book.title,
+    sourceTitle: book.sourceTitle,
+    author: book.author,
+    createdAt: book.createdAt,
+    updatedAt: book.updatedAt,
+    // file size in bytes
+    fileSize: book.fileSize,
+    primaryLanguage: book.primaryLanguage,
+    metadata: book.metadata,
+    metaHash: book.metaHash,
+    progress: book.progress, 
+  }; 
+
   const recordData: AtBook.RBook = {
     $type: COLLECTION,
     name: book.title,
+    bookmeta,
     coverblob: coverBlob,
     docblob: bookBlob,
-    // metadata: bookmetadata
-    // config: book cofig
+    // config: book config // TODO
     checksum: book.hash,
     createdAt: new Date().toISOString(),
   };
@@ -324,35 +341,6 @@ export async function listRecords(limit = 100): Promise<RecordItem[]> {
   }
 
   return records;
-
-  // // Print each record
-  // for (const record of records) {
-  //   const rkey = record.uri.split("/").pop() || "unknown";
-  //   const value = record.value as AtBook.RBook;
-
-  //   // Extract relevant info
-  //   const fileName = value.metadata?.name || "unknown";
-  //   const fileSize = value.metadata?.size || 0;
-  //   const mimeType = value.metadata?.mimeType || "unknown";
-
-  //   // Format size for readability
-  //   const formatSize = (bytes: number): string => {
-  //     if (bytes < 1024) return `${bytes}B`;
-  //     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}KB`;
-  //     if (bytes < 1024 * 1024 * 1024) {
-  //       return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
-  //     }
-  //     return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)}GB`;
-  //   };
-
-  //   // Print row with fixed widths
-  //   const rkeyStr = rkey.padEnd(13);
-  //   const sizeStr = formatSize(fileSize).padEnd(11);
-  //   const mimeStr = mimeType.slice(0, 28).padEnd(29);
-  //   const nameStr = fileName.slice(0, 40);
-
-  //   console.log(`${rkeyStr} ${sizeStr} ${mimeStr} ${nameStr}`);
-  // }
 }
 
 
@@ -428,182 +416,4 @@ export async function deleteRecord(rkey: string): Promise<void> {
     }
     throw error;
   }
-}
-
-// ================================================================== TODO: del
-
-/**
- * Options for showing file record metadata
- */
-interface ShowOptions {
-  /** The URL of the PDS service */
-  serviceUrl: string;
-  /** sessionData */
-  session: AuthToken;
-  /** The record key (rkey) of the file to show */
-  rkey: string;
-}
-
-/**
- * Show detailed metadata for a file record
- *
- * Retrieves and displays comprehensive information about a file record including
- * file metadata, checksum, creation time, and inspection links to external tools.
- *
- * @param options - Show configuration options including authentication and rkey
- * @returns A promise that resolves when the metadata is displayed
- * @throws {Error} If authentication fails or record is not found
- *
- * @example
- * ```ts
- * await showRecord({
- *   serviceUrl: "https://bsky.social",
- *   handle: "alice.bsky.social",
- *   password: "app-password",
- *   rkey: "3m35jjrc5b62d"
- * });
- * ```
- */
-async function showRecord(options: ShowOptions): Promise<void> {
-  const { serviceUrl, session, rkey } = options;
-
-  // Initialize agent
-  const agent = new AtpAgent({ service: serviceUrl });
-  await agent.resumeSession(session as AtpSessionData);
-
-  // Get DID
-  const did = agent.session?.did;
-  if (!did) {
-    throw new Error("Could not determine DID from session");
-  }
-
-  const collection = "cc.readup.rfile";
-
-  // Get the record
-  try {
-    const recordResponse = await agent.com.atproto.repo.getRecord({
-      repo: did,
-      collection,
-      rkey,
-    });
-
-    const record = recordResponse.data.value as AtFile.RFile;
-    const uri = recordResponse.data.uri;
-    const cid = recordResponse.data.cid;
-
-    // Display metadata
-    console.log(`\n📄 File Record: ${rkey}\n`);
-    console.log(`URI:          ${uri}`);
-    console.log(`CID:          ${cid}`);
-    console.log(`Created:      ${record.createdAt}`);
-
-    if (record.metadata) {
-      console.log(`\nFile Information:`);
-      console.log(`  Name:       ${record.metadata.name}`);
-      console.log(`  Size:       ${record.metadata.size} bytes`);
-      if (record.metadata.mimeType) {
-        console.log(`  MIME Type:  ${record.metadata.mimeType}`);
-      }
-      if (record.metadata.modifiedAt) {
-        console.log(`  Modified:   ${record.metadata.modifiedAt}`);
-      }
-    }
-
-    if (record.checksum) {
-      console.log(`\nChecksum:`);
-      console.log(`  Hash:       ${record.checksum}`);
-    }
-
-    if (record.attribution) {
-      console.log(`\nAttribution:  ${record.attribution}`);
-    }
-
-    // Extract blob CID
-    const blob = record.blob;
-    if (blob && typeof blob === "object" && "ref" in blob) {
-      const blobRef = blob.ref;
-      const blobCid =
-        typeof blobRef === "object" && blobRef && "$link" in blobRef
-          ? blobRef.$link
-          : blobRef;
-      console.log(`\nBlob CID:     ${blobCid}`);
-    }
-
-    // Show inspection links
-    console.log(`\n🔍 Inspect this record:`);
-    console.log(`   https://pdsls.dev/${uri}`);
-    console.log(
-      `   https://atproto-browser.vercel.app/${uri.replace("at://", "at/")}`,
-    );
-    console.log();
-  } catch (error) {
-    if (error instanceof Error && error.message.includes("not found")) {
-      throw new Error(`Record not found: ${rkey}`);
-    }
-    throw error;
-  }
-}
-
-/**
- * Options for retrieving file content
- */
-interface GetOptions {
-  /** The URL of the PDS service */
-  serviceUrl: string;
-  /** sessionData */
-  session: AuthToken;
-  /** The record key (rkey) of the file to retrieve */
-  rkey: string;
-  /** Optional output file path. If not provided, outputs to stdout */
-  outputPath?: string;
-}
-
-
-
-// Determine if content is binary
-const isBinary = (data: Uint8Array): boolean => {
-  // Check first 8KB for null bytes or high proportion of non-text chars
-  const sample = data.slice(0, Math.min(8192, data.length));
-  let nonTextCount = 0;
-
-  for (let i = 0; i < sample.length; i++) {
-    const byte = sample[i];
-    // Null byte is definite binary
-    if (!byte || byte === 0) return true;
-    // Count non-printable, non-whitespace characters
-    if (byte < 32 && byte !== 9 && byte !== 10 && byte !== 13) {
-      nonTextCount++;
-    }
-  }
-
-  // If more than 30% non-text characters, consider it binary
-  return (nonTextCount / sample.length) > 0.3;
-};
-
-async function downloadFile(blobUrl: string): Promise<ArrayBuffer | undefined> {
-  const response = await fetch(blobUrl);
-
-  if (!response.ok) {
-    throw new Error(`Failed to download blob: ${response.statusText}`);
-  }
-
-  const blobData = await response.arrayBuffer();
-
-  // const isContentBinary = isBinary(blobData);
-  // const mimeType = record.metadata?.mimeType || "application/octet-stream";
-  // const fileName = record.metadata?.name || rkey;
-
-  return blobData;
-}
-
-/**
- * Options for deleting a file record from the PDS
- */
-interface DeleteOptions {
-  /** The URL of the PDS service */
-  serviceUrl: string;
-  /** sessionData */
-  session: AuthToken;
-  /** The record key (rkey) of the file to delete */
-  rkey: string;
 }

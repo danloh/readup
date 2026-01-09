@@ -33,11 +33,11 @@ import { BookDoc, DocumentLoader, EXTS } from '@/libs/document';
 import { getOSPlatform, getTargetLang, isCJKEnv, isContentURI, isValidURL } from '@/utils/misc';
 import { deserializeConfig, serializeConfig } from '@/utils/serializer';
 import {
-  downloadFile,
+  // downloadFile,
   //uploadFile,
   deleteFile,
   createProgressHandler,
-  batchGetDownloadUrls,
+  // batchGetDownloadUrls,
 } from '@/libs/storage';
 import { ClosableFile } from '@/utils/file';
 import { ProgressHandler } from '@/utils/transfer';
@@ -45,7 +45,7 @@ import { TxtToEpubConverter } from '@/utils/txt';
 import { svg2png } from '@/utils/svg';
 import { ArticleType, FeedType } from '@/app/feed/components/dataAgent';
 import { BOOK_FILE_NOT_FOUND_ERROR } from './errors';
-import { downloadBookFile, uploadBookFile, UploadResult } from './bsky/atfile';
+import { downloadBookFile, listRecords, uploadBookFile, UploadResult } from './bsky/atfile';
 import {
   DEFAULT_BOOK_LAYOUT,
   DEFAULT_BOOK_STYLE,
@@ -431,15 +431,24 @@ export abstract class BaseAppService implements AppService {
       // download the book from the URL
       bookFile = await this.fs.openFile(book.url, 'None');
       await this.fs.writeFile(bookfp, 'Books', await bookFile.arrayBuffer());
+      bookFileExist = true;
     }
 
     // record the file size in bytes of book
     book.fileSize = bookFile?.size;
 
-    // const handleProgress = createProgressHandler(toUploadFpCount, completedFiles, onProgress);
+    let toUploadFpCount = 0;
+    const completedFiles = { count: 0 };
+    if (coverExist) {
+      toUploadFpCount++;
+    }
+    if (bookFileExist) {
+      toUploadFpCount++;
+    }
+    const handleProgress = createProgressHandler(toUploadFpCount, completedFiles, onProgress);
 
     // upload and create a book record on PDS
-    const res: UploadResult = await uploadBookFile(book, bookFile, coverFile, onProgress);
+    const res: UploadResult = await uploadBookFile(book, bookFile, coverFile, handleProgress);
     // close files
     const cf = coverFile as ClosableFile;
     if (cf && cf.close) {
@@ -461,12 +470,19 @@ export abstract class BaseAppService implements AppService {
     }
   }
 
-  async downloadCloudFile(lfp: string, cfp: string, onProgress: ProgressHandler) {
-    console.log('Downloading file:', cfp, 'to', lfp);
-    const dstPath = `${this.localBooksDir}/${lfp}`;
-    await downloadFile({ appService: this, cfp, dst: dstPath, onProgress });
+  /* List uploaded books in PDS, with cover and metadata, w/o doc  */
+  async listPdsBooks(): Promise<Book[]> {
+    console.log('List books in PDS...');
+    if (!(await this.fs.exists('', 'Books'))) {
+      await this.fs.createDir('', 'Books', true);
+    }
+
+    const records = await listRecords();
+    const books = records.map(rec => rec.value.bookmeta as Book);
+
+    return books;
   }
-  
+
   async downloadBook(
     book: Book,
     onlyCover = false,
@@ -503,7 +519,7 @@ export abstract class BaseAppService implements AppService {
     if (needDownCover && coverBlob) {
       const coverDst = `${this.localBooksDir}/${getCoverFilename(book)}`;
       await this.writeFile(coverDst, 'None', await coverBlob.arrayBuffer());
-      bookCoverDownloaded = await this.fs.exists(coverDst, 'None');;
+      bookCoverDownloaded = await this.fs.exists(coverDst, 'None');
     }
     if (needDownBook && docBlob) {
       const docDst = `${this.localBooksDir}/${getLocalBookFilename(book)}`;
