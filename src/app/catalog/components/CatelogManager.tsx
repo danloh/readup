@@ -29,13 +29,6 @@ const POPULAR_CATALOGS: OPDSCatalog[] = [
     icon: '📖',
   },
   {
-    id: 'standardebooks',
-    name: 'Standard Ebooks',
-    url: 'https://standardebooks.org/feeds/opds',
-    description: 'Free and liberated ebooks, carefully produced for the true book lover',
-    icon: '📚',
-  },
-  {
     id: 'unglue.it',
     name: 'Unglue.it',
     url: 'https://unglue.it/api/opds/',
@@ -70,6 +63,7 @@ export function CatalogManager({ closeDialog }: CMProps) {
     description: '',
     username: '',
     password: '',
+    proxy: '',
   });
   const [showPassword, setShowPassword] = useState(false);
   const [urlError, setUrlError] = useState('');
@@ -78,6 +72,16 @@ export function CatalogManager({ closeDialog }: CMProps) {
   const saveCatalogs = (updatedCatalogs: OPDSCatalog[]) => {
     setCatalogs(updatedCatalogs);
     saveSysSettings(envConfig, 'opdsCatalogs', updatedCatalogs);
+  };
+
+  const saveOpdsProxy = (url_: string, proxy_: string) => {
+    const url = url_.trim();
+    const proxy = proxy_.trim();
+    if (!url || !proxy) return;
+    const proxies = settings.opdsProxy || {};
+    proxies[url] = proxy;
+    saveSysSettings(envConfig, 'opdsProxy', proxies);
+    localStorage.setItem('opdsProxy', JSON.stringify(proxies));
   };
 
   const handleAddCatalog = async () => {
@@ -101,6 +105,9 @@ export function CatalogManager({ closeDialog }: CMProps) {
     setIsValidating(true);
     setUrlError('');
 
+    // Add the proxy to the Proxy Map
+    saveOpdsProxy(newCatalog.url, newCatalog.proxy);
+
     const validation = await validateOPDSCatalog(
       newCatalog.url,
       newCatalog.username || undefined,
@@ -120,10 +127,11 @@ export function CatalogManager({ closeDialog }: CMProps) {
       description: newCatalog.description,
       username: newCatalog.username || undefined,
       password: newCatalog.password || undefined,
+      proxy: newCatalog.proxy || undefined,
     };
 
     saveCatalogs([catalog, ...catalogs]);
-    setNewCatalog({ name: '', url: '', description: '', username: '', password: '' });
+    setNewCatalog({ name: '', url: '', description: '', username: '', password: '', proxy: '' });
     setUrlError('');
     setIsValidating(false);
     setShowAddDialog(false);
@@ -150,7 +158,7 @@ export function CatalogManager({ closeDialog }: CMProps) {
 
   const handleCloseDialog = () => {
     setShowAddDialog(false);
-    setNewCatalog({ name: '', url: '', description: '', username: '', password: '' });
+    setNewCatalog({ name: '', url: '', description: '', username: '', password: '', proxy: '' });
     setUrlError('');
     setShowPassword(false);
   };
@@ -329,6 +337,20 @@ export function CatalogManager({ closeDialog }: CMProps) {
                       <span className='label-text-alt text-error'>{urlError}</span>
                     </div>
                   )}
+                </div>
+
+                <div className='form-control'>
+                  <div className='label'>
+                    <span className='label-text'>{_('Proxy URL (optional)')}</span>
+                  </div>
+                  <input
+                    type='text'
+                    value={newCatalog.proxy}
+                    onChange={(e) => setNewCatalog({ ...newCatalog, proxy: e.target.value })}
+                    placeholder={_('URL for proxy')}
+                    className='input input-bordered placeholder:text-sm'
+                    disabled={isValidating}
+                  />
                 </div>
 
                 <div className='form-control'>

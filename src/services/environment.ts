@@ -1,5 +1,5 @@
 import { AppService } from '@/types/system';
-import { READUP_NODE_BASE_URL, READUP_WEB_BASE_URL } from './constants';
+import { READUP_WEB_BASE_URL } from './constants';
 
 declare global {
   interface Window {
@@ -12,8 +12,7 @@ export const isWebAppPlatform = () => process.env['NEXT_PUBLIC_APP_PLATFORM'] ==
 export const hasCli = () => window.__READUP_CLI_ACCESS === true;
 export const isPWA = () => window.matchMedia('(display-mode: standalone)').matches;
 export const getBaseUrl = () => process.env['NEXT_PUBLIC_API_BASE_URL'] ?? READUP_WEB_BASE_URL;
-export const getNodeBaseUrl = () =>
-  process.env['NEXT_PUBLIC_NODE_BASE_URL'] ?? READUP_NODE_BASE_URL;
+export const getNodeBaseUrl = () => process.env['NEXT_PUBLIC_NODE_BASE_URL'];
 
 // Dev API only in development mode and web platform
 // with command `pnpm dev-web`

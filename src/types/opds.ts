@@ -18,6 +18,7 @@ export interface OPDSCatalog {
   id: string;
   name: string;
   url: string;
+  proxy?: string;
   disabled?: boolean;
   description?: string;
   icon?: string;

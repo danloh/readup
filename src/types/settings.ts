@@ -42,6 +42,7 @@ export interface SystemSettings {
   librarySortBy: LibrarySortByType;
   librarySortAscending: boolean;
   opdsCatalogs: OPDSCatalog[];
+  opdsProxy: Record<string, string>;
 
   lastSyncedAtBooks: number;
   lastSyncedAtConfigs: number;

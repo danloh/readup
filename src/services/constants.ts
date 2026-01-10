@@ -570,11 +570,8 @@ export const CJK_FONTS_PATTENS = new RegExp(
 export const BOOK_IDS_SEPARATOR = '+';
 
 export const DOWNLOAD_READUP_URL = 'https://readup.cc';
-
 export const READUP_WEB_BASE_URL = 'https://web.readup.cc';
-export const READUP_NODE_BASE_URL = 'https://node.readup.cc';
-
-const LATEST_DOWNLOAD_BASE_URL = 'https://download.readup.cc/releases';
+const LATEST_DOWNLOAD_BASE_URL = 'https://web.readup.cc/releases';
 
 export const READUP_UPDATER_FILE = `${LATEST_DOWNLOAD_BASE_URL}/latest.json`;
 export const READUP_CHANGELOG_FILE = `${LATEST_DOWNLOAD_BASE_URL}/release-notes.json`;

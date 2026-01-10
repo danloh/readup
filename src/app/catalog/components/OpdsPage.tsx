@@ -299,7 +299,11 @@ export default function BrowserPage() {
 
   useEffect(() => {
     const url = searchParams?.get('url') || 'https://m.gutenberg.org/ebooks.opds/';
-    console.log("fresh? ", url, libraryLoaded);
+    // let localStorage as bridge to store the opdsProxy
+    // we may need to use the proxy later to load/download sth
+    const opdsProxies = settings.opdsProxy || {};
+    localStorage.setItem('opdsProxy', JSON.stringify(opdsProxies));
+    console.log("fresh? ", url, libraryLoaded, opdsProxies);
     if (url && !isNavigatingHistoryRef.current) {
       const catalogId = searchParams?.get('id') || '';
       const catalog = settings.opdsCatalogs?.find((cat) => cat.id === catalogId);
@@ -419,7 +423,7 @@ export default function BrowserPage() {
             const username = usernameRef.current || '';
             const password = passwordRef.current || '';
             const useProxy = needsProxy(url);
-            let downloadUrl = useProxy ? getProxiedURL(url, '', true) : url;
+            let downloadUrl = useProxy ? getProxiedURL(url, '', true, useProxy) : url;
             const headers: Record<string, string> = {
               'User-Agent': READUP_OPDS_USER_AGENT,
               Accept: '*/*',
@@ -428,7 +432,7 @@ export default function BrowserPage() {
               const authHeader = await probeAuth(url, username, password, useProxy);
               if (authHeader) {
                 headers['Authorization'] = authHeader;
-                downloadUrl = useProxy ? getProxiedURL(url, authHeader, true) : url;
+                downloadUrl = useProxy ? getProxiedURL(url, authHeader, true, useProxy) : url;
               }
             }
 
@@ -478,13 +482,13 @@ export default function BrowserPage() {
         return await appService.getImageURL(cachedPath);
       } else {
         const useProxy = needsProxy(url);
-        let downloadUrl = useProxy ? getProxiedURL(url, '', true) : url;
+        let downloadUrl = useProxy ? getProxiedURL(url, '', true, useProxy) : url;
         const headers: Record<string, string> = {};
         if (username || password) {
           const authHeader = await probeAuth(url, username, password, useProxy);
           if (authHeader) {
             headers['Authorization'] = authHeader;
-            downloadUrl = useProxy ? getProxiedURL(url, authHeader, true) : url;
+            downloadUrl = useProxy ? getProxiedURL(url, authHeader, true, useProxy) : url;
           }
         }
         await downloadFile({

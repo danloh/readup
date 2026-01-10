@@ -1,12 +1,9 @@
 import { md5 } from 'js-md5';
 import { fetch as tauriFetch } from '@tauri-apps/plugin-http';
-import { 
-  getAPIBaseUrl, getNodeAPIBaseUrl, isTauriAppPlatform, isWebAppPlatform 
-} from '@/services/environment';
+import { getAPIBaseUrl, isTauriAppPlatform, isWebAppPlatform } from '@/services/environment';
 import { READUP_OPDS_USER_AGENT } from '@/services/constants';
 
 const OPDS_PROXY_URL = `${getAPIBaseUrl()}/opds/proxy`;
-const NODE_OPDS_PROXY_URL = `${getNodeAPIBaseUrl()}/opds/proxy`;
 
 /**
  * Extract username and password from URL credentials
@@ -40,12 +37,17 @@ export const needsProxy = (url: string): boolean => {
 };
 
 const PROXY_OVERRIDES: Record<string, string> = {
-  standardebooks: NODE_OPDS_PROXY_URL,
+  // standardebooks: NODE_OPDS_PROXY_URL,
 };
 
 const getProxyBaseUrl = (url: string): string => {
-  for (const [domain, proxyUrl] of Object.entries(PROXY_OVERRIDES)) {
-    if (url.includes(domain)) {
+  const storedProxies = localStorage.getItem('opdsProxy');
+  const proxies: Record<string, string> = storedProxies ? JSON.parse(storedProxies) : null;
+  const opdsProxies = proxies ? { ...PROXY_OVERRIDES, ...proxies } : PROXY_OVERRIDES;
+  console.log('>> Proxy', opdsProxies);
+  for (const [domain, proxyUrl] of Object.entries(opdsProxies)) {
+    console.log('>> entry', domain, proxyUrl, '>> url: ', url);
+    if (url === domain || url.includes(domain)) {
       return proxyUrl;
     }
   }
@@ -55,8 +57,10 @@ const getProxyBaseUrl = (url: string): string => {
 /**
  * Generate proxied URL for OPDS requests
  */
-export const getProxiedURL = (url: string, auth: string = '', stream = false): string => {
-  if (url.startsWith('http')) {
+export const getProxiedURL = (
+  url: string, auth: string = '', stream = false, useProxy = false
+): string => {
+  if (url.startsWith('http') || useProxy) {
     const { url: cleanUrl } = extractCredentialsFromURL(url);
     const params = new URLSearchParams();
     params.append('url', cleanUrl);
@@ -65,6 +69,7 @@ export const getProxiedURL = (url: string, auth: string = '', stream = false): s
       params.append('auth', auth);
     }
     const baseUrl = getProxyBaseUrl(url);
+    console.log('>> base url', baseUrl);
     const proxyUrl = `${baseUrl}?${params.toString()}`;
     return proxyUrl;
   }
@@ -202,7 +207,9 @@ export const probeAuth = async (
     return null;
   }
 
-  const fetchURL = useProxy ? getProxiedURL(cleanUrl) : cleanUrl;
+  console.log('> clean url', cleanUrl);
+  const fetchURL = useProxy ? getProxiedURL(cleanUrl, '', false, useProxy) : cleanUrl;
+  console.log('> fetch url', fetchURL);
   const headers: Record<string, string> = {
     'User-Agent': READUP_OPDS_USER_AGENT,
     Accept: 'application/atom+xml, application/xml, text/xml, */*',
@@ -261,7 +268,9 @@ export const fetchWithAuth = async (
   const finalUsername = username || urlUsername;
   const finalPassword = password || urlPassword;
 
-  const fetchURL = useProxy ? getProxiedURL(cleanUrl) : cleanUrl;
+  console.log('>> clean url', cleanUrl);
+  const fetchURL = useProxy ? getProxiedURL(cleanUrl, '', false, useProxy) : cleanUrl;
+  console.log('>> fetch url', fetchURL);
   const headers: Record<string, string> = {
     'User-Agent': READUP_OPDS_USER_AGENT,
     Accept: 'application/atom+xml, application/xml, text/xml, */*',
