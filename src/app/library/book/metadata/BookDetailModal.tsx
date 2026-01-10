@@ -1,10 +1,9 @@
 import clsx from 'clsx';
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { Book } from '@/types/book';
 import { formatAuthors, formatTitle, getPrimaryLanguage } from '@/utils/book';
 import { isWebAppPlatform } from '@/services/environment';
-import { transferManager } from '@/services/transferManager';
 import { useLibraryStore } from '@/store/libraryStore';
 import { eventDispatcher } from '@/utils/event';
 import { BookMetadata } from '@/libs/document';
@@ -173,31 +172,6 @@ const BookDetailModal: React.FC<BookDetailModalProps> = ({
     setShowDeleteAlert(false);
   };
 
-  const handleBookUpload = useCallback(
-    async (book: Book, _syncBooks = true) => {
-      // Use transfer queue for uploads - priority 1 for manual uploads (higher priority)
-      const transferId = transferManager.queueUpload(book, 1);
-      if (transferId) {
-        eventDispatcher.dispatch('toast', {
-          type: 'info',
-          timeout: 2000,
-          message: _('Upload queued: {{title}}', {
-            title: book.title,
-          }),
-        });
-        return true;
-      }
-      return false;
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
-  );
-
-  const handleReupload = async () => {
-    handleClose();
-    handleBookUpload(book);
-  };
-
   return (
     <>
       <div className='fixed inset-0 z-50 flex items-center justify-center'>
@@ -236,7 +210,6 @@ const BookDetailModal: React.FC<BookDetailModalProps> = ({
                 fileSize={fileSize}
                 onEdit={handleEditMetadata}
                 onDelete={handleDelete}
-                onUpload={handleReupload}
                 showBtns={showBtns}
               />
             )}
