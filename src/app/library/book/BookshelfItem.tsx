@@ -25,10 +25,10 @@ export const generateBookshelfItems = (books: Book[]): (Book | BooksGroup)[] => 
     book.groupId = book.groupId || BOOK_UNGROUPED_ID;
     book.groupName = book.groupName || BOOK_UNGROUPED_NAME;
     const groupIndex = acc.findIndex((group) => group.id === book.groupId);
-    const booksGroup = acc[acc.findIndex((group) => group.id === book.groupId)];
+    const booksGroup = acc[groupIndex];
     if (booksGroup) {
       booksGroup.books.push(book);
-      booksGroup.updatedAt = Math.max(acc[groupIndex]!.updatedAt, book.updatedAt);
+      booksGroup.updatedAt = Math.max(booksGroup.updatedAt, book.updatedAt);
     } else {
       acc.push({
         id: book.groupId,
@@ -42,10 +42,11 @@ export const generateBookshelfItems = (books: Book[]): (Book | BooksGroup)[] => 
   groups.forEach((group) => {
     group.books.sort((a, b) => b.updatedAt - a.updatedAt);
   });
-  const ungroupedBooks: Book[] =
-    groups.find((group) => group.name === BOOK_UNGROUPED_NAME)?.books || [];
+  // const ungroupedBooks: Book[] =
+  //  groups.find((group) => group.name === BOOK_UNGROUPED_NAME)?.books || [];
   const groupedBooks: BooksGroup[] = groups.filter((group) => group.name !== BOOK_UNGROUPED_NAME);
-  return [...ungroupedBooks, ...groupedBooks].sort((a, b) => b.updatedAt - a.updatedAt);
+  // list all books and grouped books
+  return [...books, ...groupedBooks].sort((a, b) => b.updatedAt - a.updatedAt);
 };
 
 interface BookshelfItemProps {

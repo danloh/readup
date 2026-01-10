@@ -53,7 +53,18 @@
     WriteRegStr HKCR ".cbr\ShellEx\${SHELL_THUMBNAIL_HANDLER}" "" "${CLSID_READUP_THUMBNAIL}"
     
     DetailPrint "Thumbnail provider registered successfully."
+
+    Delete "$DESKTOP\Readup.lnk"
+    Delete "$SMPROGRAMS\Readup\Readup.lnk"
+    RMDir "$SMPROGRAMS\Readup"
+
+    ; Create new shortcuts pointing to current installation
+    CreateShortcut "$DESKTOP\Readup.lnk" "$INSTDIR\Readup.exe"
+    CreateDirectory "$SMPROGRAMS\Readup"
+    CreateShortcut "$SMPROGRAMS\Readup\Readup.lnk" "$INSTDIR\Readup.exe"
     
+    DetailPrint "Shortcuts updated."
+
     ; Refresh shell to apply changes - SHCNE_ASSOCCHANGED
     System::Call 'shell32::SHChangeNotify(i 0x08000000, i 0, p 0, p 0)'
 !macroend

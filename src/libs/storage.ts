@@ -108,6 +108,7 @@ type DownloadFileParams = {
   url?: string;
   headers?: Record<string, string>;
   singleThreaded?: boolean;
+  skipSslVerification?: boolean;
   onProgress?: ProgressHandler;
 };
 
@@ -118,6 +119,7 @@ export const downloadFile = async ({
   url,
   headers,
   singleThreaded,
+  skipSslVerification,
   onProgress,
 }: DownloadFileParams) => {
   try {
@@ -147,7 +149,15 @@ export const downloadFile = async ({
       const file = await webDownload(downloadUrl, onProgress, headers);
       await appService.writeFile(dst, 'None', await file.arrayBuffer());
     } else {
-      await tauriDownload(downloadUrl, dst, onProgress, headers, undefined, singleThreaded);
+      await tauriDownload(
+        downloadUrl,
+        dst,
+        onProgress,
+        headers,
+        undefined,
+        singleThreaded,
+        skipSslVerification,
+      );
     }
   } catch (error) {
     console.error(`File '${dst}' download failed:`, error);

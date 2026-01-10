@@ -245,10 +245,6 @@ const getLayoutStyles = (
   }
   html, body {
     ${writingMode === 'auto' ? '' : `writing-mode: ${writingMode} !important;`}
-    ${writingMode.includes('vertical') 
-      ? 'font-feature-settings: "vrt2" 1, "vert" 1; text-orientation: upright;' 
-      : ''
-    }
     text-align: var(--default-text-align);
     max-height: unset;
     -webkit-touch-callout: none;
@@ -411,6 +407,14 @@ const getLayoutStyles = (
     position: relative;
     width: auto;
     height: auto;
+  }
+
+  /* page break */
+  body.paginated-mode div[style*="page-break-after: always"],
+  body.paginated-mode div[style*="page-break-after:always"],
+  body.paginated-mode p[style*="page-break-after: always"],
+  body.paginated-mode p[style*="page-break-after:always"] {
+    margin-bottom: calc(var(--available-height) * 1px);
   }
 
   /* workaround for some badly designed epubs */
@@ -611,6 +615,7 @@ export const applyTranslationStyle = (viewSettings: ViewSettings) => {
 export const transformStylesheet = (css: string, vw: number, vh: number, vertical: boolean) => {
   const isMobile = ['ios', 'android'].includes(getOSPlatform());
   const fontScale = isMobile ? 1.25 : 1;
+  const isInlineStyle = !css.includes('{');
   const ruleRegex = /([^{]+)({[^}]+})/g;
   css = css.replace(ruleRegex, (match, selector, block) => {
     const hasTextAlignCenter = /text-align\s*:\s*center\s*[;$]/.test(block);
@@ -638,6 +643,24 @@ export const transformStylesheet = (css: string, vw: number, vh: number, vertica
     }
     return match;
   });
+
+  if (isInlineStyle) {
+    const hasPageBreakAfterAlways = /page-break-after\s*:\s*always\s*[;]?/.test(css);
+    if (hasPageBreakAfterAlways && !/margin-bottom\s*:/.test(css)) {
+      css = css.replace(/;?\s*$/, '') + '; margin-bottom: calc(var(--available-height) * 1px)';
+    }
+  } else {
+    css = css.replace(ruleRegex, (match, selector, block) => {
+      const hasPageBreakAfterAlways = /page-break-after\s*:\s*always\s*[;$]/.test(block);
+      if (hasPageBreakAfterAlways) {
+        if (!/margin-bottom\s*:/.test(block)) {
+          block = block.replace(/}$/, ' margin-bottom: calc(var(--available-height) * 1px); }');
+        }
+        return selector + block;
+      }
+      return match;
+    });
+  }
 
   // Process duokan-bleed
   css = css.replace(ruleRegex, (_, selector, block) => {
@@ -710,6 +733,9 @@ export const transformStylesheet = (css: string, vw: number, vh: number, vertica
     .replace(/font-size\s*:\s*(\d+(?:\.\d+)?)pt/gi, (_, pt) => {
       const rem = parseFloat(pt) / fontScale / 12;
       return `font-size: ${rem}rem`;
+    })
+    .replace(/font-size\s*:\s*(\d*\.?\d+)(px|rem|em|%)?/gi, (_, size, unit = 'px') => {
+      return `font-size: max(${size}${unit}, var(--min-font-size, 8px))`;
     })
     .replace(/(\d*\.?\d+)vw/gi, (_, d) => (parseFloat(d) * vw) / 100 + 'px')
     .replace(/(\d*\.?\d+)vh/gi, (_, d) => (parseFloat(d) * vh) / 100 + 'px')

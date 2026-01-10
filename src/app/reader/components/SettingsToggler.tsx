@@ -6,12 +6,18 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useSettingsStore } from '@/store/settingsStore';
 import Button from '@/components/Button';
 
-const SettingsToggler = () => {
+interface SettingsTogglerProps {
+  bookKey: string;
+}
+
+const SettingsToggler: React.FC<SettingsTogglerProps> = ({ bookKey }) => {
   const _ = useTranslation();
   const { setHoveredBookKey } = useReaderStore();
   const { isFontLayoutSettingsDialogOpen, setFontLayoutSettingsDialogOpen } = useSettingsStore();
+  const { setSettingsDialogBookKey } = useSettingsStore();
   const handleToggleSettings = () => {
     setHoveredBookKey('');
+    setSettingsDialogBookKey(bookKey);
     setFontLayoutSettingsDialogOpen(!isFontLayoutSettingsDialogOpen);
   };
   return (

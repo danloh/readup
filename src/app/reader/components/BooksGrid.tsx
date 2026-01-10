@@ -2,7 +2,6 @@ import clsx from 'clsx';
 import React, { useEffect } from 'react';
 
 import { useEnv } from '@/context/EnvContext';
-import { useSettingsStore } from '@/store/settingsStore';
 import { useReaderStore } from '@/store/readerStore';
 import { useSidebarStore } from '@/store/sidebarStore';
 import { useBookDataStore } from '@/store/bookDataStore';
@@ -10,7 +9,6 @@ import { useThemeStore } from '@/store/themeStore';
 import { getGridTemplate, getInsetEdges } from '@/utils/grid';
 import { getViewInsets } from '@/utils/insets';
 import { useTranslation } from '@/hooks/useTranslation';
-import SettingsDialog from '@/components/settings/SettingsDialog';
 import FoliateViewer from './FoliateViewer';
 import SectionInfo from './SectionInfo';
 import HeaderBar from './HeaderBar';
@@ -36,7 +34,6 @@ const BooksGrid: React.FC<BooksGridProps> = ({ bookKeys, onCloseBook }) => {
   const { getProgress, getViewState, getViewSettings } = useReaderStore();
   const { setGridInsets, hoveredBookKey } = useReaderStore();
   const { sideBarBookKey } = useSidebarStore();
-  const { isFontLayoutSettingsDialogOpen } = useSettingsStore();
 
   const { safeAreaInsets: screenInsets } = useThemeStore();
   const aspectRatio = window.innerWidth / window.innerHeight;
@@ -211,7 +208,6 @@ const BooksGrid: React.FC<BooksGridProps> = ({ bookKeys, onCloseBook }) => {
               isHoveredAnim={false}
               gridInsets={gridInsets}
             />
-            {isFontLayoutSettingsDialogOpen && <SettingsDialog bookKey={bookKey} />}
           </div>
         );
       })}

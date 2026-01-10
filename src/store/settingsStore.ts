@@ -4,9 +4,11 @@ import { EnvConfigType } from '@/services/environment';
 
 interface SettingsState {
   settings: SystemSettings;
+  settingsDialogBookKey: string;
   isFontLayoutSettingsDialogOpen: boolean;
   isFontLayoutSettingsGlobal: boolean;
   setSettings: (settings: SystemSettings) => void;
+  setSettingsDialogBookKey: (bookKey: string) => void;
   saveSettings: (envConfig: EnvConfigType, settings: SystemSettings) => void;
   setFontLayoutSettingsDialogOpen: (open: boolean) => void;
   setFontLayoutSettingsGlobal: (global: boolean) => void;
@@ -14,9 +16,11 @@ interface SettingsState {
 
 export const useSettingsStore = create<SettingsState>((set) => ({
   settings: {} as SystemSettings,
+  settingsDialogBookKey: '',
   isFontLayoutSettingsDialogOpen: false,
   isFontLayoutSettingsGlobal: true,
   setSettings: (settings) => set({ settings }),
+  setSettingsDialogBookKey: (bookKey) => set({ settingsDialogBookKey: bookKey }),
   saveSettings: async (envConfig: EnvConfigType, settings: SystemSettings) => {
     const appService = await envConfig.getAppService();
     await appService.saveSettings(settings);

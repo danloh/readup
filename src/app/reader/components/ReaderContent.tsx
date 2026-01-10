@@ -23,6 +23,7 @@ import { eventDispatcher } from '@/utils/event';
 import { navigateToLibrary } from '@/utils/nav';
 import { BOOK_IDS_SEPARATOR } from '@/services/constants';
 import Spinner from '@/components/Spinner';
+import SettingsDialog from '@/components/settings/SettingsDialog';
 import BookDetailModal from '@/app/library/book/metadata/BookDetailModal';
 import useBooksManager from '../hooks/useBooksManager';
 import useBookShortcuts from '../hooks/useBookShortcuts';
@@ -41,6 +42,7 @@ const ReaderContent: React.FC<{ids?: string; settings: SystemSettings}> = ({ ids
   const { getConfig, getBookData, saveConfig } = useBookDataStore();
   const { getView, setBookKeys, getViewSettings } = useReaderStore();
   const { initViewState, getViewState, clearViewState } = useReaderStore();
+  const { isFontLayoutSettingsDialogOpen, settingsDialogBookKey } = useSettingsStore();
   const [showDetailsBook, setShowDetailsBook] = useState<Book | null>(null);
   const isInitiating = useRef(false);
   const [loading, setLoading] = useState(false);
@@ -210,6 +212,7 @@ const ReaderContent: React.FC<{ids?: string; settings: SystemSettings}> = ({ ids
     <div className='reader-content flex full-height'>
       <SideBar onGoToLibrary={handleCloseBooksToLibrary} />
       <BooksGrid bookKeys={bookKeys} onCloseBook={handleCloseBook} />
+      {isFontLayoutSettingsDialogOpen && <SettingsDialog bookKey={settingsDialogBookKey} />}
       <Notebook />
       {showDetailsBook && (
         <BookDetailModal

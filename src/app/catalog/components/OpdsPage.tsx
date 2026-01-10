@@ -443,6 +443,7 @@ export default function BrowserPage() {
               url: downloadUrl,
               headers,
               singleThreaded: true,
+              skipSslVerification: true,
               onProgress,
             });
             const { library, setLibrary } = useLibraryStore.getState();
@@ -497,6 +498,7 @@ export default function BrowserPage() {
           cfp: '',
           url: downloadUrl,
           singleThreaded: true,
+          skipSslVerification: true,
           headers,
         });
         return await appService.getImageURL(cachedPath);
