@@ -172,6 +172,18 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
     [searchParams],
   );
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const handleOpenItem = useCallback(
+    throttle(() => {
+      if ('format' in item) {
+        handleBookClick(item as Book);
+      } else {
+        handleGroupClick(item as BooksGroup);
+      }
+    }, 100),
+    [handleBookClick, handleGroupClick],
+  );
+
   // FIXME
   const bookContextMenuHandler = async (book: Book) => {
     if (!appService?.hasContextMenu) return;
@@ -191,18 +203,6 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
     menu.append(showBookInFinderMenuItem);
     menu.popup();
   };
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const handleOpenItem = useCallback(
-    throttle(() => {
-      if ('format' in item) {
-        handleBookClick(item as Book);
-      } else {
-        handleGroupClick(item as BooksGroup);
-      }
-    }, 100),
-    [handleBookClick, handleGroupClick],
-  );
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const handleContextMenu = useCallback(

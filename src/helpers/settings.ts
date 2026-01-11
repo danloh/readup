@@ -40,11 +40,11 @@ export const saveViewSettings = async <K extends keyof ViewSettings>(
   if (isFontLayoutSettingsGlobal && !skipGlobal) {
     settings.globalViewSettings[key] = value;
     setSettings(settings);
-    await saveSettings(envConfig, settings);
-
+    
     for (const bookKey of bookKeys) {
       await applyViewSettings(bookKey);
     }
+    await saveSettings(envConfig, settings);
   } else if (bookKey) {
     await applyViewSettings(bookKey);
   }

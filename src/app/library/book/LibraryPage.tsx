@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, Suspense, useCallback } from 'react';
 import { getCurrentWebview } from '@tauri-apps/api/webview';
 import { ReadonlyURLSearchParams, useRouter, useSearchParams } from 'next/navigation';
 import { MdChevronRight } from 'react-icons/md';
+import { LiaInfoCircleSolid } from 'react-icons/lia';
 import { 
   OverlayScrollbarsComponent, OverlayScrollbarsComponentRef 
 } from 'overlayscrollbars-react';
@@ -34,6 +35,7 @@ import { useTransferQueue } from '@/hooks/useTransferQueue';
 import { selectDirectory } from '@/utils/bridge';
 import { requestStoragePermission } from '@/utils/permission';
 import DropIndicator from '@/components/DropIndicator';
+import ModalPortal from '@/components/ModalPortal';
 import { Toast } from '@/components/Toast';
 import Spinner from '@/components/Spinner';
 import { useDragDropImport } from '../hooks/useDragDropImport';
@@ -61,6 +63,7 @@ const LibraryPageContent = (
     checkLastOpenBooks,
     setCheckOpenWithBooks,
     setCheckLastOpenBooks,
+    refreshGroups,
     getGroupId,
     getGroupName,
   } = useLibraryStore();
@@ -75,6 +78,8 @@ const LibraryPageContent = (
   const [showDetailsBook, setShowDetailsBook] = useState<Book | null>(null);
   const [pendingNavigationBookIds, setPendingNavigationBookIds] = useState<string[] | null>(null);
   const [currentGroupPath, setCurrentGroupPath] = useState<string | undefined>(undefined);
+  const [showGroupModal, setShowGroupModal] = useState(false);
+  const [newGroupName, setNewGroupName] = useState(currentGroupPath);
 
   const viewSettings = settings.globalViewSettings;
   const osRef = useRef<OverlayScrollbarsComponentRef>(null);
@@ -108,6 +113,7 @@ const LibraryPageContent = (
     const groupId = searchParams?.get('group') || '';
     const groupName = getGroupName(groupId);
     setCurrentGroupPath(groupName);
+    setNewGroupName(groupName);
   }, [libraryBooks, searchParams, getGroupName]);
 
   const handleImportBookFiles = useCallback(async (event: CustomEvent) => {
@@ -420,6 +426,30 @@ const LibraryPageContent = (
     setTimeout(() => { setCurrentGroupPath(path); }, 300);
   };
 
+  const handleRenameGroup = async () => {
+    const oldGroupName = currentGroupPath;
+    if (!newGroupName || !oldGroupName) return;
+    // Update the group name for all books in this group and nested groups
+    libraryBooks.forEach((book) => {
+      if (book.groupName === oldGroupName) {
+        book.groupName = newGroupName;
+        book.groupId = getGroupId(book.groupName);
+        book.updatedAt = Date.now();
+      } else if (book.groupName?.startsWith(oldGroupName + '/')) {
+        book.groupName = book.groupName.replace(oldGroupName, newGroupName);
+        book.groupId = getGroupId(book.groupName);
+        book.updatedAt = Date.now();
+      }
+    });
+
+    setLibrary([...libraryBooks]);
+    await appService?.saveLibraryBooks(libraryBooks);
+    refreshGroups();
+    
+    setShowGroupModal(false);
+    handleNavigateToPath(newGroupName);
+  };
+
   if (!appService || !insets || checkOpenWithBooks || checkLastOpenBooks) {
     return <div className={clsx('full-height', !appService?.isLinuxApp && 'bg-base-200')} />;
   }
@@ -486,6 +516,18 @@ const LibraryPageContent = (
                 </React.Fragment>
               );
             })}
+            <button
+              aria-label={_('Show Group Details')}
+              className='show-detail-button p-2'
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowGroupModal(!showGroupModal);
+                console.log(currentGroupPath);
+              }}
+            >
+              <LiaInfoCircleSolid size={18} />
+            </button>
           </div>
         </div>
       )}
@@ -543,6 +585,46 @@ const LibraryPageContent = (
           book={showDetailsBook}
           onClose={() => setShowDetailsBook(null)}
         />
+      )}
+      {showGroupModal && (
+        <ModalPortal>
+          <dialog className='modal modal-open'>
+            <div className='modal-box'>
+              <h3 className='mb-4 text-lg font-bold'>{_('Rename Group')}</h3>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleRenameGroup();
+                }}
+                className='space-y-4'
+              >
+                <div className='form-control'>
+                  <input
+                    type='text'
+                    value={newGroupName || currentGroupPath}
+                    onChange={(e) => setNewGroupName(e.target.value.trim())}
+                    placeholder={_('New Group Name')}
+                    className='input input-bordered placeholder:text-sm'
+                  />
+                </div>
+                
+                <div className='modal-action'>
+                  <button
+                    type='button'
+                    onClick={() => setShowGroupModal(false)}
+                    className='btn btn-sm'
+                  >
+                    {_('Cancel')}
+                  </button>
+                  <button type='submit' className='btn btn-sm btn-primary'>
+                    {_('Rename')}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </dialog>
+        </ModalPortal>
       )}
       <Toast />
     </div>
