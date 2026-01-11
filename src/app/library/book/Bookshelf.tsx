@@ -1,21 +1,21 @@
 import clsx from 'clsx';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Book } from '@/types/book';
 import { LibraryViewModeType } from '@/types/settings';
 import { useEnv } from '@/context/EnvContext';
+import { useAutoFocus } from '@/hooks/useAutoFocus';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useLibraryStore } from '@/store/libraryStore';
 import { useTransferStore } from '@/store/transferStore';
+import { useTranslation } from '@/hooks/useTranslation';
 import { navigateToLibrary, navigateToReader } from '@/utils/nav';
 import { formatTitle } from '@/utils/book';
-import { useAutoFocus } from '@/hooks/useAutoFocus';
-import { useTranslation } from '@/hooks/useTranslation';
 import Spinner from '@/components/Spinner';
 import ModalPortal from '@/components/ModalPortal';
 import BookshelfItem, { generateBookshelfItems } from './BookshelfItem';
-import { createBookFilter, createBookSorter } from './libraryUtils';
 import TransferQueuePanel from './TransferQueuePanel';
+import { createBookFilter, createBookSorter } from './libraryUtils';
 
 interface BookshelfProps {
   libraryBooks: Book[];
@@ -43,7 +43,7 @@ const Bookshelf: React.FC<BookshelfProps> = ({
 
   const isImportingBook = useRef(false);
   const autofocusRef = useAutoFocus<HTMLDivElement>();
-  const { setCurrentBookshelf, setLibrary } = useLibraryStore();
+  const { setCurrentBookshelf, setLibrary, getGroupName } = useLibraryStore();
 
   const { isTransferQueueOpen } = useTransferStore();
 
@@ -81,22 +81,27 @@ const Bookshelf: React.FC<BookshelfProps> = ({
     return queryTerm ? libraryBooks.filter((book) => bookFilter(book)) : libraryBooks;
   }, [libraryBooks, queryTerm]);
 
-  const allBookshelfItems = useMemo(() => {
-    return generateBookshelfItems(filteredBooks);
-  }, [filteredBooks]);
+  const currentBookshelfItems = useMemo(() => {
+    const groupName = getGroupName(groupId) || '';
+    if (groupId && !groupName) {
+      return [];
+    }
+    const items = generateBookshelfItems(filteredBooks, groupName);
+    return items;
+  }, [filteredBooks, groupId, getGroupName]);
 
   useEffect(() => {
-    if (groupId && allBookshelfItems.length === 0) {
+    if (groupId && currentBookshelfItems.length === 0) {
       updateUrlParams({ group: null });
     } else {
       updateUrlParams({});
     }
-  }, [searchParams, groupId, allBookshelfItems.length, updateUrlParams]);
+  }, [searchParams, groupId, currentBookshelfItems.length, updateUrlParams]);
 
   const sortedBookshelfItems = useMemo(() => {
     const bookSorter = createBookSorter(sortBy, uiLanguage);
     const sortOrderMultiplier = sortOrder === 'asc' ? 1 : -1;
-    return allBookshelfItems.sort((a, b) => {
+    return currentBookshelfItems.sort((a, b) => {
       if (sortBy === 'updated') {
         return (
           (new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime()) * sortOrderMultiplier
@@ -111,7 +116,7 @@ const Bookshelf: React.FC<BookshelfProps> = ({
         return 0;
       }
     });
-  }, [sortOrder, sortBy, uiLanguage, allBookshelfItems]);
+  }, [sortOrder, sortBy, uiLanguage, currentBookshelfItems]);
 
   useEffect(() => {
     if (isImportingBook.current) return;
@@ -133,8 +138,8 @@ const Bookshelf: React.FC<BookshelfProps> = ({
   }, [importBookUrl, appService]);
 
   useEffect(() => {
-    setCurrentBookshelf(allBookshelfItems);
-  }, [allBookshelfItems, setCurrentBookshelf]);
+    setCurrentBookshelf(currentBookshelfItems);
+  }, [currentBookshelfItems, setCurrentBookshelf]);
 
   return (
     <div className='bookshelf'>

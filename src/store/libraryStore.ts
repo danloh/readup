@@ -13,7 +13,7 @@ interface LibraryState {
   setCheckOpenWithBooks: (check: boolean) => void;
   setCheckLastOpenBooks: (check: boolean) => void;
   setLibrary: (books: Book[]) => void;
-  updateBook: (envConfig: EnvConfigType, book: Book) => void;
+  updateBook: (envConfig: EnvConfigType, book: Book) => Promise<void>;
   setCurrentBookshelf: (bookshelf: (Book | BooksGroup)[]) => void;
   groups: Record<string, string>;
   refreshGroups: () => void;
@@ -49,8 +49,9 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
       library[bookIndex] = book;
     }
     set({ library: [...library] });
-    appService.saveLibraryBooks(library);
+    await appService.saveLibraryBooks(library);
   },
+
   groups: {},
   refreshGroups: () => {
     const { library } = get();

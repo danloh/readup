@@ -311,7 +311,7 @@ export function CatalogManager({ closeDialog }: CMProps) {
                   <input
                     type='text'
                     value={newCatalog.name}
-                    onChange={(e) => setNewCatalog({ ...newCatalog, name: e.target.value })}
+                    onChange={(e) => setNewCatalog({ ...newCatalog, name: e.target.value.trim() })}
                     placeholder={_('My Online Library')}
                     className='input input-bordered placeholder:text-sm'
                     disabled={isValidating}
@@ -326,7 +326,7 @@ export function CatalogManager({ closeDialog }: CMProps) {
                   <input
                     type='url'
                     value={newCatalog.url}
-                    onChange={(e) => setNewCatalog({ ...newCatalog, url: e.target.value })}
+                    onChange={(e) => setNewCatalog({ ...newCatalog, url: e.target.value.trim() })}
                     placeholder='https://example.com/opds'
                     className='input input-bordered placeholder:text-sm'
                     disabled={isValidating}
@@ -346,7 +346,7 @@ export function CatalogManager({ closeDialog }: CMProps) {
                   <input
                     type='text'
                     value={newCatalog.proxy}
-                    onChange={(e) => setNewCatalog({ ...newCatalog, proxy: e.target.value })}
+                    onChange={(e) => setNewCatalog({ ...newCatalog, proxy: e.target.value.trim() })}
                     placeholder={_('URL for proxy')}
                     className='input input-bordered placeholder:text-sm'
                     disabled={isValidating}

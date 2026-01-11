@@ -1,38 +1,60 @@
 import clsx from 'clsx';
 import { useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { Menu, MenuItem } from '@tauri-apps/api/menu';
+import { revealItemInDir } from '@tauri-apps/plugin-opener';
+
 import { navigateToLibrary, navigateToReader, showReaderWindow } from '@/utils/nav';
 import { useEnv } from '@/context/EnvContext';
 import { useLibraryStore } from '@/store/libraryStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useLongPress } from '@/hooks/useLongPress';
-import { Menu, MenuItem } from '@tauri-apps/api/menu';
-import { revealItemInDir } from '@tauri-apps/plugin-opener';
 import { getOSPlatform } from '@/utils/misc';
 import { throttle } from '@/utils/throttle';
 import { eventDispatcher } from '@/utils/event';
 import { LibraryViewModeType } from '@/types/settings';
 import { BOOK_UNGROUPED_ID, BOOK_UNGROUPED_NAME } from '@/services/constants';
 import { FILE_REVEAL_LABELS, FILE_REVEAL_PLATFORMS } from '@/utils/os';
+import { md5Fingerprint } from '@/utils/md5';
 import { Book, BooksGroup } from '@/types/book';
 import BookItem from './BookItem';
 import GroupItem from './GroupItem';
 
-export const generateBookshelfItems = (books: Book[]): (Book | BooksGroup)[] => {
+export const generateBookshelfItems = (
+  books: Book[],
+  parentGroupName: string,
+): (Book | BooksGroup)[] => {
   const groups: BooksGroup[] = books.reduce((acc: BooksGroup[], book: Book) => {
     if (book.deletedAt) return acc;
+    if (parentGroupName && (!book.groupName || !book.groupName.startsWith(parentGroupName)))
+      return acc;
     book.groupId = book.groupId || BOOK_UNGROUPED_ID;
     book.groupName = book.groupName || BOOK_UNGROUPED_NAME;
-    const groupIndex = acc.findIndex((group) => group.id === book.groupId);
+    const slashIndex = book.groupName.indexOf('/', parentGroupName.length + 1);
+    const leafGroupName = book.groupName.substring(
+      parentGroupName ? parentGroupName.length + 1 : 0,
+      slashIndex > 0 ? slashIndex : undefined,
+    );
+    const fullGroupName = parentGroupName
+      ? `${parentGroupName}${leafGroupName ? `/${leafGroupName}` : ''}`
+      : leafGroupName;
+    const groupIndex = acc.findIndex(
+      (group) =>
+        group.name === fullGroupName ||
+        (parentGroupName && group.name === parentGroupName) ||
+        (leafGroupName === BOOK_UNGROUPED_NAME && group.name === BOOK_UNGROUPED_NAME),
+    );
     const booksGroup = acc[groupIndex];
     if (booksGroup) {
       booksGroup.books.push(book);
       booksGroup.updatedAt = Math.max(booksGroup.updatedAt, book.updatedAt);
     } else {
+      const groupName = fullGroupName;
       acc.push({
-        id: book.groupId,
-        name: book.groupName,
+        id: groupName === parentGroupName ? BOOK_UNGROUPED_ID : md5Fingerprint(groupName),
+        name: groupName === parentGroupName ? BOOK_UNGROUPED_NAME : groupName,
+        displayName: leafGroupName,
         books: [book],
         updatedAt: book.updatedAt,
       });
@@ -42,11 +64,13 @@ export const generateBookshelfItems = (books: Book[]): (Book | BooksGroup)[] => 
   groups.forEach((group) => {
     group.books.sort((a, b) => b.updatedAt - a.updatedAt);
   });
-  // const ungroupedBooks: Book[] =
-  //  groups.find((group) => group.name === BOOK_UNGROUPED_NAME)?.books || [];
-  const groupedBooks: BooksGroup[] = groups.filter((group) => group.name !== BOOK_UNGROUPED_NAME);
-  // list all books and grouped books
-  return [...books, ...groupedBooks].sort((a, b) => b.updatedAt - a.updatedAt);
+  const ungroupedBooks: Book[] =
+    groups.find((group) => group.name === BOOK_UNGROUPED_NAME || group.name === parentGroupName)
+      ?.books || [];
+  const groupedBooks: BooksGroup[] = groups.filter(
+    (group) => group.name !== BOOK_UNGROUPED_NAME && group.name !== parentGroupName,
+  );
+  return [...ungroupedBooks, ...groupedBooks].sort((a, b) => b.updatedAt - a.updatedAt);
 };
 
 interface BookshelfItemProps {

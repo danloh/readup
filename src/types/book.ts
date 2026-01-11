@@ -4,6 +4,7 @@ export type BookFormat = 'EPUB' | 'PDF' | 'MOBI' | 'AZW' | 'AZW3' | 'CBZ' | 'FB2
 export type BookNoteType = 'bookmark' | 'annotation' | 'excerpt';
 export type HighlightStyle = 'highlight' | 'underline' | 'squiggly';
 export type HighlightColor = 'red' | 'yellow' | 'green' | 'blue' | 'violet';
+export type BookStatus = 'TODO' | 'DOING' | 'DONE';
 export const FIXED_LAYOUT_FORMATS: Set<BookFormat> = new Set(['PDF', 'CBZ']);
 
 export interface Book {
@@ -21,11 +22,12 @@ export interface Book {
   author: string;
   // file size in bytes
   fileSize?: number;
+  coverImageUrl?: string | null;
   
   groupId?: string;
   groupName?: string;
   tags?: string[];
-  coverImageUrl?: string | null;
+  status?: BookStatus;
 
   createdAt: number;
   updatedAt: number;
@@ -305,6 +307,7 @@ export interface BookDataRecord {
 export interface BooksGroup {
   id: string;
   name: string;
+  displayName: string;
   books: Book[];
   updatedAt: number;
 }

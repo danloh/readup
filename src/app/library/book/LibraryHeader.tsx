@@ -4,14 +4,11 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { FaSearch } from 'react-icons/fa';
 import { PiDotsThreeCircle } from 'react-icons/pi';
 import { LiaFileImportSolid } from 'react-icons/lia';
-import { MdArrowBackIosNew } from 'react-icons/md';
 import { IoMdCloseCircle } from 'react-icons/io';
 import { IoFileTray } from 'react-icons/io5';
 
 import { useTranslation } from '@/hooks/useTranslation';
 import { useLibraryStore } from '@/store/libraryStore';
-import { useResponsiveSize } from '@/hooks/useResponsiveSize';
-import { navigateToLibrary } from '@/utils/nav';
 import { debounce } from '@/utils/debounce';
 import Dropdown from '@/components/Dropdown';
 import ViewMenu from './ViewMenu';
@@ -30,7 +27,6 @@ const LibraryHeader: React.FC<LibraryHeaderProps> = (
   const { currentBookshelf } = useLibraryStore();
 
   const [searchQuery, setSearchQuery] = useState(searchParams?.get('q') ?? '');
-  const iconSize20 = useResponsiveSize(20);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const debouncedUpdateQueryParam = useCallback(
@@ -52,7 +48,6 @@ const LibraryHeader: React.FC<LibraryHeaderProps> = (
     debouncedUpdateQueryParam(newQuery);
   };
 
-  const isInGroupView = !!searchParams?.get('group');
   const currentBooksCount = currentBookshelf.reduce(
     (acc, item) => acc + ('books' in item ? item.books.length : 1),
     0,
@@ -62,18 +57,6 @@ const LibraryHeader: React.FC<LibraryHeaderProps> = (
     <div className='library-head bg-base-200 z-10 flex h-[48px] w-full items-center p-2'>
       <div className='flex w-full items-center justify-between space-x-6 sm:space-x-12'>
         <div className='exclude-title-bar-mousedown relative flex w-full items-center pl-4'>
-          {isInGroupView && (
-            <button
-              onClick={() => {
-                navigateToLibrary(router);
-              }}
-              className='ml-[-6px] mr-4 flex h-7 min-h-7 w-7 items-center p-0'
-            >
-              <div className='tooltip tooltip-bottom' data-tip={_('Go Back')}>
-                <MdArrowBackIosNew size={iconSize20} />
-              </div>
-            </button>
-          )}
           <div className='relative flex h-9 w-full items-center sm:h-7'>
             <span className='text-base-content/50 absolute ps-3'>
               <FaSearch className='h-4 w-4' />
