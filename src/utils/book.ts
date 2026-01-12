@@ -292,3 +292,30 @@ export const getMetadataHash = (metadata: BookMetadata) => {
   }
   return;
 };
+
+/**
+ * Merges two arrays of objects(books), overriding items from the first array 
+ * with items from the second if they share the same key.
+ */
+export function mergeArrays<T>(
+  arr1: T[], 
+  arr2: T[], 
+  key: keyof T
+): T[] {
+  const map = new Map<T[keyof T], T>();
+
+  // Process both arrays; items in arr2 will override properties of arr1
+  [...arr1, ...arr2].forEach((item) => {
+    const id = item[key];
+    const existing = map.get(id);
+
+    if (existing) {
+      // Shallow merge properties
+      map.set(id, { ...existing, ...item });
+    } else {
+      map.set(id, item);
+    }
+  });
+
+  return Array.from(map.values());
+}

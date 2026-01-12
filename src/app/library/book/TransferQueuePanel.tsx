@@ -12,6 +12,7 @@ import {
   MdCancel,
   MdDeleteSweep,
 } from 'react-icons/md';
+
 import { useTransferQueue } from '@/hooks/useTransferQueue';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useResponsiveSize } from '@/hooks/useResponsiveSize';
@@ -20,7 +21,7 @@ import { useLibraryStore } from '@/store/libraryStore';
 import { TransferItem, TransferStatus, TransferType, useTransferStore } from '@/store/transferStore';
 import { Book } from '@/types/book';
 import { formatBytes } from '@/utils/book';
-import { listRecords } from '@/services/bsky/atfile';
+import { useEnv } from '@/context/EnvContext';
 
 const formatSpeed = (bytesPerSec: number): string => {
   return `${formatBytes(bytesPerSec) || '0 B'}/s`;
@@ -155,9 +156,10 @@ type FilterType = 'all' | 'active' | 'pending' | 'completed' | 'failed' | 'pds';
 
 const TransferQueuePanel: React.FC = () => {
   const _ = useTranslation();
+  const { appService } = useEnv();
   const iconSize = useResponsiveSize(18);
   const setIsOpen = useTransferStore((state) => state.setIsTransferQueueOpen);
-  const getVisibleLibrary = useLibraryStore((state) => state.getVisibleLibrary);
+  const { setLibrary, getVisibleLibrary } = useLibraryStore();
   const {
     transfers,
     stats,
@@ -203,6 +205,7 @@ const TransferQueuePanel: React.FC = () => {
   // all books as temp tranfer items
   const allCanTransfer = booksToTransfers(getVisibleLibrary(), 'upload');
   const [pdsBooksToDownload, setPdsBooksToDownload] = useState<Book[]>([]);
+  const [pdsLoaded, setPdsLoaded] = useState(false);
   const [pdsCanTransfer, setPdsCanTransfer] = useState<TransferItem[]>([]);
   const booksToUpload = getVisibleLibrary().filter(
     (book) => book.downloadedAt && !book.uploadedAt,
@@ -210,22 +213,20 @@ const TransferQueuePanel: React.FC = () => {
 
   const listBooksInPds = async () => {
     console.log('List books record in PDS...');
-    const records = await listRecords();
-    const books = records.map(rec => {
-      const val = rec.value;
-      const book = val.bookmeta as Book;
-      book.title = val.name;
-      if (val.checksum) book.hash = val.checksum;
-      return book;
-    });
+    const res = await appService?.listPdsBooks();
+    const books = res ? res[0] : [];
+    const libraryBooks = res ? res[1] : [];
+    // save to library? 
+    setLibrary(libraryBooks);
     setPdsBooksToDownload(books);
     setPdsCanTransfer(booksToTransfers(books, 'download'));
+    setPdsLoaded(true);
   };
 
   const handleSetFilter = useCallback(
     async (f: FilterType) => {
       if (f === 'pds') {
-        await listBooksInPds();
+        if (!pdsLoaded) await listBooksInPds();
       }
       setFilter(f);
     }, [],

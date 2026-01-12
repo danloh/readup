@@ -26,6 +26,7 @@ import {
   formatTitle,
   formatAuthors,
   getPrimaryLanguage,
+  mergeArrays,
 } from '@/utils/book';
 import { md5, partialMD5 } from '@/utils/md5';
 import { getBaseFilename, getFilename } from '@/utils/path';
@@ -470,17 +471,22 @@ export abstract class BaseAppService implements AppService {
     }
   }
 
-  /* List uploaded books in PDS, with cover and metadata, w/o doc  */
-  async listPdsBooks(): Promise<Book[]> {
+  /** 
+   * List uploaded books in PDS, with metadata, w/o doc, cover 
+   * @returns [books-in-pds, merged-books-local]
+  */
+  async listPdsBooks(): Promise<[Book[], Book[]]> {
     console.log('List books in PDS...');
-    if (!(await this.fs.exists('', 'Books'))) {
-      await this.fs.createDir('', 'Books', true);
-    }
 
     const records = await listRecords();
     const books = records.map(rec => rec.value.bookmeta as Book);
 
-    return books;
+    // merge with local books and save
+    const localBooks = await this.loadLibraryBooks();
+    const mergedBooks = mergeArrays(books, localBooks, 'hash');
+    await this.saveLibraryBooks(mergedBooks);
+
+    return [books, mergedBooks];
   }
 
   async downloadBook(
@@ -511,11 +517,11 @@ export abstract class BaseAppService implements AppService {
 
     const rkey = book.hash;
     const res = await downloadBookFile(rkey, needDownCover, needDownBook, handleProgress);
-    // FIXME: where to save book record data? metadata, config... 
+    // FIXME: upload/download config file... 
     const coverBlob = res.coverData;
     const docBlob = res.docData;
     book.fileSize = docBlob?.size;
-    // write data to local
+    // write data to local book dir
     if (needDownCover && coverBlob) {
       const coverDst = `${this.localBooksDir}/${getCoverFilename(book)}`;
       await this.writeFile(coverDst, 'None', await coverBlob.arrayBuffer());
