@@ -415,10 +415,10 @@ const LibraryPageContent = (
   };
 
   const handleNavigateToPath = (path: string | undefined) => {
-    const group = path ? getGroupId(path) : '';
+    const groupId = path ? getGroupId(path) : '';
     const params = new URLSearchParams(searchParams?.toString());
-    if (group) {
-      params.set('group', group);
+    if (groupId) {
+      params.set('group', groupId);
     } else {
       params.delete('group');
     }
@@ -602,7 +602,7 @@ const LibraryPageContent = (
                 <div className='form-control'>
                   <input
                     type='text'
-                    value={newGroupName || currentGroupPath}
+                    value={newGroupName}
                     onChange={(e) => setNewGroupName(e.target.value.trim())}
                     placeholder={_('New Group Name')}
                     className='input input-bordered placeholder:text-sm'
@@ -612,7 +612,10 @@ const LibraryPageContent = (
                 <div className='modal-action'>
                   <button
                     type='button'
-                    onClick={() => setShowGroupModal(false)}
+                    onClick={() => {
+                      setShowGroupModal(false);
+                      setNewGroupName(currentGroupPath);
+                    }}
                     className='btn btn-sm'
                   >
                     {_('Cancel')}
