@@ -142,7 +142,7 @@ const BookDetailModal: React.FC<BookDetailModalProps> = ({
       await appService?.deleteBook(book, 'local');
       await updateBook(envConfig, book);
       clearBookData(book.hash);
-      // if (syncBooks) pushLibrary(); // FIXME
+
       eventDispatcher.dispatch('toast', {
         type: 'info',
         timeout: 2000,

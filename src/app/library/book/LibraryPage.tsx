@@ -94,8 +94,6 @@ const LibraryPageContent = (
 
   const { isDragging } = useDragDropImport();
 
-  // usePullToRefresh(containerRef, pullLibrary);
-
   useShortcuts({
     onOpenFontLayoutSettings: () => {
       setFontLayoutSettingsDialogOpen(true);
@@ -153,6 +151,7 @@ const LibraryPageContent = (
     return;
   }, [appService, handleRefreshLibrary]);
 
+  // support 'Open with ..' function
   const processOpenWithFiles = React.useCallback(
     async (appService: AppService, openWithFiles: string[], libraryBooks: Book[]) => {
       const settings = await appService.loadSettings();
@@ -239,6 +238,15 @@ const LibraryPageContent = (
       }
     };
 
+    // support 'Open with ..' function
+    const handleOpenWithBooks = async (appService: AppService, library: Book[]) => {
+      const openWithFiles = (await parseOpenWithFiles(appService)) || [];
+      if (openWithFiles.length > 0) {
+        return await processOpenWithFiles(appService, openWithFiles, library);
+      }
+      return false;
+    };
+
     const loadingTimeout = setTimeout(() => setLoading(true), 300);
     const initLibrary = async () => {
       const appService = await envConfig.getAppService();
@@ -261,14 +269,6 @@ const LibraryPageContent = (
       setLibraryLoaded(true);
       if (loadingTimeout) clearTimeout(loadingTimeout);
       setLoading(false);
-    };
-
-    const handleOpenWithBooks = async (appService: AppService, library: Book[]) => {
-      const openWithFiles = (await parseOpenWithFiles(appService)) || [];
-      if (openWithFiles.length > 0) {
-        return await processOpenWithFiles(appService, openWithFiles, library);
-      }
-      return false;
     };
 
     initLogin();
@@ -338,7 +338,6 @@ const LibraryPageContent = (
       const batch = files.slice(i, i + concurrency);
       await Promise.all(batch.map(processFile));
     }
-    // pushLibrary(); // FIXME
 
     if (failedImports.length > 0) {
       const filenames = failedImports.map((f) => f.filename);
