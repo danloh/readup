@@ -1,6 +1,6 @@
 import { Book, BookConfig, BookNote, BookDataRecord } from '@/types/book';
 import { getAPIBaseUrl } from '@/services/environment';
-import { getAccessToken } from '@/utils/access';
+import { getAccessToken } from '@/services/bsky/auth';
 import { fetchWithTimeout } from '@/utils/fetch';
 
 const SYNC_API_ENDPOINT = getAPIBaseUrl() + '/sync';

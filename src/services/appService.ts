@@ -18,7 +18,6 @@ import {
 import {
   getDir,
   getLocalBookFilename,
-  getRemoteBookFilename,
   getCoverFilename,
   getConfigFilename,
   getLibraryFilename,
@@ -35,20 +34,15 @@ import {
   getOSPlatform, getTargetLang, isCJKEnv, isContentURI, isValidURL, makeSafeFilename 
 } from '@/utils/misc';
 import { deserializeConfig, serializeConfig } from '@/utils/serializer';
-import {
-  // downloadFile,
-  //uploadFile,
-  deleteFile,
-  createProgressHandler,
-  // batchGetDownloadUrls,
-} from '@/libs/storage';
 import { ClosableFile } from '@/utils/file';
-import { ProgressHandler } from '@/utils/transfer';
+import { createProgressHandler, ProgressHandler } from '@/utils/transfer';
 import { TxtToEpubConverter } from '@/utils/txt';
 import { svg2png } from '@/utils/svg';
 import { ArticleType, FeedType } from '@/app/feed/components/dataAgent';
 import { BOOK_FILE_NOT_FOUND_ERROR } from './errors';
-import { downloadBookFile, listRecords, uploadBookFile, UploadResult } from './bsky/atfile';
+import { 
+  deleteRecord, downloadBookFile, listRecords, uploadBookFile, UploadResult 
+} from './bsky/atfile';
 import {
   DEFAULT_BOOK_LAYOUT,
   DEFAULT_BOOK_STYLE,
@@ -59,7 +53,6 @@ import {
   SYSTEM_SETTINGS_VERSION,
   DEFAULT_BOOK_SEARCH_CONFIG,
   DEFAULT_TTS_CONFIG,
-  CLOUD_BOOKS_SUBDIR,
   DEFAULT_MOBILE_VIEW_SETTINGS,
   DEFAULT_SYSTEM_SETTINGS,
   DEFAULT_CJK_VIEW_SETTINGS,
@@ -412,16 +405,7 @@ export abstract class BaseAppService implements AppService {
       }
     }
     if (deleteAction === 'cloud' || deleteAction === 'both') {
-      const fps = [getRemoteBookFilename(book), getCoverFilename(book)];
-      for (const fp of fps) {
-        console.log('Deleting uploaded file:', fp);
-        const cfp = `${CLOUD_BOOKS_SUBDIR}/${fp}`;
-        try {
-          deleteFile(cfp);
-        } catch (error) {
-          console.log('Failed to delete uploaded file:', error);
-        }
-      }
+      await deleteRecord(book.hash);
       book.uploadedAt = null;
     }
   }

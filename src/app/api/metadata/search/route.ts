@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { MetadataService } from '@/services/metadata/service';
 import { SearchRequest } from '@/services/metadata/types';
-// import { validateUserAndToken } from '@/utils/access';
 import { ApiResponse } from '@/libs/metadata';
 
 function validateSearchRequest(body: SearchRequest): {

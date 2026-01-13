@@ -22,6 +22,16 @@ export type User = {
   status?: string;
 };
 
+export const getAuth = (): User => {
+  const user = localStorage.getItem('user') ?? '{}';
+  return JSON.parse(user) as User;
+};
+
+export const getAccessToken = async (): Promise<string | null> => {
+  const user = localStorage.getItem('user') ?? '{}';
+  return JSON.parse(user).access ?? null;
+};
+
 export async function createSession(handle: string, pass: string, host: string) {
   let url = `https://${host}/xrpc/com.atproto.server.createSession`;
   const response = await fetch(url, {

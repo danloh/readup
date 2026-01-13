@@ -84,7 +84,7 @@ const TransferItemRow: React.FC<{
 
       <div className='min-w-0 flex-1'>
         <div className='truncate font-medium'>{transfer.bookTitle}</div>
-        <div className='text-base-content/60 text-xs'>
+        <div className='inline-flex gap-1 text-base-content/60 text-xs'>
           {(transfer.book?.fileSize || 0) > 0 && (
             <span className='text-info'>{formatBytes(transfer.book?.fileSize)}</span>
           )}
@@ -100,8 +100,9 @@ const TransferItemRow: React.FC<{
           {transfer.status === 'failed' && (
             <span className='text-error'>{transfer.error || _('Failed')}</span>
           )}
-          {transfer.status === 'completed' && _('Completed')}
+          {transfer.status === 'completed' && (_('Completed'))}
           {transfer.status === 'cancelled' && _('Cancelled')}
+          {transfer.type === 'upload' ? <MdCloudUpload size={12} /> : <MdCloudDownload size={12} />}
           {' · '}
           {formatDateTime(transfer.completedAt || transfer.startedAt || transfer.createdAt)}
         </div>
@@ -225,8 +226,8 @@ const TransferQueuePanel: React.FC = () => {
 
   const handleSetFilter = useCallback(
     async (f: FilterType) => {
-      if (f === 'pds') {
-        if (!pdsLoaded) await listBooksInPds();
+      if (f === 'pds' && !pdsLoaded) {
+        await listBooksInPds();
       }
       setFilter(f);
     }, [],
