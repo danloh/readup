@@ -1,0 +1,506 @@
+(detected)
+77
+A brief description of this catalog
+A new version of Readup is available!
+About Readup
+Account
+Active
+Add
+Add Bookmark
+Add Catalog
+Add OPDS Catalog
+Add Your First Catalog
+Add your first OPDS catalog to start browsing books
+Add your notes here...
+Added
+Adding LAN addresses is not supported in the web app version.
+All
+All occurrences in this book
+All occurrences in your library
+Allow JavaScript
+Already the latest version
+Always on Top
+Always Show Status Bar
+An error occurred
+Annotate
+Annotate text after selection
+Annotation Tools
+Annotations
+Apply
+Apply also in Scrolled Mode
+Apply to All Books
+Apply to This Book
+Are you sure to delete the selected book?
+Ascending
+Audio
+Author
+Auto
+Auto Detect
+Auto Import on File Open
+Auto Mode
+Auto Screen Brightness
+Auto Spread
+Auto Upload Books to PDS
+Auto-Retrieve
+Auto-Retrieve Metadata
+Available Highlight Colors
+Azure Translator
+Back
+Background Color
+Background Read Aloud
+Behavior
+Book
+Book Content
+Book Details
+Book exported successfully.
+Book Menu
+Book not found in library
+Book Specific Rules
+Bookmark
+Bookmarks
+Books Content
+Bookshelf
+Borrow
+Bottom Margin (px)
+Browse
+Browse and download books from online catalogs
+Buy
+Calculating file info...
+Cancel
+Cancelled
+Cannot Load Page
+Case sensitive:
+Catalog
+Catalog Name
+Change cover image
+Change Data Location
+Changelog
+Chapter
+Check Update
+Check Updates on Start
+Checking for updates...
+Cherry
+Choose Different Folder
+Choose New Folder
+CJK Font
+Clear Completed
+Clear Failed
+Clear search
+Clear Search
+Clear search history
+Click Both Sides
+Click to Paginate
+Close
+Close Search
+Code Language
+Collect Book in Group
+Color
+Column Gap (%)
+Completed
+Confirm
+Confirm Deletion
+Contact Support
+Continuous Scroll
+Contrast
+Copied to clipboard
+Copied to notebook
+Copy
+Copy text after selection
+Copy to Notebook
+Count
+Current Data Location
+Current selection
+Custom
+Custom Content CSS
+Custom Reader UI CSS
+Custom Theme
+Dark Mode
+Date Added
+Date Read
+Decrease
+Default
+Default Font
+Default Font Size
+Delete
+Delete Account
+Delete from Device
+Delete Highlight
+Delete Permanently
+Delete Your Account?
+Descending
+Description
+Description (optional)
+Dictionary
+Disable
+Disable Double Click
+Disable Double Tap
+Disable Quick Action
+Disable Translation
+Double Border
+Download
+DOWNLOAD & INSTALL
+Download All
+Download and install now?
+Download completed
+Download failed
+Download finished
+Download Readup
+Drop to Import Books
+E-Ink Mode
+Edit
+Edit Metadata
+Enable
+Enable Code Highlighting
+Enable only if you trust the file.
+Enable Quick Action on Selection
+Enable Quick Actions
+Enable Translation
+Enter author name
+Enter book description
+Enter book subtitle
+Enter book title
+Enter CSS for book content styling...
+Enter CSS for reader interface styling...
+Enter Parallel Read
+Enter publisher
+Enter series index
+Enter series name
+Enter text...
+Enter total books in series
+Error checking for updates
+Error Details:
+Excerpts
+Exit Parallel Read
+Export Annotations
+Export Book
+Exported from Readup
+Exported successfully
+Failed
+Failed to export the book.
+Failed to open the book file
+Failed to parse the EPUB file
+Failed to select directory
+Failed to translate.
+Fast
+Fiction, Science, History
+File Size
+File Sync Transfers
+First
+Fit Page
+Fit Width
+Font
+Font & Layout
+Font Weight
+Footer Bar
+Format
+Forward
+Full Justification
+Fullscreen
+Global Settings
+Go Back
+Go Forward
+Go to generate the app password
+Go to Library
+Google Books
+Google Translate
+Grass
+Gray
+Grid
+Group Name
+Gruvbox
+GuanKiapTsingKhai-T
+Header Bar
+Help improve Readup
+Hide Search Bar
+Highlight
+Highlight text after selection
+Highlights & Annotations
+Home
+Horizontal Direction
+Huiwen-mincho
+Hyphenation
+Identifier
+Import Books
+Import Directory
+Important Notice
+Increase
+Interface Language
+Invalid OPDS catalog. Please check the URL.
+Invert Image Colors
+Keep manual input
+Keep Screen Awake
+KingHwa_OldSong
+Landscape
+Language
+Last
+Layout
+Left Margin (px)
+Letter Spacing
+Library
+Library Header
+Light Mode
+Line Spacing
+Link Color
+List
+Loading profile...
+Loading...
+Lock All
+Lock all fields
+Lock cover
+Locked
+Look up text in dictionary after selection
+Look up text in Wikipedia after selection
+LXGW WenKai GB Screen
+LXGW WenKai TC
+Mark
+Mark the Book
+Match Case
+Match Diacritics
+Match Whole Words
+Maximize or Restore
+Maximum Column Height
+Maximum Column Width
+Maximum Number of Columns
+Migrating data...
+Migration completed successfully!
+Migration failed
+Minimize
+Minimum Font Size
+Monospace Font
+More Info
+My Catalogs
+My Online Library
+Need help?
+Never synced
+New Data Location
+New Group Name
+Next
+Next Page
+Next Paragraph
+Next Result
+Next Section
+Next Sentence
+No
+No annotations to export
+No ATmosphere account? Let's start with Bluesky
+No book-level replacement rules
+No catalogs yet
+No chapters detected
+No description available
+No notes match your search
+No search results found
+No selected text replacement rules
+No transfers
+No translation available.
+None
+Nord
+Note
+Notebook
+Notes
+Off
+Online Library
+OPDS Catalogs
+OPDS URL
+Open
+Open & Read
+Open Access
+Open Book in New Window
+Open Last Book on Start
+Open Library
+Orientation
+Original Text
+Overlap Pixels
+Override Book Color
+Override Book Font
+Override Book Layout
+Page Mode
+Paging Animation
+Paragraph Margin
+Parallel Read
+Password
+Password (optional)
+Pause Transfers
+PDS
+Pending
+Pin Notebook
+Pin Sidebar
+Please log in to continue
+Popular Catalogs
+Popup
+Portrait
+Preview
+Previous
+Previous Page
+Previous Paragraph
+Previous Result
+Previous Section
+Previous Sentence
+Progress
+Proofread
+Proofread Replacement Rules
+Proofread text after selection
+Proxy URL (optional)
+Publication Date
+Published
+Publisher
+Query
+Queue
+Quick Action
+Quick action disabled
+Read Aloud
+Read text aloud after selection
+Reading Progress Synced
+Ready to read aloud
+Reload Page
+Remove Bookmark
+Remove cover image
+Rename
+Rename Group
+Replace
+Replace with:
+Reset
+Reset Settings
+Reset Zoom
+Resize Notebook
+Resize Sidebar
+Restart App
+Resume Transfers
+Retry
+Retry All
+Reveal in File Explorer
+Reveal in Finder
+Reveal in Folder
+Right Margin (px)
+RTL Direction
+Sample
+Sans-Serif Font
+Save
+Scope:
+Scrolled Mode
+Search
+Search Books...
+Search in OPDS Catalog...
+Search notes and excerpts...
+Search Options
+Search text after selection
+Select Audio
+Select Books
+Select Files
+Select Fonts
+Select Image
+Select Metadata Source
+Select Video
+Selected Text Rules
+Selected text:
+Selection
+Separate Cover Page
+Sepia
+Series
+Series Index
+Serif Font
+Settings
+Settings Menu
+Settings Panels
+Sharing anonymized statistics
+Show Book Details
+Show Footer
+Show Group Details
+Show Header
+Show Results
+Show Search Bar
+Show Search Results
+Show Source Text
+Sidebar
+Sign In
+Sign in to Sync
+Sign in with Bluesky
+Sign Out
+Single Page
+Sky
+Slow
+Software Update
+Solarized
+Sort by...
+Sort TOC by Page
+Source and Translated
+Source Han Serif CN VF
+Source Only
+Start Migration
+Start Page
+Status
+Status: todo, doing, done, ...
+Subject
+Subjects
+Subscribe
+Subtitle
+Sunset
+Swap Click Sides
+Swap Tap Sides
+System Fonts
+System Language
+Tag
+Tags
+Tap Both Sides
+Tap to Paginate
+Text Color
+Text Indent
+The book file is corrupted
+The book file is empty
+The new data directory must be different from the current one.
+Theme Color
+Theme Mode
+This book format is not supported
+Title
+Title, Author, Tag, etc...
+TOC
+Toggle Sidebar
+Toggle Translation
+Top Margin (px)
+Total in Series
+Transfer Queue
+Translate
+Translate text after selection
+Translate To
+Translated Only
+Translated Text
+Translation Not Available
+Try Again
+TTS Highlight Color
+TTS not supported for PDF
+TTS not supported for this document
+TTS Text
+Unable to fetch the translation. Try again later.
+Unable to open book
+Unknown
+Unknown error
+Unlock All
+Unlock all fields
+Unlock cover
+Unpin Notebook
+Unpin Sidebar
+Untitled
+Updated
+Upload All
+URL for proxy
+URL must start with http:// or https://
+Username
+Username (optional)
+Validating...
+Vertical Direction
+View All
+View Menu
+Volume Keys for Page Flip
+Waiting...
+Welcome
+Welcome to Readup
+What's New in Readup
+Wikipedia
+Word limit of 30 words exceeded.
+Word Spacing
+Writing Mode
+Yes
+YYYY or YYYY-MM-DD
+Zoom In
+Zoom Level
+Zoom Mode
+Zoom Out
