@@ -42,6 +42,7 @@ dependencies = [
  "tauri-plugin-os",
  "tauri-plugin-persisted-scope",
  "tauri-plugin-process",
+ "tauri-plugin-sharekit",
  "tauri-plugin-shell",
  "tauri-plugin-sign-in-with-apple",
  "tauri-plugin-single-instance",
@@ -2956,7 +2957,9 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1c10c2894a6fed806ade6027bcd50662746363a9589d3ec9d9bef30a4e4bc166"
 dependencies = [
  "bitflags 2.9.1",
+ "block2 0.6.1",
  "dispatch2 0.3.0",
+ "libc",
  "objc2 0.6.1",
 ]
 
@@ -5150,6 +5153,27 @@ checksum = "d55511a7bf6cd70c8767b02c97bf8134fa434daf3926cfc1be0a0f94132d165a"
 dependencies = [
  "tauri",
  "tauri-plugin",
+]
+
+[[package]]
+name = "tauri-plugin-sharekit"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "78d52e8e7f240043bb8c2cb0275feb8fb78b90ea6647a0105c043989197e69d3"
+dependencies = [
+ "log",
+ "objc2 0.6.1",
+ "objc2-app-kit",
+ "objc2-core-foundation",
+ "objc2-foundation 0.3.1",
+ "serde",
+ "serde_json",
+ "serde_repr",
+ "tauri",
+ "tauri-plugin",
+ "thiserror 2.0.12",
+ "windows",
+ "windows-collections",
 ]
 
 [[package]]

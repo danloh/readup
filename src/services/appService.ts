@@ -31,7 +31,9 @@ import {
 import { md5, partialMD5 } from '@/utils/md5';
 import { getBaseFilename, getFilename } from '@/utils/path';
 import { BookDoc, DocumentLoader, EXTS } from '@/libs/document';
-import { getOSPlatform, getTargetLang, isCJKEnv, isContentURI, isValidURL } from '@/utils/misc';
+import { 
+  getOSPlatform, getTargetLang, isCJKEnv, isContentURI, isValidURL, makeSafeFilename 
+} from '@/utils/misc';
 import { deserializeConfig, serializeConfig } from '@/utils/serializer';
 import {
   // downloadFile,
@@ -103,6 +105,12 @@ export abstract class BaseAppService implements AppService {
   abstract setCustomRootDir(customRootDir: string): Promise<void>;
   abstract selectDirectory(mode: SelectDirectoryMode): Promise<string>;
   abstract selectFiles(name: string, extensions: string[]): Promise<string[]>;
+  abstract saveFile(
+    filename: string,
+    content: string | ArrayBuffer,
+    filepath: string,
+    mimeType?: string,
+  ): Promise<boolean>;
 
   async prepareBooksDir() {
     this.localBooksDir = await this.fs.getPrefix('Books');
@@ -673,6 +681,15 @@ export abstract class BaseAppService implements AppService {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const libraryBooks = books.map(({ coverImageUrl, ...rest }) => rest);
     await this.safeSaveJSON(getLibraryFilename(), 'Books', libraryBooks);
+  }
+
+  async exportBook(book: Book): Promise<boolean> {
+    const { file } = await this.loadBookContent(book);
+    const content = await file.arrayBuffer();
+    const filename = `${makeSafeFilename(book.title)}.${book.format.toLowerCase()}`;
+    const filepath = await this.resolveFilePath(getLocalBookFilename(book), 'Books');
+    const fileType = file.type || 'application/octet-stream';
+    return await this.saveFile(filename, content, filepath, fileType);
   }
 
   private imageToArrayBuffer(imageUrl?: string, imageFile?: string): Promise<ArrayBuffer> {

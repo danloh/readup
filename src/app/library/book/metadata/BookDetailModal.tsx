@@ -13,6 +13,7 @@ import { useBookDataStore } from '@/store/bookDataStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import Alert from '@/components/Alert';
 import Dialog from '@/components/Dialog';
+import Spinner from '@/components/Spinner';
 import { useMetadataEdit } from './useMetadataEdit';
 import BookDetailView from './BookDetailView';
 import BookDetailEdit from './BookDetailEdit';
@@ -38,6 +39,7 @@ const BookDetailModal: React.FC<BookDetailModalProps> = ({
   const [editMode, setEditMode] = useState(false);
   const [bookMeta, setBookMeta] = useState<BookMetadata | null>(null);
   const [fileSize, setFileSize] = useState<number | undefined>(book.fileSize);
+  const [isLoading, setIsLoading] = useState(false);
   const { updateBook } = useLibraryStore();
   const { clearBookData } = useBookDataStore();
 
@@ -133,6 +135,20 @@ const BookDetailModal: React.FC<BookDetailModalProps> = ({
     }
   };
 
+  const handleBookExport = async () => {
+    setIsLoading(true);
+    setTimeout(async () => {
+      const success = await appService?.exportBook(book);
+      setIsLoading(false);
+      if (!isWebAppPlatform()) {
+        eventDispatcher.dispatch('toast', {
+          type: success ? 'info' : 'error',
+          message: success ? _('Book exported successfully.') : _('Failed to export the book.'),
+        });
+      }
+    }, 0);
+  };
+
   const handleDelete = () => {
     setShowDeleteAlert(true);
   };
@@ -210,6 +226,7 @@ const BookDetailModal: React.FC<BookDetailModalProps> = ({
                 fileSize={fileSize}
                 onEdit={handleEditMetadata}
                 onDelete={handleDelete}
+                onExport={handleBookExport}
                 showBtns={showBtns}
               />
             )}
@@ -224,6 +241,12 @@ const BookDetailModal: React.FC<BookDetailModalProps> = ({
             onSelect={handleSourceSelection}
             onClose={handleCloseSourceSelection}
           />
+        )}
+
+        {isLoading && (
+          <div className='fixed inset-0 z-50 flex items-center justify-center'>
+            <Spinner loading />
+          </div>
         )}
 
         {showDeleteAlert && (

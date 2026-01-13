@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MdCollectionsBookmark, MdOutlineDelete, MdOutlineEdit } from 'react-icons/md';
+import { MdCollectionsBookmark, MdOutlineDelete, MdOutlineEdit, MdSaveAlt } from 'react-icons/md';
 
 import { Book, BookStatus } from '@/types/book';
 import { BookMetadata } from '@/libs/document';
@@ -13,10 +13,10 @@ import {
   formatTitle,
   normalizeIdentifier,
 } from '@/utils/book';
-import BookCover from '../BookCover';
 import ModalPortal from '@/components/ModalPortal';
 import { useLibraryStore } from '@/store/libraryStore';
 import { useEnv } from '@/context/EnvContext';
+import BookCover from '../BookCover';
 
 interface BookDetailViewProps {
   book: Book;
@@ -24,6 +24,7 @@ interface BookDetailViewProps {
   fileSize?: number;
   onEdit?: () => void;
   onDelete?: () => void;
+  onExport?: () => void;
   showBtns?: boolean;
 }
 
@@ -33,6 +34,7 @@ const BookDetailView: React.FC<BookDetailViewProps> = ({
   fileSize,
   onEdit,
   onDelete,
+  onExport,
   showBtns = true,
 }) => {
   const _ = useTranslation();
@@ -81,7 +83,7 @@ const BookDetailView: React.FC<BookDetailViewProps> = ({
   return (
     <div className='relative w-full rounded-lg'>
       <div className='mb-6 me-4 flex h-32 items-start'>
-        <div className='me-10 aspect-[28/41] h-32 shadow-lg'>
+        <div className='me-6 aspect-[28/41] h-32 shadow-lg'>
           <BookCover mode='list' book={book} />
         </div>
         <div className='title-author flex h-32 flex-col justify-between'>
@@ -102,7 +104,7 @@ const BookDetailView: React.FC<BookDetailViewProps> = ({
               {formatAuthors(book.author, book.primaryLanguage) || _('Unknown')}
             </p>
           </div>
-          <div className='flex flex-wrap items-center gap-x-4'>
+         <div className='flex flex-nowrap items-center gap-2 sm:gap-x-4'>
             {onEdit && showBtns && (
               <button
                 onClick={onEdit}
@@ -115,6 +117,11 @@ const BookDetailView: React.FC<BookDetailViewProps> = ({
             {showBtns && (
               <button onClick={() => setShowMarkDialog(!showMarkDialog)} title={_('Mark')}>
                 <MdCollectionsBookmark className='hover:fill-green-500' />
+              </button>
+            )}
+            {book.downloadedAt && showBtns && onExport && (
+              <button onClick={onExport} title={_('Export Book')}>
+                <MdSaveAlt className='hover:fill-purple-500' />
               </button>
             )}
             {onDelete && showBtns && (

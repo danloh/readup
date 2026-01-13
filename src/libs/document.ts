@@ -77,6 +77,8 @@ export const EXTS: Record<BookFormat, string> = {
   CBZ: 'cbz',
   FB2: 'fb2',
   FBZ: 'fbz',
+  TXT: 'txt',
+  MD: 'md',
 };
 
 export const MIMETYPES: Record<BookFormat, string[]> = {
@@ -88,6 +90,8 @@ export const MIMETYPES: Record<BookFormat, string[]> = {
   CBZ: ['application/vnd.comicbook+zip', 'application/zip', 'application/x-cbz'],
   FB2: ['application/x-fictionbook+xml', 'text/xml', 'application/xml'],
   FBZ: ['application/x-zip-compressed-fb2', 'application/zip'],
+  TXT: ['text/plain'],
+  MD: ['text/markdown', 'text/x-markdown'],
 };
 
 export class DocumentLoader {
@@ -251,4 +255,15 @@ export const getFileExtFromMimeType = (mimeType?: string): string => {
     }
   }
   return '';
+};
+
+export const getMimeTypeFromFileExt = (ext: string): string => {
+  ext = ext.toLowerCase();
+  for (const format in EXTS) {
+    if (EXTS[format as BookFormat] === ext) {
+      const mimeTypes = MIMETYPES[format as BookFormat];
+      return mimeTypes[0] || 'application/octet-stream';
+    }
+  }
+  return 'application/octet-stream';
 };
