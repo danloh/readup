@@ -477,8 +477,10 @@ export abstract class BaseAppService implements AppService {
       book.deletedAt = null;
       book.updatedAt = Date.now();
       book.uploadedAt = Date.now();
+      // FIXME: check if uploaded file?
       book.downloadedAt = Date.now();
       book.coverDownloadedAt = Date.now();
+      book.configSyncedAt = Date.now();
     } else {
       throw new Error('Book file not uploaded');
     }
@@ -510,6 +512,7 @@ export abstract class BaseAppService implements AppService {
   ): Promise<void> {
     let bookDownloaded = false;
     let bookCoverDownloaded = false;
+    let configDownloaded = false;
     const completedFiles = { count: 0 };
     let toDownloadFpCount = 0;
     const needDownCover = !(await this.fs.exists(getCoverFilename(book), 'Books')) || redownload;
@@ -556,6 +559,7 @@ export abstract class BaseAppService implements AppService {
     if (needDownConfig && configBlob) {
       const configDst = `${this.localBooksDir}/${getConfigFilename(book)}`;
       await this.writeFile(configDst, 'None', await configBlob.arrayBuffer());
+      configDownloaded = await this.fs.exists(configDst, 'None');
     }
 
     // some books may not have cover image, so we need to check if the book is downloaded
@@ -564,6 +568,9 @@ export abstract class BaseAppService implements AppService {
     }
     if ((bookCoverDownloaded || !needDownCover) && !book.coverDownloadedAt) {
       book.coverDownloadedAt = Date.now();
+    }
+    if (configDownloaded || (!onlyCover && !needDownConfig)) {
+      book.configSyncedAt = Date.now();
     }
   }
 
@@ -686,7 +693,7 @@ export abstract class BaseAppService implements AppService {
     await Promise.all(
       books.map(async (book) => {
         book.coverImageUrl = await this.generateCoverImageUrl(book);
-        book.updatedAt ??= book.lastUpdated || Date.now();
+        book.updatedAt = Date.now();
         return book;
       }),
     );

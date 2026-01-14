@@ -54,7 +54,7 @@ export const DEFAULT_SYSTEM_SETTINGS: Partial<SystemSettings> = {
   telemetryEnabled: false,
   libraryViewMode: 'grid',
   librarySortBy: 'updated',
-  librarySortAscending: false,
+  librarySortAscending: true,
 };
 
 export const HIGHLIGHT_COLOR_HEX: Record<HighlightColor, string> = {

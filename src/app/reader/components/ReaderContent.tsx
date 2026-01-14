@@ -124,7 +124,7 @@ const ReaderContent: React.FC<{ids?: string; settings: SystemSettings}> = ({ ids
     const { book } = getBookData(bookKey) || {};
     const { isPrimary } = getViewState(bookKey) || {};
     if (isPrimary && book && config) {
-      eventDispatcher.dispatch('sync-book-progress', { bookKey });
+      // eventDispatcher.dispatch('sync-book-progress', { bookKey });
       const settings = useSettingsStore.getState().settings;
       await saveConfig(envConfig, bookKey, config, settings);
     }

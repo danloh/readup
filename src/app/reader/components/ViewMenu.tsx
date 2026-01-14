@@ -66,6 +66,7 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
     setIsDropdownOpen?.(false);
   };
 
+  // TODO, sync config
   const handleSync = () => {
     if (!user) {
       setAuthDialogVisible(true);

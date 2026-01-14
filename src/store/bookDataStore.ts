@@ -24,7 +24,7 @@ interface BookDataState {
     bookKey: string,
     config: BookConfig,
     settings: SystemSettings,
-  ) => void;
+  ) => Promise<void>;
   updateBooknotes: (key: string, booknotes: BookNote[]) => BookConfig | undefined;
   getBookData: (keyOrId: string) => BookData | null;
   clearBookData: (keyOrId: string) => void;
