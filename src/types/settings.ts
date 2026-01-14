@@ -44,10 +44,6 @@ export interface SystemSettings {
   opdsCatalogs: OPDSCatalog[];
   opdsProxy: Record<string, string>;
 
-  lastSyncedAtBooks: number;
-  lastSyncedAtConfigs: number;
-  lastSyncedAtNotes: number;
-
   globalReadSettings: ReadSettings;
   globalViewSettings: ViewSettings;
 }

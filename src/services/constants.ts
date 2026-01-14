@@ -55,10 +55,6 @@ export const DEFAULT_SYSTEM_SETTINGS: Partial<SystemSettings> = {
   libraryViewMode: 'grid',
   librarySortBy: 'updated',
   librarySortAscending: false,
-
-  lastSyncedAtBooks: 0,
-  lastSyncedAtConfigs: 0,
-  lastSyncedAtNotes: 0,
 };
 
 export const HIGHLIGHT_COLOR_HEX: Record<HighlightColor, string> = {
@@ -576,11 +572,7 @@ export const READUP_UPDATER_FILE = `${LATEST_DOWNLOAD_BASE_URL}/latest.json`;
 export const READUP_CHANGELOG_FILE = `${LATEST_DOWNLOAD_BASE_URL}/release-notes.json`;
 export const READUP_OPDS_USER_AGENT = 'Readup/1.0 (OPDS Browser)';
 
-export const SYNC_PROGRESS_INTERVAL_SEC = 3;
-export const SYNC_NOTES_INTERVAL_SEC = 5;
-export const SYNC_BOOKS_INTERVAL_SEC = 5;
 export const CHECK_UPDATE_INTERVAL_SEC = 24 * 60 * 60;
-
 export const RELOAD_BEFORE_SAVED_TIMEOUT_MS = 300;
 
 export const MAX_ZOOM_LEVEL = 500;

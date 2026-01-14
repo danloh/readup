@@ -10,41 +10,33 @@ export type BookStatus = 'TODO' | 'DOING' | 'DONE';
 export const FIXED_LAYOUT_FORMATS: Set<BookFormat> = new Set(['PDF', 'CBZ']);
 
 export interface Book {
-  // if Book is a remote book we just lazy load the book content via url
-  url?: string;
-  // if Book is a transient local book we can load the book content via filePath
-  filePath?: string;
-  // Partial md5 hash of the book file, used as the unique identifier
-  hash: string;
-  // Metadata md5 hash, used to aggregate different versions of the same book
-  metaHash?: string;
+  url?: string; // if Book is a remote book we just lazy load the book content via url
+  filePath?: string; // if Book is a transient local book we can load the book content via filePath
+  hash: string; // Partial md5 hash of the book file, used as the unique identifier
+  metaHash?: string; // Metadata md5 hash, used to aggregate different versions of the same book
   format: BookFormat;
   title: string; // editable title from metadata
   sourceTitle?: string; // parsed when the book is imported and used to locate the file
   author: string;
-  // file size in bytes
-  fileSize?: number;
+  fileSize?: number; // file size in bytes
   coverImageUrl?: string | null;
-  
+  primaryLanguage?: string;
+  metadata?: BookMetadata;
+
   groupId?: string;
   groupName?: string;
   tags?: string[];
   status?: BookStatus;
+  progress?: [number, number]; // Add progress field: [current, total], 1-based page number
 
   createdAt: number;
   updatedAt: number;
-  deletedAt?: number | null;
 
+  deletedAt?: number | null;
   uploadedAt?: number | null;
   downloadedAt?: number | null;
   coverDownloadedAt?: number | null;
-  syncedAt?: number | null;
-
-  lastUpdated?: number; // deprecated in favor of updatedAt
-  progress?: [number, number]; // Add progress field: [current, total], 1-based page number
-  primaryLanguage?: string;
-
-  metadata?: BookMetadata;
+  configSyncedAt?: number | null;
 }
 
 export interface BookGroupType {
@@ -290,10 +282,6 @@ export interface BookConfig {
   booknotes?: BookNote[];
   searchConfig?: Partial<BookSearchConfig>;
   viewSettings?: Partial<ViewSettings>;
-
-  lastSyncedAtConfig?: number;
-  lastSyncedAtNotes?: number;
-
   updatedAt: number;
 }
 

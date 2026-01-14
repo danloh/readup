@@ -36,9 +36,8 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
   const _ = useTranslation();
   const { user } = useAuth();
   const { envConfig, appService } = useEnv();
-  const { getConfig, getBookData } = useBookDataStore();
+  const { getBookData } = useBookDataStore();
   const { getView, getViewSettings, setViewSettings } = useReaderStore();
-  const config = getConfig(bookKey)!;
   const bookData = getBookData(bookKey)!;
   const viewSettings = getViewSettings(bookKey)!;
 
@@ -133,7 +132,7 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [keepCoverSpread]);
 
-  const lastSyncTime = Math.max(config?.lastSyncedAtConfig || 0, config?.lastSyncedAtNotes || 0);
+  const lastSyncTime = bookData.book?.configSyncedAt || 0;
 
   return (
     <Menu

@@ -26,7 +26,6 @@ import { throttle } from '@/utils/throttle';
 import { getWordCount } from '@/utils/word';
 import { isCfiInLocation } from '@/utils/cfi';
 import { useFoliateEvents } from '../../hooks/useFoliateEvents';
-// import { useNotesSync } from '../../hooks/useNotesSync';
 import { useTextSelector } from '../../hooks/useTextSelector';
 import { getHighlightColorHex } from '../../utils/annotatorUtil';
 import { TransformContext } from '../../transformers/types';
@@ -48,8 +47,6 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
   const { getProgress, getView, getViewsById, getViewSettings } = useReaderStore();
   const { setNotebookVisible, setNotebookNewAnnotation } = useNotebookStore();
   const { listenToNativeTouchEvents } = useDeviceControlStore();
-
-  // useNotesSync(bookKey);  // FIXME
 
   const osPlatform = getOSPlatform();
   const config = getConfig(bookKey)!;
