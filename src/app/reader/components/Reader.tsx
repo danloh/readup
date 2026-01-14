@@ -33,10 +33,10 @@ const Reader: React.FC<{ ids?: string }> = ({ ids }) => {
   const { appService } = useEnv();
   const { hoveredBookKey } = useReaderStore();
   const { settings } = useSettingsStore();
-  const { 
-    isSideBarVisible, getIsSideBarVisible, setSideBarVisible, sideBarBookKey 
-  } = useSidebarStore();
-  const { isNotebookVisible, getIsNotebookVisible, setNotebookVisible } = useNotebookStore();
+  const { getIsSideBarVisible, setSideBarVisible, sideBarBookKey } = useSidebarStore();
+  const { isSideBarVisible, isSideBarPinned } = useSidebarStore();
+  const { getIsNotebookVisible, setNotebookVisible } = useNotebookStore();
+  const { isNotebookVisible, isNotebookPinned } = useNotebookStore();
   const { 
     isDarkMode, isRoundedWindow, systemUIAlwaysHidden, showSystemUI, dismissSystemUI 
   } = useThemeStore();
@@ -59,9 +59,9 @@ const Reader: React.FC<{ ids?: string }> = ({ ids }) => {
 
   const handleKeyDown = (event: CustomEvent) => {
     if (event.detail.keyName === 'Back') {
-      if (getIsSideBarVisible()) {
+      if (getIsSideBarVisible() && !isSideBarPinned) {
         setSideBarVisible(false);
-      } else if (getIsNotebookVisible()) {
+      } else if (getIsNotebookVisible() && !isNotebookPinned) {
         setNotebookVisible(false);
       } else {
         eventDispatcher.dispatch('close-reader');
@@ -91,7 +91,14 @@ const Reader: React.FC<{ ids?: string }> = ({ ids }) => {
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [appService?.isAndroidApp, sideBarBookKey, isSideBarVisible, isNotebookVisible]);
+  }, [
+    appService?.isAndroidApp,
+    sideBarBookKey,
+    isSideBarPinned,
+    isSideBarVisible,
+    isNotebookPinned,
+    isNotebookVisible,
+  ]);
 
   useEffect(() => {
     if (!appService?.isMobileApp) return;
