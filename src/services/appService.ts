@@ -303,6 +303,7 @@ export abstract class BaseAppService implements AppService {
         primaryLanguage,
         author: formatAuthors(loadedBook.metadata.author, primaryLanguage),
         fileSize,
+        metadata: loadedBook.metadata,
         createdAt: existingBook ? existingBook.createdAt : Date.now(),
         uploadedAt: existingBook ? existingBook.uploadedAt : null,
         deletedAt: transient ? Date.now() : null,
@@ -316,6 +317,7 @@ export abstract class BaseAppService implements AppService {
         existingBook.sourceTitle = existingBook.sourceTitle ?? book.sourceTitle;
         existingBook.author = existingBook.author ?? book.author;
         existingBook.fileSize = fileSize;
+        existingBook.metadata = existingBook.metadata ?? loadedBook.metadata;
         existingBook.primaryLanguage = existingBook.primaryLanguage ?? book.primaryLanguage;
         existingBook.downloadedAt = Date.now();
       }
@@ -410,7 +412,9 @@ export abstract class BaseAppService implements AppService {
     }
   }
 
-  async uploadBook(book: Book, onProgress?: ProgressHandler): Promise<void> {
+  async uploadBook(
+    book: Book, includesConfig = false, onProgress?: ProgressHandler
+  ): Promise<void> {
     const coverfp = getCoverFilename(book);
     const coverExist = await this.fs.exists(coverfp, 'Books');
     const coverFile = coverExist ? await this.fs.openFile(coverfp, 'Books') : undefined;
@@ -427,6 +431,14 @@ export abstract class BaseAppService implements AppService {
       bookFileExist = true;
     }
 
+    let configFileExist = false;
+    let configFile: File | undefined = undefined;
+    if (includesConfig) {
+      const configfp = getConfigFilename(book);
+      configFileExist = await this.fs.exists(configfp, 'Books');
+      configFile = configFileExist ? await this.fs.openFile(configfp, 'Books') : undefined;
+    }
+
     // record the file size in bytes of book
     book.fileSize = bookFile?.size;
 
@@ -438,10 +450,15 @@ export abstract class BaseAppService implements AppService {
     if (bookFileExist) {
       toUploadFpCount++;
     }
+    if (configFileExist) {
+      toUploadFpCount++;
+    }
+
     const handleProgress = createProgressHandler(toUploadFpCount, completedFiles, onProgress);
 
     // upload and create a book record on PDS
-    const res: UploadResult = await uploadBookFile(book, bookFile, coverFile, handleProgress);
+    const res: UploadResult = 
+      await uploadBookFile(book, bookFile, coverFile, configFile, handleProgress);
     // close files
     const cf = coverFile as ClosableFile;
     if (cf && cf.close) {
@@ -450,6 +467,10 @@ export abstract class BaseAppService implements AppService {
     const bf = bookFile as ClosableFile;
     if (bf && bf.close) {
       await bf.close();
+    }
+    const cgf = configFile as ClosableFile;
+    if (cgf && cgf.close) {
+      await cgf.close();
     }
 
     if (res.success) {
@@ -494,10 +515,16 @@ export abstract class BaseAppService implements AppService {
     const needDownCover = !(await this.fs.exists(getCoverFilename(book), 'Books')) || redownload;
     const needDownBook =
       (!onlyCover && !(await this.fs.exists(getLocalBookFilename(book), 'Books'))) || redownload;
+    const needDownConfig =
+      (!onlyCover && !(await this.fs.exists(getConfigFilename(book), 'Books'))) || redownload;
+
     if (needDownCover) {
       toDownloadFpCount++;
     }
     if (needDownBook) {
+      toDownloadFpCount++;
+    }
+    if (needDownConfig) {
       toDownloadFpCount++;
     }
 
@@ -508,10 +535,12 @@ export abstract class BaseAppService implements AppService {
     }
 
     const rkey = book.hash;
-    const res = await downloadBookFile(rkey, needDownCover, needDownBook, handleProgress);
+    const res = 
+      await downloadBookFile(rkey, needDownCover, needDownBook, needDownConfig, handleProgress);
     // FIXME: upload/download config file... 
     const coverBlob = res.coverData;
     const docBlob = res.docData;
+    const configBlob = res.configData;
     book.fileSize = docBlob?.size;
     // write data to local book dir
     if (needDownCover && coverBlob) {
@@ -523,6 +552,10 @@ export abstract class BaseAppService implements AppService {
       const docDst = `${this.localBooksDir}/${getLocalBookFilename(book)}`;
       await this.writeFile(docDst, 'None', await docBlob.arrayBuffer());
       bookDownloaded = await this.fs.exists(docDst, 'None');
+    }
+    if (needDownConfig && configBlob) {
+      const configDst = `${this.localBooksDir}/${getConfigFilename(book)}`;
+      await this.writeFile(configDst, 'None', await configBlob.arrayBuffer());
     }
 
     // some books may not have cover image, so we need to check if the book is downloaded

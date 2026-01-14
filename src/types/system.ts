@@ -117,7 +117,7 @@ export interface AppService {
     transient?: boolean,
   ): Promise<Book | null>;
   deleteBook(book: Book, deleteAction: DeleteAction): Promise<void>;
-  uploadBook(book: Book, onProgress?: ProgressHandler): Promise<void>;
+  uploadBook(book: Book, includesConfig?: boolean, onProgress?: ProgressHandler): Promise<void>;
   listPdsBooks(): Promise<[Book[], Book[]]>;
   downloadBook(
     book: Book,

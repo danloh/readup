@@ -19,8 +19,9 @@ export interface BlobResp {
 export interface UploadResult {
   success: boolean;
   /** The uploaded blob reference */
-  coverblob: unknown;
-  bookblob: unknown;
+  coverblob: unknown; // book's cover image
+  bookblob: unknown;  // book document
+  config: unknown;    // book config including setting, reading process, notes... 
   /** The created record information */
   record: {
     /** The AT URI of the created record */
@@ -126,6 +127,7 @@ export async function uploadBookFile(
   book: Book,
   bookFile?: File,
   coverFile?: File,
+  configFile?: File,
   onProgress?: ProgressHandler,
 ): Promise<UploadResult> {
   const usr = await refreshSession();
@@ -135,11 +137,15 @@ export async function uploadBookFile(
   
   console.log("Agent: ", agent);
   // upload cover
-  const coverBlob = coverFile ? await uploadFile(coverFile, agent) : undefined;
-  //const coverBlob = coverFile ? await xhrUploadFile(coverFile, usr, onProgress) : undefined;
+  // const coverBlob = coverFile ? await uploadFile(coverFile, agent) : undefined;
+  const coverBlob = coverFile ? await xhrUploadFile(coverFile, usr, onProgress) : undefined;
+
   // upload book doc
-  //const bookBlob = bookFile ? await uploadFile(bookFile, agent) : undefined;
+  // const bookBlob = bookFile ? await uploadFile(bookFile, agent) : undefined;
   const bookBlob = bookFile ? await xhrUploadFile(bookFile, usr, onProgress) : undefined;
+
+  // upload book config
+  const configBlob = configFile ? await xhrUploadFile(configFile, usr, onProgress) : undefined;
 
   // Get DID
   const did = agent.session?.did;
@@ -172,7 +178,7 @@ export async function uploadBookFile(
     bookmeta,
     coverblob: coverBlob,
     docblob: bookBlob,
-    // config: book config // TODO
+    config: configBlob,
     checksum: book.hash,
     createdAt: new Date().toISOString(),
   };
@@ -193,6 +199,7 @@ export async function uploadBookFile(
     success: createRes.success,
     coverblob: coverBlob,
     bookblob: bookBlob,
+    config: configBlob,
     record: createRes.data,
   };
 }
@@ -203,10 +210,9 @@ export async function uploadBookFile(
  */
 export interface DownloadResult {
   rkey: string;
-  /** The download data */
   coverData?: Blob;
   docData?: Blob;
-  /** The download record information */
+  configData?: Blob;
   record: AtBook.RBook;
 }
 
@@ -224,6 +230,7 @@ export async function downloadBookFile(
   rkey: string,
   needCover: boolean,
   needDoc: boolean,
+  needConfig: boolean,
   onProgress?: ProgressHandler,
 ): Promise<DownloadResult> {
   const usr = await refreshSession();
@@ -241,6 +248,7 @@ export async function downloadBookFile(
   // Get the record
   let coverCid: string = '';
   let docCid: string = '';
+  let configCid: string = '';
 
   const recordResponse = await agent.com.atproto.repo.getRecord({
     repo: did,
@@ -263,6 +271,12 @@ export async function downloadBookFile(
       : coverRef as string;
   }
 
+  // Download the cover blob
+  const coverUrl = coverCid
+    ? `${serv}/xrpc/com.atproto.sync.getBlob?did=${did}&cid=${coverCid}`
+    : undefined;
+  const coverData = coverUrl ? await webDownload(coverUrl, onProgress) : undefined;
+
   // Extract book doc blob CID
   const docblob = record.docblob;
   if (!needDoc) {
@@ -276,21 +290,36 @@ export async function downloadBookFile(
       : docRef as string;
   }
 
-  // Download the cover blob
-  const coverUrl = coverCid
-    ? `${serv}/xrpc/com.atproto.sync.getBlob?did=${did}&cid=${coverCid}`
-    : undefined;
-  const coverData = coverUrl ? await webDownload(coverUrl, onProgress) : undefined;
   // Download the book doc blob
   const docUrl = docCid
     ? `${serv}/xrpc/com.atproto.sync.getBlob?did=${did}&cid=${docCid}`
     : undefined;
   const docData = docUrl ? await webDownload(docUrl, onProgress) : undefined;
 
+  // Extract book config blob CID
+  const configblob = record.config;
+  if (!needConfig) {
+    console.log("No config blob needed");
+  } else if (!configblob || typeof configblob !== "object" || !("ref" in configblob)) {
+    console.error("No config blob found in record");
+  } else {
+    const configRef = configblob.ref;
+    configCid = typeof configRef === "object" && configRef && "$link" in configRef
+      ? configRef.$link as string
+      : configRef as string;
+  }
+
+  // Download the book config blob
+  const configUrl = configCid
+    ? `${serv}/xrpc/com.atproto.sync.getBlob?did=${did}&cid=${configCid}`
+    : undefined;
+  const configData = configUrl ? await webDownload(configUrl, onProgress) : undefined;
+
   return {
     rkey,
     coverData,
     docData,
+    configData,
     record,
   };
 }

@@ -220,7 +220,7 @@ class TransferManager {
 
       if (transfer.type === 'upload') {
         console.log("transfer: to upload");
-        await this.appService.uploadBook(book, progressHandler);
+        await this.appService.uploadBook(book, false, progressHandler);
         console.log("transfer: uploaded");
         book.uploadedAt = Date.now();
       } else {
