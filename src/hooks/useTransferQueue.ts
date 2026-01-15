@@ -42,6 +42,10 @@ export function useTransferQueue(libraryLoaded = true, delayInit = 0) {
     return transferManager.queueDownload(book, priority);
   }, []);
 
+  const queueDelete = useCallback((book: Book, priority?: number) => {
+    return transferManager.queueDelete(book, priority);
+  }, []);
+
   const queueBatchUploads = useCallback((books: Book[], priority?: number) => {
     return transferManager.queueBatchUploads(books, priority);
   }, []);
@@ -128,6 +132,7 @@ export function useTransferQueue(libraryLoaded = true, delayInit = 0) {
     setIsTransferQueueOpen,
     queueUpload,
     queueDownload,
+    queueDelete,
     queueBatchUploads,
     cancelTransfer,
     retryTransfer,

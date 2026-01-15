@@ -140,7 +140,7 @@ const ProofreadPopup: React.FC<ProofreadPopupProps> = ({
               value={replacementText}
               onChange={handleInputChange}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && replacementText.trim()) {
+                if (e.key === 'Enter' && replacementText) {
                   handleApply();
                 }
               }}
@@ -152,7 +152,7 @@ const ProofreadPopup: React.FC<ProofreadPopupProps> = ({
             />
             <button
               onClick={handleApply}
-              disabled={!replacementText.trim()}
+              disabled={!replacementText}
               className={clsx(
                 'btn btn-sm btn-ghost btn-primary disabled:text-base-content/75 text-blue-600 disabled:opacity-75',
                 'bg-transparent hover:bg-transparent disabled:bg-transparent',

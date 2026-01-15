@@ -22,12 +22,13 @@ import { SUPPORTED_BOOK_EXTS } from '@/services/constants';
 import { transferManager } from '@/services/transferManager';
 import { useEnv } from '@/context/EnvContext';
 import { useAuth } from '@/context/AuthContext';
-import { useTranslation } from '@/hooks/useTranslation';
 import { useLibraryStore } from '@/store/libraryStore';
 import { useSettingsStore } from '@/store/settingsStore';
+import { useThemeStore } from '@/store/themeStore';
+import { useTransferStore } from '@/store/transferStore';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useTheme } from '@/hooks/useTheme';
 import { useUICSS } from '@/hooks/useUICSS';
-import { useThemeStore } from '@/store/themeStore';
 import { SelectedFile, useFileSelector } from '@/hooks/useFileSelector';
 import { useOpenWithBooks } from '@/hooks/useOpenWithBooks';
 import useShortcuts from '@/hooks/useShortcuts';
@@ -43,6 +44,7 @@ import BookDetailModal from './metadata/BookDetailModal';
 import LibraryHeader from './LibraryHeader';
 import Bookshelf from './Bookshelf';
 import { getBreadcrumbs } from './libraryUtils';
+import TransferQueuePanel from './TransferQueuePanel';
 
 const LibraryPageWithSearchParams = () => {
   const searchParams = useSearchParams();
@@ -72,6 +74,7 @@ const LibraryPageContent = (
   const { safeAreaInsets: insets } = useThemeStore();
   const { settings, setSettings, saveSettings } = useSettingsStore();
   const { setFontLayoutSettingsDialogOpen } = useSettingsStore();
+  const { isTransferQueueOpen } = useTransferStore();
   const [loading, setLoading] = useState(false);
   const isInitiating = useRef(false);
   const [libraryLoaded, setLibraryLoaded] = useState(false);
@@ -626,6 +629,11 @@ const LibraryPageContent = (
               </form>
             </div>
           </dialog>
+        </ModalPortal>
+      )}
+      {isTransferQueueOpen && (
+        <ModalPortal>
+          <TransferQueuePanel />
         </ModalPortal>
       )}
       <Toast />

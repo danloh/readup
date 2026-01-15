@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { Book } from '@/types/book';
 
-export type TransferType = 'upload' | 'download';
+export type TransferType = 'upload' | 'download' | 'delete';
 export type TransferStatus = 
   'pending' | 'in_progress' | 'completed' | 'failed' | 'cancelled' | 'can';
 
@@ -22,6 +22,7 @@ export interface TransferItem {
   startedAt?: number;
   completedAt?: number;
   priority: number; // Lower = higher priority
+  isBackground: boolean;
   book?: Book;  // for temp
 }
 
@@ -41,6 +42,7 @@ interface TransferState {
     bookTitle: string,
     type: TransferType,
     priority?: number,
+    isBackground?: boolean,
   ) => string;
   removeTransfer: (transferId: string) => void;
   updateTransferProgress: (
@@ -95,7 +97,7 @@ export const useTransferStore = create<TransferState>((set, get) => ({
 
   setIsTransferQueueOpen: (isOpen) => set({ isTransferQueueOpen: isOpen }),
 
-  addTransfer: (bookHash, bookTitle, type, priority = 10) => {
+  addTransfer: (bookHash, bookTitle, type, priority = 10, isBackground = false) => {
     const id = generateTransferId();
     const transfer: TransferItem = {
       id,
@@ -111,6 +113,7 @@ export const useTransferStore = create<TransferState>((set, get) => ({
       maxRetries: 3,
       createdAt: Date.now(),
       priority,
+      isBackground,
     };
 
     set((state) => ({
@@ -259,8 +262,8 @@ export const useTransferStore = create<TransferState>((set, get) => ({
   },
 
   getTransferByBookHash: (bookHash, type) => {
-    return Object.values(get().transfers).find(
-      (t) => t.bookHash === bookHash && t.type === type && ['pending', 'in_progress'].includes(t.status),
+    return Object.values(get().transfers).find((t) => 
+      t.bookHash === bookHash && t.type === type && ['pending', 'in_progress'].includes(t.status),
     );
   },
 

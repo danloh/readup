@@ -11,6 +11,7 @@ import {
   MdError,
   MdCancel,
   MdDeleteSweep,
+  MdDeleteForever,
 } from 'react-icons/md';
 
 import { useTransferQueue } from '@/hooks/useTransferQueue';
@@ -18,10 +19,14 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useResponsiveSize } from '@/hooks/useResponsiveSize';
 import { useKeyDownActions } from '@/hooks/useKeyDownActions';
 import { useLibraryStore } from '@/store/libraryStore';
-import { TransferItem, TransferStatus, TransferType, useTransferStore } from '@/store/transferStore';
+import { 
+  TransferItem, TransferStatus, TransferType, useTransferStore 
+} from '@/store/transferStore';
 import { Book } from '@/types/book';
 import { formatBytes } from '@/utils/book';
 import { useEnv } from '@/context/EnvContext';
+import { useAuth } from '@/context/AuthContext';
+import { eventDispatcher } from '@/utils/event';
 
 const formatSpeed = (bytesPerSec: number): string => {
   return `${formatBytes(bytesPerSec) || '0 B'}/s`;
@@ -48,7 +53,7 @@ const formatDateTime = (timestamp: number): string => {
 
 const StatusIcon: React.FC<{
   status: TransferStatus;
-  type: 'upload' | 'download';
+  type: 'upload' | 'download' | 'delete';
   size: number;
 }> = ({ status, type, size }) => {
   switch (status) {
@@ -63,6 +68,8 @@ const StatusIcon: React.FC<{
     default:
       return type === 'upload' ? (
         <MdCloudUpload className='text-primary' size={size} />
+      ) : type === 'delete' ? (
+        <MdDeleteSweep className='text-primary' size={size} />
       ) : (
         <MdCloudDownload className='text-primary' size={size} />
       );
@@ -75,13 +82,19 @@ const TransferItemRow: React.FC<{
   onRetry: (id: string) => void;
   onQueue: (book: Book, priority?: number) => void;
   iconSize: number;
-}> = ({ transfer, onCancel, onRetry, onQueue, iconSize }) => {
+  onQueueDelete?: (book: Book, priority?: number) => void;
+}> = ({ transfer, onCancel, onRetry, onQueue, iconSize, onQueueDelete }) => {
   const _ = useTranslation();
+
+  const completedLabel = {
+    upload: _('Uploaded'),
+    download: _('Downloaded'),
+    delete: _('Deleted'),
+  };
 
   return (
     <div className='hover:bg-base-200 flex items-center gap-3 rounded-lg p-3'>
       <StatusIcon status={transfer.status} type={transfer.type} size={iconSize} />
-
       <div className='min-w-0 flex-1'>
         <div className='truncate font-medium'>{transfer.bookTitle}</div>
         <div className='inline-flex gap-1 text-base-content/60 text-xs'>
@@ -100,11 +113,26 @@ const TransferItemRow: React.FC<{
           {transfer.status === 'failed' && (
             <span className='text-error'>{transfer.error || _('Failed')}</span>
           )}
-          {transfer.status === 'completed' && (_('Completed'))}
+          {transfer.status === 'completed' && (completedLabel[transfer.type] || _('Completed'))}
           {transfer.status === 'cancelled' && _('Cancelled')}
-          {transfer.type === 'upload' ? <MdCloudUpload size={12} /> : <MdCloudDownload size={12} />}
+          {transfer.type === 'upload' 
+            ? (<span className='text-info'><MdCloudUpload size={14} /></span>) 
+            : (<span className='text-info'><MdCloudDownload size={14} /></span>)
+          }
           {' · '}
           {formatDateTime(transfer.completedAt || transfer.startedAt || transfer.createdAt)}
+          {onQueueDelete && transfer.book && transfer.type === 'download' && (
+            <button
+              onClick={() => {
+                console.log('To delete in PDS');
+                onQueueDelete(transfer.book!);
+              }}
+              className='link text-warning ml-2'
+              title={_('Delete in PDS')}
+            >
+              <MdDeleteForever size={16} />
+            </button>
+          )}
         </div>
 
         {transfer.status === 'in_progress' && (
@@ -157,8 +185,9 @@ type FilterType = 'all' | 'active' | 'pending' | 'completed' | 'failed' | 'pds';
 
 const TransferQueuePanel: React.FC = () => {
   const _ = useTranslation();
+  const { user } = useAuth();
   const { appService } = useEnv();
-  const iconSize = useResponsiveSize(18);
+  const iconSize = useResponsiveSize(20);
   const setIsOpen = useTransferStore((state) => state.setIsTransferQueueOpen);
   const { setLibrary, getVisibleLibrary } = useLibraryStore();
   const {
@@ -174,6 +203,7 @@ const TransferQueuePanel: React.FC = () => {
     clearFailed,
     queueUpload,
     queueDownload,
+    queueDelete, 
   } = useTransferQueue();
 
   const [filter, setFilter] = useState<FilterType>('all');
@@ -197,6 +227,7 @@ const TransferQueuePanel: React.FC = () => {
         maxRetries: 3,
         createdAt: book.createdAt || Date.now(),
         priority: 100,
+        isBackground: false,
         book,
       };
       return canTransfer;
@@ -209,7 +240,7 @@ const TransferQueuePanel: React.FC = () => {
   const [pdsLoaded, setPdsLoaded] = useState(false);
   const [pdsCanTransfer, setPdsCanTransfer] = useState<TransferItem[]>([]);
   const booksToUpload = getVisibleLibrary().filter(
-    (book) => book.downloadedAt && !book.uploadedAt,
+    (book) => book.downloadedAt && !book.uploadedAt
   );
 
   const listBooksInPds = async () => {
@@ -226,7 +257,15 @@ const TransferQueuePanel: React.FC = () => {
 
   const handleSetFilter = useCallback(
     async (f: FilterType) => {
-      if (f === 'pds' && !pdsLoaded) {
+      if (f === 'pds' && !user) {
+        eventDispatcher.dispatch('toast', {
+          type: 'info',
+          timeout: 2000,
+          message: _('Need to Log in'),
+        });
+        console.log('Not Auth');
+      }
+      if (f === 'pds' && user && !pdsLoaded) {
         await listBooksInPds();
       }
       setFilter(f);
@@ -386,6 +425,11 @@ const TransferQueuePanel: React.FC = () => {
                 onCancel={cancelTransfer}
                 onRetry={retryTransfer}
                 onQueue={transfer.type === 'upload' ? queueUpload : queueDownload}
+                onQueueDelete={
+                  transfer.book && transfer.type === 'download'
+                    ? queueDelete 
+                    : undefined
+                }
                 iconSize={iconSize}
               />
             ))

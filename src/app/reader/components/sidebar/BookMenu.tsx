@@ -2,6 +2,8 @@ import clsx from 'clsx';
 import React from 'react';
 import Image from 'next/image';
 import { MdCheck } from 'react-icons/md';
+
+import { useEnv } from '@/context/EnvContext';
 import { useReaderStore } from '@/store/readerStore';
 import { useLibraryStore } from '@/store/libraryStore';
 import { useSidebarStore } from '@/store/sidebarStore';
@@ -20,7 +22,8 @@ interface BookMenuProps {
 
 const BookMenu: React.FC<BookMenuProps> = ({ menuClassName, setIsDropdownOpen }) => {
   const _ = useTranslation();
-  const { bookKeys, getViewSettings, setViewSettings } = useReaderStore();
+  const { envConfig } = useEnv();
+  const { bookKeys, recreateViewer, getViewSettings, setViewSettings } = useReaderStore();
   const { getVisibleLibrary } = useLibraryStore();
   const { openParallelView } = useBooksManager();
   const { sideBarBookKey } = useSidebarStore();
@@ -51,8 +54,8 @@ const BookMenu: React.FC<BookMenuProps> = ({ menuClassName, setIsDropdownOpen })
       const viewSettings = getViewSettings(sideBarBookKey)!;
       viewSettings.sortedTOC = !isSortedTOC;
       setViewSettings(sideBarBookKey, viewSettings);
+      recreateViewer(envConfig, sideBarBookKey);
     }
-    setTimeout(() => window.location.reload(), 100);
   };
 
   const handleSetParallel = () => {
