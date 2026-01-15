@@ -15,9 +15,10 @@ export interface CreateProofreadRuleOptions {
   sectionHref?: string;
   isRegex?: boolean;
   enabled?: boolean;
-  caseSensitive?: boolean;
   order?: number;
   wholeWord?: boolean;
+  caseSensitive?: boolean;
+  onlyForTTS?: boolean;
 }
 
 interface ProofreadStoreState {
@@ -55,9 +56,10 @@ function createProofreadRule(opts: CreateProofreadRuleOptions): ProofreadRule {
     sectionHref: opts.sectionHref,
     isRegex: opts.isRegex ?? false,
     enabled: opts.enabled ?? true,
-    caseSensitive: opts.caseSensitive ?? true,
     order: opts.order ?? 1000,
     wholeWord: opts.wholeWord ?? true,
+    caseSensitive: opts.caseSensitive ?? true,
+    onlyForTTS: opts.onlyForTTS ?? false,
   };
 }
 

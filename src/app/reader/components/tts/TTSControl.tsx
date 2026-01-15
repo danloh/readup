@@ -1,8 +1,10 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useEnv } from '@/context/EnvContext';
 import { useBookDataStore } from '@/store/bookDataStore';
 import { useReaderStore } from '@/store/readerStore';
 import { useSettingsStore } from '@/store/settingsStore';
+import { useThemeStore } from '@/store/themeStore';
+import { useProofreadStore } from '@/store/proofreadStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useResponsiveSize } from '@/hooks/useResponsiveSize';
 import { TTSController, SILENCE_DATA, TTSMark, TTSHighlightOptions } from '@/services/tts';
@@ -17,6 +19,8 @@ import { isCfiInLocation } from '@/utils/cfi';
 import { getMediaSession, TauriMediaSession } from '@/libs/mediaSession';
 import { Overlay } from '@/components/Overlay';
 import Popup from '@/components/Popup';
+import { proofreadTransformer } from '../../transformers/proofread';
+import { TransformContext } from '../../transformers/types';
 import TTSPanel from './TTSPanel';
 
 const POPUP_WIDTH = 320;
@@ -35,7 +39,9 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey, iconRef }) => {
   const { getView, getProgress, getViewSettings } = useReaderStore();
   const { setViewSettings, setTTSEnabled } = useReaderStore();
   const viewSettings = getViewSettings(bookKey);
+  const { isDarkMode } = useThemeStore();
   const { settings } = useSettingsStore();
+  const { getMergedRules } = useProofreadStore();
   const [ttsLang, setTtsLang] = useState<string>('en');
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -262,6 +268,61 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey, iconRef }) => {
     ttsControllerRef.current?.setTargetLang(getTTSTargetLang() || '');
   }, [getTTSTargetLang]);
 
+  const transformCtx: TransformContext = useMemo(
+    () => ({
+      bookKey,
+      viewSettings: getViewSettings(bookKey)!,
+      // userLocale: getLocale(),
+      content: '',
+      transformers: [],
+      reversePunctuationTransform: true,
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
+
+  const preprocessSSMLForTTS = useCallback(
+    async (ssml: string) => {
+      const rules = getMergedRules(bookKey);
+      const viewSettings = getViewSettings(bookKey)!;
+      const ttsOnlyRules = rules.filter(
+        (rule) =>
+          rule.enabled && rule.onlyForTTS && (rule.scope === 'book' || rule.scope === 'library'),
+      );
+      if (ttsOnlyRules.length === 0) return ssml;
+
+      transformCtx['content'] = ssml;
+      transformCtx['viewSettings'] = viewSettings;
+      ssml = await proofreadTransformer.transform(transformCtx, {
+        docType: 'text/xml',
+        onlyForTTS: true,
+      });
+      return ssml;
+    },
+    [bookKey, getMergedRules, getViewSettings, transformCtx],
+  );
+
+  const getTTSHighlightOptions = useCallback(
+    (ttsHighlightColor: string, isEink: boolean) => {
+      const einkBgColor = isDarkMode ? '#000000' : '#ffffff';
+      const color = isEink ? einkBgColor : ttsHighlightColor;
+      return {
+        style: "highlight",
+        color,
+      } as TTSHighlightOptions;
+    },
+    [isDarkMode],
+  );
+
+  useEffect(() => {
+    const ttsHighlightColor = viewSettings?.ttsHighlightColor || 'green';
+    if (ttsControllerRef.current) {
+      ttsControllerRef.current.initViewTTS(
+        getTTSHighlightOptions(ttsHighlightColor, viewSettings?.isEink || false),
+      );
+    }
+  }, [viewSettings?.ttsHighlightColor, viewSettings?.isEink, getTTSHighlightOptions]);
+
   const handleTTSSpeak = async (event: CustomEvent) => {
     const { bookKey: ttsBookKey, range, oneTime = false } = event.detail;
     if (bookKey !== ttsBookKey) return;
@@ -312,9 +373,11 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey, iconRef }) => {
       await initMediaSession();
       setTtsClientsInitialized(false);
 
-      const ttsController = new TTSController(appService, view);
+      const ttsController = new TTSController(appService, view, preprocessSSMLForTTS);
       await ttsController.init();
-      await ttsController.initViewTTS({ style: 'highlight', color: viewSettings.ttsHighlightColor });
+      await ttsController.initViewTTS(
+        getTTSHighlightOptions(viewSettings.ttsHighlightColor, viewSettings.isEink),
+      );
       const ssml = view.tts?.from(ttsFromRange);
       if (ssml) {
         const lang = parseSSMLLang(ssml, primaryLang) || 'en';
@@ -586,16 +649,6 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey, iconRef }) => {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  useEffect(() => {
-    const ttsHighlightOptions: TTSHighlightOptions = { 
-      style: 'highlight', 
-      color: viewSettings?.ttsHighlightColor || 'green',
-    };
-    if (ttsControllerRef.current && ttsHighlightOptions) {
-      ttsControllerRef.current.initViewTTS(ttsHighlightOptions);
-    }
-  }, [viewSettings?.ttsHighlightColor]);
 
   return (
     <>

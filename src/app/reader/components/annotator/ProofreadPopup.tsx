@@ -43,6 +43,7 @@ const ProofreadPopup: React.FC<ProofreadPopupProps> = ({
   const [caseSensitive, setCaseSensitive] = useState(true);
   const [wholeWord, setWholeWord] = useState(!isPunctuationOnly(selection?.text || ''));
   const [scope, setScope] = useState<ProofreadScope>('selection');
+  const [onlyForTTS, setOnlyForTTS] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
   useAutoFocus<HTMLInputElement>({ ref: inputRef });
@@ -89,6 +90,7 @@ const ProofreadPopup: React.FC<ProofreadPopupProps> = ({
         enabled: true,
         caseSensitive,
         wholeWord: wholeWord,
+        onlyForTTS: scope !== 'selection' ? onlyForTTS : undefined,
       };
       onConfirm?.(options);
 
@@ -96,7 +98,7 @@ const ProofreadPopup: React.FC<ProofreadPopupProps> = ({
 
       onDismiss();
 
-      if (scope !== 'selection') {
+      if (scope !== 'selection' && !onlyForTTS) {
         if (getView(bookKey)) {
           recreateViewer(envConfig, bookKey);
         }
@@ -161,7 +163,7 @@ const ProofreadPopup: React.FC<ProofreadPopupProps> = ({
           </div>
         </div>
 
-        <div className='flex items-center gap-8 p-4'>
+        <div className='flex flex-col flex-wrap items-start gap-4 p-4'>
           <label className='flex cursor-pointer items-center gap-2'>
             <span className='line-clamp-1 text-xs' title={_('Case sensitive:')}>
               {_('Case sensitive:')}
@@ -183,6 +185,19 @@ const ProofreadPopup: React.FC<ProofreadPopupProps> = ({
               className='toggle toggle-success h-4'
               checked={wholeWord}
               onChange={(e) => setWholeWord(e.target.checked)}
+            />
+          </label>
+
+          <label className='flex cursor-pointer items-center gap-2'>
+            <span className='line-clamp-1 text-xs' title={_('Only for TTS:')}>
+              {_('Only for TTS:')}
+            </span>
+            <input
+              type='checkbox'
+              disabled={scope === 'selection'}
+              className='toggle toggle-success h-4'
+              checked={onlyForTTS}
+              onChange={(e) => setOnlyForTTS(e.target.checked)}
             />
           </label>
         </div>
