@@ -66,13 +66,13 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
     setIsDropdownOpen?.(false);
   };
 
-  // TODO, sync config
+  // sync config
   const handleSync = () => {
     if (!user) {
       setAuthDialogVisible(true);
       setIsDropdownOpen?.(false);
     } else {
-      eventDispatcher.dispatch('sync-book-progress', { bookKey });
+      eventDispatcher.dispatch('sync-book-config', { bookKey });
     }
   };
 
@@ -279,6 +279,7 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
               : _('Never synced')
         }
         Icon={user ? MdSync : MdSyncProblem}
+        description={_('Sync annotations, progress...')}
         onClick={handleSync}
       />
     </Menu>

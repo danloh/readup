@@ -413,7 +413,7 @@ export abstract class BaseAppService implements AppService {
   }
 
   async uploadBook(
-    book: Book, includesConfig = false, onProgress?: ProgressHandler
+    book: Book, syncConfig = false, onProgress?: ProgressHandler
   ): Promise<void> {
     const coverfp = getCoverFilename(book);
     const coverExist = await this.fs.exists(coverfp, 'Books');
@@ -433,7 +433,7 @@ export abstract class BaseAppService implements AppService {
 
     let configFileExist = false;
     let configFile: File | undefined = undefined;
-    if (includesConfig) {
+    if (syncConfig) {
       const configfp = getConfigFilename(book);
       configFileExist = await this.fs.exists(configfp, 'Books');
       configFile = configFileExist ? await this.fs.openFile(configfp, 'Books') : undefined;
@@ -477,10 +477,9 @@ export abstract class BaseAppService implements AppService {
       book.deletedAt = null;
       book.updatedAt = Date.now();
       book.uploadedAt = Date.now();
-      // FIXME: check if uploaded file?
-      book.downloadedAt = Date.now();
-      book.coverDownloadedAt = Date.now();
-      book.configSyncedAt = Date.now();
+      if (syncConfig) {
+        book.configSyncedAt = Date.now();
+      }
     } else {
       throw new Error('Book file not uploaded');
     }
