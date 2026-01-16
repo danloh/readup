@@ -304,7 +304,7 @@ class TransferManager {
           const errorMessages = {
             upload: _('Failed to upload book: {{title}}', { title: transfer.bookTitle }),
             download: _('Failed to download book: {{title}}', { title: transfer.bookTitle }),
-            delete: _('Failed to delete book in PDS: {{title}}', { title: transfer.bookTitle }),
+            delete: _('Failed to delete book: {{title}}', { title: transfer.bookTitle }),
           };
 
           eventDispatcher.dispatch('toast', {

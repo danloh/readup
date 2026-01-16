@@ -138,7 +138,7 @@ export function Navigation({
                   onGoStart();
                 }}
                 className='text-base-content/40 hover:text-base-content/60 pe-1'
-                aria-label={_('Clear Search')}
+                aria-label={_('Clear search')}
               >
                 <IoMdCloseCircle className='h-4 w-4' />
               </button>
