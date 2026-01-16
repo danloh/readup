@@ -17,6 +17,7 @@ import { UpdaterWindow } from '@/components/UpdaterWindow';
 import WindowButtons from '@/components/WindowButtons';
 import SettingsDialog from '@/components/settings/SettingsDialog';
 import Logo from '@/components/Logo';
+import { Toast } from '@/components/Toast';
 import { useThemeStore } from '@/store/themeStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { checkAppReleaseNotes, checkForAppUpdates } from '@/helpers/updater';
@@ -131,6 +132,7 @@ export const NavTab: React.FC<{activeTab: string}> = ({ activeTab }) => {
       <UpdaterWindow />
       <MigrateDataWindow />
       {isFontLayoutSettingsDialogOpen && <SettingsDialog bookKey={''} />}
+      <Toast />
     </div>
   );
 };

@@ -37,7 +37,6 @@ import { selectDirectory } from '@/utils/bridge';
 import { requestStoragePermission } from '@/utils/permission';
 import DropIndicator from '@/components/DropIndicator';
 import ModalPortal from '@/components/ModalPortal';
-import { Toast } from '@/components/Toast';
 import Spinner from '@/components/Spinner';
 import { useDragDropImport } from '../hooks/useDragDropImport';
 import BookDetailModal from './metadata/BookDetailModal';
@@ -636,7 +635,6 @@ const LibraryPageContent = (
           <TransferQueuePanel />
         </ModalPortal>
       )}
-      <Toast />
     </div>
   );
 };

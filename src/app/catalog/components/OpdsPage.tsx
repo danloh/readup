@@ -11,7 +11,6 @@ import { useEnv } from '@/context/EnvContext';
 import { useAuth } from '@/context/AuthContext';
 import { isWebAppPlatform } from '@/services/environment';
 import { downloadFile } from '@/utils/transfer';
-import { Toast } from '@/components/Toast';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useLibraryStore } from '@/store/libraryStore';
 import { useLibrary } from '@/hooks/useLibrary';
@@ -651,7 +650,6 @@ export default function BrowserPage() {
         )}
       </main>
       {showCatalogManager && <CatalogDialog onClose={() => setShowCatalogManager(false)} />}
-      <Toast />
     </div>
   );
 }

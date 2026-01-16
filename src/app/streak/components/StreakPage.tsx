@@ -9,7 +9,6 @@ import { useTheme } from '@/hooks/useTheme';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useSettingsStore } from '@/store/settingsStore';
 import { navigateToLibrary } from '@/utils/nav';
-import { Toast } from '@/components/Toast';
 import UserInfo from './UserInfo';
 
 const StreakPage = () => {
@@ -64,7 +63,6 @@ const StreakPage = () => {
             </div>
           </div>
         </div>
-        <Toast />
       </div>
     </div>
   );

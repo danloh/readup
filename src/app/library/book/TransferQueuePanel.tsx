@@ -259,8 +259,8 @@ const TransferQueuePanel: React.FC = () => {
     async (f: FilterType) => {
       if (f === 'pds' && !user) {
         eventDispatcher.dispatch('toast', {
-          type: 'info',
-          timeout: 2000,
+          type: 'error',
+          timeout: 10000,
           message: _('Need to Log in'),
         });
         console.log('Not Auth');
