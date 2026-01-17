@@ -83,7 +83,6 @@ async function handleRequest(request: NextRequest, method: 'GET' | 'HEAD') {
           },
         });
       }
-      // throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       return new NextResponse(data, {
         status: response.status,
         headers: {
@@ -121,6 +120,7 @@ async function handleRequest(request: NextRequest, method: 'GET' | 'HEAD') {
       return new NextResponse(response.body, {
         status: 200,
         headers: {
+          ...Object.fromEntries(response.headers.entries()),
           'Content-Type': contentType,
           'X-Content-Length': contentLength || '',
           'Cache-Control': 'public, max-age=300',
@@ -138,6 +138,7 @@ async function handleRequest(request: NextRequest, method: 'GET' | 'HEAD') {
       return new NextResponse(buf, {
         status: 200,
         headers: {
+          ...Object.fromEntries(response.headers.entries()),
           'Content-Type': contentType,
           'Content-Length': length.toString(),
           'Cache-Control': 'public, max-age=300',

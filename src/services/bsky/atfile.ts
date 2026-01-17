@@ -275,7 +275,9 @@ export async function downloadBookFile(
   const coverUrl = coverCid
     ? `${serv}/xrpc/com.atproto.sync.getBlob?did=${did}&cid=${coverCid}`
     : undefined;
-  const coverData = coverUrl ? await webDownload(coverUrl, onProgress) : undefined;
+  const coverData = coverUrl 
+    ? (await webDownload(coverUrl, onProgress)).blob 
+    : undefined;
 
   // Extract book doc blob CID
   const docblob = record.docblob;
@@ -294,7 +296,9 @@ export async function downloadBookFile(
   const docUrl = docCid
     ? `${serv}/xrpc/com.atproto.sync.getBlob?did=${did}&cid=${docCid}`
     : undefined;
-  const docData = docUrl ? await webDownload(docUrl, onProgress) : undefined;
+  const docData = docUrl 
+    ? (await webDownload(docUrl, onProgress)).blob 
+    : undefined;
 
   // Extract book config blob CID
   const configblob = record.config;
@@ -313,7 +317,9 @@ export async function downloadBookFile(
   const configUrl = configCid
     ? `${serv}/xrpc/com.atproto.sync.getBlob?did=${did}&cid=${configCid}`
     : undefined;
-  const configData = configUrl ? await webDownload(configUrl, onProgress) : undefined;
+  const configData = configUrl 
+    ? (await webDownload(configUrl, onProgress)).blob 
+    : undefined;
 
   return {
     rkey,
