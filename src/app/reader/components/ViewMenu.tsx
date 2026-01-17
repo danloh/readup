@@ -248,7 +248,7 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
         shortcut='Shift+J'
         Icon={isScrolledMode ? PiScrollLight : PiBookOpenLight}
         onClick={toggleScrolledMode}
-        disabled={bookData.bookDoc?.rendition?.layout === 'pre-paginated'}
+        disabled={bookData.isFixedLayout}
       />
       {appService?.hasWindow && <MenuItem label={_('Fullscreen')} onClick={handleFullScreen} />}
       <MenuItem

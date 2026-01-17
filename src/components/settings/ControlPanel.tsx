@@ -256,6 +256,7 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
         <input
           type='checkbox'
           className='toggle toggle-success h-5'
+          disabled={bookData?.isFixedLayout}
           checked={isScrolledMode}
           onChange={() => setScrolledMode(!isScrolledMode)}
         />
@@ -265,6 +266,7 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
         <input
           type='checkbox'
           className='toggle toggle-success h-5'
+          disabled={bookData?.isFixedLayout}
           checked={isContinuousScroll}
           onChange={() => setIsContinuousScroll(!isContinuousScroll)}
         />
