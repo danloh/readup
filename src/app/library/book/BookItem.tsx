@@ -4,7 +4,7 @@ import { LiaInfoCircleSolid } from 'react-icons/lia';
 import { Book } from '@/types/book';
 import { useResponsiveSize } from '@/hooks/useResponsiveSize';
 import { LibraryViewModeType } from '@/types/settings';
-import { formatAuthors } from '@/utils/book';
+import { formatAuthors, formatDescription } from '@/utils/book';
 import { useTranslation } from '@/hooks/useTranslation';
 import BookCover from '@/app/library/book/BookCover';
 import ReadingProgress from './ReadingProgress';
@@ -45,7 +45,7 @@ const BookItem: React.FC<BookItemProps> = ({
         className={clsx(
           'flex w-full flex-col p-0',
           mode === 'grid' && 'pt-2',
-          mode === 'list' && 'py-2',
+          mode === 'list' && 'gap-2',
         )}
       >
         <div className={clsx('min-w-0 flex-1', mode === 'list' && 'flex flex-col gap-2')}>
@@ -64,8 +64,17 @@ const BookItem: React.FC<BookItemProps> = ({
             </p>
           )}
         </div>
+        <h4 
+          className='text-neutral-content line-clamp-1 text-xs' 
+          title={formatDescription(book.metadata?.description)}
+        >
+          {formatDescription(book.metadata?.description)}
+        </h4>
         <div
-          className={clsx('flex items-center', book.progress ? 'justify-between' : 'justify-end')}
+          className={clsx(
+            'flex items-center', 
+            book.progress ? 'justify-between' : 'justify-end'
+          )}
           style={{ height: `${iconSize18}px`,minHeight: `${iconSize18}px` }}
         >
           {book.progress && <ReadingProgress book={book} />}

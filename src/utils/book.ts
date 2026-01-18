@@ -130,6 +130,16 @@ export const formatPublisher = (publisher: string | LanguageMap) => {
   return typeof publisher === 'string' ? publisher : formatLanguageMap(publisher);
 };
 
+export const formatDescription = (description?: string | LanguageMap) => {
+  if (!description) return '';
+  const text = typeof description === 'string' ? description : formatLanguageMap(description);
+
+  return text
+    .replace(/<\/?[^>]+(>|$)/g, '')
+    .replace(/&#\d+;/g, '')
+    .trim();
+};
+
 const langCodeToLangName = (langCode: string) => {
   return SUPPORTED_LANGS[langCode] || langCode.toUpperCase();
 };

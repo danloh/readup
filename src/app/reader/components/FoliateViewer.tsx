@@ -165,7 +165,9 @@ const FoliateViewer: React.FC<{
         false;
       setViewSettings(bookKey, { ...viewSettings });
 
-      mountAdditionalFonts(detail.doc, isCJKLang(bookData.book?.primaryLanguage));
+      if (!bookData?.isFixedLayout) {
+        mountAdditionalFonts(detail.doc, isCJKLang(bookData.book?.primaryLanguage));
+      }
 
       if (bookDoc.rendition?.layout === 'pre-paginated') {
         applyFixedlayoutStyles(detail.doc, viewSettings);

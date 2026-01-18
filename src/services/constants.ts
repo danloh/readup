@@ -5,6 +5,7 @@ import {
   BookSearchConfig,
   BookStyle,
   HighlightColor,
+  NoteExportConfig,
   ScreenConfig,
   TranslatorConfig,
   TTSConfig,
@@ -158,6 +159,7 @@ export const DEFAULT_MOBILE_VIEW_SETTINGS: Partial<ViewSettings> = {
   defaultFont: 'Sans-serif',
   marginBottomPx: 16,
   disableDoubleClick: true,
+  spreadMode: 'none',
 };
 
 export const DEFAULT_CJK_VIEW_SETTINGS: Partial<ViewSettings> = {
@@ -204,10 +206,25 @@ export const DEFAULT_TRANSLATOR_CONFIG: TranslatorConfig = {
   ttsReadAloudText: 'both',
 };
 
+export const DEFAULT_NOTE_EXPORT_CONFIG: NoteExportConfig = {
+  includeTitle: true,
+  includeAuthor: true,
+  includeDate: true,
+  includeChapterTitles: true,
+  includeQuotes: true,
+  includeNotes: true,
+  includeTimestamp: false,
+  includeChapterSeparator: false,
+  noteSeparator: '\n\n',
+  useCustomTemplate: false,
+  customTemplate: '',
+};
+
 export const DEFAULT_ANNOTATOR_CONFIG: AnnotatorConfig = {
   enableAnnotationQuickActions: true,
   annotationQuickAction: null,
   copyToNotebook: false,
+  noteExportConfig: DEFAULT_NOTE_EXPORT_CONFIG,
 };
 
 export const DEFAULT_SCREEN_CONFIG: ScreenConfig = {
