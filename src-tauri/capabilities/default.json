@@ -148,6 +148,16 @@
         }
       ]
     },
+    {
+      "identifier": "shell:allow-spawn",
+      "allow": [
+        {
+          "name": "start-readup",
+          "cmd": "cmd",
+          "args": ["/C", "start", "", { "validator": "^.*Readup(.*)\\.exe$" }]
+        }
+      ]
+    },
     "haptics:allow-vibrate",
     "haptics:allow-impact-feedback",
     "haptics:allow-notification-feedback",

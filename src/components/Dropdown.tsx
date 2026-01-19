@@ -63,7 +63,10 @@ const Dropdown: React.FC<DropdownProps> = ({
           title={label}
           tabIndex={-1}
           onClick={toggleDropdown}
-          className={clsx('dropdown-toggle', buttonClassName, isOpen && 'bg-base-300/50')}
+          className={clsx(
+            'dropdown-toggle touch-target', 
+            buttonClassName, isOpen && 'bg-base-300/50'
+          )}
         >
           {toggleButton}
         </div>

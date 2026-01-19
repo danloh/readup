@@ -55,6 +55,7 @@ const BookItem: React.FC<BookItemProps> = ({
               mode === 'grid' && 'block whitespace-nowrap text-[0.6em] text-xs',
               mode === 'list' && 'line-clamp-2 text-base',
             )}
+            title={formatDescription(book.metadata?.description)}
           >
             {book.title}
           </h4>
@@ -64,12 +65,14 @@ const BookItem: React.FC<BookItemProps> = ({
             </p>
           )}
         </div>
-        <h4 
-          className='text-neutral-content line-clamp-1 text-xs' 
-          title={formatDescription(book.metadata?.description)}
-        >
-          {formatDescription(book.metadata?.description)}
-        </h4>
+        {mode === 'list' && (
+          <h4 
+            className='text-neutral-content line-clamp-1 text-xs' 
+            title={formatDescription(book.metadata?.description)}
+          >
+            {formatDescription(book.metadata?.description)}
+          </h4>
+        )}
         <div
           className={clsx(
             'flex items-center', 
