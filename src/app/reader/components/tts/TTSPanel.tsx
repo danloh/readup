@@ -258,6 +258,8 @@ const TTSPanel = ({
         <button 
           onClick={onTogglePlay} 
           className='rounded-full p-1 transition-transform duration-200 hover:scale-110'
+          title={isPlaying ? _('Pause') : _('Play')}
+          aria-label={isPlaying ? _('Pause') : _('Play')}
         >
           {isPlaying ? (
             <MdPauseCircle size={iconSize24} className='fill-primary' />
@@ -285,6 +287,8 @@ const TTSPanel = ({
           <button
             onClick={() => showSetting('timer')}
             className='flex flex-col items-center justify-center rounded-full p-1'
+            title={_('Set Timeout')}
+            aria-label={_('Set Timeout')}
           >
             <RiTimerLine size={iconSize22} className={clsx(showTimer && 'fill-success')} />
             {timeoutCountdown && (
@@ -309,6 +313,8 @@ const TTSPanel = ({
               'dropdown-content bgcolor-base-200 no-triangle menu menu-vertical rounded-box absolute right-0 z-[1] shadow',
               'mt-4 inline max-h-96 w-[250px] overflow-y-scroll',
             )}
+            title={_('Select Voice')}
+            aria-label={_('Select Voice')}
           >
             {voiceGroups.map((voiceGroup, index) => {
               return (

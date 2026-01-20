@@ -38,6 +38,7 @@ import TranslatorPopup from './TranslatorPopup';
 import ProofreadPopup from './ProofreadPopup';
 import AnnotationRangeEditor from './AnnotationRangeEditor';
 import ExportMarkdownDialog from './ExportMarkdownDialog';
+import ExcerptDialog from './ExcerptDialog';
 
 const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
   const _ = useTranslation();
@@ -74,6 +75,7 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
   const [showAnnotationNotes, setShowAnnotationNotes] = useState(false);
   const [annotationNotes, setAnnotationNotes] = useState<BookNote[]>([]);
   const [editingAnnotation, setEditingAnnotation] = useState<BookNote | null>(null);
+  const [showExcerptDialog, setShowExcerptDialog] = useState(false);
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [exportData, setExportData] = useState<{
     booknotes: BookNote[];
@@ -708,6 +710,12 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
     setShowAnnotPopup(false);
   }, []);
 
+  const handleExcerpt = () => {
+    if (!selection || !selection.text) return;
+    setShowAnnotPopup(false);
+    setShowExcerptDialog(true);
+  };
+
   // Keyboard shortcuts: trigger actions only if there's an active selection and popup hidden
   useShortcuts(
     {
@@ -842,6 +850,8 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
         };
       case 'dictionary':
         return { tooltipText: _(label), Icon, onClick: handleDictionary };
+      case 'excerpt':
+        return { tooltipText: _(label), Icon, onClick: handleExcerpt };
       case 'wikipedia':
         return { tooltipText: _(label), Icon, onClick: handleWikipedia };
       case 'translate':
@@ -938,6 +948,15 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
           popupHeight={annotPopupHeight}
           onHighlight={handleHighlight}
           onDismiss={handleDismissPopupAndSelection}
+        />
+      )}
+      {showExcerptDialog && selection && bookData.book && (
+        <ExcerptDialog
+          bookKey={bookKey}
+          isOpen={showExcerptDialog}
+          book={bookData.book}
+          selection={selection}
+          onCancel={() => setShowExcerptDialog(false)}
         />
       )}
       {showExportDialog && exportData && bookData.book && (
