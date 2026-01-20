@@ -59,7 +59,7 @@ const LibraryPageContent = (
   const {
     library: libraryBooks,
     setLibrary,
-    updateBook,
+    updateBooks,
     checkOpenWithBooks,
     checkLastOpenBooks,
     setCheckOpenWithBooks,
@@ -297,32 +297,30 @@ const LibraryPageContent = (
     ];
     const { library } = useLibraryStore.getState();
 
-    const processFile = async (selectedFile: SelectedFile) => {
+    const processFile = async (selectedFile: SelectedFile): Promise<Book | null> => {
       const file = selectedFile.file || selectedFile.path;
-      if (!file) return;
+      if (!file) return null;
       try {
         const book = await appService?.importBook(file, library);
         console.log('>> Imported book:', book);
+        if (!book) return null;
         const { path, basePath } = selectedFile;
-        if (book && groupId) {
+        if (groupId) {
           book.groupId = groupId;
           book.groupName = getGroupName(groupId);
-          await updateBook(envConfig, book);
-        } else if (book && path && basePath) {
+        } else if (path && basePath) {
           const rootPath = getDirPath(basePath);
           const groupName = getDirPath(path).replace(rootPath, '').replace(/^\//, '');
           book.groupName = groupName;
           book.groupId = getGroupId(groupName);
-          await updateBook(envConfig, book);
         }
-        if (user && book && !book.uploadedAt && settings.autoUpload) {
+
+        if (user && !book.uploadedAt && settings.autoUpload) {
           console.log('Queueing upload for book:', book.title);
           transferManager.queueUpload(book);
         }
-
-        if (book) {
-          successfulImports.push(book.title);
-        }
+        successfulImports.push(book.title);
+        return book;
       } catch (error) {
         const filename = typeof file === 'string' ? file : file.name;
         const baseFilename = getFilename(filename);
@@ -332,13 +330,15 @@ const LibraryPageContent = (
             : '';
         failedImports.push({ filename: baseFilename, errorMessage });
         console.error('Failed to import book:', filename, error);
+        return null;
       }
     };
 
     const concurrency = 4;
     for (let i = 0; i < files.length; i += concurrency) {
       const batch = files.slice(i, i + concurrency);
-      await Promise.all(batch.map(processFile));
+      const importedBooks = (await Promise.all(batch.map(processFile))).filter((book) => !!book);
+      await updateBooks(envConfig, importedBooks);
     }
 
     if (failedImports.length > 0) {
@@ -363,8 +363,6 @@ const LibraryPageContent = (
       });
     }
 
-    setLibrary([...library]);
-    appService?.saveLibraryBooks(library);
     setLoading(false);
   };
 

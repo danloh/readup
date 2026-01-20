@@ -36,6 +36,7 @@ rss = { version = "2.0", features = ["serde"] }
 atom_syndication = "0.12"
 bytes = "1.11.0"
 chrono = "0.4.43"
+walkdir = "2"
 # FIXME: remove the devtools feature in production
 tauri = { version = "2.9.5", features = [ "protocol-asset", "devtools"] }
 tauri-build = "2.5.3"

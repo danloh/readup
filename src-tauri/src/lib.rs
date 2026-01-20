@@ -15,6 +15,7 @@ mod android;
 #[cfg(target_os = "macos")]
 mod macos;
 
+mod dir;
 mod file;
 mod feed;
 
@@ -154,6 +155,7 @@ pub fn run() {
         .plugin(tauri_plugin_oauth::init()) // TODO, del
         .invoke_handler(tauri::generate_handler![
             start_server, // for oauth, TODO: can del
+            dir::read_dir,
             file::download_file,
             file::upload_file,
             feed::fetch_feed,
