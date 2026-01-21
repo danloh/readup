@@ -34,7 +34,9 @@ type TemplateData = {
   }[];
 };
 
-type TemplateVariable = { [key: string]: number | string | TemplateVariable | TemplateVariable[] };
+type TemplateVariable = { 
+  [key: string]: number | string | TemplateVariable | TemplateVariable[] 
+};
 
 const renderTemplate = (template: string, data: TemplateData): string => {
   const applyFilter = (
@@ -164,27 +166,7 @@ const ExportMarkdownDialog: React.FC<ExportMarkdownDialogProps> = ({
   const { getViewSettings } = useReaderStore();
   const viewSettings = getViewSettings(bookKey);
 
-  const defaultTemplate = `## {{ title }}
-**${_('Author')}**: {{ author }}
-
-**${_('Exported from Readup')}**: {{ exportDate }}
-
----
-
-### ${_('Highlights & Annotations')}
-
-{% for chapter in chapters %}
-#### {{ chapter.title }}
-{% for annotation in chapter.annotations %}
-> {{ annotation.text }}
-{% if annotation.note %}
-**${_('Note:')}** {{ annotation.note }}
-{% endif %}
-*${_('Time:')} {{ annotation.timestamp | date('%Y-%m-%d %H:%M') }}*
-{% endfor %}
-
----
-{% endfor %}`;
+  const defaultTemplate = getDefaultTemplate(_);
 
   const [exportConfig, setExportConfig] = useState<NoteExportConfig>(() => {
     const noteExportConfig = viewSettings?.noteExportConfig || DEFAULT_NOTE_EXPORT_CONFIG;
@@ -634,3 +616,25 @@ const ExportMarkdownDialog: React.FC<ExportMarkdownDialogProps> = ({
 };
 
 export default ExportMarkdownDialog;
+
+const getDefaultTemplate = (_: any) => `## {{ title }}
+**${_('Author')}**: {{ author }}
+
+**${_('Exported From Readup')}**: {{ exportDate }}
+
+---
+
+### ${_('Highlights & Annotations')}
+
+{% for chapter in chapters %}
+#### {{ chapter.title }}
+{% for annotation in chapter.annotations %}
+> {{ annotation.text }}
+{% if annotation.note %}
+**${_('Note:')}** {{ annotation.note }}
+{% endif %}
+*${_('Time:')} {{ annotation.timestamp | date('%Y-%m-%d %H:%M') }}*
+{% endfor %}
+
+---
+{% endfor %}`;

@@ -342,23 +342,23 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
-          curl -sL https://github.com/readest/readest/releases/latest/download/latest.json -o latest.json
+          curl -sL https://github.com/danloh/readup/releases/latest/download/latest.json -o latest.json
 
           version=${{ needs.get-release.outputs.release_version }}
           arch=${{ matrix.config.arch }}
 
           if [ "$arch" = "x86_64" ]; then
-            bin_file="Readest_${version}_x64-portable.exe"
+            bin_file="Readup_${version}_x64-portable.exe"
             platform_key="windows-x86_64-portable"
           elif [ "$arch" = "aarch64" ]; then
-            bin_file="Readest_${version}_arm64-portable.exe"
+            bin_file="Readup_${version}_arm64-portable.exe"
             platform_key="windows-aarch64-portable"
           else
             echo "Unknown architecture: $arch"
             exit 1
           fi
 
-          portable_url="https://github.com/readest/readest/releases/download/${{ needs.get-release.outputs.release_tag }}/$bin_file"
+          portable_url="https://github.com/danloh/readup/releases/download/${{ needs.get-release.outputs.release_tag }}/$bin_file"
           portable_sig=$(cat $bin_file.sig)
 
           jq --arg url "$portable_url" \

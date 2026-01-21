@@ -183,7 +183,7 @@ export const UpdaterContent = ({
         const arch = OS_ARCH === 'x86_64' ? 'x64' : 'arm64';
         const downloadUrl = data.platforms[platformKey]?.url as string;
         const execDir = await invoke<string>('get_executable_dir');
-        const exeFileName = `Readest_${data.version}_${arch}-portable.exe`;
+        const exeFileName = `Readup_${data.version}_${arch}-portable.exe`;
         const exeFilePath = await join(execDir, exeFileName);
         setUpdate({
           currentVersion,
@@ -223,7 +223,7 @@ export const UpdaterContent = ({
 
             try {
               console.log('Launching new executable:', exeFilePath);
-              const command = Command.create('start-readest', ['/C', 'start', '', exeFilePath]);
+              const command = Command.create('start-readup', ['/C', 'start', '', exeFilePath]);
               await command.spawn();
               console.log('New executable launched, exiting current app...');
               setTimeout(async () => {
