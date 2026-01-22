@@ -1,3 +1,4 @@
+import AtpAgent, { AtpSessionData, CredentialSession } from "@atproto/api";
 
 // to store active sessions
 export interface AuthToken {
@@ -105,6 +106,18 @@ async function refreshToken(host: string, refreshToken: string) {
   console.log('refresh token', result);
   return result as AuthToken;
 }
+
+
+export async function getAtpAgent(): Promise<AtpAgent> {
+  const usr = await refreshSession();
+  // Initialize agent
+  const session = new CredentialSession(new URL(`https://${usr.host}`))
+  const agent = new AtpAgent(session);
+  await agent.resumeSession(usr as AtpSessionData);
+
+  return agent;
+}
+
 
 interface ResolveService {
   id: string;

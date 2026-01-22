@@ -43,7 +43,7 @@ export const AuthWindow = () => {
     <Dialog
       id='auth_window'
       isOpen={isOpen}
-      title={_('Welcome')}
+      title={_('Welcome to Readup')}
       onClose={handleClose}
       boxClassName='sm:!w-96 sm:h-auto'
     >

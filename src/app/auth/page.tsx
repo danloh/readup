@@ -36,7 +36,7 @@ export default function AuthPage({handleClose}: Props) {
 
   return (
     <div className='auth-content flex flex-col items-center justify-center'>
-      <h1 className="title text-center text-2xl my-4">{_('Welcome to Readup')}</h1>
+      <h1 className="title text-center text-2xl my-4">{_('Join with atproto')}</h1>
       <div className="card mx-auto p-4 w-full mx-auto max-w-md">
         <form
           className="flex flex-col gap-4" 
@@ -86,7 +86,7 @@ export default function AuthPage({handleClose}: Props) {
             {_('Go to generate the app password')}
           </a>
           <button type="submit" className="btn btn-primary">
-            {_('Sign in with Bluesky')}
+            {_('Sign in with atproto')}
           </button>
           <a 
             className="text-xs text-success text-center px-1" 

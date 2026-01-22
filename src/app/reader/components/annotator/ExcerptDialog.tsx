@@ -5,10 +5,14 @@ import { toPng } from 'html-to-image';
 import { Book } from '@/types/book';
 import { useTranslation } from '@/hooks/useTranslation';
 import Dialog from '@/components/Dialog';
-import { useEnv } from '@/context/EnvContext';
+import { useAuth } from '@/context/AuthContext';
 import { TextSelection } from '@/utils/sel';
 import { hexToRgba } from '@/styles/color';
 import { useReaderStore } from '@/store/readerStore';
+import { eventDispatcher } from '@/utils/event';
+import { setAuthDialogVisible } from '@/components/AuthWindow';
+import { getAtpAgent } from '@/services/bsky/auth';
+import { postWithImageAndLink } from '@/services/bsky/xpost';
 
 interface ExcerptDialogProps {
   bookKey: string;
@@ -26,7 +30,7 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
   onCancel,
 }) => {
   const _ = useTranslation();
-  const { envConfig } = useEnv();
+  const { user } = useAuth();
   const { getProgress } = useReaderStore();
   const progress = getProgress(bookKey);
   const [imageUrl, setImageUrl] = useState<string>('');
@@ -238,8 +242,33 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
     generateImage();
   }, [selection.text, styles]);
 
-  const handleShare = () => {
-    // TODO
+  const handleShare = async () => {
+    if (!user) {
+      eventDispatcher.dispatch('toast', {
+        message: 'Please Sign in then share',
+        timeout: 2000,
+        type: 'warning',
+      });
+      setAuthDialogVisible(true);
+      onCancel();
+    } else {
+      // TODO
+      const agent = await getAtpAgent();
+      const resp = await postWithImageAndLink(agent, {
+        text: `Excerpt from ${book.title}`,
+        imageData: imageUrl,
+        altText: selection.text,
+        url: `https://readup.cc/read/${user.did}/${book.hash}`, // TODO, the endpointer for url
+        linkTitle: 'Read the Book'
+      });
+      if (resp.success) {
+        eventDispatcher.dispatch('toast', {
+          message: 'Success to share on ATmosphere',
+          timeout: 2000,
+          type: 'info',
+        });
+      }
+    }
   };
 
   return (
