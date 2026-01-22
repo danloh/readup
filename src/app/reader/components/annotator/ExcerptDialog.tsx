@@ -7,7 +7,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import Dialog from '@/components/Dialog';
 import { useAuth } from '@/context/AuthContext';
 import { TextSelection } from '@/utils/sel';
-import { hexToRgba } from '@/styles/color';
+import { getContrastHex, hexToRgba } from '@/styles/color';
 import { useReaderStore } from '@/store/readerStore';
 import { eventDispatcher } from '@/utils/event';
 import { setAuthDialogVisible } from '@/components/AuthWindow';
@@ -94,7 +94,7 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
           .header {
             margin-bottom: 32px;
             padding-bottom: 16px;
-            border-bottom: 2px solid rgba(31, 41, 55, 0.1);
+            border-bottom: 2px solid ${hexToRgba(getContrastHex(styles.backgroundColor), 0.3)};
           }
           
           .book-title {
@@ -138,7 +138,7 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
           }
           
           code {
-            background-color: rgba(31, 41, 55, 0.05);
+            background-color: ${hexToRgba(styles.backgroundColor, 0.8)};
             padding: 2px 6px;
             border-radius: 3px;
             font-family: 'Monaco', 'Courier New', monospace;
