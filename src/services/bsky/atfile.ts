@@ -335,11 +335,11 @@ export async function downloadPdsBook(
   did: string,
   onProgress?: ProgressHandler,
 ): Promise<DownloadResult> {
-  const serv = await resolveDid(did);  // TODO handle error
-  
-  if (!did) {
-    throw new Error("Could not determine DID from session");
+  if (!did || !rkey) {
+    throw new Error("No DID or rkey provided");
   }
+
+  const serv = await resolveDid(did);  // TODO handle error
 
   // Get the record
   let coverCid: string = '';

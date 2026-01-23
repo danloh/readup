@@ -7,7 +7,7 @@ import { EnvProvider, useEnv } from '@/context/EnvContext';
 import { CSPostHogProvider } from '@/context/PHContext';
 import { Book } from '@/types/book';
 import Reader from '@/app/reader/components/Reader';
-import { useLibraryStore } from '@/store/libraryStore';
+import Spinner from '@/components/Spinner';
 
 export default function Page() {
   const router = useRouter();
@@ -31,35 +31,6 @@ const ReadPage: React.FC<{ id: string; did: string }> = ({ id, did }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { envConfig } = useEnv();
-  const { library: libraryBooks } = useLibraryStore();
-
-  // useEffect(() => {
-  //   if (isInitiating.current) return;
-  //   isInitiating.current = true;
-
-  //   const loadingTimeout = setTimeout(() => setIsLoading(true), 300);
-  //   const initLibrary = async () => {
-  //     const appService = await envConfig.getAppService();
-  //     const settings = await appService.loadSettings();
-  //     setSettings(settings);
-
-  //     // Reuse the library from the store when we return from the reader
-  //     const library = libraryBooks.length > 0 
-  //       ? libraryBooks 
-  //       : await appService.loadLibraryBooks();
-      
-  //     setLibrary(library);
-  //     setLibraryLoaded(true);
-  //     if (loadingTimeout) clearTimeout(loadingTimeout);
-  //   };
-
-  //   initLibrary();
-    
-  //   return () => {
-  //     isInitiating.current = false;
-  //   };
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [id, did]);
 
   useEffect(() => {
     const loadBook = async () => {
@@ -75,6 +46,15 @@ const ReadPage: React.FC<{ id: string; did: string }> = ({ id, did }) => {
 
         setIsLoading(true);
         setError(null);
+
+        const libraryBooks = await appService.loadLibraryBooks();
+        const existingBook = libraryBooks.find((b) => b.hash === id);
+        if (existingBook) {
+          setBook(existingBook);
+          setIsLoading(false);
+          console.log(`Loading book locally: id=${id}, did=${did}`);
+          return;
+        }
 
         // Load book from PDS using hash (id) and DID
         console.log(`Loading book from PDS: id=${id}, did=${did}`);
@@ -110,8 +90,8 @@ const ReadPage: React.FC<{ id: string; did: string }> = ({ id, did }) => {
 
   if (isLoading) {
     return (
-      <div className='full-height'>
-        <p>Loading book...</p>
+      <div className='fixed inset-0 z-40 flex items-center justify-center'>
+        <Spinner loading />
       </div>
     );
   }
