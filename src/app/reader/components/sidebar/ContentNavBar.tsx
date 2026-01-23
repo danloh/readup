@@ -1,7 +1,7 @@
 import clsx from 'clsx';
 import React from 'react';
 import { IoIosList, IoMdCloseCircle } from 'react-icons/io';
-import { HiArrowLongLeft, HiArrowLongRight } from 'react-icons/hi2';
+import { MdChevronLeft, MdChevronRight } from 'react-icons/md';
 
 import { Insets } from '@/types/misc';
 import { useEnv } from '@/context/EnvContext';
@@ -60,7 +60,7 @@ const ContentNavBar: React.FC<ContentNavBarProps> = ({
 
   return (
     <div
-      className='results-nav-bar pointer-events-none absolute inset-0 z-30 flex flex-col items-center justify-between px-2 py-1'
+      className='results-nav-bar pointer-events-none absolute inset-0 z-30 flex flex-col items-center justify-start'
       style={{
         top: gridInsets.top,
         right: gridInsets.right,
@@ -68,7 +68,7 @@ const ContentNavBar: React.FC<ContentNavBarProps> = ({
         left: gridInsets.left,
       }}
     >
-      <div className='bg-base-100 pointer-events-auto relative flex items-center justify-between overflow-hidden rounded-xl px-2 py-1 shadow-lg sm:gap-4'>
+      <div className='bg-base-100 pointer-events-auto relative flex items-center justify-between overflow-hidden rounded-xl p-1 shadow-lg sm:gap-4'>
         {progress !== undefined && progress < 1 && (
           <div
             className='bg-base-200 absolute inset-y-0 left-0 transition-all duration-300'
@@ -80,7 +80,7 @@ const ContentNavBar: React.FC<ContentNavBarProps> = ({
           <button
             title={showResultsTitle || _('Show Results')}
             onClick={onShowResults}
-            className='btn btn-ghost relative z-10 h-8 min-h-8 w-8 p-0 hover:bg-transparent'
+            className='btn btn-ghost relative z-10 h-8 min-h-8 w-8 p-0'
           >
             <IoIosList size={iconSize20} className='text-base-content' />
           </button>
@@ -94,22 +94,24 @@ const ContentNavBar: React.FC<ContentNavBarProps> = ({
             onClick={onPrevious}
             disabled={!hasPrevious}
             className={clsx(
-              'btn btn-ghost relative z-10 h-auto min-h-0 p-1 hover:bg-transparent',
-              !hasPrevious && 'opacity-40 disabled:bg-transparent',
+              'btn btn-ghost relative z-10 h-auto min-h-0 p-1',
+              'bg-base-200 rounded-full hover:bg-base-300 hover:disabled:bg-base-200',
+              !hasPrevious && 'opacity-20',
             )}
           >
-            <HiArrowLongLeft size={iconSize18} className='text-base-content' />
+            <MdChevronLeft size={iconSize18} className='text-base-content' />
           </button>
           <button
             title={nextTitle || _('Next')}
             onClick={onNext}
             disabled={!hasNext}
             className={clsx(
-              'btn btn-ghost relative z-10 h-auto min-h-0 p-1 hover:bg-transparent',
-              !hasNext && 'opacity-40 disabled:bg-transparent',
+              'btn btn-ghost relative z-10 h-auto min-h-0 p-1',
+              'bg-base-200 rounded-full hover:bg-base-300 hover:disabled:bg-base-200',
+              !hasNext && 'opacity-20',
             )}
           >
-            <HiArrowLongRight size={iconSize18} className='text-base-content' />
+            <MdChevronRight size={iconSize18} className='text-base-content' />
           </button>
         </div>
 
@@ -125,7 +127,7 @@ const ContentNavBar: React.FC<ContentNavBarProps> = ({
         <button
           title={closeTitle || _('Close')}
           onClick={onClose}
-          className='btn btn-ghost relative z-10 h-8 min-h-8 w-8 p-0 hover:bg-transparent'
+          className='btn btn-ghost relative z-10 h-8 min-h-8 w-8 p-0'
         >
           <IoMdCloseCircle size={iconSize16} />
         </button>

@@ -10,7 +10,7 @@ import { useResponsiveSize } from '@/hooks/useResponsiveSize';
 import { TTSController, SILENCE_DATA, TTSMark, TTSHighlightOptions } from '@/services/tts';
 import { getPopupPosition, Position } from '@/utils/sel';
 import { eventDispatcher } from '@/utils/event';
-import { parseSSMLLang } from '@/utils/ssml';
+import { genSSMLRaw, parseSSMLLang } from '@/utils/ssml';
 import { throttle } from '@/utils/throttle';
 import { fetchImageAsBase64 } from '@/utils/image';
 import { invokeUseBackgroundAudio } from '@/utils/bridge';
@@ -64,6 +64,7 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey, iconRef }) => {
 
   const [ttsController, setTtsController] = useState<TTSController | null>(null);
   const [ttsClientsInited, setTtsClientsInitialized] = useState(false);
+  const ttsOnRef = useRef(false);
 
   // this enables WebAudio to play even when the mute toggle switch is ON
   const unblockAudio = () => {
@@ -326,6 +327,8 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey, iconRef }) => {
   const handleTTSSpeak = async (event: CustomEvent) => {
     const { bookKey: ttsBookKey, range, oneTime = false } = event.detail;
     if (bookKey !== ttsBookKey) return;
+    if (ttsOnRef.current) return;
+    ttsOnRef.current = true;
 
     const view = getView(bookKey);
     const progress = getProgress(bookKey);
@@ -340,7 +343,8 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey, iconRef }) => {
       return;
     }
 
-    let ttsFromRange = range;
+    const ttsSpeakRange = range as Range | null;
+    let ttsFromRange = ttsSpeakRange;
     if (!ttsFromRange && viewSettings.ttsLocation) {
       const { location } = progress;
       const ttsCfi = viewSettings.ttsLocation;
@@ -373,12 +377,20 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey, iconRef }) => {
       await initMediaSession();
       setTtsClientsInitialized(false);
 
+      // setShowIndicator(true);
+
       const ttsController = new TTSController(appService, view, preprocessSSMLForTTS);
+      ttsControllerRef.current = ttsController;
+      setTtsController(ttsController);
+
       await ttsController.init();
       await ttsController.initViewTTS(
         getTTSHighlightOptions(viewSettings.ttsHighlightColor, viewSettings.isEink),
       );
-      const ssml = view.tts?.from(ttsFromRange);
+      const ssml =
+        oneTime && ttsSpeakRange
+          ? genSSMLRaw(ttsSpeakRange.toString().trim())
+          : view.tts?.from(ttsFromRange);
       if (ssml) {
         const lang = parseSSMLLang(ssml, primaryLang) || 'en';
         setIsPlaying(true);
@@ -386,10 +398,8 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey, iconRef }) => {
 
         ttsController.setLang(lang);
         ttsController.setRate(viewSettings.ttsRate);
-        ttsController.speak(ssml, oneTime);
+        ttsController.speak(ssml, oneTime, () => handleStop(bookKey));
         ttsController.setTargetLang(getTTSTargetLang() || '');
-        ttsControllerRef.current = ttsController;
-        setTtsController(ttsController);
       }
       setTtsClientsInitialized(true);
       setTTSEnabled(bookKey, true);
@@ -480,6 +490,7 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey, iconRef }) => {
     }
     await deinitMediaSession();
     setTTSEnabled(bookKey, false);
+    ttsOnRef.current = false;
   }, [appService]);
 
   // rate range: 0.5 - 3, 1.0 is normal speed

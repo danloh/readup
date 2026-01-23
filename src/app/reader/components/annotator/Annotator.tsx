@@ -89,6 +89,8 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
     settings.globalReadSettings.highlightStyles[selectedStyle],
   );
 
+  const androidTouchEndRef = useRef(false);
+
   const showingPopup =
     showAnnotPopup ||
     showWiktionaryPopup ||
@@ -237,8 +239,10 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
     const handleNativeTouch = (event: CustomEvent) => {
       const ev = event.detail as NativeTouchEventType;
       if (ev.type === 'touchstart') {
+        androidTouchEndRef.current = false;
         handleTouchStart();
       } else if (ev.type === 'touchend') {
+        androidTouchEndRef.current = true;
         handleTouchEnd();
         handlePointerUp(doc, index);
       }
@@ -412,6 +416,7 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
   }, []);
 
   const handleQuickAction = () => {
+    if (appService?.isAndroidApp && !androidTouchEndRef.current) return;
     const action = viewSettings.annotationQuickAction;
     switch (action) {
       case 'copy':
