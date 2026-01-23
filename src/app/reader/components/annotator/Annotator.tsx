@@ -862,6 +862,7 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
           Icon,
           onClick: handleSpeakText,
           disabled: bookData.book?.format === 'PDF',
+          visible: false,
         };
       case 'proofread':
         return {
