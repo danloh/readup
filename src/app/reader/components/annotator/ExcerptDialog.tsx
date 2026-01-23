@@ -260,10 +260,9 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
       setAuthDialogVisible(true);
       onCancel();
     } else {
-      // TODO
       const agent = await getAtpAgent();
       const resp = await postWithImageAndLink(agent, {
-        text: `Excerpt from ${book.title}`,
+        text: `Excerpt from ${book.title} \n\n`,
         imageData: imageUrl,
         altText: selection.text,
         url: `https://readup.cc/read/${book.hash}?did=${user.did}`,
@@ -383,7 +382,7 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
         </div>
 
         {/* Iframe Preview Toggle */}
-        <div className='border-t border-base-300 pt-4 hidden'>
+        <div className='border-t border-base-300 p-2 hidden'>
           <button
             onClick={() => setShowContentPreview(!showContentPreview)}
             className='btn btn-sm btn-outline gap-2'

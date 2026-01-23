@@ -47,7 +47,7 @@ export namespace AtBook {
     bookmeta: MetaData;
     coverblob?: BlobRef;
     docblob?: BlobRef;
-    config?: BlobRef; // TODO, as a text blob or ??
+    config?: BlobRef; 
     checksum?: string; // md5 hash
     attribution?: string;
   };

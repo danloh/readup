@@ -7,17 +7,20 @@ import PopupButton from './PopupButton';
 import HighlightOptions from './HighlightOptions';
 import AnnotationNotes from './AnnotationNotes';
 
+interface ToolButton {
+  tooltipText: string;
+  Icon: React.ElementType;
+  onClick: () => void;
+  disabled?: boolean;
+  visible?: boolean;
+  className?: string;
+}
+
 interface AnnotationPopupProps {
   bookKey: string;
   dir: 'ltr' | 'rtl';
   isVertical: boolean;
-  buttons: Array<{
-    tooltipText: string;
-    Icon: React.ElementType;
-    onClick: () => void;
-    disabled?: boolean;
-    visible?: boolean;
-  }>;
+  buttons: ToolButton[];
   notes: BookNote[];
   position: Position;
   trianglePosition: Position;
@@ -80,6 +83,7 @@ const AnnotationPopup: React.FC<AnnotationPopupProps> = ({
                   Icon={button.Icon}
                   onClick={button.onClick}
                   disabled={button.disabled}
+                  className={button.className}
                 />
               );
             })}

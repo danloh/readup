@@ -849,7 +849,7 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
           disabled: bookData.book?.format === 'PDF',
         };
       case 'dictionary':
-        return { tooltipText: _(label), Icon, onClick: handleDictionary };
+        return { tooltipText: _(label), Icon, onClick: handleDictionary, visible: false };
       case 'excerpt':
         return { tooltipText: _(label), Icon, onClick: handleExcerpt };
       case 'wikipedia':

@@ -4,17 +4,19 @@ import { useState } from 'react';
 interface PopupButtonProps {
   showTooltip: boolean;
   tooltipText: string;
-  disabled?: boolean;
   Icon: React.ElementType;
   onClick: () => void;
+  disabled?: boolean;
+  className?: string;
 }
 
 const PopupButton: React.FC<PopupButtonProps> = ({
   showTooltip,
   tooltipText,
-  disabled,
   Icon,
   onClick,
+  disabled,
+  className,
 }) => {
   const [buttonClicked, setButtonClicked] = useState(false);
   const handleClick = () => {
@@ -30,6 +32,7 @@ const PopupButton: React.FC<PopupButtonProps> = ({
         disabled
           ? 'cursor-not-allowed opacity-50'
           : 'not-eink:hover:bg-gray-500 eink:hover:border rounded-md',
+        className || '',
       )}
       disabled={disabled}
       title={!buttonClicked && showTooltip ? tooltipText : undefined}
