@@ -36,6 +36,7 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
   const [imageUrl, setImageUrl] = useState<string>('');
   const [isRendering, setIsRendering] = useState(false);
   const [showContentPreview, setShowContentPreview] = useState(false);
+  const [iframeHeight, setIframeHeight] = useState<string>('auto');
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   // Style customization state
@@ -185,7 +186,14 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
     iframeDoc.open();
     iframeDoc.write(htmlContent);
     iframeDoc.close();
-  }, [isOpen, selection.text, styles, book, progress?.sectionLabel]);
+    // Calculate iframe height based on content
+    setTimeout(() => {
+      const iframe = iframeRef.current;
+      if (iframe && iframe.contentDocument) {
+        const contentHeight = iframe.contentDocument.documentElement.scrollHeight;
+        setIframeHeight(`${contentHeight + 24}px`);
+      }
+    }, 100);  }, [isOpen, selection.text, styles, book, progress?.sectionLabel]);
 
   // Generate image from iframe
   useEffect(() => {
@@ -398,8 +406,10 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
             ref={iframeRef}
             className='w-full border border-base-300 rounded-sm'
             style={{
-              height: '400px',
+              height: iframeHeight,
+              minHeight: '200px',
               display: selection.text ? 'block' : 'none',
+              overflow: 'hidden',
             }}
             title='Excerpt preview'
             sandbox='allow-same-origin'
