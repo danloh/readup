@@ -116,6 +116,11 @@ export interface AppService {
     overwrite?: boolean,
     transient?: boolean,
   ): Promise<Book | null>;
+  loadPdsBook(
+    hash: string,
+    did: string,
+    books: Book[],
+  ): Promise<Book | null>;
   deleteBook(book: Book, deleteAction: DeleteAction): Promise<void>;
   uploadBook(book: Book, syncConfig?: boolean, onProgress?: ProgressHandler): Promise<void>;
   listPdsBooks(): Promise<[Book[], Book[]]>;

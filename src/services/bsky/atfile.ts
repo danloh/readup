@@ -2,7 +2,7 @@
 
 import { AtpAgent, AtpSessionData, BlobRef } from "@atproto/api";
 import type { AtBook } from "./types";
-import { refreshSession, User } from "./auth";
+import { refreshSession, resolveDid, User } from "./auth";
 import { Book } from "@/types/book";
 import { ProgressHandler, webDownload } from "@/utils/transfer";
 
@@ -330,6 +330,76 @@ export async function downloadBookFile(
   };
 }
 
+export async function downloadPdsBook(
+  rkey: string,
+  did: string,
+  onProgress?: ProgressHandler,
+): Promise<DownloadResult> {
+  const serv = await resolveDid(did);  // TODO handle error
+  
+  if (!did) {
+    throw new Error("Could not determine DID from session");
+  }
+
+  // Get the record
+  let coverCid: string = '';
+  let docCid: string = '';
+
+  const agent = new AtpAgent({ service: serv });
+  const recordResponse = await agent.com.atproto.repo.getRecord({
+    repo: did,
+    collection: COLLECTION,
+    rkey,
+  });
+
+  const record = recordResponse.data.value as AtBook.RBook;
+
+  // Extract cover blob CID
+  const coverblob = record.coverblob;
+  if (!coverblob || typeof coverblob !== "object" || !("ref" in coverblob)) {
+    console.error("No Cover blob found in record");
+  } else {
+    const coverRef = coverblob.ref;
+    coverCid = typeof coverRef === "object" && coverRef && "$link" in coverRef
+      ? coverRef.$link as string
+      : coverRef as string;
+  }
+
+  // Download the cover blob
+  const coverUrl = coverCid
+    ? `${serv}/xrpc/com.atproto.sync.getBlob?did=${did}&cid=${coverCid}`
+    : undefined;
+  const coverData = coverUrl 
+    ? (await webDownload(coverUrl, onProgress)).blob 
+    : undefined;
+
+  // Extract book doc blob CID
+  const docblob = record.docblob;
+  if (!docblob || typeof docblob !== "object" || !("ref" in docblob)) {
+    console.error("No Doc blob found in record");
+  } else {
+    const docRef = docblob.ref;
+    docCid = typeof docRef === "object" && docRef && "$link" in docRef
+      ? docRef.$link as string
+      : docRef as string;
+  }
+
+  // Download the book doc blob
+  const docUrl = docCid
+    ? `${serv}/xrpc/com.atproto.sync.getBlob?did=${did}&cid=${docCid}`
+    : undefined;
+  const docData = docUrl 
+    ? (await webDownload(docUrl, onProgress)).blob 
+    : undefined;
+
+  return {
+    rkey,
+    coverData,
+    docData,
+    record,
+  };
+}
+
 /**
  * item of the list record
  */
@@ -448,6 +518,39 @@ export async function deleteRecord(rkey: string): Promise<void> {
   } catch (error) {
     if (error instanceof Error && error.message.includes("not found")) {
       throw new Error(`Record not found: ${rkey}`);
+    }
+    throw error;
+  }
+}
+
+/**
+ * Get an atproto record without authentication
+ *
+ * Retrieves a record from any user's repository using their DID and the record key.
+ * No authentication is required as this uses the public read API.
+ *
+ * @param rkey - The record key
+ * @param did - The DID (Decentralized Identifier) of the record owner
+ * @returns A promise that resolves to the record data
+ * @throws {Error} If the record is not found or retrieval fails
+ */
+export async function getPublicRecord(rkey: string, did: string): Promise<AtBook.RBook> {
+  // Create an unauthenticated agent
+  const agent = new AtpAgent({ service: "https://public.api.bsky.app" });
+
+  try {
+    const recordResponse = await agent.com.atproto.repo.getRecord({
+      repo: did,
+      collection: COLLECTION,
+      rkey,
+    });
+
+    const record = recordResponse.data.value as AtBook.RBook;
+    console.log(`✓ Record retrieved: ${rkey} from ${did}`);
+    return record;
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("not found")) {
+      throw new Error(`Record not found: ${rkey} in repository ${did}`);
     }
     throw error;
   }

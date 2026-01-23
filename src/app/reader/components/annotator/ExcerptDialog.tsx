@@ -258,7 +258,7 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
         text: `Excerpt from ${book.title}`,
         imageData: imageUrl,
         altText: selection.text,
-        url: `https://readup.cc/read/${user.did}/${book.hash}`, // TODO, the endpointer for url
+        url: `https://readup.cc/read/${book.hash}?did=${user.did}`,
         linkTitle: 'Read the Book'
       });
       if (resp.success) {

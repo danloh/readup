@@ -54,7 +54,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     console.log('Logg result: ', res);
     if (res) {
       // build User
-      let serv = await resolveDid(res.did);
+      let serv = await resolveDid(res.did); // TODO handle error
       if (serv) {
         const newUser: User = {
           host,

@@ -128,23 +128,60 @@ interface ResolveService {
 interface ResolveResp {
   id: string;
   alsoKnownAs: string[];
-  service: ResolveService[]
+  service: ResolveService[];
 }
 
+// Cache for resolved DIDs to avoid repeated requests
+const didCache = new Map<string, string>();
+
+/**
+ * Resolve a DID to its PDS service endpoint
+ * 
+ * @param did - The DID to resolve (must start with 'did:')
+ * @returns The PDS service endpoint URL
+ * @throws {Error} If the DID is invalid or resolution fails
+ */
 export async function resolveDid(did: string): Promise<string> {
+  // Validate DID format
+  if (!did || !did.startsWith('did:')) {
+    throw new Error(`Invalid DID format: ${did}`);
+  }
+
+  // Check cache first
+  if (didCache.has(did)) {
+    return didCache.get(did)!;
+  }
+
   const url = `https://plc.directory/${did}`;
   try {
     const response = await fetch(url);
     if (!response.ok) {
-      console.error(`Resolve DID, Response status: ${response.status}`);
-      return '';
+      throw new Error(`Failed to resolve DID: ${response.status} ${response.statusText}`);
     }
 
     const result: ResolveResp = await response.json();
-    console.log(result);
-    return result.service[0]?.serviceEndpoint || '';
-  } catch (error: any) {
-    console.error(error.message);
-    return '';
+    
+    // Find the AtprotoPersonalDataServer service
+    const pdsService = result.service?.find(
+      (service) => service.type === 'AtprotoPersonalDataServer'
+    );
+
+    if (!pdsService?.serviceEndpoint) {
+      throw new Error(`No PDS service endpoint found for DID: ${did}`);
+    }
+
+    const endpoint = pdsService.serviceEndpoint;
+    
+    // Cache the result
+    didCache.set(did, endpoint);
+    
+    console.log(`✓ DID resolved: ${did} -> ${endpoint}`);
+    return endpoint;
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error(`Error resolving DID ${did}:`, error.message);
+      throw error;
+    }
+    throw new Error(`Unknown error resolving DID: ${did}`);
   }
 }

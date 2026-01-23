@@ -41,7 +41,8 @@ import { svg2png } from '@/utils/svg';
 import { ArticleType, FeedType } from '@/app/feed/components/dataAgent';
 import { BOOK_FILE_NOT_FOUND_ERROR } from './errors';
 import { 
-  deleteRecord, downloadBookFile, listRecords, uploadBookFile, UploadResult 
+  deleteRecord, downloadBookFile, downloadPdsBook, listRecords, 
+  uploadBookFile, UploadResult 
 } from './bsky/atfile';
 import {
   DEFAULT_BOOK_LAYOUT,
@@ -382,6 +383,109 @@ export abstract class BaseAppService implements AppService {
       return existingBook || book;
     } catch (error) {
       console.error('Error importing book:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Load a book from PDS (Personal Data Server)
+   * Downloads and processes a book record using its hash (rkey) and owner's DID
+   * Similar to importBook but retrieves from remote PDS instead of local file
+   * 
+   * @param hash - The record key (usually book hash)
+   * @param did - The DID of the record owner
+   * @param books - Array of existing books to merge with
+   * @returns A promise that resolves to the loaded Book or null
+   */
+  async loadPdsBook(
+    hash: string,
+    did: string,
+    books: Book[],
+  ): Promise<Book | null> {
+    try {
+      if (!hash || !did) {
+        throw new Error('Hash and DID are required');
+      }
+
+      console.log(`Loading book from PDS: hash=${hash}, did=${did}`);
+
+      // Download the book from PDS
+      const res = await downloadPdsBook(hash, did);
+
+      const docBlob = res.docData;
+      if (!docBlob) {
+        throw new Error('No book document found in PDS record');
+      }
+
+      // Load and parse the book
+      let loadedBook: BookDoc;
+      const docFile = new File([docBlob], `${hash}.book`, { type: docBlob.type });
+      
+      try {
+        ({ book: loadedBook } = await new DocumentLoader(docFile).open());
+        if (!loadedBook) {
+          throw new Error('Unsupported or corrupted book file');
+        }
+      } catch (error) {
+        throw new Error(`Failed to parse book: ${(error as Error).message || error}`);
+      }
+
+      // Check if book already exists locally
+      const existingBook = books.find((b) => b.hash === hash);
+      if (existingBook) {
+        existingBook.uploadedAt = Date.now();
+        existingBook.updatedAt = Date.now();
+      }
+
+      const primaryLanguage = getPrimaryLanguage(loadedBook.metadata.language);
+      const fileSize = docBlob.size;
+      const now = Date.now();
+
+      const book: Book = {
+        hash,
+        format: res.record.bookmeta.format || 'epub',
+        title: formatTitle(res.record.bookmeta.title || loadedBook.metadata.title),
+        sourceTitle: formatTitle(res.record.bookmeta.sourceTitle || loadedBook.metadata.title),
+        primaryLanguage: res.record.bookmeta.primaryLanguage || primaryLanguage,
+        author: res.record.bookmeta.author || formatAuthors(loadedBook.metadata.author, primaryLanguage),
+        fileSize,
+        metadata: res.record.bookmeta.metadata || loadedBook.metadata,
+        createdAt: existingBook ? existingBook.createdAt : now,
+        uploadedAt: now,
+        downloadedAt: now,
+        updatedAt: now,
+        deletedAt: null,
+      };
+
+      // Create directory if needed
+      if (!(await this.fs.exists(getDir(book), 'Books'))) {
+        await this.fs.createDir(getDir(book), 'Books');
+      }
+
+      // Save book files locally
+      const bookFilename = getLocalBookFilename(book);
+      if (!(await this.fs.exists(bookFilename, 'Books'))) {
+        await this.fs.writeFile(bookFilename, 'Books', await docBlob.arrayBuffer());
+      }
+
+      // Save cover if available
+      if (res.coverData) {
+        const coverFilename = getCoverFilename(book);
+        if (!(await this.fs.exists(coverFilename, 'Books'))) {
+          await this.fs.writeFile(coverFilename, 'Books', await res.coverData.arrayBuffer());
+        }
+      }
+
+      // Save config metadata
+      if (!existingBook) {
+        books.splice(0, 0, book);
+      }
+
+      book.coverImageUrl = await this.generateCoverImageUrl(book);
+      console.log(`✓ Book loaded from PDS: ${book.title}`);
+      return existingBook || book;
+    } catch (error) {
+      console.error('Error loading book from PDS:', error);
       throw error;
     }
   }
