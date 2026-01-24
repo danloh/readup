@@ -19,15 +19,23 @@ export default function AuthPage({handleClose}: Props) {
   const onSubmit = useCallback(
     async (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
-      const res = await login(handle, password, host); 
-      if (res) {
-        handleClose && handleClose();
-      } else {
-        // toast 
+      try {
+        const res = await login(handle, password, host); 
+        if (res) {
+          handleClose && handleClose();
+        } else {
+          // toast 
+          eventDispatcher.dispatch('toast', {
+            message: _('Failed to sign in'),
+            timeout: 2000,
+            type: 'warning',
+          });
+        }
+      } catch(e) {
         eventDispatcher.dispatch('toast', {
-          message: 'Failed Signing in',
+          message: `Error: ${e}`,
           timeout: 2000,
-          type: 'warning',
+          type: 'error',
         });
       }
     },

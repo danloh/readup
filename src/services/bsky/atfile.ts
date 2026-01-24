@@ -339,7 +339,7 @@ export async function downloadPdsBook(
     throw new Error("No DID or rkey provided");
   }
 
-  const serv = await resolveDid(did);  // TODO handle error
+  const serv = await resolveDid(did);
 
   // Get the record
   let coverCid: string = '';
