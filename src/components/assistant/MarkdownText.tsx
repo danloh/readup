@@ -1,7 +1,6 @@
 'use client';
 
 import '@assistant-ui/react-markdown/styles/dot.css';
-
 import {
   type CodeHeaderProps,
   MarkdownTextPrimitive,
@@ -12,8 +11,8 @@ import remarkGfm from 'remark-gfm';
 import { type FC, memo, useState } from 'react';
 import { CheckIcon, CopyIcon } from 'lucide-react';
 
-import { TooltipIconButton } from '@/components/assistant-ui/tooltip-icon-button';
-import { cn } from '@/lib/utils';
+import { cn } from '@/utils/tailwind';
+import { TooltipIconButton } from './TooltipIconButton';
 
 const MarkdownTextImpl = () => {
   return (

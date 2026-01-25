@@ -21,7 +21,7 @@ import { getBookDirFromLanguage } from '@/utils/book';
 import { saveSysSettings } from '@/helpers/settings';
 import { Overlay } from '@/components/Overlay';
 import BooknoteItem from '../sidebar/BooknoteItem';
-import AIAssistant from '../sidebar/AIAssistant';
+import AIAssistant from './AIAssistant';
 import NotebookHeader from './Header';
 import NoteEditor from './NoteEditor';
 import SearchBar from './SearchBar';

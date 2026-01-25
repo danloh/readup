@@ -8,6 +8,7 @@ import {
   type ThreadMessage,
   type ThreadHistoryAdapter,
 } from '@assistant-ui/react';
+import { Loader2Icon, BookOpenIcon } from 'lucide-react';
 
 import { useTranslation } from '@/hooks/useTranslation';
 import { useSettingsStore } from '@/store/settingsStore';
@@ -25,10 +26,8 @@ import {
 } from '@/services/ai';
 import type { EmbeddingProgress, AISettings, AIMessage } from '@/services/ai/types';
 import { useEnv } from '@/context/EnvContext';
-
-import { Thread } from '@/components/assistant-ui/thread';
-import { Button } from '@/components/ui/button';
-import { Loader2Icon, BookOpenIcon } from 'lucide-react';
+import { Thread } from '@/components/assistant/Thread';
+import { Button } from '@/components/primitives/button';
 
 // Helper function to convert AIMessage array to ExportedMessageRepository format
 // Each message needs to be wrapped with { message, parentId } structure
