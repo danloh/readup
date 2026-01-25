@@ -4,7 +4,7 @@ import { aiLogger } from '../logger';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const lunr = require('lunr') as typeof import('lunr');
 
-const DB_NAME = 'readest-ai';
+const DB_NAME = 'readup-ai';
 const DB_VERSION = 3;
 const CHUNKS_STORE = 'chunks';
 const META_STORE = 'bookMeta';

@@ -302,14 +302,13 @@ const AIPanel: React.FC = () => {
   return (
     <div className='my-4 w-full space-y-6'>
       <div className='w-full'>
-        <h2 className='mb-2 font-medium'>{_('AI Assistant')}</h2>
         <div className='card border-base-200 bg-base-100 border shadow'>
           <div className='divide-base-200 divide-y'>
             <div className='config-item'>
-              <span>{_('Enable AI Assistant')}</span>
+              <b>{_('Enable AI Assistant')}</b>
               <input
                 type='checkbox'
-                className='toggle'
+                className='toggle toggle-success h-5'
                 checked={enabled}
                 onChange={() => setEnabled(!enabled)}
               />
@@ -414,7 +413,7 @@ const AIPanel: React.FC = () => {
                 <div className='flex w-full items-center justify-between'>
                   <span>{_('API Key')}</span>
                   <a
-                    href='https://vercel.com/docs/ai/ai-gateway'
+                    href='https://vercel.com/docs/ai-gateway'
                     target='_blank'
                     rel='noopener noreferrer'
                     className={clsx('link text-xs', !enabled && 'pointer-events-none')}
@@ -494,12 +493,11 @@ const AIPanel: React.FC = () => {
       )}
 
       <div className={clsx('w-full', disabledSection)}>
-        <h2 className='mb-2 font-medium'>{_('Connection')}</h2>
         <div className='card border-base-200 bg-base-100 border shadow'>
           <div className='divide-base-200 divide-y'>
             <div className='config-item'>
               <button
-                className='btn btn-outline btn-sm'
+                className='btn btn-outline btn-sm btn-primary'
                 onClick={handleTestConnection}
                 disabled={!enabled || connectionStatus === 'testing'}
               >
