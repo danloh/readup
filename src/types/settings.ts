@@ -1,4 +1,6 @@
 import { CustomTheme } from '@/styles/themes';
+import type { AISettings } from '@/services/ai/types';
+import type { NotebookTab } from '@/store/notebookStore';
 import { HighlightColor, HighlightStyle, ViewSettings } from './book';
 import { OPDSCatalog } from './opds';
 
@@ -12,6 +14,7 @@ export interface ReadSettings {
   isSideBarPinned: boolean;
   notebookWidth: string;
   isNotebookPinned: boolean;
+  notebookActiveTab: NotebookTab;
   autohideCursor: boolean;
   translationProvider: string;
   translateTargetLang: string;
@@ -45,6 +48,7 @@ export interface SystemSettings {
   opdsCatalogs: OPDSCatalog[];
   opdsProxy: Record<string, string>;
 
+  aiSettings: AISettings;
   globalReadSettings: ReadSettings;
   globalViewSettings: ViewSettings;
 }

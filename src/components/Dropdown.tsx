@@ -11,6 +11,7 @@ interface DropdownProps {
   children: ReactElement<{ setIsDropdownOpen: (isOpen: boolean) => void; menuClassName?: string }>;
   disabled?: boolean;
   onToggle?: (isOpen: boolean) => void;
+  showTooltip?: boolean;
 }
 
 const Dropdown: React.FC<DropdownProps> = ({
@@ -22,6 +23,7 @@ const Dropdown: React.FC<DropdownProps> = ({
   children,
   disabled,
   onToggle,
+  showTooltip = true,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -60,7 +62,7 @@ const Dropdown: React.FC<DropdownProps> = ({
         className={clsx('dropdown', className)}
       >
         <div
-          title={label}
+          title={showTooltip ? label : undefined}
           tabIndex={-1}
           onClick={toggleDropdown}
           className={clsx(

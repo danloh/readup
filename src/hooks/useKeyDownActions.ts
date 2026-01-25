@@ -18,7 +18,7 @@ export const useKeyDownActions = ({
 }: UseKeyDownOptions) => {
   const { appService } = useEnv();
   const { acquireBackKeyInterception, releaseBackKeyInterception } = useDeviceControlStore();
-  const internalRef = useRef<HTMLDivElement>(null);
+  const internalRef = useRef<HTMLDivElement | null>(null);
   const elementRef = providedRef || internalRef;
 
   useEffect(() => {

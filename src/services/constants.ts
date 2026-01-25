@@ -15,6 +15,7 @@ import {
 import { ReadSettings, SystemSettings } from '@/types/settings';
 import { getDefaultMaxBlockSize, getDefaultMaxInlineSize } from '@/utils/config';
 import { stubTranslation as _ } from '@/utils/misc';
+import { DEFAULT_AI_SETTINGS } from './ai/constants';
 
 export const DATA_SUBDIR = 'Readup';
 export const LOCAL_BOOKS_SUBDIR = `${DATA_SUBDIR}/Books`;
@@ -56,6 +57,7 @@ export const DEFAULT_SYSTEM_SETTINGS: Partial<SystemSettings> = {
   libraryViewMode: 'grid',
   librarySortBy: 'updated',
   librarySortAscending: true,
+  aiSettings: DEFAULT_AI_SETTINGS,
 };
 
 export const HIGHLIGHT_COLOR_HEX: Record<HighlightColor, string> = {
@@ -71,6 +73,7 @@ export const DEFAULT_READSETTINGS: ReadSettings = {
   isSideBarPinned: true,
   notebookWidth: '25%',
   isNotebookPinned: false,
+  notebookActiveTab: 'notes',
   autohideCursor: true,
   translationProvider: 'azure',
   translateTargetLang: 'EN',

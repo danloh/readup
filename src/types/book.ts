@@ -237,7 +237,8 @@ export interface AnnotatorConfig {
 }
 
 export interface ViewSettings
-  extends BookLayout,
+  extends 
+    BookLayout,
     BookStyle,
     BookFont,
     // BookLanguage,

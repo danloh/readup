@@ -64,6 +64,7 @@ import {
   DEFAULT_ANNOTATOR_CONFIG,
   DEFAULT_EINK_VIEW_SETTINGS,
 } from './constants';
+import { DEFAULT_AI_SETTINGS } from './ai/constants';
 
 export abstract class BaseAppService implements AppService {
   osPlatform: OsPlatform = getOSPlatform();
@@ -105,6 +106,7 @@ export abstract class BaseAppService implements AppService {
     filepath: string,
     mimeType?: string,
   ): Promise<boolean>;
+  abstract ask(message: string): Promise<boolean>;
 
   async prepareBooksDir() {
     this.localBooksDir = await this.fs.getPrefix('Books');
@@ -219,6 +221,10 @@ export abstract class BaseAppService implements AppService {
     settings.globalViewSettings = {
       ...this.getDefaultViewSettings(),
       ...settings.globalViewSettings,
+    };
+    settings.aiSettings = {
+      ...DEFAULT_AI_SETTINGS,
+      ...settings.aiSettings,
     };
 
     settings.localBooksDir = await this.fs.getPrefix('Books');

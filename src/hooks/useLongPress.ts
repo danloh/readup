@@ -11,7 +11,6 @@ interface UseLongPressOptions {
 
 interface UseLongPressResult {
   pressing: boolean;
-  hasPointerEventsRef: React.RefObject<boolean>;
   handlers: {
     onPointerDown: (e: React.PointerEvent) => void;
     onPointerUp: (e: React.PointerEvent) => void;
@@ -35,11 +34,11 @@ export const useLongPress = (
   deps: React.DependencyList,
 ): UseLongPressResult => {
   const [pressing, setPressing] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const timerRef = useRef<ReturnType<typeof setTimeout>>(null);
   const startPosRef = useRef<{ x: number; y: number } | null>(null);
   const pointerId = useRef<number | null>(null);
   const hasPointerEventsRef = useRef(false);
-  const pointerEventTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const pointerEventTimeoutRef = useRef<ReturnType<typeof setTimeout>>(null);
   const isLongPressTriggered = useRef(false);
 
   const reset = useCallback(() => {
@@ -47,7 +46,9 @@ export const useLongPress = (
     isLongPressTriggered.current = false;
     startPosRef.current = null;
     pointerId.current = null;
-    clearTimeout(timerRef.current);
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+    }
   }, []);
 
   const handlePointerDown = useCallback(
@@ -57,7 +58,9 @@ export const useLongPress = (
       }
 
       hasPointerEventsRef.current = true;
-      clearTimeout(pointerEventTimeoutRef.current);
+      if (pointerEventTimeoutRef.current) {
+        clearTimeout(pointerEventTimeoutRef.current);
+      }
 
       pointerId.current = e.pointerId;
       startPosRef.current = { x: e.clientX, y: e.clientY };
@@ -107,7 +110,7 @@ export const useLongPress = (
 
       pointerEventTimeoutRef.current = setTimeout(() => {
         hasPointerEventsRef.current = false;
-      }, 100);
+      }, 200);
     },
     [onTap, moveThreshold, reset],
   );
@@ -120,12 +123,13 @@ export const useLongPress = (
 
       pointerEventTimeoutRef.current = setTimeout(() => {
         hasPointerEventsRef.current = false;
-      }, 100);
+      }, 200);
     },
     [onCancel, reset],
   );
 
   const handleClick = useCallback(() => {
+    // This is only for aria activation, if the user has used pointer events, we ignore the click event
     if (!hasPointerEventsRef.current) {
       onTap?.();
     }
@@ -145,14 +149,15 @@ export const useLongPress = (
 
   useEffect(() => {
     return () => {
-      clearTimeout(timerRef.current);
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 
   return {
     pressing,
-    hasPointerEventsRef,
     handlers: {
       onPointerDown: handlePointerDown,
       onPointerUp: handlePointerUp,

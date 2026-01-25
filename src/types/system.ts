@@ -143,6 +143,8 @@ export interface AppService {
   getCoverImageBlobUrl(book: Book): Promise<string>;
   generateCoverImageUrl(book: Book): Promise<string>;
   updateCoverImage(book: Book, imageUrl?: string, imageFile?: string): Promise<void>;
+  // for ai assistant
+  ask(message: string): Promise<boolean>;
   // for feeds
   loadFeeds(): Promise<FeedType[]>;
   saveFeeds(feeds: FeedType[]): Promise<void>;

@@ -9,7 +9,10 @@ function appr(x: number) {
   return MAX * (1 - Math.exp((-k * x) / MAX));
 }
 
-export const usePullToRefresh = (ref: React.RefObject<HTMLDivElement>, onTrigger: () => void) => {
+export const usePullToRefresh = (
+  ref: React.RefObject<HTMLDivElement | null>,
+  onTrigger: () => void,
+) => {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
@@ -65,7 +68,7 @@ export const usePullToRefresh = (ref: React.RefObject<HTMLDivElement>, onTrigger
         const headerbar = document.querySelector('.titlebar');
         const pullIndicator = document.createElement('div');
         const headerBottom = headerbar?.getBoundingClientRect().bottom || 0;
-        pullIndicator.style.top = `${headerBottom + 20}px`;
+        pullIndicator.style.top = `${headerBottom + 30}px`;
         pullIndicator.className = 'pull-indicator text-gray-500';
         pullIndicator.innerHTML = `
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
