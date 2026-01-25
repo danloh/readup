@@ -4,23 +4,22 @@ import { PiNotePencil, PiRobot } from 'react-icons/pi';
 
 import { useEnv } from '@/context/EnvContext';
 import { useTranslation } from '@/hooks/useTranslation';
-import { useSettingsStore } from '@/store/settingsStore';
 import { NotebookTab } from '@/store/notebookStore';
 
 interface NotebookTabNavigationProps {
   activeTab: NotebookTab;
   onTabChange: (tab: NotebookTab) => void;
+  aiEnabled: boolean;
 }
 
 const NotebookTabNavigation: React.FC<NotebookTabNavigationProps> = ({
   activeTab,
   onTabChange,
+  aiEnabled,
 }) => {
   const _ = useTranslation();
   const { appService } = useEnv();
-  const { settings } = useSettingsStore();
-  const aiEnabled = settings?.aiSettings?.enabled ?? false;
-
+  
   const tabs: NotebookTab[] = aiEnabled ? ['notes', 'ai'] : [];
 
   const getTabLabel = (tab: NotebookTab) => {

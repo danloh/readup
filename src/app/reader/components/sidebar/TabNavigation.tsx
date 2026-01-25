@@ -61,7 +61,6 @@ const TabNavigation: React.FC<{
               onTabChange(tab);
             }
           }}
-          title={getTabLabel(tab)}
           aria-label={getTabLabel(tab)}
         >
           <div className='m-0 flex h-6 items-center p-0'>

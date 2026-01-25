@@ -7,6 +7,7 @@ import { useReaderStore } from '@/store/readerStore';
 import { useSidebarStore } from '@/store/sidebarStore';
 import { useNotebookStore } from '@/store/notebookStore';
 import { useThemeStore } from '@/store/themeStore';
+import { useAIChatStore } from '@/store/aiChatStore';
 import { useEnv } from '@/context/EnvContext';
 import { useDrag } from '@/hooks/useDrag';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -20,11 +21,10 @@ import { getBookDirFromLanguage } from '@/utils/book';
 import { saveSysSettings } from '@/helpers/settings';
 import { Overlay } from '@/components/Overlay';
 import BooknoteItem from '../sidebar/BooknoteItem';
+import AIAssistant from '../sidebar/AIAssistant';
 import NotebookHeader from './Header';
 import NoteEditor from './NoteEditor';
 import SearchBar from './SearchBar';
-import { useAIChatStore } from '@/store/aiChatStore';
-import AIAssistant from '../sidebar/AIAssistant';
 import NotebookTabNavigation from './NotebookTabNavigation';
 
 const MIN_NOTEBOOK_WIDTH = 0.15;
@@ -49,6 +49,8 @@ const Notebook: React.FC = ({}) => {
   const [isSearchBarVisible, setIsSearchBarVisible] = useState(false);
   const [searchResults, setSearchResults] = useState<BookNote[] | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+
+  const aiEnabled = settings?.aiSettings?.enabled ?? false;
 
   const onNavigateEvent = async () => {
     const pinButton = document.querySelector('.sidebar-pin-btn');
@@ -290,7 +292,7 @@ const Notebook: React.FC = ({}) => {
             </div>
           )}
         </div>
-        {notebookActiveTab === 'ai' ? (
+        {notebookActiveTab === 'ai' && aiEnabled ? (
           <div className='flex min-h-0 flex-1 flex-col'>
             <AIAssistant key={activeConversationId ?? 'new'} bookKey={sideBarBookKey} />
           </div>
@@ -385,7 +387,11 @@ const Notebook: React.FC = ({}) => {
             paddingBottom: `${(safeAreaInsets?.bottom || 0) / 2}px`,
           }}
         >
-          <NotebookTabNavigation activeTab={notebookActiveTab} onTabChange={handleTabChange} />
+          <NotebookTabNavigation 
+            activeTab={notebookActiveTab} 
+            onTabChange={handleTabChange} 
+            aiEnabled={aiEnabled}
+          />
         </div>
       </div>
     </>
