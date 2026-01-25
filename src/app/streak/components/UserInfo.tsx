@@ -1,5 +1,5 @@
 import { PiUserCircle } from 'react-icons/pi';
-import { useTranslation } from '@/hooks/useTranslation';
+// import { useTranslation } from '@/hooks/useTranslation';
 import UserAvatar from '@/components/UserAvatar';
 
 interface UserInfoProps {
@@ -9,7 +9,7 @@ interface UserInfoProps {
 }
 
 const UserInfo: React.FC<UserInfoProps> = ({ avatarUrl, userFullName, userEmail }) => {
-  const _ = useTranslation();
+  // const _ = useTranslation();
   return (
     <div className='flex flex-col items-center gap-x-6 gap-y-4 md:flex-row md:items-start'>
       <div className='flex-shrink-0'>

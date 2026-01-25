@@ -8,7 +8,7 @@ const EDGE_SPEECH_URL =
   'wss://speech.platform.bing.com/consumer/speech/synthesize/readaloud/edge/v1';
 const EDGE_API_TOKEN = '6A5AA1D4EAFF4E9FB37E23D68491D6F4';
 const CHROMIUM_FULL_VERSION = '143.0.3650.75';
-const CHROMIUM_MAJOR_VERSION = CHROMIUM_FULL_VERSION.split('.')[0];
+// const CHROMIUM_MAJOR_VERSION = CHROMIUM_FULL_VERSION.split('.')[0];
 
 const EDGE_TTS_VOICES = {
   'af-ZA': ['af-ZA-AdriNeural', 'af-ZA-WillemNeural'],

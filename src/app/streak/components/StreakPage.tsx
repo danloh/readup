@@ -2,34 +2,34 @@
 
 import clsx from 'clsx';
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+// import { useRouter } from 'next/navigation';
 import { useEnv } from '@/context/EnvContext';
-import { useAuth } from '@/context/AuthContext';
+// import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/hooks/useTheme';
 import { useTranslation } from '@/hooks/useTranslation';
-import { useSettingsStore } from '@/store/settingsStore';
-import { navigateToLibrary } from '@/utils/nav';
+//import { useSettingsStore } from '@/store/settingsStore';
+//import { navigateToLibrary } from '@/utils/nav';
 import UserInfo from './UserInfo';
 
 const StreakPage = () => {
   const _ = useTranslation();
-  const router = useRouter();
-  const { envConfig, appService } = useEnv();
-  const { user, logout } = useAuth();
-  const { settings, setSettings, saveSettings } = useSettingsStore();
+  //const router = useRouter();
+  const { appService } = useEnv();
+  // const { user, logout } = useAuth();
+  // const { settings, setSettings, saveSettings } = useSettingsStore();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
 
   useTheme({ systemUIVisible: false });
 
-  const handleLogout = () => {
-    logout();
-    settings.keepLogin = false;
-    setSettings(settings);
-    saveSettings(envConfig, settings);
-    navigateToLibrary(router);
-  };
+  // const handleLogout = () => {
+  //   logout();
+  //   settings.keepLogin = false;
+  //   setSettings(settings);
+  //   saveSettings(envConfig, settings);
+  //   navigateToLibrary(router);
+  // };
 
   if (!mounted) {
     return null;

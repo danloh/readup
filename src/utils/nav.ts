@@ -70,7 +70,7 @@ export const navigateToLogin = (router: ReturnType<typeof useRouter>) => {
   const search = window.location.search;
   const currentPath = pathname !== '/auth' ? pathname + search : '/';
   console.log("current path", currentPath);
-  // router.push(`/auth?redirect=${encodeURIComponent(currentPath)}`);
+  router.push(`/auth?redirect=${encodeURIComponent(currentPath)}`);
 };
 
 export const navigateToProfile = (router: ReturnType<typeof useRouter>) => {
