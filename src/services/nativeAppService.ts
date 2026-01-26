@@ -39,6 +39,7 @@ import { LOCAL_BOOKS_SUBDIR, SETTINGS_FILENAME, DATA_SUBDIR, } from './constants
 
 declare global {
   interface Window {
+    __READUP_IS_APPIMAGE?: boolean;
     __READUP_UPDATER_DISABLED?: boolean;
     __READUP_IS_EINK?: boolean;
   }
@@ -363,6 +364,7 @@ export class NativeAppService extends BaseAppService {
   override isLinuxApp = OS_TYPE === 'linux';
   override isMobileApp = ['android', 'ios'].includes(OS_TYPE);
   override isDesktopApp = ['macos', 'windows', 'linux'].includes(OS_TYPE);
+  override isAppImage = Boolean(window.__READUP_IS_APPIMAGE);
   override isEink = Boolean(window.__READUP_IS_EINK);
   override hasTrafficLight = OS_TYPE === 'macos';
   override hasWindow = !(OS_TYPE === 'ios' || OS_TYPE === 'android');

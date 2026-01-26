@@ -155,6 +155,16 @@
           "name": "start-readup",
           "cmd": "cmd",
           "args": ["/C", "start", "", { "validator": "^.*Readup(.*)\\.exe$" }]
+        },
+        {
+          "name": "chmod-appimage",
+          "cmd": "chmod",
+          "args": ["+x", { "validator": "^.*Readup(.*)\\.AppImage$" }]
+        },
+        {
+          "name": "launch-appimage",
+          "cmd": "setsid",
+          "args": [{ "validator": "^.*Readup(.*)\\.AppImage$" }]
         }
       ]
     },
