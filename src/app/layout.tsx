@@ -6,9 +6,8 @@ import '../styles/globals.css';
 
 const url = 'https://web.readup.cc/';
 const title = 'Readup';
-const description =
-  'Discover Readup, the ultimate online ebook reader';
-const previewImage = 'https://cdn.readup.cc/images/open_graph_preview_read_now.png';
+const description = 'Feed and ebook reader';
+const previewImage = 'https://readup.cc/images/open_graph_preview_read_now.png'; // TODO
 
 export const metadata = {
   title,

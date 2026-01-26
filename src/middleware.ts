@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 const allowedOrigins = [
+  'https://readup.cc',
   'https://web.readup.cc',
   'https://tauri.localhost',
   'http://tauri.localhost',

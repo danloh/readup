@@ -158,7 +158,7 @@
       ]
     },
     "deep-link": {
-      "mobile": [{ "host": "web.readup.cc" }],
+      "mobile": [{ "host": "readup.cc" }],
       "desktop": {
         "schemes": ["readup"]
       }
