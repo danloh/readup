@@ -6,6 +6,7 @@ import {
   BookStyle,
   HighlightColor,
   NoteExportConfig,
+  ReadingRulerColor,
   ScreenConfig,
   TranslatorConfig,
   TTSConfig,
@@ -68,6 +69,14 @@ export const HIGHLIGHT_COLOR_HEX: Record<HighlightColor, string> = {
   violet: '#a78bfa', // violet-400
 };
 
+export const READING_RULER_COLORS: Record<ReadingRulerColor, string> = {
+  transparent: '#00000000',
+  yellow: '#facc15',
+  green: '#4ade80',
+  blue: '#60a5fa',
+  rose: '#fb7185',
+};
+
 export const DEFAULT_READSETTINGS: ReadSettings = {
   sideBarWidth: '15%',
   isSideBarPinned: true,
@@ -124,8 +133,7 @@ export const DEFAULT_BOOK_LAYOUT: BookLayout = {
   maxColumnCount: 2,
   maxInlineSize: getDefaultMaxInlineSize(),
   maxBlockSize: getDefaultMaxBlockSize(),
-  animated: false,
-  isEink: false,
+
   writingMode: 'auto',
   vertical: false,
   rtl: false,
@@ -192,6 +200,16 @@ export const DEFAULT_VIEW_CONFIG: ViewConfig = {
   showHeader: true,
   showFooter: true,
   showBarsOnScroll: false,
+
+  animated: false,
+  isEink: false,
+  isColorEink: false,
+
+  readingRulerEnabled: false,
+  readingRulerLines: 2,
+  readingRulerPosition: 33,
+  readingRulerOpacity: 0.5,
+  readingRulerColor: 'transparent',
 };
 
 export const DEFAULT_TTS_CONFIG: TTSConfig = {

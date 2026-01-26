@@ -21,6 +21,7 @@ import HintInfo from './HintInfo';
 import DoubleBorder from './DoubleBorder';
 import SearchResultsNav from './sidebar/SearchResultsNav';
 import BooknotesNav from './sidebar/BooknotesNav';
+import ReadingRuler from './ReadingRuler';
 
 interface BooksGridProps {
   bookKeys: string[];
@@ -185,6 +186,19 @@ const BooksGrid: React.FC<BooksGridProps> = ({ bookKeys, onCloseBook }) => {
               contentInsets={contentInsets}
               gridInsets={gridInsets}
             />
+            {viewSettings.readingRulerEnabled && !viewState?.loading && (
+              <ReadingRuler
+                bookKey={bookKey}
+                isVertical={viewSettings.vertical}
+                lines={viewSettings.readingRulerLines}
+                position={viewSettings.readingRulerPosition}
+                opacity={viewSettings.readingRulerOpacity}
+                color={viewSettings.readingRulerColor}
+                bookFormat={book.format}
+                viewSettings={viewSettings}
+                gridInsets={gridInsets}
+              />
+            )}
             {showFooter && (
               <ProgressInfoView
                 bookKey={bookKey}

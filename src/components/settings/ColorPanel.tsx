@@ -30,6 +30,7 @@ import { useEinkMode } from '@/hooks/useEinkMode';
 import ThemeEditor from './ThemeEditor';
 import ColorInput from './ColorInput';
 import { SettingsPanelPanelProp } from './SettingsDialog';
+import ReadingRulerSettings from './ReadingRulerSettings';
 
 const ColorPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset }) => {
   const _ = useTranslation();
@@ -57,6 +58,11 @@ const ColorPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset
     settings.globalReadSettings.customHighlightColors,
   );
 
+  const [readingRulerEnabled, setReadingRulerEnabled] = useState(viewSettings.readingRulerEnabled);
+  const [readingRulerLines, setReadingRulerLines] = useState(viewSettings.readingRulerLines);
+  const [readingRulerOpacity, setReadingRulerOpacity] = useState(viewSettings.readingRulerOpacity);
+  const [readingRulerColor, setReadingRulerColor] = useState(viewSettings.readingRulerColor);
+
   const resetToDefaults = useResetViewSettings();
 
   const handleReset = () => {
@@ -66,6 +72,9 @@ const ColorPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset
       codeHighlighting: setcodeHighlighting,
       codeLanguage: setCodeLanguage,
       isEink: setIsEink,
+      readingRulerEnabled: setReadingRulerEnabled,
+      readingRulerLines: setReadingRulerLines,
+      readingRulerOpacity: setReadingRulerOpacity,
     });
     setThemeColor('default');
     setThemeMode('auto');
@@ -132,6 +141,26 @@ const ColorPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset
       })),
     );
   }, [settings]);
+
+  useEffect(() => {
+    saveViewSettings(envConfig, bookKey, 'readingRulerEnabled', readingRulerEnabled, false, false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [readingRulerEnabled]);
+
+  useEffect(() => {
+    saveViewSettings(envConfig, bookKey, 'readingRulerLines', readingRulerLines, false, false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [readingRulerLines]);
+
+  useEffect(() => {
+    saveViewSettings(envConfig, bookKey, 'readingRulerOpacity', readingRulerOpacity, false, false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [readingRulerOpacity]);
+
+  useEffect(() => {
+    saveViewSettings(envConfig, bookKey, 'readingRulerColor', readingRulerColor, false, false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [readingRulerColor]);
 
   const handleSaveCustomTheme = (customTheme: CustomTheme) => {
     applyCustomTheme(customTheme);
@@ -257,7 +286,7 @@ const ColorPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset
             <b className='mb-2 font-medium'>{_('TTS Highlight Color')}</b>
             <div className='flex items-center gap-2'>
               <div
-                className='border-base-300 h-8 w-8 rounded-full border-2 shadow-sm'
+                className='border-base-300 h-6 w-6 rounded-full border-2 shadow-sm'
                 style={{ backgroundColor: ttsHighlightColor }}
               />
               <ColorInput
@@ -307,6 +336,17 @@ const ColorPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset
               </div>
             </div>
           </div>
+
+          <ReadingRulerSettings
+            enabled={readingRulerEnabled}
+            lines={readingRulerLines}
+            opacity={readingRulerOpacity}
+            color={readingRulerColor}
+            onEnabledChange={setReadingRulerEnabled}
+            onLinesChange={setReadingRulerLines}
+            onOpacityChange={setReadingRulerOpacity}
+            onColorChange={setReadingRulerColor}
+          />
 
           <div>
             <h2 className='mb-2 font-medium'>{_('Theme Color')}</h2>
