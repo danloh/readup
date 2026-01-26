@@ -1,19 +1,19 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { CgFeed } from 'react-icons/cg';
-import { FaHeadphones, FaMinus, FaPlus, FaRss, FaTrashAlt } from 'react-icons/fa';
+import { FaHeadphones, FaMinus, FaPlus, FaRss, FaTrashAlt, FaFileDownload, FaFileUpload } from 'react-icons/fa';
 import * as dataAgent from './dataAgent';
 import { FeedType } from './dataAgent';
+import { exportOPML, downloadOPML, parseOPMLFile } from './opmlManager';
 
 type Props = {
   channelList: FeedType[];
   handleAddFeed: (url: string, ty: string, title: string) => Promise<void>;
   handleDelete: (channel: FeedType) => Promise<void>;
-  handleImport?: () => void;
-  handleExport?: () => void;
+  onImportFeeds?: (feeds: FeedType[]) => Promise<void>;
 };
 
 export function FeedManager(props: Props) {
-  const { channelList, handleAddFeed, handleDelete } = props;
+  const { channelList, handleAddFeed, handleDelete, onImportFeeds } = props;
 
   const [realList, setRealList] = useState<FeedType[]>(channelList);
   const [showAdd, setShowAdd] = useState(false);
@@ -25,6 +25,8 @@ export function FeedManager(props: Props) {
   const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(false);
   const [confirming, setConfirming] = useState(false);
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
    setRealList(channelList);
@@ -69,6 +71,52 @@ export function FeedManager(props: Props) {
     }
   };
 
+  const handleExportOPML = () => {
+    try {
+      const opmlContent = exportOPML(channelList, 'Readup Feeds');
+      downloadOPML(opmlContent);
+    } catch (error) {
+      console.error('Error exporting OPML:', error);
+      alert('Failed to export feeds');
+    }
+  };
+
+  const handleImportOPML = async () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setLoading(true);
+      const feeds = await parseOPMLFile(file);
+      
+      if (feeds.length === 0) {
+        alert('No feeds found in the OPML file');
+        return;
+      }
+
+      // Add imported feeds to the channel list
+      if (onImportFeeds) {
+        await onImportFeeds(feeds);
+      }
+
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+
+      alert(`Successfully imported ${feeds.length} feed(s)`);
+    } catch (error) {
+      console.error('Error importing OPML:', error);
+      alert('Failed to import feeds. Please ensure the file is a valid OPML file.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className='flex flex-col items-start justify-center p-2'>
       <div className='flex flex-row gap-2 items-center justify-center w-full mt-2'>
@@ -96,6 +144,28 @@ export function FeedManager(props: Props) {
             }}
           />
         </div>
+        <button
+          className='btn btn-sm'
+          onClick={handleExportOPML}
+          title='Export feeds as OPML'
+        >
+          <FaFileDownload size={18} />
+        </button>
+        <button
+          className='btn btn-sm'
+          onClick={handleImportOPML}
+          disabled={loading}
+          title='Import feeds from OPML'
+        >
+          <FaFileUpload size={18} />
+        </button>
+        <input
+          ref={fileInputRef}
+          type='file'
+          accept='.opml,.xml'
+          onChange={handleFileChange}
+          style={{ display: 'none' }}
+        />
       </div>
       {showAdd && (
         <div className='flex flex-col w-full p-4'>
@@ -198,5 +268,3 @@ export function FeedManager(props: Props) {
     </div>
   );
 }
-
-// TODO: import/export OPML, EDIT FEED

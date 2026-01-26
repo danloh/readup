@@ -80,6 +80,21 @@ export default function FeedPage() {
     await appService.saveFeeds(newFeeds);
   };
 
+  const handleImportFeeds = async (importedFeeds: FeedType[]) => {
+    const feeds = channelList;
+    
+    // Only add feeds that don't already exist
+    for (const feed of importedFeeds) {
+      if (!feeds.find(f => f.link === feed.link)) {
+        feeds.push(feed);
+      }
+    }
+
+    const appService = await envConfig.getAppService();
+    setChannelList(feeds);
+    await appService.saveFeeds(feeds);
+  };
+
   return (
     <div className='feed-view flex flex-row overflow-y-auto h-full border-t-2 border-base-300'>
       <div className='w-52 p-1 bg-base-300 overflow-y-auto'>
@@ -96,6 +111,7 @@ export default function FeedPage() {
             channelList={channelList} 
             handleAddFeed={handleAddFeed}
             handleDelete={handleDeleteFeed}
+            onImportFeeds={handleImportFeeds}
           />
         </div>
       ) : (
