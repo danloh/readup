@@ -25,7 +25,7 @@ import { navigateToLibrary } from '@/utils/nav';
 import { BOOK_IDS_SEPARATOR } from '@/services/constants';
 import Spinner from '@/components/Spinner';
 import SettingsDialog from '@/components/settings/SettingsDialog';
-import BookDetailModal from '@/app/library/book/metadata/BookDetailModal';
+import BookDetailModal from '@/app/library/components/metadata/BookDetailModal';
 import useBooksManager from '../hooks/useBooksManager';
 import useBookShortcuts from '../hooks/useBookShortcuts';
 import SideBar from './sidebar/SideBar';

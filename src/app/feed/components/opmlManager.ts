@@ -1,18 +1,6 @@
 import { FeedType } from './dataAgent';
 
 /**
- * Represents an OPML outline element
- */
-interface OPMLOutline {
-  type?: string;
-  text?: string;
-  title?: string;
-  xmlUrl?: string;
-  htmlUrl?: string;
-  [key: string]: string | undefined;
-}
-
-/**
  * Export feeds as OPML format
  * @param feeds Array of feeds to export
  * @param title Optional title for the OPML document

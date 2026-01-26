@@ -7,7 +7,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { eventDispatcher } from '@/utils/event';
 import { useResponsiveSize } from '@/hooks/useResponsiveSize';
 import { formatAuthors, formatTitle } from '@/utils/book';
-import BookCover from '@/app/library/book/BookCover';
+import BookCover from '@/app/library/components/BookCover';
 
 const BookCard = ({ book }: { book: Book }) => {
   const { title, author } = book;

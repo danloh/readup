@@ -1,6 +1,6 @@
 'use client';
 
-import LibraryPage from './book/LibraryPage';
+import LibraryPage from './components/LibraryPage';
 import NavBar from '../NavBar';
 
 export default function Library() {
