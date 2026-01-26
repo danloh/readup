@@ -12,6 +12,7 @@ interface ReadingRulerSettingsProps {
   onLinesChange: (lines: number) => void;
   onOpacityChange: (opacity: number) => void;
   onColorChange: (color: ReadingRulerColor) => void;
+  'data-setting-id'?: string;
 }
 
 const RULER_COLORS: { value: ReadingRulerColor; className: string; hoverClassName: string }[] = [
@@ -31,11 +32,12 @@ const ReadingRulerSettings: React.FC<ReadingRulerSettingsProps> = ({
   onLinesChange,
   onOpacityChange,
   onColorChange,
+  'data-setting-id': settingId,
 }) => {
   const _ = useTranslation();
 
   return (
-    <div className='w-full'>
+    <div className='w-full' data-setting-id={settingId}>
       <h2 className='mb-2 font-medium'>{_('Reading Ruler')}</h2>
       <div className='card bg-base-100 border-base-200 border shadow'>
         <div className='divide-base-200 divide-y'>
