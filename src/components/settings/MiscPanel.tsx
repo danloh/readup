@@ -151,11 +151,14 @@ const MiscPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
     error: string | null,
     saved: boolean,
     textareaRef: React.RefObject<HTMLTextAreaElement | null>,
+    settingId?: string,
   ) => (
-    <div className='w-full'>
+    <div className='w-full' data-setting-id={settingId}>
       <h2 className='mb-2 font-medium'>{_(title)}</h2>
       <div
-        className={`card border-base-200 bg-base-100 border shadow ${error ? 'border-red-500' : ''}`}
+        className={
+          `card border-base-200 bg-base-100 border shadow ${error ? 'border-red-500' : ''}`
+        }
       >
         <div className='relative p-1'>
           <textarea
@@ -206,6 +209,7 @@ const MiscPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
         contentError,
         draftContentStylesheetSaved,
         contentTextareaRef,
+        'settings.custom.contentCss',
       )}
 
       {renderCSSEditor(
@@ -216,6 +220,7 @@ const MiscPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
         uiError,
         draftUIStylesheetSaved,
         uiTextareaRef,
+        'settings.custom.readerUiCss',
       )}
     </div>
   );

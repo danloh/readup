@@ -204,7 +204,10 @@ const ColorPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset
         />
       ) : (
         <>
-          <div className='flex items-center justify-between'>
+          <div 
+            className='flex items-center justify-between' 
+            data-setting-id='settings.color.themeMode'
+          >
             <b className='font-medium'>{_('Theme Mode')}</b>
             <div className='flex gap-4'>
               <div className='tooltip tooltip-bottom' data-tip={_('Light Mode')}>
@@ -235,7 +238,10 @@ const ColorPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset
           </div>
 
           {(appService?.isAndroidApp || appService?.appPlatform === 'web') && (
-            <div className='flex items-center justify-between'>
+            <div 
+              className='flex items-center justify-between' 
+              data-setting-id='settings.color.einkMode'
+            >
               <b className=''>{_('E-Ink Mode')}</b>
               <input
                 type='checkbox'
@@ -247,7 +253,10 @@ const ColorPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset
           )}
 
           {(appService?.isAndroidApp || appService?.appPlatform === 'web') && (
-            <div className='flex items-center justify-between'>
+            <div 
+              className='flex items-center justify-between' 
+              data-setting-id='settings.color.colorEinkMode'
+            >
               <b className=''>{_('Color E-Ink Mode')}</b>
               <input
                 type='checkbox'
@@ -259,7 +268,10 @@ const ColorPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset
             </div>
           )}
 
-          <div className='flex items-center justify-between'>
+          <div 
+            className='flex items-center justify-between' 
+            data-setting-id='settings.color.invertImageColors'
+          >
             <b className=''>{_('Invert Image Colors')}</b>
             <input
               type='checkbox'
@@ -269,7 +281,10 @@ const ColorPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset
             />
           </div>
 
-          <div className='flex items-center justify-between'>
+          <div 
+            className='flex items-center justify-between'
+            data-setting-id='settings.color.overrideBookColor'
+          >
             <b className=''>{_('Override Book Color')}</b>
             <input
               type='checkbox'
@@ -279,7 +294,10 @@ const ColorPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset
             />
           </div>
 
-          <div className='flex items-center justify-between'>
+          <div 
+            className='flex items-center justify-between'
+            data-setting-id='settings.color.codeHighlighting'
+          >
             <b className=''>{_('Enable Code Highlighting')}</b>
             <input
               type='checkbox'
@@ -301,7 +319,10 @@ const ColorPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset
             />
           </div>
 
-          <div className='flex items-center justify-between'>
+          <div 
+            className='flex items-center justify-between'
+            data-setting-id='settings.color.ttsHighlightStyle'
+          >
             <b className='mb-2 font-medium'>{_('TTS Highlight Color')}</b>
             <div className='flex items-center gap-2'>
               <div
@@ -321,7 +342,7 @@ const ColorPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset
             </div>
           </div>
 
-          <div>
+          <div data-setting-id='settings.color.highlightColors'>
             <h2 className='mb-2 font-medium'>{_('Available Highlight Colors')}</h2>
             <div className='card border-base-200 bg-base-100 overflow-visible border p-4 shadow'>
               <div className='grid grid-cols-3 gap-2 sm:grid-cols-5'>
@@ -365,9 +386,10 @@ const ColorPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset
             onLinesChange={setReadingRulerLines}
             onOpacityChange={setReadingRulerOpacity}
             onColorChange={setReadingRulerColor}
+            data-setting-id='settings.color.readingRuler'
           />
 
-          <div>
+          <div data-setting-id='settings.color.themeColor'>
             <h2 className='mb-2 font-medium'>{_('Theme Color')}</h2>
             <div className='grid grid-cols-3 gap-4'>
               {themes.concat(customThemes).map(({ name, label, colors, isCustomizale }) => (

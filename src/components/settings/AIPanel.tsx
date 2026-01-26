@@ -304,7 +304,7 @@ const AIPanel: React.FC = () => {
       <div className='w-full'>
         <div className='card border-base-200 bg-base-100 border shadow'>
           <div className='divide-base-200 divide-y'>
-            <div className='config-item'>
+            <div className='config-item' data-setting-id='settings.ai.enableAssistant'>
               <b>{_('Enable AI Assistant')}</b>
               <input
                 type='checkbox'
@@ -317,7 +317,10 @@ const AIPanel: React.FC = () => {
         </div>
       </div>
 
-      <div className={clsx('w-full', disabledSection)}>
+      <div 
+        className={clsx('w-full', disabledSection)} 
+        data-setting-id='settings.ai.provider'
+      >
         <h2 className='mb-2 font-medium'>{_('Provider')}</h2>
         <div className='card border-base-200 bg-base-100 border shadow'>
           <div className='divide-base-200 divide-y'>
@@ -348,7 +351,10 @@ const AIPanel: React.FC = () => {
       </div>
 
       {provider === 'ollama' && (
-        <div className={clsx('w-full', disabledSection)}>
+        <div 
+          className={clsx('w-full', disabledSection)}
+          data-setting-id='settings.ai.ollamaModel'
+        >
           <h2 className='mb-2 font-medium'>{_('Ollama Configuration')}</h2>
           <div className='card border-base-200 bg-base-100 border shadow'>
             <div className='divide-base-200 divide-y'>
@@ -400,7 +406,10 @@ const AIPanel: React.FC = () => {
       )}
 
       {provider === 'ai-gateway' && (
-        <div className={clsx('w-full', disabledSection)}>
+        <div 
+          className={clsx('w-full', disabledSection)}
+          data-setting-id='settings.ai.gatewayModel'
+        >
           <h2 className='mb-2 font-medium'>{_('AI Gateway Configuration')}</h2>
           <p className='text-base-content/70 mb-3 text-sm'>
             {_(
@@ -492,7 +501,10 @@ const AIPanel: React.FC = () => {
         </div>
       )}
 
-      <div className={clsx('w-full', disabledSection)}>
+      <div 
+        className={clsx('w-full', disabledSection)}
+        data-setting-id='settings.ai.TestConnection'
+      >
         <div className='card border-base-200 bg-base-100 border shadow'>
           <div className='divide-base-200 divide-y'>
             <div className='config-item'>

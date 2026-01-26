@@ -7,11 +7,13 @@ interface SettingsState {
   settingsDialogBookKey: string;
   isFontLayoutSettingsDialogOpen: boolean;
   isFontLayoutSettingsGlobal: boolean;
+  activeSettingsItemId: string | null;
   setSettings: (settings: SystemSettings) => void;
   setSettingsDialogBookKey: (bookKey: string) => void;
   saveSettings: (envConfig: EnvConfigType, settings: SystemSettings) => void;
   setFontLayoutSettingsDialogOpen: (open: boolean) => void;
   setFontLayoutSettingsGlobal: (global: boolean) => void;
+  setActiveSettingsItemId: (id: string | null) => void;
 }
 
 export const useSettingsStore = create<SettingsState>((set) => ({
@@ -19,6 +21,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   settingsDialogBookKey: '',
   isFontLayoutSettingsDialogOpen: false,
   isFontLayoutSettingsGlobal: true,
+  activeSettingsItemId: null,
   setSettings: (settings) => set({ settings }),
   setSettingsDialogBookKey: (bookKey) => set({ settingsDialogBookKey: bookKey }),
   saveSettings: async (envConfig: EnvConfigType, settings: SystemSettings) => {
@@ -27,4 +30,5 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   },
   setFontLayoutSettingsDialogOpen: (open) => set({ isFontLayoutSettingsDialogOpen: open }),
   setFontLayoutSettingsGlobal: (global) => set({ isFontLayoutSettingsGlobal: global }),
+  setActiveSettingsItemId: (id) => set({ activeSettingsItemId: id }),
 }));

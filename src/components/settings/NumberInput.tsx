@@ -14,6 +14,7 @@ interface NumberInputProps {
   step?: number;
   disabled?: boolean;
   onChange: (value: number) => void;
+  'data-setting-id'?: string;
 }
 
 const NumberInput: React.FC<NumberInputProps> = ({
@@ -26,6 +27,7 @@ const NumberInput: React.FC<NumberInputProps> = ({
   max,
   step,
   disabled,
+  'data-setting-id': settingId,
 }) => {
   const _ = useTranslation();
   const [localValue, setLocalValue] = useState(value);
@@ -71,7 +73,7 @@ const NumberInput: React.FC<NumberInputProps> = ({
   };
 
   return (
-    <div className={clsx('config-item', className)}>
+    <div className={clsx('config-item', className)} data-setting-id={settingId}>
       <div className='flex min-w-0 items-center'>
         {Icon && (<Icon className='text-base-content' />)}
         <span className='text-base-content line-clamp-2 mx-1'>{label}</span>

@@ -13,6 +13,7 @@ import { useEinkMode } from '@/hooks/useEinkMode';
 import { initSystemThemeListener, loadDataTheme, useThemeStore } from '@/store/themeStore';
 import { getDirFromUILanguage } from '@/utils/rtl';
 import { getLocale } from '@/utils/misc';
+import { CommandPalette, CommandPaletteProvider } from './command-palette';
 
 const Providers = ({ children }: { children: React.ReactNode }) => {
   const { appService } = useEnv();
@@ -62,7 +63,10 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
     <CSPostHogProvider>
       <AuthProvider>
         <IconContext.Provider value={{ size: `${iconSize}px` }}>
-          {children}
+          <CommandPaletteProvider>
+            {children}
+            <CommandPalette />
+          </CommandPaletteProvider>
         </IconContext.Provider>
       </AuthProvider>
     </CSPostHogProvider>

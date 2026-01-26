@@ -185,7 +185,10 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
 
   return (
     <div className='my-4 w-full space-y-6'>
-      <div className='flex items-center justify-between'>
+      <div 
+        className='flex items-center justify-between' 
+        data-setting-id='settings.control.clickToPaginate'
+      >
         <b className=''>
           {appService?.isMobileApp ? _('Tap to Paginate') : _('Click to Paginate')}
         </b>
@@ -196,7 +199,10 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
           onChange={() => setIsDisableClick(!isDisableClick)}
         />
       </div>
-      <div className='flex items-center justify-between'>
+      <div 
+        className='flex items-center justify-between' 
+        data-setting-id='settings.control.disableDoubleClick'
+      >
         <b className=''>
           {appService?.isMobileApp ? _('Disable Double Tap') : _('Disable Double Click')}
         </b>
@@ -207,7 +213,10 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
           onChange={() => setIsDisableDoubleClick(!isDisableDoubleClick)}
         />
       </div>
-      <div className='flex items-center justify-between'>
+      <div 
+        className='flex items-center justify-between' 
+        data-setting-id='settings.control.pagingAnimation'
+      >
         <b className=''>{_('Paging Animation')}</b>
         <input
           type='checkbox'
@@ -216,7 +225,10 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
           onChange={() => setAnimated(!animated)}
         />
       </div>
-      <div className='flex items-center justify-between'>
+      <div 
+        className='flex items-center justify-between' 
+        data-setting-id='settings.control.clickBothSides'
+      >
         <b className=''>
           {appService?.isMobileApp ? _('Tap Both Sides') : _('Click Both Sides')}
         </b>
@@ -228,7 +240,10 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
           onChange={() => setFullscreenClickArea(!fullscreenClickArea)}
         />
       </div>
-      <div className='flex items-center justify-between'>
+      <div 
+        className='flex items-center justify-between' 
+        data-setting-id='settings.control.swapClickSides'
+      >
         <b className=''>
           {appService?.isMobileApp ? _('Swap Tap Sides') : _('Swap Click Sides')}
         </b>
@@ -251,7 +266,10 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
           />
         </div>
       )}
-      <div className='flex items-center justify-between'>
+      <div 
+        className='flex items-center justify-between' 
+        data-setting-id='settings.control.scrolledMode'
+      >
         <b className=''>{_('Scrolled Mode')}</b>
         <input
           type='checkbox'
@@ -261,7 +279,10 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
           onChange={() => setScrolledMode(!isScrolledMode)}
         />
       </div>
-      <div className='flex items-center justify-between'>
+      <div 
+        className='flex items-center justify-between' 
+        data-setting-id='settings.control.continuousScroll'
+      >
         <b className=''>{_('Continuous Scroll')}</b>
         <input
           type='checkbox'
@@ -280,9 +301,10 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
         min={0}
         max={200}
         step={10}
+        data-setting-id='settings.control.overlapPixels'
       />
 
-      <div className='w-full'>
+      <div className='w-full' data-setting-id='settings.control.quickAction'>
         <div className='card border-base-200 bg-base-100 border shadow p-2'>
           <h2 className='mb-2 font-medium text-center'>{_('Annotation Tools')}</h2>
           <div className='divide-base-200 divide-y'>
@@ -340,7 +362,7 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
       <div className='w-full'>
         <div className='card border-base-200 bg-base-100 border shadow'>
           <div className='divide-base-200 divide-y'>
-            <div className='config-item !h-16'>
+            <div className='config-item !h-16' data-setting-id='settings.control.allowJavascript'>
               <div className='flex flex-col gap-1'>
                 <b className=''>{_('Allow JavaScript')}</b>
                 <span className='text-xs'>{_('Enable only if you trust the file.')}</span>

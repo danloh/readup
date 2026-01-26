@@ -40,6 +40,7 @@ const genCJKFontsList = (sysFonts: string[]) => {
 
 const isSymbolicFontName = (font: string) =>
   /emoji|icons|symbol|dingbats|ornaments|webdings|wingdings|miuiex/i.test(font);
+
 interface FontFaceProps {
   className?: string;
   family: string;
@@ -48,6 +49,7 @@ interface FontFaceProps {
   moreOptions?: string[];
   selected: string;
   onSelect: (option: string) => void;
+  'data-setting-id'?: string;
 }
 
 const handleFontFaceFont = (option: string, family: string) => {
@@ -66,10 +68,11 @@ const FontFace = ({
   moreOptions,
   selected,
   onSelect,
+  'data-setting-id': settingId,
 }: FontFaceProps) => {
   const _ = useTranslation();
   return (
-    <div className={clsx('config-item', className)}>
+    <div className={clsx('config-item', className)} data-setting-id={settingId}>
       <span className='min-w-10'>{label}</span>
       <FontDropdown
         family={family}
@@ -252,7 +255,10 @@ const FontPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
 
   return (
     <div className='my-4 w-full space-y-6'>
-      <div className='flex items-center justify-between'>
+      <div 
+        className='flex items-center justify-between' 
+        data-setting-id='settings.font.overrideBookFont'
+      >
         <b className=''>{_('Override Book Font')}</b>
         <input
           type='checkbox'
@@ -272,6 +278,7 @@ const FontPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
               onChange={setDefaultFontSize}
               min={minFontSize}
               max={120}
+              data-setting-id='settings.font.defaultFontSize'
             />
             <NumberInput
               Icon={RiFontSize}
@@ -280,6 +287,7 @@ const FontPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
               onChange={setMinFontSize}
               min={1}
               max={120}
+              data-setting-id='settings.font.minimumFontSize'
             />
             <NumberInput
               Icon={RxFontBold}
@@ -289,6 +297,7 @@ const FontPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
               min={100}
               max={900}
               step={100}
+              data-setting-id='settings.font.fontWeight'
             />
           </div>
         </div>
@@ -297,7 +306,7 @@ const FontPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
       <div className='w-full'>
         <div className='card border-base-200 border shadow'>
           <div className='divide-base-200 divide-y'>
-            <div className='config-item'>
+            <div className='config-item' data-setting-id='settings.font.defaultFont'>
               <span className=''>{_('Default Font')}</span>
               <FontDropdown
                 options={fontFamilyOptions}
@@ -315,6 +324,7 @@ const FontPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
                 options={CJKFonts}
                 selected={defaultCJKFont}
                 onSelect={setDefaultCJKFont}
+                data-setting-id='settings.font.cjkFont'
               />
             )}
           </div>
@@ -332,6 +342,7 @@ const FontPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
               moreOptions={sysFonts}
               selected={serifFont}
               onSelect={setSerifFont}
+              data-setting-id='settings.font.serifFont'
             />
             <FontFace
               family='sans-serif'
@@ -340,6 +351,7 @@ const FontPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
               moreOptions={sysFonts}
               selected={sansSerifFont}
               onSelect={setSansSerifFont}
+              data-setting-id='settings.font.sansSerifFont'
             />
             <FontFace
               className='config-item-bottom'
@@ -349,6 +361,7 @@ const FontPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
               moreOptions={sysFonts}
               selected={monospaceFont}
               onSelect={setMonospaceFont}
+              data-setting-id='settings.font.monospaceFont'
             />
           </div>
         </div>

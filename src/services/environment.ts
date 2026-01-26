@@ -14,6 +14,11 @@ export const isPWA = () => window.matchMedia('(display-mode: standalone)').match
 export const getBaseUrl = () => process.env['NEXT_PUBLIC_API_BASE_URL'] ?? READUP_WEB_BASE_URL;
 export const getNodeBaseUrl = () => process.env['NEXT_PUBLIC_NODE_BASE_URL'];
 
+export const isMacPlatform = () =>
+  typeof window !== 'undefined' && /Mac|iPod|iPhone|iPad/.test(navigator.platform);
+
+export const getCommandPaletteShortcut = () => (isMacPlatform() ? '⌘⇧P' : 'Ctrl+Shift+P');
+
 // Dev API only in development mode and web platform
 // with command `pnpm dev-web`
 // for production build or tauri app use the production Web API

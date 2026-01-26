@@ -121,11 +121,17 @@ const LangPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
 
   return (
     <div className='my-4 w-full space-y-6'>
-      <div className='flex items-center justify-between'>
+      <div 
+        className='flex items-center justify-between' 
+        data-setting-id='settings.language.interfaceLanguage'
+      >
         <b className=''>{_('Interface Language')}</b>
         <LangSelect />
       </div>
-      <div className='flex items-center justify-between'>
+      <div 
+        className='flex items-center justify-between' 
+        data-setting-id='settings.language.translationEnabled'
+      >
         <b className=''>{_('Enable Translation')}</b>
         <input
           type='checkbox'
@@ -144,7 +150,7 @@ const LangPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
           onChange={() => setShowTranslateSource(!showTranslateSource)}
         />
       </div>
-      <div className='config-item'>
+      <div className='config-item' data-setting-id='settings.language.ttsTextTranslation'>
         <span className=''>{_('TTS Text')}</span>
         <Select
           value={ttsReadAloudText}
@@ -152,7 +158,10 @@ const LangPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
           options={getTTSTextOptions()}
         />
       </div>
-      <div className='flex items-center justify-between'>
+      <div 
+        className='flex items-center justify-between' 
+        data-setting-id='settings.language.targetLanguage'
+      >
         <b className=''>{_('Translate To')}</b>
         <Select
           value={getCurrentTargetLangOption().value}
@@ -160,7 +169,7 @@ const LangPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
           options={getLangOptions(TRANSLATOR_LANGS, _('System Language'))}
         />
       </div>
-      <div className='w-full'>
+      <div className='w-full' data-setting-id='settings.language.translationProvider'>
         <Select
           className="w-full"
           value={getCurrentTranslationProviderOption().value}

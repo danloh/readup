@@ -357,7 +357,10 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
   return (
     <div className='my-4 w-full space-y-6'>
       {mightBeRTLBook && (
-        <div className='flex items-center justify-between'>
+        <div 
+          className='flex items-center justify-between' 
+          data-setting-id='settings.layout.writingMode'
+        >
           <b className=''>{_('Writing Mode')}</b>
           <div className='flex gap-4'>
             <div className='tooltip tooltip-bottom' data-tip={_('Default')}>
@@ -460,6 +463,7 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
               min={0}
               max={4}
               step={0.1}
+              data-setting-id='settings.layout.paragraphMargin'
             />
             <NumberInput
               Icon={MdFormatLineSpacing}
@@ -469,6 +473,7 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
               min={1.0}
               max={3.0}
               step={0.1}
+              data-setting-id='settings.layout.lineSpacing'
             />
             {langCode !== 'zh' && (
               <NumberInput
@@ -479,6 +484,7 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
                 min={-4}
                 max={8}
                 step={0.5}
+                data-setting-id='settings.layout.wordSpacing'
               />
             )}
             <NumberInput
@@ -489,6 +495,7 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
               min={-2}
               max={4}
               step={0.5}
+              data-setting-id='settings.layout.letterSpacing'
             />
             <NumberInput
               Icon={FaIndent}
@@ -498,6 +505,7 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
               min={-2}
               max={4}
               step={1}
+              data-setting-id='settings.layout.paragraphIndent'
             />
             <NumberInput
               Icon={CgBorderTop}
@@ -511,6 +519,7 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
               }
               max={88}
               step={4}
+              data-setting-id='settings.layout.pageMargins.Top'
             />
             <NumberInput
               Icon={CgBorderBottom}
@@ -524,6 +533,7 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
               }
               max={88}
               step={4}
+              data-setting-id='settings.layout.pageMargins.Bottom'
             />
             <NumberInput
               Icon={CgBorderLeft}
@@ -533,6 +543,7 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
               min={0}
               max={88}
               step={4}
+              data-setting-id='settings.layout.pageMargins.Left'
             />
             <NumberInput
               Icon={CgBorderRight}
@@ -542,6 +553,7 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
               min={0}
               max={88}
               step={4}
+              data-setting-id='settings.layout.pageMargins.Right'
             />
             <NumberInput
               Icon={PiSplitHorizontalBold}
@@ -550,6 +562,7 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
               onChange={setGapPercent}
               min={0}
               max={30}
+              data-setting-id='settings.layout.pageGap'
             />
             <NumberInput
               Icon={TbNumber}
@@ -558,32 +571,44 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
               onChange={setMaxColumnCount}
               min={1}
               max={4}
+              data-setting-id='settings.layout.maxColumnCount'
             />
             <NumberInput
               Icon={viewSettings.vertical ? AiOutlineColumnHeight : AiOutlineColumnWidth}
-              label={viewSettings.vertical ? _('Maximum Column Height') : _('Maximum Column Width')}
+              label={viewSettings.vertical 
+                ? _('Maximum Column Height') 
+                : _('Maximum Column Width')
+              }
               value={maxInlineSize}
               onChange={setMaxInlineSize}
               disabled={false}
               min={200}
               max={9999}
               step={50}
+              data-setting-id='settings.layout.maxInlineSize'
             />
             <NumberInput
               Icon={viewSettings.vertical ? AiOutlineColumnWidth : AiOutlineColumnHeight}
-              label={viewSettings.vertical ? _('Maximum Column Width') : _('Maximum Column Height')}
+              label={viewSettings.vertical 
+                ? _('Maximum Column Width') 
+                : _('Maximum Column Height')
+              }
               value={maxBlockSize}
               onChange={setMaxBlockSize}
               disabled={false}
               min={400}
               max={9999}
               step={50}
+              data-setting-id='settings.layout.maxBlockSize'
             />
           </div>
         </div>
       </div>
 
-      <div className='flex items-center justify-between'>
+      <div 
+        className='flex items-center justify-between' 
+        data-setting-id='settings.layout.overrideBookLayout'
+      >
         <b className=''>{_('Override Book Layout')}</b>
         <input
           type='checkbox'
@@ -592,7 +617,10 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
           onChange={() => setOverrideLayout(!overrideLayout)}
         />
       </div>
-      <div className='flex items-center justify-between'>
+      <div 
+        className='flex items-center justify-between' 
+        data-setting-id='settings.layout.fullJustification'
+      >
         <b className=''>{_('Full Justification')}</b>
         <input
           type='checkbox'
@@ -601,7 +629,10 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
           onChange={() => setFullJustification(!fullJustification)}
         />
       </div>
-      <div className='flex items-center justify-between'>
+      <div 
+        className='flex items-center justify-between' 
+        data-setting-id='settings.layout.hyphenation'
+      >
         <b className=''>{_('Hyphenation')}</b>
         <input
           type='checkbox'
@@ -612,7 +643,10 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
       </div>
 
       {viewSettings.vertical && (
-        <div className='flex items-center justify-between'>
+        <div 
+          className='flex items-center justify-between' 
+          data-setting-id='settings.layout.borderFrame'
+        >
           <b className=''>{_('Double Border')}</b>
           <input
             type='checkbox'
@@ -623,7 +657,10 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
         </div>
       )}
 
-      <div className='flex items-center justify-between'>
+      <div 
+        className='flex items-center justify-between' 
+        data-setting-id='settings.layout.showHeader'
+      >
         <b className=''>{_('Show Header')}</b>
         <input
           type='checkbox'
@@ -632,7 +669,10 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
           onChange={() => setShowHeader(!showHeader)}
         />
       </div>
-      <div className='flex items-center justify-between'>
+      <div 
+        className='flex items-center justify-between'
+        data-setting-id='settings.layout.showFooter'
+      >
         <b className=''>{_('Show Footer')}</b>
         <input
           type='checkbox'

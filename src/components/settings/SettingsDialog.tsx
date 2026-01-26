@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { RiFontSize } from 'react-icons/ri';
 import { VscSymbolColor } from 'react-icons/vsc';
 import { PiDotsThreeVerticalBold, PiRobot } from 'react-icons/pi';
@@ -7,6 +7,7 @@ import { MdArrowBackIosNew, MdArrowForwardIos, MdClose } from 'react-icons/md';
 import { FaLanguage } from "react-icons/fa";
 import { BiCustomize, BiLayout } from "react-icons/bi";
 import { GiClick } from "react-icons/gi";
+import { FiSearch } from 'react-icons/fi';
 
 import { useEnv } from '@/context/EnvContext';
 import { useSettingsStore } from '@/store/settingsStore';
@@ -14,6 +15,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { getDirFromUILanguage } from '@/utils/rtl';
 import Dropdown from '@/components/Dropdown';
 import Dialog from '@/components/Dialog';
+import { getCommandPaletteShortcut } from '@/services/environment';
 import FontPanel from './FontPanel';
 import LayoutPanel from './LayoutPanel';
 import ColorPanel from './ColorPanel';
@@ -22,6 +24,7 @@ import ControlPanel from './ControlPanel';
 import LangPanel from './LangPanel';
 import MiscPanel from './MiscPanel';
 import AIPanel from './AIPanel';
+import { useCommandPalette } from '../command-palette';
 
 export type SettingsPanelType = 
   'Font' | 'Layout' | 'Color' | 'Control' | 'Language' | 'AI' | 'Custom';
@@ -41,7 +44,16 @@ const SettingsDialog: React.FC<{ bookKey: string }> = ({ bookKey }) => {
   const _ = useTranslation();
   const { appService } = useEnv();
   const [isRtl] = useState(() => getDirFromUILanguage() === 'rtl');
-  const { setFontLayoutSettingsDialogOpen } = useSettingsStore();
+  const panelRef = useRef<HTMLDivElement | null>(null);
+  const { setFontLayoutSettingsDialogOpen, activeSettingsItemId, setActiveSettingsItemId } = 
+    useSettingsStore();
+  
+  const { open: openCommandPalette } = useCommandPalette();
+
+  const handleOpenCommandPalette = () => {
+    openCommandPalette();
+    // setFontLayoutSettingsDialogOpen(false);
+  };
 
   const tabConfig = [
     {
@@ -95,6 +107,15 @@ const SettingsDialog: React.FC<{ bookKey: string }> = ({ bookKey }) => {
     localStorage.setItem('lastConfigPanel', tab);
   };
 
+  // sync localStorage and fontPanelView when activePanel changes
+  const activePanelRef = useRef(activePanel);
+  useEffect(() => {
+    if (activePanelRef.current !== activePanel) {
+      activePanelRef.current = activePanel;
+      localStorage.setItem('lastConfigPanel', activePanel);
+    }
+  }, [activePanel]);
+
   const [resetFunctions, setResetFunctions] = useState<
     Record<SettingsPanelType, (() => void) | null>
   >({
@@ -121,6 +142,46 @@ const SettingsDialog: React.FC<{ bookKey: string }> = ({ bookKey }) => {
   const handleClose = () => {
     setFontLayoutSettingsDialogOpen(false);
   };
+
+  // handle activeSettingsItemId: switch to correct panel and scroll to item
+  useEffect(() => {
+    if (!activeSettingsItemId) return;
+
+    // parse panel from item id (format: settings.panel.itemName)
+    const parts = activeSettingsItemId.split('.');
+    if (parts.length >= 2) {
+      const panelMap: Record<string, SettingsPanelType> = {
+        font: 'Font',
+        layout: 'Layout',
+        color: 'Color',
+        control: 'Control',
+        language: 'Language',
+        ai: 'AI',
+        custom: 'Custom',
+      };
+      const panelKey = parts[1]?.toLowerCase();
+      const targetPanel = panelMap[panelKey || ''];
+      if (targetPanel && targetPanel !== activePanel) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- panel switch based on external navigation is intended
+        setActivePanel(targetPanel);
+      }
+    }
+
+    // scroll to item after panel renders
+    const timeoutId = setTimeout(() => {
+      const element = panelRef.current?.querySelector(
+        `[data-setting-id="${activeSettingsItemId}"]`,
+      );
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        element.classList.add('settings-highlight');
+        setTimeout(() => element.classList.remove('settings-highlight'), 2000);
+      }
+      setActiveSettingsItemId(null);
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
+  }, [activeSettingsItemId, activePanel, setActiveSettingsItemId]);
 
   const currentPanel = tabConfig.find((tab) => tab.tab === activePanel);
 
@@ -178,6 +239,14 @@ const SettingsDialog: React.FC<{ bookKey: string }> = ({ bookKey }) => {
               }
             </div>
             <div className='flex h-full items-center justify-end gap-x-2'>
+              <button
+                onClick={handleOpenCommandPalette}
+                aria-label={_('Search Settings')}
+                title={`${_('Search Settings')} (${getCommandPaletteShortcut()})`}
+                className='btn btn-ghost hidden h-8 min-h-8 w-8 items-center justify-center p-0 sm:flex'
+              >
+                <FiSearch />
+              </button>
               <Dropdown
                 className='dropdown-bottom dropdown-end'
                 buttonClassName='btn btn-ghost h-8 min-h-8 w-8 p-0 flex items-center justify-center'
@@ -207,40 +276,49 @@ const SettingsDialog: React.FC<{ bookKey: string }> = ({ bookKey }) => {
         </div>
       }
     >
-      {activePanel === 'Font' && (
-        <FontPanel bookKey={bookKey} onRegisterReset={(fn) => registerResetFunction('Font', fn)} />
-      )}
-      {activePanel === 'Layout' && (
-        <LayoutPanel
-          bookKey={bookKey}
-          onRegisterReset={(fn) => registerResetFunction('Layout', fn)}
-        />
-      )}
-      {activePanel === 'Color' && (
-        <ColorPanel
-          bookKey={bookKey}
-          onRegisterReset={(fn) => registerResetFunction('Color', fn)}
-        />
-      )}
-      {activePanel === 'Control' && (
-        <ControlPanel
-          bookKey={bookKey}
-          onRegisterReset={(fn) => registerResetFunction('Control', fn)}
-        />
-      )}
-      {activePanel === 'Language' && (
-        <LangPanel
-          bookKey={bookKey}
-          onRegisterReset={(fn) => registerResetFunction('Language', fn)}
-        />
-      )}
-      {activePanel === 'AI' && <AIPanel />}
-      {activePanel === 'Custom' && (
-        <MiscPanel
-          bookKey={bookKey}
-          onRegisterReset={(fn) => registerResetFunction('Custom', fn)}
-        />
-      )}
+      <div
+        ref={panelRef}
+        role='group'
+        aria-label={`${_(currentPanel?.label || '')} - ${_('Settings')}`}
+      >
+        {activePanel === 'Font' && (
+          <FontPanel 
+            bookKey={bookKey} 
+            onRegisterReset={(fn) => registerResetFunction('Font', fn)} 
+          />
+        )}
+        {activePanel === 'Layout' && (
+          <LayoutPanel
+            bookKey={bookKey}
+            onRegisterReset={(fn) => registerResetFunction('Layout', fn)}
+          />
+        )}
+        {activePanel === 'Color' && (
+          <ColorPanel
+            bookKey={bookKey}
+            onRegisterReset={(fn) => registerResetFunction('Color', fn)}
+          />
+        )}
+        {activePanel === 'Control' && (
+          <ControlPanel
+            bookKey={bookKey}
+            onRegisterReset={(fn) => registerResetFunction('Control', fn)}
+          />
+        )}
+        {activePanel === 'Language' && (
+          <LangPanel
+            bookKey={bookKey}
+            onRegisterReset={(fn) => registerResetFunction('Language', fn)}
+          />
+        )}
+        {activePanel === 'AI' && <AIPanel />}
+        {activePanel === 'Custom' && (
+          <MiscPanel
+            bookKey={bookKey}
+            onRegisterReset={(fn) => registerResetFunction('Custom', fn)}
+          />
+        )}
+      </div>
     </Dialog>
   );
 };
