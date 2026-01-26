@@ -22,7 +22,6 @@ interface ThemeState {
   systemIsDarkMode: boolean;
   themeCode: ThemeCode;
   isDarkMode: boolean;
-  isEinkMode: boolean;
   systemUIVisible: boolean;
   uiLang: string;
   statusBarHeight: number;
@@ -37,7 +36,6 @@ interface ThemeState {
   getIsDarkMode: () => boolean;
   setThemeMode: (mode: ThemeMode) => void;
   setThemeColor: (color: string) => void;
-  setIsEinkMode: (isEink: boolean) => void;
   updateAppTheme: (color: keyof Palette) => void;
   saveCustomTheme: (
     envConfig: EnvConfigType,
@@ -78,7 +76,6 @@ export const useThemeStore = create<ThemeState>((set, get) => {
     themeColor: initialThemeColor,
     systemIsDarkMode,
     isDarkMode,
-    isEinkMode: false,
     themeCode,
     systemUIVisible: false,
     uiLang: '',
@@ -119,9 +116,6 @@ export const useThemeStore = create<ThemeState>((set, get) => {
       );
       set({ themeColor: color });
       set({ themeCode: getThemeCode() });
-    },
-    setIsEinkMode: (isEink: boolean) => {
-      set({ isEinkMode: isEink });
     },
     updateAppTheme: (color) => {
       if (isWebAppPlatform()) {

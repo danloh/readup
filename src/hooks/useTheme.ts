@@ -18,10 +18,12 @@ export const useTheme = ({
 }: UseThemeProps = {}) => {
   const { appService } = useEnv();
   const { settings } = useSettingsStore();
+  const isEink = settings?.globalViewSettings?.isEink;
+  const isColorEink = settings?.globalViewSettings?.isColorEink;
+  const isBwEink = isEink && !isColorEink;
   const {
     themeColor,
     isDarkMode,
-    isEinkMode,
     showSystemUI,
     dismissSystemUI,
     updateAppTheme,
@@ -120,11 +122,11 @@ export const useTheme = ({
     document.documentElement.style.setProperty('color-scheme', colorScheme);
     document.documentElement.style.setProperty(
       '--overlayer-highlight-opacity',
-      isEinkMode ? '1.0' : '0.3',
+      isBwEink ? '1.0' : '0.3',
     );
     document.documentElement.style.setProperty(
       '--overlayer-highlight-blend-mode',
-      isEinkMode ? 'difference' : isDarkMode ? 'lighten' : 'normal',
+      isBwEink ? 'difference' : isDarkMode ? 'lighten' : 'normal',
     );
-  }, [themeColor, isDarkMode, isEinkMode]);
+  }, [themeColor, isDarkMode, isBwEink]);
 };

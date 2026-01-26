@@ -12,6 +12,7 @@ import { useBookDataStore } from '@/store/bookDataStore';
 import { useReaderStore } from '@/store/readerStore';
 import { useSidebarStore } from '@/store/sidebarStore';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useGamepad } from '@/hooks/useGamepad';
 import { Book } from '@/types/book';
 import { SystemSettings } from '@/types/settings';
 import { parseOpenWithFiles } from '@/helpers/openWith';
@@ -49,6 +50,7 @@ const ReaderContent: React.FC<{ids?: string; settings: SystemSettings}> = ({ ids
   const [errorLoading, setErrorLoading] = useState(false);
 
   useBookShortcuts({ sideBarBookKey, bookKeys });
+  useGamepad();
 
   useEffect(() => {
     if (isInitiating.current) return;

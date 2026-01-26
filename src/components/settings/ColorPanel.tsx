@@ -43,6 +43,7 @@ const ColorPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset
   const viewSettings = getViewSettings(bookKey) || settings.globalViewSettings;
   const { applyEinkMode } = useEinkMode();
   const [isEink, setIsEink] = useState(viewSettings.isEink);
+  const [isColorEink, setIsColorEink] = useState(viewSettings.isColorEink);
   const [invertImgColor, setInvertImgColor] = useState(viewSettings.invertImgColor);
 
   const iconSize16 = useResponsiveSize(16);
@@ -96,6 +97,11 @@ const ColorPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset
     applyEinkMode(isEink);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isEink]);
+
+  useEffect(() => {
+    saveViewSettings(envConfig, bookKey, 'isColorEink', isColorEink);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isColorEink]);
 
   useEffect(() => {
     if (invertImgColor === viewSettings.invertImgColor) return;
@@ -236,6 +242,19 @@ const ColorPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset
                 className='toggle toggle-success h-5'
                 checked={isEink}
                 onChange={() => setIsEink(!isEink)}
+              />
+            </div>
+          )}
+
+          {(appService?.isAndroidApp || appService?.appPlatform === 'web') && (
+            <div className='flex items-center justify-between'>
+              <b className=''>{_('Color E-Ink Mode')}</b>
+              <input
+                type='checkbox'
+                className='toggle toggle-success h-5'
+                disabled={!isEink}
+                checked={isColorEink}
+                onChange={() => setIsColorEink(!isColorEink)}
               />
             </div>
           )}
