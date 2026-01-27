@@ -30,22 +30,14 @@ export interface FeedType {
   link: string;
   description?: string;
   published?: string; // iso date string
-  articles?: FeedEntry[]; // lite articles
-}
-
-export interface FeedEntry {
-  id?: string;
-  link?: string;
-  title?: string;
-  description?: string;
-  published?: string;
+  articles?: ArticleType[]; // lite articles
 }
 
 export interface ArticleType {
   title: string;
   link: string;
   description: string;
-  published?: Date;
+  published?: string;
   content?: string;
   author?: string;
   image?: string;
@@ -55,6 +47,7 @@ export interface ArticleType {
   feed_link: string;
   audio_url: string;
   id?: string;
+  status?: string; // star-ed, 
 }
 
 export interface PodType {
@@ -67,14 +60,16 @@ export interface PodType {
 
 export const fetchFeed = async (url: string): Promise<FeedType> => {
   if (!isWebAppPlatform()) {
-    return await invoke('fetch_feed', { url }); // TODO, to modify
+    // feed with articles, cache the articles first?
+    return await invoke('fetch_feed', { url });
   }
   return await fetchFeedWeb(url);
 }
 
 export const fetchArticle = async (url: string): Promise<ArticleType> => {
   if (!isWebAppPlatform()) {
-    return await invoke('fetch_article', { url }); // TODO, to modify
+    // TODO: 1- Tauri Commands or 2- API Routes (Remote Vercel Server )
+    return await invoke('fetch_article', { url }); 
   }
   return await fetchArticleWeb(url);
 }
@@ -115,7 +110,7 @@ export const webFetchFeed = async (url: string): Promise<FeedType> => {
     title: result.title || '',
     link: result.link || url,
     description: result.description,
-    articles: entries as FeedEntry[],
+    articles: entries as ArticleType[],
   };
 
   return feed;
@@ -156,7 +151,7 @@ export const webFetchArticle = async (
       feed_link: feedUrl || '',
       audio_url: '',
       description: data.description || '',
-      published: new Date(data.published || ''),
+      published: data.published || '',
       content: data.content || data.description || '',
       author: data.author || '',
       image: data.image || '', 

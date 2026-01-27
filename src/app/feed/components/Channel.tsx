@@ -1,15 +1,17 @@
 import React, { memo, useEffect, useState } from 'react';
 import { IoMdLink, IoMdStar, IoMdStarOutline } from 'react-icons/io';
 import { useEnv } from '@/context/EnvContext';
+import { mergeArrays } from '@/utils/book';
 import * as dataAgent from './dataAgent';
 import { 
-  ArticleType, dateCompare, FeedType, FeedEntry, fmtDatetime, getFavicon 
+  ArticleType, dateCompare, FeedType, fmtDatetime, getFavicon 
 } from './dataAgent';
+import { isWebAppPlatform } from '@/services/environment';
 
 type Props = {
   channel: FeedType | null;
   isStarChannel?: boolean;
-  entries: FeedEntry[] | null;
+  entries: ArticleType[] | null;
   loading: boolean;
 };
 
@@ -36,7 +38,7 @@ export function Channel(props: Props) {
 }
 
 type ListProps = {
-  articles: FeedEntry[];
+  articles: ArticleType[];
   isInStar?: boolean;
 };
 
@@ -55,7 +57,7 @@ function ArticleList(props: ListProps) {
 
   return (
     <div className='p-2'>
-      {sortedArticles.map((article: FeedEntry, idx: number) => {
+      {sortedArticles.map((article: ArticleType, idx: number) => {
         return (
           <ArticleItem
             key={`${article.link}-${idx}`}
@@ -69,7 +71,7 @@ function ArticleList(props: ListProps) {
 }
 
 type ItemProps = {
-  entry: FeedEntry;
+  entry: ArticleType;
   isInStar?: boolean;
 };
 
@@ -79,17 +81,17 @@ const ArticleItem = memo(function ArticleItm(props: ItemProps) {
   const [isStar, setIsStar] = useState(isInStar);
   const [expanded, setExpanded] = useState(false);
 
-  const updateStar = async (article: FeedEntry, toStar: boolean) => {
+  const updateStar = async (article: ArticleType, toStar: boolean) => {
     const appService = await envConfig.getAppService();
-    let starArticles = await appService.loadArticles();
+    const oldArticles = await appService.loadArticles();
+    // just change the status then merge to old articles
     if (toStar) {
-      if (starArticles.findIndex(a => a.link === article.link) === -1) {
-        starArticles.push(article);
-      }
+      article.status = 'star';
     } else {
-      starArticles = starArticles.filter(a => a.link !== article.link);
+      article.status = '';
     }
-    await appService.saveArticles(starArticles);
+    const newArticles = mergeArrays(oldArticles, [article], 'link');
+    await appService.saveArticles(newArticles);
   };
 
   return (
@@ -137,20 +139,34 @@ const ArticleItem = memo(function ArticleItm(props: ItemProps) {
   );
 });
 
-function ArticleView({ entry } : { entry: FeedEntry; }) {
+function ArticleView({ entry } : { entry: ArticleType; }) {
+  const { envConfig } = useEnv();
   const [pageContent, setPageContent] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadArticle = async (entry: FeedEntry) => {
+    const loadArticle = async (entry: ArticleType) => {
       const link = entry?.link;
       if (!link || !link.trim()) {
         return;
       }
 
-      const res: ArticleType = await dataAgent.fetchArticle(link);
-      
-      const content = (res.content || entry?.description || '').replace(
+      // get from cache first 
+      const appService = await envConfig.getAppService();
+      const localArticles = await appService.loadArticles();
+      let res;
+      const article = localArticles.find(a => a.link === link);
+      if (article && article.content?.trim()) {
+        res = article
+      } else if (isWebAppPlatform()) {
+        res = await dataAgent.fetchArticle(link);
+        // save to loacl as cache
+        const newArticle = res as ArticleType;
+        const newArticles = mergeArrays(localArticles, [newArticle], 'link');
+        await appService.saveArticles(newArticles);
+      }
+
+      const content = (res?.content || entry?.description || '').replace(
         /<a[^>]+>/gi,
         (a: string) => {
           return (!/\starget\s*=/gi.test(a)) ? a.replace(/^<a\s/, `<a target='_blank'`) : a;

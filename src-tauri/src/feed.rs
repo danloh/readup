@@ -16,7 +16,7 @@ pub struct Channel {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Article {
     pub title: String,
-    pub url: String,  // unique
+    pub link: String,  // unique
     pub feed_link: String,
     pub audio_url: String,
     pub description: String,
@@ -39,7 +39,7 @@ pub async fn process_feed(
 ) -> Option<Channel> {
     match process_rss(url, ty, title.clone()).await {
         Some(res) => Some(res),
-        None => process_atom(url, ty, title).await,
+        None => process_atom(url, "atom", title).await,
     }
 }
 
@@ -106,7 +106,7 @@ async fn process_rss(
 
                     let new_article = Article {
                         title,
-                        url: link,
+                        link,
                         feed_link: url.to_string(),
                         audio_url,
                         description,
@@ -162,7 +162,7 @@ async fn process_atom(
 
                     let new_article = Article {
                         title: item.title.to_string(),
-                        url: item_url,
+                        link: item_url,
                         feed_link: url.to_string(),
                         audio_url: String::from(""),
                         description: description.clone(),

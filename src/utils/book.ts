@@ -304,27 +304,43 @@ export const getMetadataHash = (metadata: BookMetadata) => {
 };
 
 /**
- * Merges two arrays of objects(books), overriding items from the first array 
+ * Merges two arrays of objects(such as books), overriding items from the first array 
  * with items from the second if they share the same key.
+ * If the key value in arr2 is invalid (null, undefined, or empty string), it will not override.
  */
-export function mergeArrays<T>(
-  arr1: T[], 
-  arr2: T[], 
-  key: keyof T
-): T[] {
+export function mergeArrays<T extends object>(arr1: T[], arr2: T[], key: keyof T): T[] {
   const map = new Map<T[keyof T], T>();
 
-  // Process both arrays; items in arr2 will override properties of arr1
-  [...arr1, ...arr2].forEach((item) => {
+  // Process arr1 first
+  arr1.forEach((item) => {
     const id = item[key];
-    const existing = map.get(id);
+    map.set(id, item);
+  });
 
-    if (existing) {
-      // Shallow merge properties
-      map.set(id, { ...existing, ...item });
-    } else {
-      map.set(id, item);
+  // Process arr2, only overriding if the key value is valid
+  arr2.forEach((item) => {
+    const id = item[key];
+    const isValidKeyValue = !!id;
+
+    if (isValidKeyValue) {
+      const existing = map.get(id);
+      if (existing) {
+        // Merge properties, keeping existing values for invalid properties in item
+        const merged = { ...existing };
+        Object.keys(item).forEach((objKey) => {
+          const value = item[objKey as keyof T];
+          const isValidValue = !!value;
+          if (isValidValue) {
+            //(merged as Record<string, unknown>)[objKey] = value;
+            merged[objKey as keyof T] = value;
+          }
+        });
+        map.set(id, merged);
+      } else {
+        map.set(id, item);
+      }
     }
+    // If key value is invalid, skip this item
   });
 
   return Array.from(map.values());

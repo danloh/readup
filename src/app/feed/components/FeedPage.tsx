@@ -1,18 +1,20 @@
 import { useEffect, useState, useRef } from 'react';
 // import clsx from 'clsx';
 import { useEnv } from '@/context/EnvContext';
+import { isWebAppPlatform } from '@/services/environment';
+import { mergeArrays } from '@/utils/book';
 import { ChannelList } from './ChannelList';
 import { Channel } from './Channel';
 import { FeedManager } from './FeedManager';
 import * as dataAgent from './dataAgent';
-import { FeedType, FeedEntry } from './dataAgent';
+import { ArticleType, FeedType } from './dataAgent';
 
 export default function FeedPage() {
   const { envConfig } = useEnv();
   // channel list
   const [channelList, setChannelList] = useState<FeedType[]>([]);
   const [currentChannel, setCurrentChannel] = useState<FeedType | null>(null);
-  const [currentEntries, setCurrentEntries] = useState<FeedEntry[] | null>(null);
+  const [currentEntries, setCurrentEntries] = useState<ArticleType[] | null>(null);
   const [isStarChannel, setIsStarChannel] = useState(false);
   const [showManager, setShowManager] = useState(false);
   const isInitiating = useRef(false);
@@ -32,8 +34,18 @@ export default function FeedPage() {
 
   const loadFeed = async (link: string) => {
     const res = await dataAgent.fetchFeed(link);
+    const articles = res.articles; 
     // console.log('current articles', res);
-    setCurrentEntries(res.articles || []);
+    if (isWebAppPlatform()) {
+      // Tauri fetch, with full articles
+      if (articles && articles.length > 0) {
+        const appService = await envConfig.getAppService();
+        const oldArticles = await appService.loadArticles();
+        const mergedArticles = mergeArrays(oldArticles, articles, 'link');
+        await appService.saveArticles(mergedArticles);
+      }
+    }
+    setCurrentEntries(articles || []);
   };
 
   const [loading, setLoading] = useState(false);
