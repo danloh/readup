@@ -2,7 +2,7 @@ import { SystemSettings } from './settings';
 import { Book, BookConfig, BookContent, ViewSettings } from './book';
 import { BookMetadata } from '@/libs/document';
 import { ProgressHandler } from '@/utils/transfer';
-import { ArticleType, FeedType } from '@/app/feed/components/dataAgent';
+import { FeedEntry, FeedType } from '@/app/feed/components/dataAgent';
 
 export type AppPlatform = 'web' | 'tauri';
 export type OsPlatform = 'android' | 'ios' | 'macos' | 'windows' | 'linux' | 'unknown';
@@ -149,6 +149,6 @@ export interface AppService {
   // for feeds
   loadFeeds(): Promise<FeedType[]>;
   saveFeeds(feeds: FeedType[]): Promise<void>;
-  loadArticles(): Promise<ArticleType[]>;
-  saveArticles(articles: ArticleType[]): Promise<void>;
+  loadArticles(): Promise<FeedEntry[]>;
+  saveArticles(articles: FeedEntry[]): Promise<void>;
 }

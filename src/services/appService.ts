@@ -38,7 +38,7 @@ import { ClosableFile } from '@/utils/file';
 import { createProgressHandler, ProgressHandler } from '@/utils/transfer';
 import { TxtToEpubConverter } from '@/utils/txt';
 import { svg2png } from '@/utils/svg';
-import { ArticleType, FeedType } from '@/app/feed/components/dataAgent';
+import { FeedEntry, FeedType } from '@/app/feed/components/dataAgent';
 import { BOOK_FILE_NOT_FOUND_ERROR } from './errors';
 import { 
   deleteRecord, downloadBookFile, downloadPdsBook, listRecords, 
@@ -884,13 +884,13 @@ export abstract class BaseAppService implements AppService {
     }
   }
 
-  async loadArticles(): Promise<ArticleType[]> {
+  async loadArticles(): Promise<FeedEntry[]> {
     console.log('Loading starred articles...');
-    let articles: ArticleType[] = [];
+    let articles: FeedEntry[] = [];
 
     const mainResult = await this.loadJSONFile('articles.json', 'Books');
     if (mainResult.success) {
-      articles = mainResult.data as ArticleType[];
+      articles = mainResult.data as FeedEntry[];
     } else {
       console.error('Failed to Loaded articles.json');
     }
@@ -898,7 +898,7 @@ export abstract class BaseAppService implements AppService {
     return articles;
   }
 
-  async saveArticles(articles: ArticleType[]): Promise<void> {  
+  async saveArticles(articles: FeedEntry[]): Promise<void> {  
     const jsonData = JSON.stringify(articles, null, 2);
     const saveResults = await Promise.allSettled([
       this.fs.writeFile('articles.json', 'Books', jsonData),

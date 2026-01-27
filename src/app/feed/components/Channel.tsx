@@ -1,23 +1,26 @@
 import React, { memo, useEffect, useState } from 'react';
 import { IoMdLink, IoMdStar, IoMdStarOutline } from 'react-icons/io';
 import { useEnv } from '@/context/EnvContext';
-import { ArticleType, dateCompare, FeedType, fmtDatetime, getFavicon } from './dataAgent';
+import * as dataAgent from './dataAgent';
+import { 
+  ArticleType, dateCompare, FeedType, FeedEntry, fmtDatetime, getFavicon 
+} from './dataAgent';
 
 type Props = {
   channel: FeedType | null;
   isStarChannel?: boolean;
-  articles: ArticleType[] | null;
+  entries: FeedEntry[] | null;
   loading: boolean;
 };
 
 export function Channel(props: Props) {
-  const { channel, isStarChannel, articles, loading } = props;
+  const { channel, isStarChannel, entries, loading } = props;
 
   if (loading) {
     return (
       <div className='flex items-center justify-center'>Loading...</div>
     );
-  } else if (!articles) {
+  } else if (!entries) {
     return (<></>);
   }
 
@@ -25,15 +28,15 @@ export function Channel(props: Props) {
     <div className='flex flex-col items-between justify-center p-2'>
       <div className='flex flex-row items-center justify-between p-1 bg-slate-500 rounded'>
         <b className='font-bold'>{channel?.title || (isStarChannel ? 'Starred' : '')}</b>
-        <span className='text-info' >{articles.length}</span>
+        <span className='text-info' >{entries.length}</span>
       </div>
-      <ArticleList articles={articles} isInStar={isStarChannel} />
+      <ArticleList articles={entries} isInStar={isStarChannel} />
     </div>
   );
 }
 
 type ListProps = {
-  articles: ArticleType[];
+  articles: FeedEntry[];
   isInStar?: boolean;
 };
 
@@ -48,15 +51,15 @@ function ArticleList(props: ListProps) {
       })
     : articles;
 
-  // console.log('sorted: ', sortedArticles)
+  console.log('sorted: ', sortedArticles)
 
   return (
     <div className=''>
-      {sortedArticles.map((article: ArticleType, idx: number) => {
+      {sortedArticles.map((article: FeedEntry, idx: number) => {
         return (
           <ArticleItem
-            key={`${article.url}-${idx}`}
-            article={article}
+            key={`${article.link}-${idx}`}
+            entry={article}
             isInStar={isInStar}
           />
         )}
@@ -66,25 +69,25 @@ function ArticleList(props: ListProps) {
 }
 
 type ItemProps = {
-  article: ArticleType;
+  entry: FeedEntry;
   isInStar?: boolean;
 };
 
 const ArticleItem = memo(function ArticleItm(props: ItemProps) {
-  const { article, isInStar } = props;
+  const { entry: article, isInStar } = props;
   const { envConfig } = useEnv();
   const [isStar, setIsStar] = useState(isInStar);
   const [expanded, setExpanded] = useState(false);
 
-  const updateStar = async (article: ArticleType, toStar: boolean) => {
+  const updateStar = async (article: FeedEntry, toStar: boolean) => {
     const appService = await envConfig.getAppService();
     let starArticles = await appService.loadArticles();
     if (toStar) {
-      if (starArticles.findIndex(a => a.url === article.url) === -1) {
+      if (starArticles.findIndex(a => a.link === article.link) === -1) {
         starArticles.push(article);
       }
     } else {
-      starArticles = starArticles.filter(a => a.url !== article.url);
+      starArticles = starArticles.filter(a => a.link !== article.link);
     }
     await appService.saveArticles(starArticles);
   };
@@ -98,7 +101,7 @@ const ArticleItem = memo(function ArticleItm(props: ItemProps) {
         <h2 className='flex-1 text-xl text-info cursor-pointer'>{article.title}</h2>
       </div>
       <div className='flex flex-row items-center justify-center'>
-        <img src={getFavicon(article.url)} className='h-4 w-4 m-1' alt='>' loading='lazy' />
+        <img src={getFavicon(article.link!)} className='h-4 w-4 m-1' alt='>' loading='lazy' />
         <span className='m-1 text-sm'>
           {fmtDatetime(article.published || '')}
         </span>
@@ -106,7 +109,7 @@ const ArticleItem = memo(function ArticleItm(props: ItemProps) {
           className='m-1'
           target='_blank'
           rel='noreferrer'
-          href={article.url}
+          href={article.link}
         >
           <IoMdLink size={20} />
         </a>
@@ -123,23 +126,31 @@ const ArticleItem = memo(function ArticleItm(props: ItemProps) {
           }
         </span>
       </div>
-      <ArticleView article={article} expanded={expanded} />
+      {expanded 
+        ? <ArticleView entry={article} />
+        : <ArticlePreview 
+            content={article.description || ''} 
+            onClick={() => setExpanded(prev => !prev)}
+          />
+      }
     </div>
   );
 });
 
-type ViewProps = {
-  article: ArticleType | null;
-  expanded?: boolean;
-};
-
-function ArticleView(props: ViewProps) {
-  const { article, expanded = false } = props;
+function ArticleView({ entry } : { entry: FeedEntry; }) {
   const [pageContent, setPageContent] = useState('');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (article) {
-      const content = (article.content || article.description || '').replace(
+    const loadArticle = async (entry: FeedEntry) => {
+      const link = entry?.link;
+      if (!link || !link.trim()) {
+        return;
+      }
+
+      const res: ArticleType = await dataAgent.fetchArticle(link);
+      
+      const content = (res.content || entry?.description || '').replace(
         /<a[^>]+>/gi,
         (a: string) => {
           return (!/\starget\s*=/gi.test(a)) ? a.replace(/^<a\s/, `<a target='_blank'`) : a;
@@ -147,17 +158,41 @@ function ArticleView(props: ViewProps) {
       );
 
       setPageContent(content);
-    }
-  }, [article]);
+      setLoading(false);
+    };
 
-  if (!article || !expanded) {
+    if (entry?.link) {
+      loadArticle(entry);
+    }
+  }, [entry]);
+
+  if (loading) {
     return (
-      <div className=''></div>
+      <div className='text-center px-2 py-4 text-success'>Loading...</div>
     );
   }
 
   return (
     <div className='h-full p-2'>
+      <div
+        className='content prose prose-sm'
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{__html: pageContent}}
+      />
+    </div>
+  );
+}
+
+function ArticlePreview({ content, onClick } : { content: string; onClick: () => void; }) {
+  const pageContent = content.replace(
+    /<a[^>]+>/gi,
+    (a: string) => {
+      return (!/\starget\s*=/gi.test(a)) ? a.replace(/^<a\s/, `<a target='_blank'`) : a;
+    }
+  );
+
+  return (
+    <div className='h-full p-2' onClick={onClick}>
       <div
         className='content prose prose-sm'
         // eslint-disable-next-line react/no-danger

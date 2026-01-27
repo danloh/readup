@@ -30,14 +30,20 @@ export interface FeedType {
   link: string;
   description?: string;
   published?: string; // iso date string
-  articles?: ArticleType[]; // cache the articles
+  articles?: FeedEntry[]; // lite articles
+}
+
+export interface FeedEntry {
+  id?: string;
+  link?: string;
+  title?: string;
+  description?: string;
+  published?: string;
 }
 
 export interface ArticleType {
   title: string;
-  url: string;
-  feed_link: string;
-  audio_url: string;
+  link: string;
   description: string;
   published?: Date;
   content?: string;
@@ -46,6 +52,9 @@ export interface ArticleType {
   source?: string;
   links?: string[];
   ttr?: number;
+  feed_link: string;
+  audio_url: string;
+  id?: string;
 }
 
 export interface PodType {
@@ -60,46 +69,14 @@ export const fetchFeed = async (url: string): Promise<FeedType> => {
   if (isWebAppPlatform()) {
     return await fetchFeedWeb(url);
   }
-  return await invoke('fetch_feed', { url });
+  return await invoke('fetch_feed', { url }); // TODO, to modify
 }
 
-export const webFetchFeed = async (url: string): Promise<FeedType> => {
-  console.log("fetch feed on web");
-  const result = await feedExtract(url);
-  // console.log(result)
-  const entries = result.entries || [];
-  let articles = [];
-  for (const entry of entries) {
-    const articleUrl = entry.link;
-    if (articleUrl && articleUrl.trim()) {
-      const data = await articleExtract(articleUrl);
-      // console.log(data)
-      if (data) {
-        let newArticle: ArticleType = {
-          title: data.title || '',
-          url: data.url || '',
-          feed_link: result.link || url,
-          audio_url: '',
-          description: data.description || '',
-          published: new Date(data.published  || ''),
-          content: data.content || data.description || '',
-          author: data.author || '',
-          image: data.image || '', 
-        };
-        articles.push(newArticle);
-      }
-    }
+export const fetchArticle = async (url: string): Promise<ArticleType> => {
+  if (isWebAppPlatform()) {
+    return await fetchArticleWeb(url);
   }
-
-  const feed: FeedType = {
-    ty: 'feed',
-    title: result.title || '',
-    link: result.link || url,
-    description: result.description,
-    articles,
-  };
-
-  return feed;
+  return await invoke('fetch_article', { url }); // TODO, to modify
 }
 
 export interface FeedResponse<T> {
@@ -110,19 +87,83 @@ export interface FeedResponse<T> {
   responseTime?: number;
 }
 
-const API_ENDPOINT = getAPIBaseUrl() + '/feed/proxy';
+const FEED_API_ENDPOINT = getAPIBaseUrl() + '/feed/proxy';
 
 const fetchFeedWeb = async (url: string): Promise<FeedType> => {
-  const response = await fetch(`${API_ENDPOINT}?url=${url}`);
+  const response = await fetch(`${FEED_API_ENDPOINT}?url=${url}`);
 
   const result: FeedResponse<FeedType> = await response.json();
 
   if (!result.success) {
-    throw new Error(result.error || 'Fetch failed');
+    throw new Error(result.error || 'Fetch feed failed');
   }
   if (!result.data) {
-    throw new Error('Fetch failed');
+    throw new Error('Fetch feed failed');
   }
 
   return result.data;
 };
+
+export const webFetchFeed = async (url: string): Promise<FeedType> => {
+  console.log("fetch feed on web");
+  const result = await feedExtract(url);
+  // console.log(result)
+  const entries = result.entries || [];
+
+  const feed: FeedType = {
+    ty: 'feed',
+    title: result.title || '',
+    link: result.link || url,
+    description: result.description,
+    articles: entries as FeedEntry[],
+  };
+
+  return feed;
+}
+
+const ARTICLE_API_ENDPOINT = getAPIBaseUrl() + '/feed/article';
+
+const fetchArticleWeb = async (url: string): Promise<ArticleType> => {
+  const response = await fetch(`${ARTICLE_API_ENDPOINT}?url=${url}`);
+
+  const result: FeedResponse<ArticleType> = await response.json();
+
+  if (!result.success) {
+    throw new Error(result.error || 'Fetch article failed');
+  }
+  if (!result.data) {
+    throw new Error('Fetch article failed');
+  }
+
+  return result.data;
+};
+
+export const webFetchArticle = async (
+  url: string, feedUrl?: string, 
+): Promise<ArticleType> => {
+  console.log("fetch article on web");
+
+  if (!url.trim()) {
+    throw Error('Invalid Url');
+  }
+  
+  const data = await articleExtract(url);
+  // console.log(data)
+  if (data) {
+    let newArticle: ArticleType = {
+      title: data.title || '',
+      link: data.url || '',
+      feed_link: feedUrl || '',
+      audio_url: '',
+      description: data.description || '',
+      published: new Date(data.published || ''),
+      content: data.content || data.description || '',
+      author: data.author || '',
+      image: data.image || '', 
+    };
+
+    return newArticle;
+  } else {
+    throw Error('Failed to fetch article');
+  }
+}

@@ -5,14 +5,14 @@ import { ChannelList } from './ChannelList';
 import { Channel } from './Channel';
 import { FeedManager } from './FeedManager';
 import * as dataAgent from './dataAgent';
-import { ArticleType, FeedType } from './dataAgent';
+import { FeedType, FeedEntry } from './dataAgent';
 
 export default function FeedPage() {
   const { envConfig } = useEnv();
   // channel list
   const [channelList, setChannelList] = useState<FeedType[]>([]);
   const [currentChannel, setCurrentChannel] = useState<FeedType | null>(null);
-  const [currentArticles, setCurrentArticles] = useState<ArticleType[] | null>(null);
+  const [currentEntries, setCurrentEntries] = useState<FeedEntry[] | null>(null);
   const [isStarChannel, setIsStarChannel] = useState(false);
   const [showManager, setShowManager] = useState(false);
   const isInitiating = useRef(false);
@@ -33,7 +33,7 @@ export default function FeedPage() {
   const loadFeed = async (link: string) => {
     const res = await dataAgent.fetchFeed(link);
     // console.log('current articles', res);
-    setCurrentArticles(res.articles || []);
+    setCurrentEntries(res.articles || []);
   };
 
   const [loading, setLoading] = useState(false);
@@ -52,12 +52,12 @@ export default function FeedPage() {
   const onClickStar = async () => {
     setLoading(true);
     setCurrentChannel(null);
-    setCurrentArticles(null);
+    setCurrentEntries(null);
     setIsStarChannel(true);
     setShowManager(false);
     // load star articles
     const appService = await envConfig.getAppService();
-    setCurrentArticles(await appService.loadArticles());
+    setCurrentEntries(await appService.loadArticles()); 
     setLoading(false);
   };
 
@@ -119,7 +119,7 @@ export default function FeedPage() {
           <Channel 
             channel={currentChannel} 
             isStarChannel={isStarChannel} 
-            articles={currentArticles}
+            entries={currentEntries}
             loading={loading}
           />
         </div>
