@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { CgFeed } from 'react-icons/cg';
-import { FaHeadphones, FaMinus, FaPlus, FaRss, FaTrashAlt, FaFileDownload, FaFileUpload } from 'react-icons/fa';
+import clsx from 'clsx';
+import { CiExport, CiImport } from "react-icons/ci";
+import { FaHeadphones, FaMinus, FaPlus, FaRss, FaTrashAlt } from 'react-icons/fa';
+
 import * as dataAgent from './dataAgent';
 import { FeedType } from './dataAgent';
 import { exportOPML, downloadOPML, parseOPMLFile } from './opmlManager';
@@ -149,7 +151,7 @@ export function FeedManager(props: Props) {
           onClick={handleExportOPML}
           title='Export feeds as OPML'
         >
-          <FaFileDownload size={18} />
+          <CiImport size={18} />
         </button>
         <button
           className='btn btn-sm'
@@ -157,7 +159,7 @@ export function FeedManager(props: Props) {
           disabled={loading}
           title='Import feeds from OPML'
         >
-          <FaFileUpload size={18} />
+          <CiExport size={18} />
         </button>
         <input
           ref={fileInputRef}
@@ -201,21 +203,12 @@ export function FeedManager(props: Props) {
               <input 
                 type='radio' 
                 className='m-1 text-sm'
-                id='feedType0' 
-                name='feedType' 
-                value='OPDS' 
-                onChange={() => setFeedType('opds')} 
-              />
-              <label className='mr-4 text-sm' htmlFor='feedType0'>OPDS</label>
-              <input 
-                type='radio' 
-                className='m-1 text-sm'
                 id='feedType1' 
                 name='feedType' 
-                value='RSS' 
-                onChange={() => setFeedType('rss')} 
+                value='Feed' 
+                onChange={() => setFeedType('feed')} 
               />
-              <label className='mr-4 text-sm' htmlFor='feedType1'>RSS</label>
+              <label className='mr-4 text-sm' htmlFor='feedType1'>Feed(RSS/Atom)</label>
               <input 
                 type='radio' 
                 className='m-1 text-sm'
@@ -244,22 +237,26 @@ export function FeedManager(props: Props) {
       <div className='w-full flex flex-col items-between justify-center border-t-2 border-base-300 my-4'>
         {realList.map((channel: FeedType, idx: number) => {
           return (
-            <div key={idx} className='flex items-center justify-between m-1'>
+            <div 
+              key={idx} 
+              className={clsx(
+                'flex items-center justify-between p-2 rounded',
+                idx / 2 === 0 ? 'bg-base-300' : 'bg-base-100',
+              )}
+            >
               <span className='flex items-center justify-between'>
-                {channel.ty === 'rss' 
-                  ? <FaRss size={12} className='mr-1 text-orange-500' /> 
-                  : channel.ty === 'opds' 
-                    ? <CgFeed size={12} className='mr-1 text-teal-500' />
-                    : <FaHeadphones size={12} className='mr-1 text-purple-500' />
+                {channel.ty === 'podcast' 
+                  ? <FaHeadphones size={12} className='mr-1 text-purple-500' /> 
+                  : <FaRss size={12} className='mr-1 text-orange-500' />
                 }
                 <span className='text-sm'>{channel.title}</span>
               </span>
               <span className='text-sm'>{channel.link}</span>
               <button 
-                className='cursor-pointer' 
+                className='btn btn-xs btn-ghost' 
                 onClick={async () => await handleDelete(channel)}
               >
-                <FaTrashAlt size={18} className='m-1' />
+                <FaTrashAlt className='fill-warning' />
               </button>
             </div>
           )

@@ -25,7 +25,7 @@ export function fmtDatetime(date: string | number | Date) {
 }
 
 export interface FeedType {
-  ty: string; // podcast | rss | atom | opds
+  ty: string; // podcast | feed(rss | atom)
   title: string;
   link: string;
   description?: string;
@@ -66,17 +66,17 @@ export interface PodType {
 }
 
 export const fetchFeed = async (url: string): Promise<FeedType> => {
-  if (isWebAppPlatform()) {
-    return await fetchFeedWeb(url);
+  if (!isWebAppPlatform()) {
+    return await invoke('fetch_feed', { url }); // TODO, to modify
   }
-  return await invoke('fetch_feed', { url }); // TODO, to modify
+  return await fetchFeedWeb(url);
 }
 
 export const fetchArticle = async (url: string): Promise<ArticleType> => {
-  if (isWebAppPlatform()) {
-    return await fetchArticleWeb(url);
+  if (!isWebAppPlatform()) {
+    return await invoke('fetch_article', { url }); // TODO, to modify
   }
-  return await invoke('fetch_article', { url }); // TODO, to modify
+  return await fetchArticleWeb(url);
 }
 
 export interface FeedResponse<T> {

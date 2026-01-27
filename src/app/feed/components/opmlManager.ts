@@ -92,9 +92,9 @@ const normalizeFeedType = (type: string): string => {
   if (normalized === 'podcast' || normalized === 'audio/x-mpegurl') {
     return 'podcast';
   }
-  if (normalized === 'opds' || normalized === 'opds+xml') {
-    return 'opds';
-  }
+  // if (normalized === 'opds' || normalized === 'opds+xml') {
+  //   return 'opds';
+  // }
   return 'rss';
 };
 

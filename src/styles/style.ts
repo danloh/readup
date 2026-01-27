@@ -156,7 +156,7 @@ const getColorStyles = (
     *:has(> hr.background-img):not(body) {
       background-color: ${bg};
     }
-    hr {
+    hr.background-img {
       mix-blend-mode: multiply;
     }
     /* inline images */
