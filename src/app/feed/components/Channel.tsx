@@ -25,10 +25,10 @@ export function Channel(props: Props) {
   }
 
   return (
-    <div className='flex flex-col items-between justify-center p-2'>
-      <div className='flex flex-row items-center justify-between p-1 bg-slate-500 rounded'>
+    <div className='flex flex-col items-between justify-center'>
+      <div className='flex flex-row items-center justify-start gap-2 p-2 bg-base-300'>
+        <b className='text-info' >{entries.length}</b>
         <b className='font-bold'>{channel?.title || (isStarChannel ? 'Starred' : '')}</b>
-        <span className='text-info' >{entries.length}</span>
       </div>
       <ArticleList articles={entries} isInStar={isStarChannel} />
     </div>
@@ -54,7 +54,7 @@ function ArticleList(props: ListProps) {
   console.log('sorted: ', sortedArticles)
 
   return (
-    <div className=''>
+    <div className='p-2'>
       {sortedArticles.map((article: FeedEntry, idx: number) => {
         return (
           <ArticleItem

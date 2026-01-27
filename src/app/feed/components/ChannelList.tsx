@@ -31,7 +31,7 @@ export function ChannelList(props: Props) {
                 setHighlighted(channel);
               }}
             >
-              <div className='flex flex-row items-center justify-start mr-1'>
+              <div className='flex flex-row items-center justify-start mr-1 hover:text-success'>
                 <img src={getFavicon(link)} className='h-4 w-4 mx-1' alt='>' loading='lazy' />
                 <span className='text-sm'>{title}</span>
               </div>
@@ -45,7 +45,7 @@ export function ChannelList(props: Props) {
   return (
     <div className='flex flex-col p-1'>
       <div 
-        className='flex flex-row items-center justify-between cursor-pointer'
+        className='flex flex-row items-center justify-between cursor-pointer hover:text-primary'
         onClick={onShowManager}
       >
         <div className='flex flex-row items-center justify-start'>
@@ -60,7 +60,7 @@ export function ChannelList(props: Props) {
           setHighlighted(undefined);
         }}
       >
-        <div className='flex flex-row items-center justify-start'>
+        <div className='flex flex-row items-center justify-start hover:text-warning'>
           <IoIosStar size={18} className='m-1 fill-yellow-500 text-yellow-500' />
           <span className='m-1'>Starred</span>
         </div>
