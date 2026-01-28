@@ -80,7 +80,27 @@ export function detectArticleChanges(
 }
 
 /**
- * Create EPUB file from articles
+ * Check if this is an append-only update (no removals, no reordering)
+ */
+export function isAppendOnlyUpdate(
+  oldManifest: EpubManifest,
+  newArticles: ArticleType[]
+): boolean {
+  const change = detectArticleChanges(oldManifest, newArticles);
+  return change.appendOnly && change.added.length > 0;
+}
+
+/**
+ * Load EPUB from Blob and return JSZip instance
+ */
+export async function loadEpubFromBlob(epubBlob: Blob): Promise<JSZip> {
+  const zip = new JSZip();
+  await zip.loadAsync(epubBlob);
+  return zip;
+}
+
+/**
+ * Create EPUB file from articles (fresh creation only)
  * Returns both the EPUB blob and the manifest for storage
  */
 export async function createArticlesEpub(
@@ -263,7 +283,7 @@ export async function createArticlesEpub(
 /**
  * Helper functions
  */
-function escapeXml(str: string): string {
+export function escapeXml(str: string): string {
   return str
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -272,7 +292,7 @@ function escapeXml(str: string): string {
     .replace(/'/g, '&apos;');
 }
 
-function sanitizeHtml(html: string): string {
+export function sanitizeHtml(html: string): string {
   // Basic sanitization - remove script tags and dangerous attributes
   return html
     .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
@@ -281,7 +301,7 @@ function sanitizeHtml(html: string): string {
     .replace(/javascript:/gi, '');
 }
 
-function generateUuid(): string {
+export function generateUuid(): string {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
     const r = (Math.random() * 16) | 0;
     const v = c === 'x' ? r : (r & 0x3) | 0x8;

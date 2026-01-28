@@ -49,6 +49,7 @@ function ArticleList(props: ListProps) {
   const { envConfig } = useEnv();
   const router = useRouter();
   const [exporting, setExporting] = useState(false);
+  const [showFreshEpubConfirm, setShowFreshEpubConfirm] = useState(false);
 
   const sortedArticles = articles.length >= 2 
     ? articles.sort((n1, n2) => {
@@ -58,7 +59,7 @@ function ArticleList(props: ListProps) {
       })
     : articles;
 
-  const handleExportToEpub = async () => {
+  const handleExportToEpub = async (createFresh: boolean = false) => {
     if (sortedArticles.length === 0) {
       alert('No articles to export');
       return;
@@ -69,12 +70,13 @@ function ArticleList(props: ListProps) {
       const appService = await envConfig.getAppService();
       const library = await appService.loadLibraryBooks();
 
-      console.log('Starting EPUB export with', sortedArticles.length, 'articles');
+      console.log('Starting EPUB export with', sortedArticles.length, 'articles', { createFresh });
 
       const { book, migrationWarnings } = await FeedEpubService.createOrUpdateEpub(
         sortedArticles,
         appService,
-        library
+        library,
+        createFresh
       );
 
       console.log('EPUB export completed. Book:', book);
@@ -97,6 +99,7 @@ function ArticleList(props: ListProps) {
       alert(`Failed to export: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setExporting(false);
+      setShowFreshEpubConfirm(false);
     }
   };
 
@@ -106,17 +109,52 @@ function ArticleList(props: ListProps) {
     <div className='flex flex-col'>
       {isInStar && sortedArticles.length > 0 && (
         <div className='p-2 bg-base-200 border-b'>
-          <button
-            onClick={handleExportToEpub}
-            disabled={exporting}
-            className='btn btn-sm btn-primary gap-2'
-          >
-            <FcReadingEbook size={18} />
-            {exporting ? 'Creating EPUB...' : `Export to EPUB (${sortedArticles.length})`}
-          </button>
+          <div className='flex gap-2 items-start justify-center'>
+            <div className='flex-1 flex gap-2 items-start justify-start'>
+              <button
+                onClick={() => handleExportToEpub(false)}
+                disabled={exporting}
+                className='btn btn-sm btn-primary gap-2'
+              >
+                <FcReadingEbook size={18} />
+                {exporting ? 'Creating EPUB...' : `Export to EPUB (${sortedArticles.length})`}
+              </button>
+              <button
+                onClick={() => setShowFreshEpubConfirm(true)}
+                disabled={exporting}
+                className='btn btn-sm btn-outline gap-1 ml-2'
+                title="Create a new EPUB from scratch, replacing the previous version"
+              >
+                Fresh
+              </button>
+            </div>
+          </div>
           <p className='text-xs text-base-content/60 mt-2'>
             Converts starred articles into an EPUB book. Annotations will persist across updates to the collection.
           </p>
+          {showFreshEpubConfirm && (
+            <div className='mt-3 p-2 bg-base-100 rounded border border-warning'>
+              <p className='text-sm text-warning font-medium mb-2'>
+                Create a fresh EPUB? This will replace the previous version.
+              </p>
+              <div className='flex gap-2'>
+                <button
+                  onClick={() => handleExportToEpub(true)}
+                  disabled={exporting}
+                  className='btn btn-xs btn-warning'
+                >
+                  Yes, Create Fresh
+                </button>
+                <button
+                  onClick={() => setShowFreshEpubConfirm(false)}
+                  disabled={exporting}
+                  className='btn btn-xs btn-ghost'
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
       <div className='p-2'>
