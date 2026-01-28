@@ -67,9 +67,11 @@ export default function FeedPage() {
     setCurrentEntries(null);
     setIsStarChannel(true);
     setShowManager(false);
-    // load star articles
+    // load and filter star articles
     const appService = await envConfig.getAppService();
-    setCurrentEntries(await appService.loadArticles()); 
+    const localArticles = await appService.loadArticles();
+    const starArticles = localArticles.filter(a => a.status === 'star');
+    setCurrentEntries(starArticles); 
     setLoading(false);
   };
 

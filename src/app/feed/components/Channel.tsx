@@ -1,12 +1,14 @@
 import React, { memo, useEffect, useState } from 'react';
 import { IoMdLink, IoMdStar, IoMdStarOutline } from 'react-icons/io';
+import { FcReadingEbook } from "react-icons/fc";
+
 import { useEnv } from '@/context/EnvContext';
+import { useRouter } from 'next/navigation';
 import { mergeArrays } from '@/utils/book';
-import * as dataAgent from './dataAgent';
-import { 
-  ArticleType, dateCompare, FeedType, fmtDatetime, getFavicon 
-} from './dataAgent';
 import { isWebAppPlatform } from '@/services/environment';
+import { FeedEpubService } from '@/services/feedEpubService';
+import * as dataAgent from './dataAgent';
+import { ArticleType, dateCompare, FeedType, fmtDatetime, getFavicon } from './dataAgent';
 
 type Props = {
   channel: FeedType | null;
@@ -44,6 +46,9 @@ type ListProps = {
 
 function ArticleList(props: ListProps) {
   const { articles, isInStar } = props;
+  const { envConfig } = useEnv();
+  const router = useRouter();
+  const [exporting, setExporting] = useState(false);
 
   const sortedArticles = articles.length >= 2 
     ? articles.sort((n1, n2) => {
@@ -53,19 +58,78 @@ function ArticleList(props: ListProps) {
       })
     : articles;
 
+  const handleExportToEpub = async () => {
+    if (sortedArticles.length === 0) {
+      alert('No articles to export');
+      return;
+    }
+
+    setExporting(true);
+    try {
+      const appService = await envConfig.getAppService();
+      const library = await appService.loadLibraryBooks();
+
+      console.log('Starting EPUB export with', sortedArticles.length, 'articles');
+
+      const { book, migrationWarnings } = await FeedEpubService.createOrUpdateEpub(
+        sortedArticles,
+        appService,
+        library
+      );
+
+      console.log('EPUB export completed. Book:', book);
+
+      if (migrationWarnings.length > 0) {
+        console.warn('Migration warnings:', migrationWarnings);
+        const warningMsg = migrationWarnings.join('\n');
+        alert(`EPUB updated. Annotation status:\n\n${warningMsg}`);
+      } else {
+        alert('EPUB created successfully!');
+      }
+
+      // Navigate to reader with the starred EPUB
+      setTimeout(() => {
+        console.log('Navigating to reader with book hash:', book.hash);
+        router.push(`/reader/${book.hash}`);
+      }, 500);
+    } catch (error) {
+      console.error('Failed to export to EPUB:', error);
+      alert(`Failed to export: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setExporting(false);
+    }
+  };
+
   console.log('sorted: ', sortedArticles)
 
   return (
-    <div className='p-2'>
-      {sortedArticles.map((article: ArticleType, idx: number) => {
-        return (
-          <ArticleItem
-            key={`${article.link}-${idx}`}
-            entry={article}
-            isInStar={isInStar}
-          />
-        )}
+    <div className='flex flex-col'>
+      {isInStar && sortedArticles.length > 0 && (
+        <div className='p-2 bg-base-200 border-b'>
+          <button
+            onClick={handleExportToEpub}
+            disabled={exporting}
+            className='btn btn-sm btn-primary gap-2'
+          >
+            <FcReadingEbook size={18} />
+            {exporting ? 'Creating EPUB...' : `Export to EPUB (${sortedArticles.length})`}
+          </button>
+          <p className='text-xs text-base-content/60 mt-2'>
+            Converts starred articles into an EPUB book. Annotations will persist across updates to the collection.
+          </p>
+        </div>
       )}
+      <div className='p-2'>
+        {sortedArticles.map((article: ArticleType, idx: number) => {
+          return (
+            <ArticleItem
+              key={`${article.link}-${idx}`}
+              entry={article}
+              isInStar={isInStar}
+            />
+          )}
+        )}
+      </div>
     </div>
   );
 }
@@ -84,8 +148,13 @@ const ArticleItem = memo(function ArticleItm(props: ItemProps) {
   const updateStar = async (article: ArticleType, toStar: boolean) => {
     const appService = await envConfig.getAppService();
     const oldArticles = await appService.loadArticles();
+    
     // just change the status then merge to old articles
     if (toStar) {
+      // ensure the content of article is fetched
+      if (!article.content?.trim() && isWebAppPlatform()) {
+        article = await dataAgent.fetchArticle(article.link);
+      }
       article.status = 'star';
     } else {
       article.status = '';
