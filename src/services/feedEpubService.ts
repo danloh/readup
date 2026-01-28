@@ -9,7 +9,7 @@ import { generateMigrationStrategy, ArticleAnnotationMetadata } from '@/libs/ann
 import { Book } from '@/types/book';
 import { AppService } from '@/types/system';
 
-const STARRED_ARTICLES_EPUB_NAME = 'Starred Articles Collection';
+export const STARRED_ARTICLES_EPUB_NAME = 'Starred Articles Collection';
 const MANIFEST_STORAGE_KEY = 'starred-articles-epub-manifest';
 const ANNOTATION_METADATA_KEY = 'starred-articles-annotation-metadata';
 
@@ -40,7 +40,10 @@ export class FeedEpubService {
   }> {
     // Check if starred articles EPUB already exists
     // Note: We can't use a fixed hash because appService.importBook computes hash from file content
-    // So we'll update any existing "Starred Articles Collection" book by title or just create a new one
+    // So we'll update any existing "Starred Articles Collection" book by title 
+    // or just create a new one
+    // FIXME: actually, cannot check existing by title
+    // FIXME, how to handle the update: create new one with append only and mig the annotation, rm the old one
     const existingBook = books.find(b => b.title === STARRED_ARTICLES_EPUB_NAME);
     const oldManifest = localStorage.getItem(MANIFEST_STORAGE_KEY)
       ? JSON.parse(localStorage.getItem(MANIFEST_STORAGE_KEY)!)
@@ -52,9 +55,11 @@ export class FeedEpubService {
     const { epubBlob, manifest } = await createArticlesEpub(articles);
     console.log('EPUB generated:', { blobSize: epubBlob.size, manifestVersion: manifest.version });
     
-    const epubFile = new File([epubBlob], `${STARRED_ARTICLES_EPUB_NAME}.epub`, {
-      type: 'application/epub+zip',
-    });
+    const epubFile = new File(
+      [epubBlob], 
+      `${STARRED_ARTICLES_EPUB_NAME}.epub`, 
+      { type: 'application/epub+zip' }
+    );
     console.log('File created:', { name: epubFile.name, size: epubFile.size });
 
     let migrationWarnings: string[] = [];
@@ -92,7 +97,7 @@ export class FeedEpubService {
               `Annotation migration strategy: ${strategy.strategy}`,
               ...strategy.warnings,
               ...(strategy.removedAnnotations.length > 0 
-                ? [`${strategy.removedAnnotations.length} annotations removed due to article changes`] 
+                ? [`${strategy.removedAnnotations.length} annotations removed as article changes`] 
                 : [])
             );
 

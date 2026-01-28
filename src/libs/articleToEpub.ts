@@ -5,6 +5,7 @@
 
 import JSZip from 'jszip';
 import { ArticleType } from '@/app/feed/components/dataAgent';
+import { STARRED_ARTICLES_EPUB_NAME } from '@/services/feedEpubService';
 
 export interface EpubManifest {
   version: string; // timestamp-based: YYYYMMDD-HHmmss
@@ -95,12 +96,14 @@ export async function createArticlesEpub(
   zip.file('mimetype', 'application/epub+zip', { compression: 'STORE' });
 
   // 2. Create META-INF/container.xml
-  const containerXml = `<?xml version="1.0" encoding="UTF-8"?>
-<container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
-  <rootfiles>
-    <rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/>
-  </rootfiles>
-</container>`;
+  const containerXml = `
+    <?xml version="1.0" encoding="UTF-8"?>
+    <container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
+      <rootfiles>
+        <rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/>
+      </rootfiles>
+    </container>
+  `;
   zip.folder('META-INF')!.file('container.xml', containerXml);
 
   // 3. Store manifest as JSON in OEBPS for easy retrieval
@@ -122,53 +125,65 @@ export async function createArticlesEpub(
       }, 0)
     ).toString(16);
 
-    const xhtml = `<?xml version="1.0" encoding="UTF-8"?>
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" id="article-${articleHash}">
-  <head>
-    <title>${escapeXml(article.title)}</title>
-    <meta charset="utf-8"/>
-  </head>
-  <body>
-    <article id="article-${index}" class="chapter" data-article-link="${escapeXml(articleLinkStr)}">
-      <h1>${escapeXml(article.title)}</h1>
-      ${article.author ? `<p class="author">By ${escapeXml(article.author)}</p>` : ''}
-      ${article.published ? `<p class="date">${new Date(article.published).toLocaleDateString()}</p>` : ''}
-      ${article.source ? `<p class="source">Source: ${escapeXml(article.source)}</p>` : ''}
-      <div class="content">
-        ${sanitizeHtml(content)}
-      </div>
-    </article>
-  </body>
-</html>`;
+    const xhtml = `
+      <?xml version="1.0" encoding="UTF-8"?>
+      <html 
+        xmlns="http://www.w3.org/1999/xhtml" 
+        xmlns:epub="http://www.idpf.org/2007/ops" 
+        id="article-${articleHash}"
+      >
+        <head>
+          <title>${escapeXml(article.title)}</title>
+          <meta charset="utf-8"/>
+        </head>
+        <body>
+          <article 
+            id="article-${index}" 
+            class="chapter" 
+            data-article-link="${escapeXml(articleLinkStr)}"
+          >
+            <h1>${escapeXml(article.title)}</h1>
+            ${article.author ? `<p class="author">By ${escapeXml(article.author)}</p>` : ''}
+            ${article.published 
+              ? `<p class="date">${new Date(article.published).toLocaleDateString()}</p>` 
+              : ''
+            }
+            ${article.source ? `<p class="source">Source: ${escapeXml(article.source)}</p>` : ''}
+            <div class="content">${sanitizeHtml(content)}</div>
+          </article>
+        </body>
+      </html>
+    `;
 
     zip.folder('OEBPS')!.file(`${docId}.xhtml`, xhtml);
-    htmlContent += `    <item id="${docId}" href="${docId}.xhtml" media-type="application/xhtml+xml"/>\n`;
+    htmlContent += 
+      `<item id="${docId}" href="${docId}.xhtml" media-type="application/xhtml+xml"/>\n`;
   });
 
   // 5. Create spine content
   let spineContent = '';
-  docIds.forEach(docId => {
-    spineContent += `    <itemref idref="${docId}"/>\n`;
-  });
+  docIds.forEach(docId => { spineContent += `<itemref idref="${docId}"/>\n`; });
 
   // 6. Create content.opf (package document)
-  const title = `Starred Articles - ${new Date().toLocaleDateString()}`;
-  const contentOpf = `<?xml version="1.0" encoding="UTF-8"?>
-<package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="uuid">
-  <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
-    <dc:identifier id="uuid">urn:uuid:${generateUuid()}</dc:identifier>
-    <dc:title>${escapeXml(title)}</dc:title>
-    <dc:creator>Feed Reader</dc:creator>
-    <dc:date>${new Date().toISOString()}</dc:date>
-    <dc:language>en</dc:language>
-    <meta property="dcterms:modified">${new Date().toISOString()}</meta>
-  </metadata>
-  <manifest>
-${htmlContent}    <item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/>
-  </manifest>
-  <spine toc="ncx">
-${spineContent}  </spine>
-</package>`;
+  const title = STARRED_ARTICLES_EPUB_NAME;
+  const contentOpf = `
+    <?xml version="1.0" encoding="UTF-8"?>
+    <package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="uuid">
+      <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
+        <dc:identifier id="uuid">urn:uuid:${generateUuid()}</dc:identifier>
+        <dc:title>${escapeXml(title)}</dc:title>
+        <dc:creator>Feed Reader</dc:creator>
+        <dc:date>${new Date().toISOString()}</dc:date>
+        <dc:language>en</dc:language>
+        <meta property="dcterms:modified">${new Date().toISOString()}</meta>
+      </metadata>
+      <manifest>
+        ${htmlContent}
+        <item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/>
+      </manifest>
+      <spine toc="ncx">${spineContent}</spine>
+    </package>
+  `;
 
   zip.folder('OEBPS')!.file('content.opf', contentOpf);
 
@@ -176,80 +191,73 @@ ${spineContent}  </spine>
   let navPoints = '';
   articles.forEach((article, index) => {
     const docId = docIds[index];
-    navPoints += `  <navPoint id="navpoint-${index}" playOrder="${index + 1}">
-    <navLabel>
-      <text>${escapeXml(article.title)}</text>
-    </navLabel>
-    <content src="${docId}.xhtml"/>
-  </navPoint>
-`;
+    navPoints += `  
+      <navPoint id="navpoint-${index}" playOrder="${index + 1}">
+        <navLabel>
+          <text>${escapeXml(article.title)}</text>
+        </navLabel>
+        <content src="${docId}.xhtml"/>
+      </navPoint>
+    `;
   });
 
-  const tocNcx = `<?xml version="1.0" encoding="UTF-8"?>
-<ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1">
-  <head>
-    <meta name="dtb:uid" content="urn:uuid:${generateUuid()}"/>
-    <meta name="dtb:depth" content="1"/>
-    <meta name="dtb:totalPageCount" content="0"/>
-    <meta name="dtb:maxPageNumber" content="0"/>
-  </head>
-  <docTitle>
-    <text>${escapeXml(title)}</text>
-  </docTitle>
-  <navMap>
-${navPoints}  </navMap>
-</ncx>`;
+  const tocNcx = `
+    <?xml version="1.0" encoding="UTF-8"?>
+    <ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1">
+      <head>
+        <meta name="dtb:uid" content="urn:uuid:${generateUuid()}"/>
+        <meta name="dtb:depth" content="1"/>
+        <meta name="dtb:totalPageCount" content="0"/>
+        <meta name="dtb:maxPageNumber" content="0"/>
+      </head>
+      <docTitle><text>${escapeXml(title)}</text></docTitle>
+      <navMap>${navPoints}</navMap>
+    </ncx>
+  `;
 
   zip.folder('OEBPS')!.file('toc.ncx', tocNcx);
 
   // 8. Create CSS
-  const css = `body {
-  margin: 1em;
-  padding: 0;
-  font-family: "Noto Serif", Georgia, serif;
-  line-height: 1.5;
-}
-
-article {
-  margin-bottom: 2em;
-}
-
-h1 {
-  font-size: 1.8em;
-  margin: 0.5em 0;
-  font-weight: bold;
-}
-
-.author, .date, .source {
-  font-size: 0.9em;
-  color: #666;
-  margin: 0.3em 0;
-  font-style: italic;
-}
-
-.content {
-  margin-top: 1em;
-  text-align: justify;
-}
-
-.content p {
-  margin: 0.5em 0;
-}
-
-.content img {
-  max-width: 100%;
-  height: auto;
-}`;
+  const css = `
+    body {
+      margin: 1em;
+      padding: 0;
+      font-family: "Noto Serif", Georgia, serif;
+      line-height: 1.5;
+    }
+    article {
+      margin-bottom: 2em;
+    }
+    h1 {
+      font-size: 1.8em;
+      margin: 0.5em 0;
+      font-weight: bold;
+    }
+    .author, .date, .source {
+      font-size: 0.9em;
+      color: #666;
+      margin: 0.3em 0;
+      font-style: italic;
+    }
+    .content {
+      margin-top: 1em;
+      text-align: justify;
+    }
+    .content p {
+      margin: 0.5em 0;
+    }
+    .content img {
+      max-width: 100%;
+      height: auto;
+    }
+  `;
 
   zip.folder('OEBPS')!.file('style.css', css);
 
   // Generate zip
   const epubBlob = await zip.generateAsync({ type: 'blob' });
 
-  return {
-    epubBlob,
-    manifest,
-  };
+  return { epubBlob, manifest };
 }
 
 /**
