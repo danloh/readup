@@ -181,7 +181,7 @@ const BookDetailModal: React.FC<BookDetailModalProps> = ({
   const confirmDeleteAction = async () => {
     handleClose();
     setShowDeleteAlert(false);
-    handleBookDelete(book);
+    await handleBookDelete(book);
   };
 
   const cancelDeleteAction = () => {

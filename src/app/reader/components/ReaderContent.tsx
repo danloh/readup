@@ -223,6 +223,7 @@ const ReaderContent: React.FC<{ids?: string; settings: SystemSettings}> = ({ ids
           isOpen={!!showDetailsBook}
           book={showDetailsBook}
           onClose={() => setShowDetailsBook(null)}
+          showBtns={false}
         />
       )}
     </div>

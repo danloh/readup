@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { MdCollectionsBookmark, MdOutlineDelete, MdOutlineEdit, MdSaveAlt } from 'react-icons/md';
+import { MdCollectionsBookmark, MdOutlineDelete, MdOutlineEdit } from 'react-icons/md';
+import { LiaFileExportSolid } from 'react-icons/lia';
 
 import { Book, BookStatus } from '@/types/book';
 import { BookMetadata } from '@/libs/document';
@@ -121,7 +122,7 @@ const BookDetailView: React.FC<BookDetailViewProps> = ({
             )}
             {book.downloadedAt && showBtns && onExport && (
               <button onClick={onExport} title={_('Export Book')}>
-                <MdSaveAlt className='hover:fill-purple-500' />
+                <LiaFileExportSolid className='hover:fill-purple-500' />
               </button>
             )}
             {onDelete && showBtns && (

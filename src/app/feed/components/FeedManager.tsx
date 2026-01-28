@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import clsx from 'clsx';
-import { CiExport, CiImport } from "react-icons/ci";
+import { LiaFileExportSolid, LiaFileImportSolid } from 'react-icons/lia';
 import { FaHeadphones, FaMinus, FaPlus, FaRss, FaTrashAlt } from 'react-icons/fa';
 
 import * as dataAgent from './dataAgent';
@@ -148,18 +148,11 @@ export function FeedManager(props: Props) {
         </div>
         <button
           className='btn btn-sm'
-          onClick={handleExportOPML}
-          title='Export feeds as OPML'
-        >
-          <CiImport size={18} />
-        </button>
-        <button
-          className='btn btn-sm'
           onClick={handleImportOPML}
           disabled={loading}
           title='Import feeds from OPML'
         >
-          <CiExport size={18} />
+          <LiaFileImportSolid size={18} />
         </button>
         <input
           ref={fileInputRef}
@@ -168,6 +161,13 @@ export function FeedManager(props: Props) {
           onChange={handleFileChange}
           style={{ display: 'none' }}
         />
+        <button
+          className='btn btn-sm'
+          onClick={handleExportOPML}
+          title='Export feeds as OPML'
+        >
+          <LiaFileExportSolid size={18} />
+        </button>
       </div>
       {showAdd && (
         <div className='flex flex-col w-full p-4'>

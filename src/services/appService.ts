@@ -500,22 +500,16 @@ export abstract class BaseAppService implements AppService {
   async deleteBook(book: Book, deleteAction: DeleteAction): Promise<void> {
     console.log('Deleting book with action:', deleteAction, book.title);
     if (deleteAction === 'local' || deleteAction === 'both') {
-      const localDeleteFps =
-        deleteAction === 'local'
-          ? [getLocalBookFilename(book)]
-          : [getLocalBookFilename(book), getCoverFilename(book)];
+      const localDeleteFps = [getLocalBookFilename(book), getCoverFilename(book)];
       for (const fp of localDeleteFps) {
         if (await this.fs.exists(fp, 'Books')) {
           await this.fs.removeFile(fp, 'Books');
         }
       }
-      if (deleteAction === 'local') {
-        book.downloadedAt = null;
-      } else {
-        book.deletedAt = Date.now();
-        book.downloadedAt = null;
-        book.coverDownloadedAt = null;
-      }
+      
+      book.deletedAt = Date.now();
+      book.downloadedAt = null;
+      book.coverDownloadedAt = null;
     }
     if (deleteAction === 'cloud' || deleteAction === 'both') {
       await deleteRecord(book.hash);
