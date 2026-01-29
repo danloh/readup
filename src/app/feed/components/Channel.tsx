@@ -140,7 +140,7 @@ function ArticleList(props: ListProps) {
                   disabled={exporting}
                   className='btn btn-xs btn-warning'
                 >
-                  Update
+                  Create or Update
                 </button>
                 <input
                   type='text'

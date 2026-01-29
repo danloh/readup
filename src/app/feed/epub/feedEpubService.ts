@@ -8,9 +8,12 @@ import { Book } from '@/types/book';
 import { AppService } from '@/types/system';
 import { getLocalBookFilename } from '@/utils/book';
 import { ArticleType } from '../components/dataAgent';
-import { appendArticlesToEpub } from './epubAppendOnly';
 import { 
-  createArticlesEpub, EpubManifest, detectArticleChanges, generateManifest 
+  appendArticlesToEpub, 
+  createArticlesEpub, 
+  EpubManifest, 
+  detectArticleChanges, 
+  generateManifest 
 } from './articleToEpub';
 
 export const STARRED_ARTICLES_EPUB_NAME = 'Starred Articles Collection';
