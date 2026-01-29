@@ -4,8 +4,8 @@
  */
 
 import JSZip from 'jszip';
-import { ArticleType } from '@/app/feed/components/dataAgent';
-import { STARRED_ARTICLES_EPUB_NAME } from '@/services/feedEpubService';
+import { ArticleType } from '../components/dataAgent';
+import { STARRED_ARTICLES_EPUB_NAME } from './feedEpubService';
 
 export interface EpubManifest {
   version: string; // timestamp-based: YYYYMMDD-HHmmss

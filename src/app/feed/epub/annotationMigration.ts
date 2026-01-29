@@ -4,8 +4,8 @@
  */
 
 import { BookNote } from '@/types/book';
+import { ArticleType } from '../components/dataAgent';
 import { EpubManifest, detectArticleChanges } from './articleToEpub';
-import { ArticleType } from '@/app/feed/components/dataAgent';
 
 export type ArticleAnnotationMetadata = {
   articleLink: string;

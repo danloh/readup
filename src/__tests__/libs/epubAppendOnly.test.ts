@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import JSZip from 'jszip';
-import { createArticlesEpub } from '@/libs/articleToEpub';
-import { appendArticlesToEpub } from '@/libs/epubAppendOnly';
+import { createArticlesEpub } from '@/app/feed/epub/articleToEpub';
+import { appendArticlesToEpub } from '@/app/feed/epub/epubAppendOnly';
 
 type ArticleType = {
   title: string;

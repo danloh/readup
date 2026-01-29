@@ -4,7 +4,7 @@
  */
 
 import JSZip from 'jszip';
-import { ArticleType } from '@/app/feed/components/dataAgent';
+import { ArticleType } from '../components/dataAgent';
 import { escapeXml, sanitizeHtml } from './articleToEpub';
 
 /**

@@ -6,8 +6,8 @@ import { useEnv } from '@/context/EnvContext';
 import { useRouter } from 'next/navigation';
 import { mergeArrays } from '@/utils/book';
 import { isWebAppPlatform } from '@/services/environment';
-import { FeedEpubService } from '@/services/feedEpubService';
 import { useTranslation } from '@/hooks/useTranslation';
+import { FeedEpubService } from '../epub/feedEpubService';
 import * as dataAgent from './dataAgent';
 import { ArticleType, dateCompare, FeedType, fmtDatetime, getFavicon } from './dataAgent';
 

@@ -4,17 +4,17 @@
  * Uses append-only strategy to preserve CFI stability for annotations
  */
 
-import { ArticleType } from '@/app/feed/components/dataAgent';
-import { createArticlesEpub, EpubManifest, detectArticleChanges, generateManifest } from '@/libs/articleToEpub';
-import { appendArticlesToEpub } from '@/libs/epubAppendOnly';
-import { ArticleAnnotationMetadata } from '@/libs/annotationMigration';
 import { Book } from '@/types/book';
 import { AppService } from '@/types/system';
 import { getLocalBookFilename } from '@/utils/book';
+import { ArticleType } from '../components/dataAgent';
+import { appendArticlesToEpub } from './epubAppendOnly';
+import { 
+  createArticlesEpub, EpubManifest, detectArticleChanges, generateManifest 
+} from './articleToEpub';
 
 export const STARRED_ARTICLES_EPUB_NAME = 'Starred Articles Collection';
 const MANIFEST_STORAGE_KEY = 'starred-articles-epub-manifest';
-const ANNOTATION_METADATA_KEY = 'starred-articles-annotation-metadata';
 const VERSION_HISTORY_KEY = 'starred-articles-epub-versions'; // Stores up to 2 previous versions
 
 export interface FeedEpubInfo {
@@ -84,11 +84,11 @@ export class FeedEpubService {
     // Decide strategy: prefer append-only (keep CFI stable) unless user forced fresh
     if (!createFresh && existingBook && oldManifest) {
       const changeInfo = detectArticleChanges(oldManifest, articles);
-
-      console.log('Append-only candidate:', { added: changeInfo.added.length, removed: changeInfo.removed.length, reordered: changeInfo.reordered });
+      console.log('Changed:', { changeInfo });
 
       // Always attempt append-only: append any new articles and leave existing ones untouched.
-      // If there are removals or reordering, warn the user that the EPUB will grow and include stale entries.
+      // If there are removals or reordering, 
+      // warn the user that the EPUB will grow and include stale entries.
       if (changeInfo.removed.length > 0) {
         migrationWarnings.push(`⚠️ ${changeInfo.removed.length} article(s) were removed from the current selection. They remain in the EPUB to preserve annotation CFIs.`);
       }
@@ -229,68 +229,6 @@ export class FeedEpubService {
   }
 
   /**
-   * Get info about the current starred articles EPUB
-   */
-  static async getFeedEpubInfo(
-    _appService: AppService,
-    books: Book[]
-  ): Promise<FeedEpubInfo> {
-    const book = books.find(b => b.title === STARRED_ARTICLES_EPUB_NAME);
-    let manifest: EpubManifest | null = null;
-    if (book) {
-      try {
-        const mf = await _appService.readFile(`${book.hash}/manifest.json`, 'Books', 'text');
-        if (mf) manifest = JSON.parse(mf as string) as EpubManifest;
-      } catch {
-        try {
-          manifest = localStorage.getItem(MANIFEST_STORAGE_KEY)
-            ? JSON.parse(localStorage.getItem(MANIFEST_STORAGE_KEY)!)
-            : null;
-        } catch {
-          manifest = null;
-        }
-      }
-    } else {
-      try {
-        manifest = localStorage.getItem(MANIFEST_STORAGE_KEY)
-          ? JSON.parse(localStorage.getItem(MANIFEST_STORAGE_KEY)!)
-          : null;
-      } catch {
-        manifest = null;
-      }
-    }
-
-    return {
-      book: book || null,
-      manifest: manifest || null,
-      hasUpdates: false, // Will be determined when comparing with fresh articles
-    };
-  }
-
-  /**
-   * Store annotation metadata for migration tracking
-   * Call this after creating an annotation on the starred EPUB
-   */
-  static storeAnnotationMetadata(
-    annotationId: string,
-    metadata: ArticleAnnotationMetadata
-  ): void {
-    const metadataStr = localStorage.getItem(ANNOTATION_METADATA_KEY) || '{}';
-    const metadata_map: Record<string, ArticleAnnotationMetadata> = JSON.parse(metadataStr);
-    metadata_map[annotationId] = metadata;
-    localStorage.setItem(ANNOTATION_METADATA_KEY, JSON.stringify(metadata_map));
-  }
-
-  /**
-   * Get stored annotation metadata
-   */
-  static getAnnotationMetadata(annotationId: string): ArticleAnnotationMetadata | null {
-    const metadataStr = localStorage.getItem(ANNOTATION_METADATA_KEY) || '{}';
-    const metadata_map: Record<string, ArticleAnnotationMetadata> = JSON.parse(metadataStr);
-    return metadata_map[annotationId] || null;
-  }
-
-  /**
    * Save version history (keep last 2 versions)
    */
   private static saveVersionHistory(book: Book, manifest: EpubManifest): void {
@@ -364,15 +302,6 @@ export class FeedEpubService {
     console.log('Rollback complete');
 
     return null; // User needs to reload to get the old book
-  }
-
-  /**
-   * Clear all stored data (for testing or reset)
-   */
-  static clearStoredData(): void {
-    localStorage.removeItem(MANIFEST_STORAGE_KEY);
-    localStorage.removeItem(ANNOTATION_METADATA_KEY);
-    localStorage.removeItem(VERSION_HISTORY_KEY);
   }
 
   /**
