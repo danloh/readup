@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useState } from 'react';
+import React, { memo, useCallback, useEffect, useState } from 'react';
 import { IoMdLink, IoMdStar, IoMdStarOutline } from 'react-icons/io';
 import { FcReadingEbook } from "react-icons/fc";
 
@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { mergeArrays } from '@/utils/book';
 import { isWebAppPlatform } from '@/services/environment';
 import { FeedEpubService } from '@/services/feedEpubService';
+import { useTranslation } from '@/hooks/useTranslation';
 import * as dataAgent from './dataAgent';
 import { ArticleType, dateCompare, FeedType, fmtDatetime, getFavicon } from './dataAgent';
 
@@ -47,9 +48,11 @@ type ListProps = {
 function ArticleList(props: ListProps) {
   const { articles, isInStar } = props;
   const { envConfig } = useEnv();
+  const _ = useTranslation();
   const router = useRouter();
   const [exporting, setExporting] = useState(false);
   const [showFreshEpubConfirm, setShowFreshEpubConfirm] = useState(false);
+  const [freshTitle, setFreshTitle] = useState('');
 
   const sortedArticles = articles.length >= 2 
     ? articles.sort((n1, n2) => {
@@ -59,7 +62,11 @@ function ArticleList(props: ListProps) {
       })
     : articles;
 
-  const handleExportToEpub = async (createFresh: boolean = false) => {
+  const handleExportToEpub = useCallback(async (createFresh: boolean = false) => {
+    if (createFresh && freshTitle.trim()) {
+      alert('Need to name the fresh EPUB');
+      return;
+    }
     if (sortedArticles.length === 0) {
       alert('No articles to export');
       return;
@@ -76,7 +83,8 @@ function ArticleList(props: ListProps) {
         sortedArticles,
         appService,
         library,
-        createFresh
+        createFresh,
+        freshTitle
       );
 
       console.log('EPUB export completed. Book:', book);
@@ -101,7 +109,7 @@ function ArticleList(props: ListProps) {
       setExporting(false);
       setShowFreshEpubConfirm(false);
     }
-  };
+  }, [freshTitle]);
 
   console.log('sorted: ', sortedArticles)
 
@@ -112,38 +120,41 @@ function ArticleList(props: ListProps) {
           <div className='flex gap-2 items-start justify-center'>
             <div className='flex-1 flex gap-2 items-start justify-start'>
               <button
-                onClick={() => handleExportToEpub(false)}
+                onClick={() => setShowFreshEpubConfirm(prev => !prev)}
                 disabled={exporting}
                 className='btn btn-sm btn-primary gap-2'
               >
                 <FcReadingEbook size={18} />
                 {exporting ? 'Creating EPUB...' : `Export to EPUB (${sortedArticles.length})`}
               </button>
-              <button
-                onClick={() => setShowFreshEpubConfirm(true)}
-                disabled={exporting}
-                className='btn btn-sm btn-outline gap-1 ml-2'
-                title="Create a new EPUB from scratch, replacing the previous version"
-              >
-                Fresh
-              </button>
             </div>
           </div>
-          <p className='text-xs text-base-content/60 mt-2'>
-            Converts starred articles into an EPUB book. Annotations will persist across updates to the collection.
-          </p>
           {showFreshEpubConfirm && (
-            <div className='mt-3 p-2 bg-base-100 rounded border border-warning'>
-              <p className='text-sm text-warning font-medium mb-2'>
-                Create a fresh EPUB? This will replace the previous version.
+            <div className='mt-3 p-2 bg-base-100 rounded border'>
+              <p className='text-xs text-base-content/60 mb-2'>
+                Converts starred articles into an EPUB book. Annotations will persist across updates to the collection. Or create a fresh EPUB from scratch.
               </p>
               <div className='flex gap-2'>
                 <button
-                  onClick={() => handleExportToEpub(true)}
+                  onClick={() => handleExportToEpub(false)}
                   disabled={exporting}
                   className='btn btn-xs btn-warning'
                 >
-                  Yes, Create Fresh
+                  Update
+                </button>
+                <input
+                  type='text'
+                  value={freshTitle}
+                  onChange={(e) => setFreshTitle(e.target.value.trim())}
+                  placeholder={_('New EPUB Name')}
+                  className='input input-xs input-bordered'
+                />
+                <button
+                  onClick={() => handleExportToEpub(true)}
+                  disabled={exporting}
+                  className='btn btn-xs btn-success'
+                >
+                  Create Fresh
                 </button>
                 <button
                   onClick={() => setShowFreshEpubConfirm(false)}

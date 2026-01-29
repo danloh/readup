@@ -5,10 +5,12 @@
  */
 
 import { ArticleType } from '@/app/feed/components/dataAgent';
-import { createArticlesEpub, EpubManifest, detectArticleChanges } from '@/libs/articleToEpub';
+import { createArticlesEpub, EpubManifest, detectArticleChanges, generateManifest } from '@/libs/articleToEpub';
+import { appendArticlesToEpub } from '@/libs/epubAppendOnly';
 import { ArticleAnnotationMetadata } from '@/libs/annotationMigration';
 import { Book } from '@/types/book';
 import { AppService } from '@/types/system';
+import { getLocalBookFilename } from '@/utils/book';
 
 export const STARRED_ARTICLES_EPUB_NAME = 'Starred Articles Collection';
 const MANIFEST_STORAGE_KEY = 'starred-articles-epub-manifest';
@@ -37,23 +39,41 @@ export class FeedEpubService {
    * Strategy: Append-only to preserve CFI stability for annotations
    * - New articles: Appended to end
    * - Updated articles: Kept at original position
-   * - Removed articles: User warned, old EPUB kept as backup
+   * - Removed articles: User warned, creates fresh EPUB as fallback
    * Keep up to 2 previous versions for rollback
    */
   static async createOrUpdateEpub(
     articles: ArticleType[],
     appService: AppService,
     books: Book[],
-    createFresh: boolean = false
+    createFresh: boolean = false,
+    freshTitle: string = ''
   ): Promise<{
     book: Book;
     created: boolean;
     migrationWarnings: string[];
   }> {
     const existingBook = books.find(b => b.title === STARRED_ARTICLES_EPUB_NAME);
-    const oldManifest = localStorage.getItem(MANIFEST_STORAGE_KEY)
-      ? JSON.parse(localStorage.getItem(MANIFEST_STORAGE_KEY)!)
-      : null;
+    // Try to load previous manifest from the saved manifest file next to the book.
+    // Fallback to localStorage for backward compatibility.
+    let oldManifest: EpubManifest | null = null;
+    if (existingBook) {
+      try {
+        const manifestPath = `${existingBook.hash}/manifest.json`;
+        const mf = await appService.readFile(manifestPath, 'Books', 'text');
+        if (mf) {
+          oldManifest = JSON.parse(mf as string) as EpubManifest;
+        }
+      } catch (e) {
+        try {
+          oldManifest = localStorage.getItem(MANIFEST_STORAGE_KEY)
+            ? JSON.parse(localStorage.getItem(MANIFEST_STORAGE_KEY)!)
+            : null;
+        } catch {
+          oldManifest = null;
+        }
+      }
+    }
 
     console.log('Existing book lookup:', { found: !!existingBook, title: existingBook?.title, hash: existingBook?.hash, createFresh });
 
@@ -61,27 +81,50 @@ export class FeedEpubService {
     let manifest: EpubManifest | null = null;
     let migrationWarnings: string[] = [];
 
-    // Create fresh EPUB
-    // TODO: Implement append-only strategy when we have better file system access
-    console.log('Creating fresh EPUB...');
-    const result = await createArticlesEpub(articles);
-    epubBlob = result.epubBlob;
-    manifest = result.manifest;
-    
+    // Decide strategy: prefer append-only (keep CFI stable) unless user forced fresh
     if (!createFresh && existingBook && oldManifest) {
       const changeInfo = detectArticleChanges(oldManifest, articles);
-      migrationWarnings = [
-        ...(changeInfo.removed.length > 0 
-          ? [
-            `⚠️ Warning: ${changeInfo.removed.length} article(s) were removed from the collection. A fresh EPUB was created.`,
-            'Previous version is kept as backup for 1 update cycle.',
-          ] 
-          : []),
-        ...(changeInfo.reordered 
-          ? ['⚠️ Articles were reordered - fresh EPUB created for stability.'] 
-          : []),
-        ...changeInfo.added.map(link => `+ Added: ${link}`),
-      ];
+
+      console.log('Append-only candidate:', { added: changeInfo.added.length, removed: changeInfo.removed.length, reordered: changeInfo.reordered });
+
+      // Always attempt append-only: append any new articles and leave existing ones untouched.
+      // If there are removals or reordering, warn the user that the EPUB will grow and include stale entries.
+      if (changeInfo.removed.length > 0) {
+        migrationWarnings.push(`⚠️ ${changeInfo.removed.length} article(s) were removed from the current selection. They remain in the EPUB to preserve annotation CFIs.`);
+      }
+      if (changeInfo.reordered) {
+        migrationWarnings.push('⚠️ Articles were reordered in the feed. Append-only update will keep original ordering to preserve annotations.');
+      }
+
+      if (changeInfo.added.length > 0) {
+        try {
+          // Load existing EPUB and append new articles (skip any not found)
+          const existingEpub = await this.loadExistingEpubFile(existingBook, appService);
+          if (existingEpub) {
+            const newArticles = changeInfo.added
+              .map(link => articles.find(a => a.link === link))
+              .filter(Boolean) as ArticleType[];
+            if (newArticles.length > 0) {
+              const result = await appendArticlesToEpub(
+                existingEpub, newArticles, oldManifest.articleIds.length
+              );
+              epubBlob = result.epubBlob;
+              manifest = generateManifest(articles); // New manifest with full article list
+              migrationWarnings.unshift(`✓ Appended ${newArticles.length} new article(s). CFI positions stable.`);
+            }
+          }
+        } catch (error) {
+          console.warn('Append-only failed, falling back to fresh EPUB:', error);
+        }
+      }
+    }
+
+    // If we didn't build an EPUB via append-only, create a fresh EPUB
+    if (createFresh || !existingBook) {
+      console.log('Creating fresh EPUB...');
+      const result = await createArticlesEpub(articles);
+      epubBlob = result.epubBlob;
+      manifest = result.manifest;
     }
 
     if (!epubBlob || !manifest) {
@@ -90,19 +133,12 @@ export class FeedEpubService {
 
     const epubFile = new File(
       [epubBlob],
-      `${STARRED_ARTICLES_EPUB_NAME}.epub`,
+      freshTitle ? `${freshTitle}.epub` : `${STARRED_ARTICLES_EPUB_NAME}.epub`,
       { type: 'application/epub+zip' }
     );
-    console.log('File created:', { name: epubFile.name, size: epubFile.size });
 
-    // Handle annotation hash migration (book hash changes after update)
-    if (existingBook && oldManifest) {
-      const config = await appService.loadBookConfig(existingBook, await appService.loadSettings());
-      if (config && config.booknotes && config.booknotes.length > 0) {
-        console.log('Migrating annotations to new book hash...');
-        // We'll update the config later after getting the new book hash
-      }
-    }
+    console.log('File created:', { name: epubFile.name, size: epubFile.size, fresh: createFresh });
+    console.log('Will Migrating annotations to new book hash after importing successfully...');
 
     // Import the updated EPUB file
     const book = await appService.importBook(
@@ -126,22 +162,39 @@ export class FeedEpubService {
     });
 
     // Handle annotation migration: update hash in config if needed
-    if (existingBook && oldManifest && book.hash !== existingBook.hash) {
-      const oldConfig = await appService.loadBookConfig(existingBook, await appService.loadSettings());
-      if (oldConfig && oldConfig.booknotes && oldConfig.booknotes.length > 0) {
+    if (!createFresh && existingBook && oldManifest && book.hash !== existingBook.hash) {
+      const sysSettings = await appService.loadSettings();
+      const oldConfig = await appService.loadBookConfig(existingBook, sysSettings);
+      const oldNotes = oldConfig.booknotes;
+      // Update annotations: copy booknotes from old config to new book config
+      if (oldConfig && oldNotes && oldNotes.length > 0) {
         console.log('Copying annotations from old book to new book...');
+        // change the book hash of the old booknotes
+        const newNotes = oldNotes.map(bn => {
+          return {
+            ...bn,
+            bookHash: book.hash,
+          }
+        });
+
         // Copy booknotes to new book
-        const newConfig = await appService.loadBookConfig(book, await appService.loadSettings());
-        newConfig.booknotes = oldConfig.booknotes;
+        const newConfig = {
+          ...oldConfig,
+          bookHah: book.hash,
+          booknotes: newNotes,
+          updatedAt: Date.now(),
+        };
         await appService.saveBookConfig(book, newConfig);
-        migrationWarnings.unshift(`Migrated ${oldConfig.booknotes.length} annotation(s) to new version`);
+        migrationWarnings.unshift(`Migrated ${newNotes.length} annotation(s) to new version`);
       }
     }
 
     // Remove old book if it exists and is different
-    if (existingBook && book.hash !== existingBook.hash) {
+    if (!createFresh && existingBook && book.hash !== existingBook.hash) {
       // Save version history (keep last 2)
-      this.saveVersionHistory(existingBook, oldManifest);
+      if (oldManifest) {
+        this.saveVersionHistory(existingBook, oldManifest);
+      }
       
       // Remove old book from library
       const bookIndex = books.indexOf(existingBook);
@@ -156,7 +209,17 @@ export class FeedEpubService {
     console.log('Library saved successfully');
 
     // Store manifest for next update
-    localStorage.setItem(MANIFEST_STORAGE_KEY, JSON.stringify(manifest));
+    try {
+      // Save manifest file next to the book files so it can be retrieved later
+      const manifestPath = `${book.hash}/manifest.json`;
+      await appService.writeFile(manifestPath, 'Books', JSON.stringify(manifest, null, 2));
+      console.log('Manifest saved to file:', manifestPath);
+      // Keep localStorage as fallback for older versions
+      localStorage.setItem(MANIFEST_STORAGE_KEY, JSON.stringify(manifest));
+    } catch (e) {
+      console.warn('Failed to save manifest file, falling back to localStorage:', e);
+      localStorage.setItem(MANIFEST_STORAGE_KEY, JSON.stringify(manifest));
+    }
 
     return {
       book,
@@ -173,9 +236,29 @@ export class FeedEpubService {
     books: Book[]
   ): Promise<FeedEpubInfo> {
     const book = books.find(b => b.title === STARRED_ARTICLES_EPUB_NAME);
-    const manifest = localStorage.getItem(MANIFEST_STORAGE_KEY)
-      ? JSON.parse(localStorage.getItem(MANIFEST_STORAGE_KEY)!)
-      : null;
+    let manifest: EpubManifest | null = null;
+    if (book) {
+      try {
+        const mf = await _appService.readFile(`${book.hash}/manifest.json`, 'Books', 'text');
+        if (mf) manifest = JSON.parse(mf as string) as EpubManifest;
+      } catch {
+        try {
+          manifest = localStorage.getItem(MANIFEST_STORAGE_KEY)
+            ? JSON.parse(localStorage.getItem(MANIFEST_STORAGE_KEY)!)
+            : null;
+        } catch {
+          manifest = null;
+        }
+      }
+    } else {
+      try {
+        manifest = localStorage.getItem(MANIFEST_STORAGE_KEY)
+          ? JSON.parse(localStorage.getItem(MANIFEST_STORAGE_KEY)!)
+          : null;
+      } catch {
+        manifest = null;
+      }
+    }
 
     return {
       book: book || null,
@@ -290,5 +373,19 @@ export class FeedEpubService {
     localStorage.removeItem(MANIFEST_STORAGE_KEY);
     localStorage.removeItem(ANNOTATION_METADATA_KEY);
     localStorage.removeItem(VERSION_HISTORY_KEY);
+  }
+
+  /**
+   * Helper: Load existing EPUB file from book storage
+   */
+  private static async loadExistingEpubFile(book: Book, appService: AppService): Promise<Blob | null> {
+    try {
+      const bookFilename = getLocalBookFilename(book);
+      const file = await appService.openFile(bookFilename, 'Books');
+      return file;
+    } catch (error) {
+      console.warn('Could not load existing EPUB file:', error);
+      return null;
+    }
   }
 }
