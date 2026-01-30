@@ -151,4 +151,7 @@ export interface AppService {
   saveFeeds(feeds: FeedType[]): Promise<void>;
   loadArticles(): Promise<ArticleType[]>;
   saveArticles(articles: ArticleType[]): Promise<void>;
+  // for reading tracker 
+  loadUsageData(): Promise<Record<string, { readSeconds: number; annotations: number }>>;
+  saveUsageData(data: Record<string, { readSeconds: number; annotations: number }>): Promise<void>;
 }

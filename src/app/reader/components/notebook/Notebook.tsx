@@ -19,6 +19,7 @@ import { uniqueId } from '@/utils/misc';
 import { eventDispatcher } from '@/utils/event';
 import { getBookDirFromLanguage } from '@/utils/book';
 import { saveSysSettings } from '@/helpers/settings';
+import { incrementAnnotations } from '@/services/usageService';
 import { Overlay } from '@/components/Overlay';
 import BooknoteItem from '../sidebar/BooknoteItem';
 import AIAssistant from './AIAssistant';
@@ -143,6 +144,13 @@ const Notebook: React.FC = ({}) => {
       saveConfig(envConfig, sideBarBookKey, updatedConfig, settings);
     }
     setNotebookNewAnnotation(null);
+
+    // record annotation creation
+    try {
+      incrementAnnotations(envConfig, 1).catch(() => {});
+    } catch (err) {
+      console.error('Failed to increment annotation usage', err);
+    }
   };
 
   const handleEditNote = (note: BookNote, isDelete: boolean) => {

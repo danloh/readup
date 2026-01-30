@@ -10,18 +10,30 @@ import { useTranslation } from '@/hooks/useTranslation';
 //import { useSettingsStore } from '@/store/settingsStore';
 //import { navigateToLibrary } from '@/utils/nav';
 import UserInfo from './UserInfo';
+import HeatMap, { ActivityRecord } from './HeatMap';
+import { loadUsage } from '@/services/usageService';
 
 const StreakPage = () => {
   const _ = useTranslation();
   //const router = useRouter();
-  const { appService } = useEnv();
+  const { appService, envConfig } = useEnv();
   // const { user, logout } = useAuth();
   // const { settings, setSettings, saveSettings } = useSettingsStore();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => setMounted(true), []);
 
   useTheme({ systemUIVisible: false });
+
+  const [usage, setUsage] = useState<Record<string, any>>({});
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await loadUsage(envConfig);
+        setUsage(data || {});
+      } catch (err) {
+        console.error('Failed to load usage data', err);
+      }
+    })();
+  }, [envConfig]);
 
   // const handleLogout = () => {
   //   logout();
@@ -30,10 +42,6 @@ const StreakPage = () => {
   //   saveSettings(envConfig, settings);
   //   navigateToLibrary(router);
   // };
-
-  if (!mounted) {
-    return null;
-  }
 
   if (!appService) {
     return (
@@ -59,6 +67,10 @@ const StreakPage = () => {
                   userFullName={'userFullName'}
                   userEmail={'userEmail'}
                 />
+                <div className='pt-6'>
+                  <h3 className='text-lg font-medium text-base-content mb-2'>Daily Usage 📊</h3>
+                  <HeatMap data={usage as ActivityRecord} onClickCell={(d) => console.log('day click', d)} />
+                </div>
               </div>
             </div>
           </div>

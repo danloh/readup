@@ -358,7 +358,9 @@ export abstract class BaseAppService implements AppService {
           try {
             console.log('Converting SVG cover to PNG...');
             cover = await svg2png(cover);
-          } catch {}
+          } catch(e) {
+            console.warn('Converting SVG: ', e);
+          }
         }
         if (cover) {
           await this.fs.writeFile(getCoverFilename(book), 'Books', await cover.arrayBuffer());
@@ -902,6 +904,20 @@ export abstract class BaseAppService implements AppService {
       throw new Error('Failed to save articles');
     }
   }
+
+  // Usage data management --------------------------------------------------
+  async loadUsageData(): Promise<Record<string, { readSeconds: number; annotations: number }>> {
+    const mainResult = await this.loadJSONFile('usage.json', 'Books');
+    if (mainResult.success) {
+      return mainResult.data as Record<string, { readSeconds: number; annotations: number }>;
+    }
+    return {};
+  }
+
+  async saveUsageData(data: Record<string, { readSeconds: number; annotations: number }>): Promise<void> {
+    await this.safeSaveJSON('usage.json', 'Books', data);
+  }
+
 
   private async loadJSONFile(
     path: string,
