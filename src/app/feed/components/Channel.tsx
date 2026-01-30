@@ -132,7 +132,7 @@ function ArticleList(props: ListProps) {
           {showFreshEpubConfirm && (
             <div className='mt-3 p-2 bg-base-100 rounded border'>
               <p className='text-xs text-base-content/60 mb-2'>
-                Converts starred articles into an EPUB book. Annotations will persist across updates to the collection. Or create a fresh EPUB from scratch.
+                Converts starred articles into an EPUB book. Create or Update: annotations will persist across updates; Create Fresh: create EPUB from scratch.
               </p>
               <div className='flex gap-2'>
                 <button

@@ -58,7 +58,6 @@ export class FeedEpubService {
   }> {
     const existingBook = books.find(b => b.title === STARRED_ARTICLES_EPUB_NAME);
     // Try to load previous manifest from the saved manifest file next to the book.
-    // Fallback to localStorage for backward compatibility.
     let oldManifest: EpubManifest | null = null;
     if (existingBook) {
       try {
@@ -68,17 +67,12 @@ export class FeedEpubService {
           oldManifest = JSON.parse(mf as string) as EpubManifest;
         }
       } catch (e) {
-        try {
-          oldManifest = localStorage.getItem(MANIFEST_STORAGE_KEY)
-            ? JSON.parse(localStorage.getItem(MANIFEST_STORAGE_KEY)!)
-            : null;
-        } catch {
-          oldManifest = null;
-        }
+        console.warn('No epub manifest file:', e);
+        oldManifest = null;
       }
     }
 
-    console.log('Existing book lookup:', { found: !!existingBook, title: existingBook?.title, hash: existingBook?.hash, createFresh });
+    console.log('Existing book lookup:', { found: !!existingBook, data: existingBook, createFresh });
 
     let epubBlob: Blob | null = null;
     let manifest: EpubManifest | null = null;
@@ -117,7 +111,7 @@ export class FeedEpubService {
             }
           }
         } catch (error) {
-          console.warn('Append-only failed, falling back to fresh EPUB:', error);
+          console.warn('Append failed, falling back to fresh EPUB:', error);
         }
       }
     }
@@ -149,7 +143,7 @@ export class FeedEpubService {
       books,
       true, // saveBook
       true, // saveCover
-      false, // don't overwrite yet - will handle old book removal
+      true, // overwrite - sometimes, the hash is same, if diff hash, will never overwrite
       false // not transient
     );
 
@@ -217,11 +211,8 @@ export class FeedEpubService {
       const manifestPath = `${book.hash}/manifest.json`;
       await appService.writeFile(manifestPath, 'Books', JSON.stringify(manifest, null, 2));
       console.log('Manifest saved to file:', manifestPath);
-      // Keep localStorage as fallback for older versions
-      localStorage.setItem(MANIFEST_STORAGE_KEY, JSON.stringify(manifest));
     } catch (e) {
-      console.warn('Failed to save manifest file, falling back to localStorage:', e);
-      localStorage.setItem(MANIFEST_STORAGE_KEY, JSON.stringify(manifest));
+      console.warn('Failed to save manifest file:', e);
     }
 
     return {
@@ -281,6 +272,12 @@ export class FeedEpubService {
       console.warn('Previous version is undefined');
       return null;
     }
+
+    // FIXME: need to rebuild epub per the previousVersion's epub manifest
+    // const ids = previousVersion.manifest.articleIds;
+    // 1- get articles per ids
+    // 2- build book
+    // const prevBook = createArticlesEpub(articles);
 
     console.log('Rolling back to version:', previousVersion.timestamp);
 

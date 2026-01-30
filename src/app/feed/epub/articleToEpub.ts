@@ -116,8 +116,7 @@ export async function createArticlesEpub(
   zip.file('mimetype', 'application/epub+zip', { compression: 'STORE' });
 
   // 2. Create META-INF/container.xml
-  const containerXml = `
-    <?xml version="1.0" encoding="UTF-8"?>
+  const containerXml = `<?xml version="1.0" encoding="UTF-8"?>
     <container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
       <rootfiles>
         <rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/>
@@ -145,8 +144,7 @@ export async function createArticlesEpub(
       }, 0)
     ).toString(16);
 
-    const xhtml = `
-      <?xml version="1.0" encoding="UTF-8"?>
+    const xhtml = `<?xml version="1.0" encoding="UTF-8"?>
       <html 
         xmlns="http://www.w3.org/1999/xhtml" 
         xmlns:epub="http://www.idpf.org/2007/ops" 
@@ -155,6 +153,7 @@ export async function createArticlesEpub(
         <head>
           <title>${escapeXml(article.title)}</title>
           <meta charset="utf-8"/>
+          <link rel="stylesheet" type="text/css" href="style.css"/>
         </head>
         <body>
           <article 
@@ -186,8 +185,7 @@ export async function createArticlesEpub(
 
   // 6. Create content.opf (package document)
   const title = STARRED_ARTICLES_EPUB_NAME;
-  const contentOpf = `
-    <?xml version="1.0" encoding="UTF-8"?>
+  const contentOpf = `<?xml version="1.0" encoding="UTF-8"?>
     <package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="uuid">
       <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
         <dc:identifier id="uuid">urn:uuid:${generateUuid()}</dc:identifier>
@@ -221,13 +219,12 @@ export async function createArticlesEpub(
     `;
   });
 
-  const tocNcx = `
-    <?xml version="1.0" encoding="UTF-8"?>
+  const tocNcx = `<?xml version="1.0" encoding="UTF-8"?>
     <ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1">
       <head>
         <meta name="dtb:uid" content="urn:uuid:${generateUuid()}"/>
         <meta name="dtb:depth" content="1"/>
-        <meta name="dtb:totalPageCount" content="0"/>
+        <meta name="dtb:totalPageCount" content="${docIds.length}"/>
         <meta name="dtb:maxPageNumber" content="0"/>
       </head>
       <docTitle><text>${escapeXml(title)}</text></docTitle>
@@ -331,20 +328,30 @@ export async function appendArticlesToEpub(
     newDocIds.push(docId);
 
     const articleLinkStr = article.link || `article-${docIndex}`;
+    const articleHash = Math.abs(
+      articleLinkStr.split('').reduce((hash, char) => {
+        return ((hash << 5) - hash) + char.charCodeAt(0);
+      }, 0)
+    ).toString(16);
+
     const content = article.content || article.description || '(No content)';
 
-    const xhtml = `
-      <?xml version="1.0" encoding="UTF-8"?>
+    const xhtml = `<?xml version="1.0" encoding="UTF-8"?>
       <html 
         xmlns="http://www.w3.org/1999/xhtml" 
-        xmlns:epub="http://www.idpf.org/2007/ops" lang="en"
+        xmlns:epub="http://www.idpf.org/2007/ops" id="article-${articleHash}"
       >
         <head>
           <title>${escapeXml(article.title)}</title>
+          <meta charset="utf-8"/>
           <link rel="stylesheet" type="text/css" href="style.css"/>
         </head>
         <body>
-          <article class="chapter" data-article-link="${escapeXml(articleLinkStr)}">
+          <article 
+            id="article-${docIndex}" 
+            class="chapter" 
+            data-article-link="${escapeXml(articleLinkStr)}"
+          >
             <h1>${escapeXml(article.title)}</h1>
             ${article.author 
               ? `<p class="author">By ${escapeXml(article.author)}</p>` 
@@ -402,7 +409,7 @@ export async function appendArticlesToEpub(
   const allNavPoints = existingNavPoints + '\n' + newNavPoints;
   ncxContent = ncxContent.replace(
     /<navMap>[\s\S]*?<\/navMap>/,
-    `<navMap>\n${allNavPoints}  </navMap>`
+    `<navMap>\n${allNavPoints}</navMap>`
   );
 
   // Update NCX depth and page count
