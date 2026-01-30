@@ -1,5 +1,6 @@
 'use client';
 
+import clsx from 'clsx';
 import { useState } from 'react';
 import { IoAdd, IoTrash, IoOpenOutline, IoBook, IoEyeOff, IoEye } from 'react-icons/io5';
 import { useRouter } from 'next/navigation';
@@ -53,7 +54,7 @@ interface CMProps {
 export function CatalogManager({ closeDialog }: CMProps) {
   const _ = useTranslation();
   const router = useRouter();
-  const { envConfig } = useEnv();
+  const { envConfig, appService } = useEnv();
   const { settings } = useSettingsStore();
   const [catalogs, setCatalogs] = useState<OPDSCatalog[]>(() => settings.opdsCatalogs || []);
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -68,6 +69,7 @@ export function CatalogManager({ closeDialog }: CMProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [urlError, setUrlError] = useState('');
   const [isValidating, setIsValidating] = useState(false);
+  const popularCatalogs = appService?.distChannel !== 'appstore' ? POPULAR_CATALOGS : [];
 
   const saveCatalogs = (updatedCatalogs: OPDSCatalog[]) => {
     setCatalogs(updatedCatalogs);
@@ -246,10 +248,10 @@ export function CatalogManager({ closeDialog }: CMProps) {
       </section>
 
       {/* Popular Catalogs */}
-      <section className='text-base'>
+      <section className={clsx('text-base', popularCatalogs.length === 0 && 'hidden')}>
         <h2 className='mb-4 font-semibold'>{_('Popular Catalogs')}</h2>
         <div className='grid gap-4 sm:grid-cols-2'>
-          {POPULAR_CATALOGS.filter((catalog) => !catalog.disabled).map((catalog) => {
+          {popularCatalogs.filter((catalog) => !catalog.disabled).map((catalog) => {
             const isAdded = catalogs.some((c) => c.url === catalog.url);
             return (
               <div
