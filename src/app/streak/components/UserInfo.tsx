@@ -1,34 +1,75 @@
+import { useEffect, useState } from 'react';
 import { PiUserCircle } from 'react-icons/pi';
-// import { useTranslation } from '@/hooks/useTranslation';
 import UserAvatar from '@/components/UserAvatar';
+import { useAuth } from '@/context/AuthContext';
+import { getProfile, UserProfile } from '@/services/bsky/auth';
 
-interface UserInfoProps {
-  avatarUrl?: string;
-  userFullName: string;
-  userEmail: string;
-}
+const UserInfo: React.FC = () => {
+  const { user, logout } = useAuth();
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-const UserInfo: React.FC<UserInfoProps> = ({ avatarUrl, userFullName, userEmail }) => {
-  // const _ = useTranslation();
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const id = user?.did ?? user?.handle;
+        const svc = user?.service;
+        if (!id || !svc) {
+          setProfile(null);
+          return;
+        }
+
+        const prof = await getProfile(id, svc);
+        setProfile(prof as UserProfile);
+      } catch (e) {
+        console.error('Failed to load profile:', e);
+        setError(String(e));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    load();
+  }, [user?.did, user?.service]);
+
+  if (error && !loading) {
+    return (<p className='mt-2 text-sm text-error'>Failed to load profile</p>)
+  }
+
   return (
-    <div className='flex flex-col items-center gap-x-6 gap-y-4 md:flex-row md:items-start'>
+    <div className='flex items-center justify-center gap-2'>
       <div className='flex-shrink-0'>
-        {avatarUrl ? (
+        {profile?.avatar ? (
           <UserAvatar
-            url={avatarUrl}
-            size={window.innerWidth < 640 ? 64 : 128}
+            url={profile?.avatar}
+            size={64}
             DefaultIcon={PiUserCircle}
-            className='h-16 w-16 md:h-24 md:w-24'
+            className='h-16 w-16'
             borderClassName='border-base-100 border-4'
           />
         ) : (
-          <PiUserCircle className='h-16 w-16 md:h-24 md:w-24' />
+          <PiUserCircle className='h-16 w-16' />
         )}
       </div>
 
-      <div className='flex-grow text-center md:text-left'>
-        <h2 className='text-base-content text-xl font-bold md:text-2xl'>{userFullName}</h2>
-        <p className='text-base-content/60'>{userEmail}</p>
+      <div className='flex flex-col items-start justify-center'>
+        <h2 className='text-base-content text-xl font-bold'>
+          {profile?.displayName || user?.handle}
+        </h2>
+        <div className='text-sm opacity-70'>
+          <a href={`https://bsky.app}/profile/${user?.handle}`}>@{user?.handle}</a>
+        </div>
+        {/* {profile?.description ? (
+          <p className='mt-2 max-w-prose text-sm text-base-content break-words'>
+            {profile.description}
+          </p>
+        ) : error && !loading ? (
+          <p className='mt-2 text-sm text-error'>Failed to load profile</p>
+        ) : null} */}
+        <button className='link text-xs' onClick={logout}>Log Out</button>
       </div>
     </div>
   );

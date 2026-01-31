@@ -1,24 +1,17 @@
 'use client';
 
-import clsx from 'clsx';
+// import clsx from 'clsx';
 import React, { useState, useEffect } from 'react';
-// import { useRouter } from 'next/navigation';
 import { useEnv } from '@/context/EnvContext';
-// import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/hooks/useTheme';
 import { useTranslation } from '@/hooks/useTranslation';
-//import { useSettingsStore } from '@/store/settingsStore';
-//import { navigateToLibrary } from '@/utils/nav';
 import UserInfo from './UserInfo';
 import HeatMap, { ActivityRecord } from './HeatMap';
 import { loadUsage } from '@/services/usageService';
 
 const StreakPage = () => {
   const _ = useTranslation();
-  //const router = useRouter();
   const { appService, envConfig } = useEnv();
-  // const { user, logout } = useAuth();
-  // const { settings, setSettings, saveSettings } = useSettingsStore();
 
   useTheme({ systemUIVisible: false });
 
@@ -35,14 +28,6 @@ const StreakPage = () => {
     })();
   }, [envConfig]);
 
-  // const handleLogout = () => {
-  //   logout();
-  //   settings.keepLogin = false;
-  //   setSettings(settings);
-  //   saveSettings(envConfig, settings);
-  //   navigateToLibrary(router);
-  // };
-
   if (!appService) {
     return (
       <div className='mx-auto max-w-4xl px-4 py-8'>
@@ -56,23 +41,15 @@ const StreakPage = () => {
   }
 
   return (
-    <div className='feed-view flex flex-row overflow-y-auto h-full border-t-2 border-base-100'>
-      <div className={clsx('flex h-full w-full flex-col items-center overflow-y-auto')}>
-        <div className='w-full min-w-60 max-w-4xl py-10'>
-          <div className='sm:bg-base-200 overflow-hidden rounded-lg sm:p-6 sm:shadow-md'>
-            <div className='flex flex-col gap-y-8'>
-              <div className='flex flex-col gap-y-8 px-6'>
-                <UserInfo
-                  avatarUrl={'avatarUrl'}
-                  userFullName={'userFullName'}
-                  userEmail={'userEmail'}
-                />
-                <div className='pt-6'>
-                  <h3 className='text-lg font-medium text-base-content mb-2'>Daily Usage 📊</h3>
-                  <HeatMap data={usage as ActivityRecord} onClickCell={(d) => console.log('day click', d)} />
-                </div>
-              </div>
-            </div>
+    <div className='profile-view h-full p-2 border-t-2 border-base-100'>
+      <div className='flex h-full w-full flex-col items-center bg-base-200'>
+        <div className='flex flex-col gap-y-4 px-2'>
+          <UserInfo />
+          <div className='pt-6'>
+            <HeatMap 
+              data={usage as ActivityRecord} 
+              onClickCell={(d) => console.log('day click', d)} 
+            />
           </div>
         </div>
       </div>

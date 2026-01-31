@@ -308,3 +308,47 @@ export async function resolveDid(did: string): Promise<string> {
     throw new Error(`Unknown error resolving DID: ${did}`);
   }
 }
+
+
+// ============================================================================
+// ============ Get User Profile ==============================================
+
+export type UserProfile = {
+	did: string;
+	handle: string;
+	displayName?: string;
+  description?: string;
+  banner?: string;
+	avatar?: string;
+};
+
+/**
+ * Get a user's profile by DID or handle.
+ * @param identifier - DID or handle 
+ * @param service - pds url of user
+ * @returns The profile object returned by the server
+ */
+export async function getProfile(
+  identifier: string, service: string
+): Promise<UserProfile> {
+  if (!identifier?.trim() || !service.trim()) {
+    throw new Error('Identifier (did or handle) and service are required');
+  }
+
+  // public fetch from host's XRPC endpoint
+  const url = `https://api.bsky.app/xrpc/app.bsky.actor.getProfile?actor=${identifier}`;
+  try {
+    const resp = await fetch(url, { method: 'GET', signal: AbortSignal.timeout(10000) });
+    if (!resp.ok) {
+      const errText = await resp.text().catch(() => '');
+      throw new Error(`Failed to get profile: ${resp.status} ${resp.statusText}${errText || ''}`);
+    }
+    const result = await resp.json();
+    return result;
+  } catch (error) {
+    if (error instanceof TypeError) {
+      throw new Error(`Network error fetching profile: ${error.message}`);
+    }
+    throw error;
+  }
+}
