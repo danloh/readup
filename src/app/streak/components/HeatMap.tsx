@@ -38,7 +38,8 @@ export default function HeatMap(props: HeatMapProps) {
           {Array.from(Array(12).keys()).map(monIdx => (
             <text 
               key={`mon-${monIdx}`} 
-              x={`${calcMonStart() * 16 + 66 * monIdx}`} 
+              id={`start-${calcMonStart()}-idx-${monIdx}`}
+              x={`${calcMonStart() * 11 + 16 * 4 * monIdx}`} 
               y='-8' className={hmLabelClass}
             >
               {getMonthLabel(monIdx)}
@@ -152,7 +153,7 @@ function getDayStyle(data: ActivityRecord, weekIdx: number, dayIdx: number) {
 }
 
 function getMonthLabel(idx: number) {
-  if (idx > 11) return;
+  if (idx > 11) return '';
   const months = [
     'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
     'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
@@ -160,5 +161,5 @@ function getMonthLabel(idx: number) {
   const nowMonth = new Date().getMonth();
   const monIdx = nowMonth + idx + 1;
   const realIdx = monIdx >= 12 ? monIdx - 12 : monIdx;
-  return months[realIdx];
+  return months[realIdx] || '';
 }
