@@ -246,6 +246,10 @@ export interface AnnotatorConfig {
   noteExportConfig: NoteExportConfig;
 }
 
+export interface ParagraphModeConfig {
+  enabled: boolean;
+}
+
 export interface ViewSettings
   extends 
     BookLayout,
@@ -257,7 +261,9 @@ export interface ViewSettings
     TranslatorConfig,
     ScreenConfig,
     ProofreadRulesConfig,
-    AnnotatorConfig {}
+    AnnotatorConfig {
+      paragraphMode?: ParagraphModeConfig;
+    }
 
 export interface BookProgress {
   location: string;

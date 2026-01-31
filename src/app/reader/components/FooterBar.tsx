@@ -215,15 +215,14 @@ const FooterBar: React.FC<FooterBarProps> = ({
         role='group'
         aria-label={_('Footer Bar')}
         className={clsx(
-          'footer-bar shadow-xs absolute bottom-0 z-30 flex w-full flex-col',
-          'sm:h-[52px] sm:justify-center',
+          'footer-bar shadow-xs absolute bottom-0 z-30 flex w-full flex-col sm:h-[52px]',
           'sm:bg-base-100 border-base-300/50 border-t sm:border-none',
           'transition-[opacity,transform] duration-300',
           window.innerWidth < 640 ? 'fixed' : 'absolute',
           appService?.hasRoundedWindow && 'rounded-window-bottom-right',
           !isSideBarVisible && appService?.hasRoundedWindow && 'rounded-window-bottom-left',
           isHoveredAnim && 'hover-bar-anim',
-          needHorizontalScroll && 'sm:!bottom-3 sm:!h-10 sm:justify-end',
+          needHorizontalScroll ? 'sm:!bottom-3 sm:!h-10 sm:justify-end' : 'sm:justify-center',
           isVisible
             ? `pointer-events-auto translate-y-0 opacity-100`
             : `pointer-events-none translate-y-full opacity-0 sm:translate-y-0`,

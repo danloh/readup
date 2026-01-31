@@ -52,6 +52,7 @@ import {
   handleTouchEnd,
 } from '../utils/iframeEventHandlers';
 import { TransformContext } from '../transformers/types';
+import { ParagraphControl } from './paragraph';
 
 declare global {
   interface Window {
@@ -63,8 +64,9 @@ const FoliateViewer: React.FC<{
   bookKey: string;
   bookDoc: BookDoc;
   config: BookConfig;
+  gridInsets: Insets;
   contentInsets: Insets;
-}> = ({ bookKey, bookDoc, config, contentInsets: insets }) => {
+}> = ({ bookKey, bookDoc, config, gridInsets, contentInsets: insets }) => {
   const _ = useTranslation();
   const { getView, setView: setFoliateView, setViewInited, setProgress } = useReaderStore();
   const { getViewSettings, setViewSettings } = useReaderStore();
@@ -438,6 +440,7 @@ const FoliateViewer: React.FC<{
         {...mouseHandlers}
         {...touchHandlers}
       />
+      <ParagraphControl bookKey={bookKey} viewRef={viewRef} gridInsets={gridInsets} />
       {!docLoaded.current && loading && <Spinner loading={true} />}
     </>
   );

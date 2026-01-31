@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 import { useState } from 'react';
 import { GrSystem } from "react-icons/gr";
 import { MdZoomOut, MdZoomIn, MdSync, MdSyncProblem } from 'react-icons/md';
-import { PiScrollLight, PiBookOpenLight } from "react-icons/pi";
+import { PiScrollLight, PiBookOpenLight, PiParagraphFill } from "react-icons/pi";
 import { BiCheckboxChecked, BiCheckbox, BiMoon, BiSun } from "react-icons/bi";
 import { IoMdExpand } from 'react-icons/io';
 import { TbArrowAutofitWidth, TbColumns1, TbColumns2 } from 'react-icons/tb';
@@ -43,6 +43,10 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
 
   const { themeMode, setThemeMode } = useThemeStore();
   const [isScrolledMode, setScrolledMode] = useState(viewSettings!.scrolled);
+  const [isParagraphMode, setParagraphMode] = useState(
+    viewSettings?.paragraphMode?.enabled ?? false,
+  );
+
   const [zoomLevel, setZoomLevel] = useState(viewSettings!.zoomLevel!);
   const [zoomMode, setZoomMode] = useState(viewSettings!.zoomMode!);
   const [spreadMode, setSpreadMode] = useState(viewSettings!.spreadMode!);
@@ -55,6 +59,11 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
   const zoomOut = () => setZoomLevel((prev) => Math.max(prev - ZOOM_STEP, MIN_ZOOM_LEVEL));
   const resetZoom = () => setZoomLevel(100);
   const toggleScrolledMode = () => setScrolledMode(!isScrolledMode);
+  const toggleParagraphMode = () => {
+    setParagraphMode(!isParagraphMode);
+    eventDispatcher.dispatch('toggle-paragraph-mode', { bookKey });
+    setIsDropdownOpen?.(false);
+  };
 
   const cycleThemeMode = () => {
     const nextMode = themeMode === 'auto' ? 'light' : themeMode === 'light' ? 'dark' : 'auto';
@@ -248,6 +257,13 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
         shortcut='Shift+J'
         Icon={isScrolledMode ? PiScrollLight : PiBookOpenLight}
         onClick={toggleScrolledMode}
+        disabled={bookData.isFixedLayout}
+      />
+      <MenuItem
+        label={_('Paragraph Mode')}
+        shortcut='Shift+P'
+        Icon={isParagraphMode ? PiParagraphFill : BiCheckbox}
+        onClick={toggleParagraphMode}
         disabled={bookData.isFixedLayout}
       />
       {appService?.hasWindow && <MenuItem label={_('Fullscreen')} onClick={handleFullScreen} />}

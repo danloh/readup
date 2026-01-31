@@ -22,7 +22,7 @@ const ReadingProgress: React.FC<ReadingProgressProps> = memo(
     const progressPercentage = useMemo(() => getProgressPercentage(book), [book]);
 
      if (progressPercentage === null || Number.isNaN(progressPercentage)) {
-      return null;
+      return <div className='flex justify-start'></div>;
     }
 
     return (

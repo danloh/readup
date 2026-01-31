@@ -6,6 +6,7 @@ import {
   BookStyle,
   HighlightColor,
   NoteExportConfig,
+  ParagraphModeConfig,
   ReadingRulerColor,
   ScreenConfig,
   TranslatorConfig,
@@ -210,6 +211,10 @@ export const DEFAULT_VIEW_CONFIG: ViewConfig = {
   readingRulerPosition: 33,
   readingRulerOpacity: 0.5,
   readingRulerColor: 'transparent',
+};
+
+export const DEFAULT_PARAGRAPH_MODE_CONFIG: ParagraphModeConfig = {
+  enabled: false,
 };
 
 export const DEFAULT_TTS_CONFIG: TTSConfig = {
