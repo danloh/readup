@@ -16,31 +16,16 @@ type HeatMapProps = {
 export default function HeatMap(props: HeatMapProps) {
   const { data: activeRecord = {}, onClickCell } = props;
 
-  // const activeRecord = useMemo(() => {
-  //   // usageData keys are local date format 'yyyy-m-d'
-  //   const activity: ActivityRecord = {};
-  //   for (const [day, val] of Object.entries(usageData)) {
-  //     const readMinutes = Math.ceil((val.readSeconds || 0) / 60);
-  //     const noteNum = val.annotations || 0;
-  //     // activity[day] = {
-  //     //   readNum: readMinutes,
-  //     //   noteNum,
-  //     //   activityNum: readMinutes + noteNum, // simple aggregate
-  //     // };
-  //   }
-  //   return activity;
-  // }, [usageData]);
-
   const onDayClick = useCallback(async (weekIdx: number, dayIdx: number) => {
     const date = getDate(weekIdx, dayIdx);
     onClickCell(date);
   }, [onClickCell]);
 
-  const hmLabelClass = 'text-xs fill-gray-500';
+  const hmLabelClass = 'text-xs fill-primary';
 
   return (
-    <div className='overflow-auto p-1 m-1'>
-      <svg width='828' height='128' className='hm-svg'>
+    <div className='w-full overflow-auto p-1 m-0.5'>
+      <svg width='828' height='128' className='hm-svg w-full overflow-auto'>
         <g transform='translate(10, 20)'>
           {Array.from(Array(53).keys()).map(weekIdx => (
             <WeekHeatMap 
@@ -133,26 +118,37 @@ function getDataToolTips(data: ActivityRecord, weekIdx: number, dayIdx: number) 
   const date = getDate(weekIdx, dayIdx);
   const readMinutes = Math.ceil((aData?.readSeconds || 0) / 60);
   const noteNum = aData?.annotations || 0;
-  return `${date}:\nRead: ${readMinutes}min\nAnnotations: ${noteNum}`;
+  return `${date}:\nRead: ${readMinutes} min\nAnnotations: ${noteNum}`;
 }
 
 function getDayStyle(data: ActivityRecord, weekIdx: number, dayIdx: number) {
   const aData = getData(data, weekIdx, dayIdx);
-  const an = aData?.readSeconds || 0 / 60;
+  const readMin = (aData?.readSeconds || 0) / 60;
+  const noteNum = aData?.annotations || 0;
   const today = new Date();
   const weekDay = today.getDay();
   const isAfterToday = weekIdx >= 52 && dayIdx > weekDay;
-  const anStyle = isAfterToday 
+  const fillStyle = isAfterToday 
     ? 'fill-transparent' 
-    : an === 0 
-      ? 'fill-gray-200 dark:fill-gray-600'
-      : an >= 12 
-        ? 'fill-green-500'
-        : an >= 6 
-          ? 'fill-cyan-500'
-          : 'fill-primary-200 dark:fill-primary-900';
+    : readMin === 0 
+      ? 'fill-base-300'
+      : readMin >= 60 
+        ? 'fill-success'
+        : readMin >= 45
+          ? 'fill-success/85' 
+          : readMin >= 15 ? 'fill-success/70' : 'fill-success/55';
 
-  return `${anStyle} cursor-pointer`;
+  const lineStyle = isAfterToday 
+    ? 'border-none' 
+    : noteNum === 0 
+      ? 'stroke-base-200'
+      : noteNum >= 15 
+        ? 'stroke-primary'
+        : noteNum >= 10
+          ? 'stroke-primary/85' 
+          : noteNum >= 5 ? 'stroke-primary/70' : 'stroke-primary/55';
+
+  return `${fillStyle} ${lineStyle} cursor-pointer`;
 }
 
 function getMonthLabel(idx: number) {

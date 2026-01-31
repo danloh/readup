@@ -31,7 +31,7 @@ const StreakPage = () => {
   if (!appService) {
     return (
       <div className='mx-auto max-w-4xl px-4 py-8'>
-        <div className='overflow-hidden rounded-lg shadow-md'>
+        <div className='rounded-lg shadow-md'>
           <div className='flex min-h-[300px] items-center justify-center p-6'>
             <div className='text-base-content animate-pulse'>{_('Loading profile...')}</div>
           </div>
@@ -41,11 +41,11 @@ const StreakPage = () => {
   }
 
   return (
-    <div className='profile-view h-full p-2 border-t-2 border-base-100'>
+    <div className='profile-view w-full h-full p-2 border-t-2 border-base-100'>
       <div className='flex h-full w-full flex-col items-center bg-base-200'>
         <div className='flex flex-col gap-y-4 px-2'>
           <UserInfo />
-          <div className='pt-6'>
+          <div className='w-full p-4'>
             <HeatMap 
               data={usage as ActivityRecord} 
               onClickCell={(d) => console.log('day click', d)} 
