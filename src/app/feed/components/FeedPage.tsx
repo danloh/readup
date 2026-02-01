@@ -17,6 +17,7 @@ export default function FeedPage() {
   const [currentEntries, setCurrentEntries] = useState<ArticleType[] | null>(null);
   const [isStarChannel, setIsStarChannel] = useState(false);
   const [showManager, setShowManager] = useState(false);
+  const [showFeedSide, setShowFeedSide] = useState(true);
   const isInitiating = useRef(false);
 
   useEffect(() => {
@@ -111,14 +112,16 @@ export default function FeedPage() {
 
   return (
     <div className='feed-view flex flex-row overflow-y-auto h-full border-t-2 border-base-300'>
-      <div className='w-52 p-1 bg-base-300 overflow-y-auto'>
-        <ChannelList 
-          channelList={channelList} 
-          onShowManager={() => setShowManager(prev => !prev)} 
-          onClickFeed={onClickFeed}
-          onClickStar={onClickStar} 
-        />
-      </div>
+      {showFeedSide ? (
+        <div className='w-52 p-1 bg-base-300 overflow-y-auto'>
+          <ChannelList 
+            channelList={channelList} 
+            onShowManager={() => setShowManager(prev => !prev)} 
+            onClickFeed={onClickFeed}
+            onClickStar={onClickStar} 
+          />
+        </div>
+      ) : null}
       {showManager ? (
         <div className='flex-1 m-1 p-2 overflow-y-auto'>
           <FeedManager 
@@ -135,6 +138,7 @@ export default function FeedPage() {
             isStarChannel={isStarChannel} 
             entries={currentEntries}
             loading={loading}
+            showSide={() => setShowFeedSide(prev => !prev)}
           />
         </div>
       )}

@@ -1,6 +1,7 @@
 import React, { memo, useCallback, useEffect, useState } from 'react';
 import { IoMdLink, IoMdStar, IoMdStarOutline } from 'react-icons/io';
 import { FcReadingEbook } from "react-icons/fc";
+import { CiMenuFries } from "react-icons/ci";
 
 import { useEnv } from '@/context/EnvContext';
 import { useRouter } from 'next/navigation';
@@ -16,10 +17,11 @@ type Props = {
   isStarChannel?: boolean;
   entries: ArticleType[] | null;
   loading: boolean;
+  showSide?: () => void;
 };
 
 export function Channel(props: Props) {
-  const { channel, isStarChannel, entries, loading } = props;
+  const { channel, isStarChannel, entries, loading, showSide } = props;
 
   if (loading) {
     return (
@@ -32,6 +34,9 @@ export function Channel(props: Props) {
   return (
     <div className='flex flex-col items-between justify-center'>
       <div className='flex flex-row items-center justify-start gap-2 p-2 bg-base-300'>
+        <button className='btn btn-xs btn-ghost' onClick={showSide}>
+          <CiMenuFries />
+        </button>
         <b className='text-info' >{entries.length}</b>
         <b className='font-bold'>{channel?.title || (isStarChannel ? 'Starred' : '')}</b>
       </div>
