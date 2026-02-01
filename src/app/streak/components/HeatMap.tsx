@@ -1,11 +1,7 @@
 import { useCallback } from 'react';
+import { UsageDay } from '@/services/usageService';
 
-type ActivityData = {
-  readSeconds: number; // reading seconds
-  annotations: number; // annotations
-};
-
-export type ActivityRecord = Record<string, ActivityData>;
+export type ActivityRecord = Record<string, UsageDay>; // map day to data
 
 type HeatMapProps = {
   data?: ActivityRecord;
@@ -109,7 +105,7 @@ function getData(
   data: ActivityRecord,
   weekIdx: number, 
   dayIdx: number
-): ActivityData | undefined {
+): UsageDay | undefined {
   const date = getDate(weekIdx, dayIdx);
   return data[date];
 }

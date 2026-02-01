@@ -28,7 +28,6 @@ import SettingsDialog from '@/components/settings/SettingsDialog';
 import BookDetailModal from '@/app/library/components/metadata/BookDetailModal';
 import useBooksManager from '../hooks/useBooksManager';
 import useBookShortcuts from '../hooks/useBookShortcuts';
-import useReadingTracker from '../hooks/useReadingTracker';
 import SideBar from './sidebar/SideBar';
 import Notebook from './notebook/Notebook';
 import BooksGrid from './BooksGrid';
@@ -52,9 +51,6 @@ const ReaderContent: React.FC<{ids?: string; settings: SystemSettings}> = ({ ids
 
   useBookShortcuts({ sideBarBookKey, bookKeys });
   useGamepad();
-
-  // Track continuous reading sessions for usage stats
-  useReadingTracker(!!bookKeys && bookKeys.length > 0);
 
   useEffect(() => {
     if (isInitiating.current) return;

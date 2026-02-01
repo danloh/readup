@@ -147,7 +147,7 @@ const Notebook: React.FC = ({}) => {
 
     // record annotation creation
     try {
-      incrementAnnotations(envConfig, 1).catch(() => {});
+      incrementAnnotations(envConfig, sideBarBookKey, 1).catch(() => {});
     } catch (err) {
       console.error('Failed to increment annotation usage', err);
     }

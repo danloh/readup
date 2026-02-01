@@ -2,16 +2,15 @@ import { useEffect, useRef } from 'react';
 import { useEnv } from '@/context/EnvContext';
 import { addReadSeconds } from '@/services/usageService';
 
-
-// TODO: MORE fine-grain record reading time per book
 /**
  * Tracks continuous reading sessions and saves read time when session ends.
  * Only sessions longer than minSessionSeconds are counted (default 10s).
+ * 2 ways to trigger addReadSeconds: VisibilityChangeHidden and Unload
  */
 export default function useReadingTracker(
   active: boolean, 
+  bookKey: string,
   minSessionSeconds = 10, 
-  idleTimeoutSeconds = 30
 ) {
   const { envConfig } = useEnv();
   const now = () => Date.now();
@@ -24,37 +23,25 @@ export default function useReadingTracker(
     if (!active) return;
 
     const endSessionIfNeeded = async () => {
-      console.log('>> active ', sessionActive.current, 'start ', sessionStart.current, 'last ', lastActivity.current);
+      // console.log('>> active ', sessionActive.current, 'start ', sessionStart.current, 'last ', lastActivity.current);
       if (!sessionActive.current || !sessionStart.current || !lastActivity.current) return;
       const duration = Math.floor((lastActivity.current - sessionStart.current) / 1000);
       sessionActive.current = false;
       sessionStart.current = null;
       lastActivity.current = null;
-      console.log('>> Duration(end): ', duration);
+      // console.log('>> Duration(end): ', duration);
       if (duration >= minSessionSeconds) {
         // save duration in seconds
         try {
-          await addReadSeconds(envConfig, duration);
-          console.log('Record reading time: endSession');
+          await addReadSeconds(envConfig, bookKey, duration);
+          // console.log('Record reading time: endSession');
         } catch (err) {
           console.error('Failed to save reading time: endSession', err);
         }
       }
     };
 
-    // const resetIdleTimer = () => {
-    //   console.log('>> To rest Idle Timer');
-    //   if (idleTimer.current) {
-    //     console.log('>> clear Idle Timer');
-    //     window.clearTimeout(idleTimer.current);
-    //   }
-    //   console.log('>> rest Idle Timer-endSession');
-    //   idleTimer.current = window.setTimeout(() => {
-    //     endSessionIfNeeded();
-    //   }, idleTimeoutSeconds * 1000);
-    // };
-
-    const onActivity = (ev?: string) => {
+    const onActivity = (_ev?: string) => {
       const t = now();
       lastActivity.current = t;
       // re-active if not active 
@@ -62,25 +49,26 @@ export default function useReadingTracker(
         sessionActive.current = true;
         sessionStart.current = t;
       }
-      // resetIdleTimer();
-      console.log(
-        '>> Event ', ev, 'active ', sessionActive, 'start ', sessionStart, 'last ', lastActivity
-      );
+      // console.log(
+      //   '>> Event ', _ev, 'active ', sessionActive, 'start ', sessionStart, 'last ', lastActivity
+      // );
     };
 
+    // ref: https://developer.mozilla.org/en-US/docs/Web/API/Document/visibilitychange_event
     const onVisibilityChange = () => {
       if (document.hidden) {
-        console.log('>> Hide visibility as end session');
+        // console.log('>> Hide visibility as end session');
         onActivity('hide-vis');
         // hide as end session and record reading time
         endSessionIfNeeded(); 
       } else {
         // treat show visibility as activity to restart session
-        console.log('>> Show visibility as start session');
+        // console.log('>> Show visibility as start session');
         onActivity('show-vis');
       }
     };
 
+    // ref: https://developer.mozilla.org/en-US/docs/Web/API/Window/beforeunload_event
     const onBeforeUnload = () => {
       // synchronous end (best effort)
       if (sessionActive.current && sessionStart.current && lastActivity.current) {
@@ -88,11 +76,11 @@ export default function useReadingTracker(
         sessionActive.current = false;
         sessionStart.current = null;
         lastActivity.current = null;
-        console.log('>> Duration(unload): ', duration);
+        // console.log('>> Duration(unload): ', duration);
         if (duration >= minSessionSeconds) {
           // call addReadSeconds but do not await
-          addReadSeconds(envConfig, duration).then(() => {
-            console.warn("Record reading seconds: onBeforeUnload");
+          addReadSeconds(envConfig, bookKey, duration).then(() => {
+            // console.log("Record reading seconds: onBeforeUnload");
           }).catch(() => {
             console.warn("Failed to Record reading seconds: onBeforeUnload");
           });
@@ -107,9 +95,6 @@ export default function useReadingTracker(
     document.addEventListener('scroll', () => onActivity('scroll'), true);
     document.addEventListener('visibilitychange', onVisibilityChange);
     window.addEventListener('beforeunload', onBeforeUnload);
-
-    // start idle timer if there's initial activity
-    // resetIdleTimer();
 
     return () => {
       document.removeEventListener('mousemove', () => onActivity());
@@ -127,5 +112,5 @@ export default function useReadingTracker(
       endSessionIfNeeded();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active, minSessionSeconds, idleTimeoutSeconds]);
+  }, [active, minSessionSeconds]);
 }

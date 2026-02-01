@@ -1,8 +1,9 @@
-import { SystemSettings } from './settings';
-import { Book, BookConfig, BookContent, ViewSettings } from './book';
 import { BookMetadata } from '@/libs/document';
 import { ProgressHandler } from '@/utils/transfer';
 import { ArticleType, FeedType } from '@/app/feed/components/dataAgent';
+import { UsageRecord } from '@/services/usageService';
+import { SystemSettings } from './settings';
+import { Book, BookConfig, BookContent, ViewSettings } from './book';
 
 export type AppPlatform = 'web' | 'tauri';
 export type OsPlatform = 'android' | 'ios' | 'macos' | 'windows' | 'linux' | 'unknown';
@@ -152,6 +153,6 @@ export interface AppService {
   loadArticles(): Promise<ArticleType[]>;
   saveArticles(articles: ArticleType[]): Promise<void>;
   // for reading tracker 
-  loadUsageData(): Promise<Record<string, { readSeconds: number; annotations: number }>>;
-  saveUsageData(data: Record<string, { readSeconds: number; annotations: number }>): Promise<void>;
+  loadUsageData(): Promise<UsageRecord>;
+  saveUsageData(data: UsageRecord): Promise<void>;
 }

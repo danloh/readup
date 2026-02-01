@@ -1,7 +1,8 @@
 import { EnvConfigType } from '@/services/environment';
 
 export type UsageDay = { readSeconds: number; annotations: number };
-export type UsageRecord = Record<string, UsageDay>;
+export type BookUsageDay = Record<string, UsageDay>; // Map<bookId, uUsageDay>
+export type UsageRecord = Record<string, BookUsageDay>;
 
 export const loadUsage = async (envConfig: EnvConfigType): Promise<UsageRecord> => {
   const appService = await envConfig.getAppService();
@@ -19,25 +20,35 @@ export const saveUsage = async (envConfig: EnvConfigType, usage: UsageRecord) =>
   await appService.saveUsageData(usage);
 };
 
-export const addReadSeconds = async (envConfig: EnvConfigType, secondsToAdd: number) => {
+export const addReadSeconds = async (
+  envConfig: EnvConfigType, bookKey_: string, secondsToAdd: number
+) => {
   if (!envConfig) return;
   const appService = await envConfig.getAppService();
   const today = new Date();
-  const key = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
+  const dayKey = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
   const data = (await appService.loadUsageData()) || {};
-  const day = data[key] || { readSeconds: 0, annotations: 0 };
-  day.readSeconds = (day.readSeconds || 0) + Math.floor(secondsToAdd);
-  data[key] = day;
+  const dayData = data[dayKey] || {}; 
+  const bookKey = bookKey_.split('-')[0]!;
+  const bookData = dayData[bookKey] || { readSeconds: 0, annotations: 0 };
+  bookData.readSeconds = (bookData.readSeconds || 0) + Math.floor(secondsToAdd);
+  dayData[bookKey] = bookData;
+  data[dayKey] = dayData;
   await appService.saveUsageData(data);
 };
 
-export const incrementAnnotations = async (envConfig: EnvConfigType, count = 1) => {
+export const incrementAnnotations = async (
+  envConfig: EnvConfigType, bookKey_: string, count = 1
+) => {
   const appService = await envConfig.getAppService();
   const today = new Date();
-  const key = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
+  const dayKey = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
   const data = (await appService.loadUsageData()) || {};
-  const day = data[key] || { readSeconds: 0, annotations: 0 };
-  day.annotations = (day.annotations || 0) + count;
-  data[key] = day;
+  const dayData = data[dayKey] || {};
+  const bookKey = bookKey_.split('-')[0]!;
+  const bookData = dayData[bookKey] || { readSeconds: 0, annotations: 0 };
+  bookData.annotations = (bookData.annotations || 0) + count;
+  dayData[bookKey] = bookData;
+  data[dayKey] = dayData;
   await appService.saveUsageData(data);
 };

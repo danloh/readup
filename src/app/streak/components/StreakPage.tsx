@@ -5,9 +5,9 @@ import React, { useState, useEffect } from 'react';
 import { useEnv } from '@/context/EnvContext';
 import { useTheme } from '@/hooks/useTheme';
 import { useTranslation } from '@/hooks/useTranslation';
+import { loadUsage, UsageDay, UsageRecord } from '@/services/usageService';
 import UserInfo from './UserInfo';
 import HeatMap, { ActivityRecord } from './HeatMap';
-import { loadUsage } from '@/services/usageService';
 
 const StreakPage = () => {
   const _ = useTranslation();
@@ -15,13 +15,23 @@ const StreakPage = () => {
 
   useTheme({ systemUIVisible: false });
 
-  const [usage, setUsage] = useState<Record<string, any>>({});
+  const [usage, setUsage] = useState<ActivityRecord>({});
 
   useEffect(() => {
     (async () => {
       try {
-        const data = await loadUsage(envConfig);
-        setUsage(data || {});
+        const data: UsageRecord = await loadUsage(envConfig);
+        const activityRecord: ActivityRecord = {};
+        for (const [day, dayData] of Object.entries(data)) {
+          const usageData: UsageDay = { readSeconds: 0, annotations: 0 };
+          const records = Object.values(dayData);
+          for (const rec of records) {
+            usageData.readSeconds += (rec.readSeconds || 0);
+            usageData.annotations += (rec.annotations || 0);
+          }
+          activityRecord[day] = usageData;
+        }
+        setUsage(activityRecord);
       } catch (err) {
         console.error('Failed to load usage data', err);
       }
@@ -46,10 +56,7 @@ const StreakPage = () => {
         <div className='flex flex-col gap-y-4 px-2'>
           <UserInfo />
           <div className='flex items-center justify-center overlfow-auto p-4'>
-            <HeatMap 
-              data={usage as ActivityRecord} 
-              onClickCell={(d) => console.log('day click', d)} 
-            />
+            <HeatMap data={usage} onClickCell={(d) => console.log('day click', d)} />
           </div>
         </div>
       </div>

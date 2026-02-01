@@ -40,6 +40,7 @@ import { usePagination } from '../hooks/usePagination';
 import { useFoliateEvents } from '../hooks/useFoliateEvents';
 import { useProgressAutoSave } from '../hooks/useProgressAutoSave';
 import { useTextTranslation } from '../hooks/useTextTranslation';
+import useReadingTracker from '../hooks/useReadingTracker';
 import {
   handleKeydown,
   handleKeyup,
@@ -95,6 +96,8 @@ const FoliateViewer: React.FC<{
   useUICSS(bookKey);
   useProgressAutoSave(bookKey);
   useTextTranslation(bookKey, viewRef.current);
+  // Track continuous reading sessions for usage stats
+  useReadingTracker(!!bookKey, bookKey);
 
   const progressRelocateHandler = (event: Event) => {
     const detail = (event as CustomEvent).detail;

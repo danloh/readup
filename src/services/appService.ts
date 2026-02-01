@@ -65,6 +65,7 @@ import {
   DEFAULT_EINK_VIEW_SETTINGS,
 } from './constants';
 import { DEFAULT_AI_SETTINGS } from './ai/constants';
+import { UsageRecord } from './usageService';
 
 export abstract class BaseAppService implements AppService {
   osPlatform: OsPlatform = getOSPlatform();
@@ -906,18 +907,17 @@ export abstract class BaseAppService implements AppService {
   }
 
   // Usage data management --------------------------------------------------
-  async loadUsageData(): Promise<Record<string, { readSeconds: number; annotations: number }>> {
+  async loadUsageData(): Promise<UsageRecord> {
     const mainResult = await this.loadJSONFile('usage.json', 'Books');
     if (mainResult.success) {
-      return mainResult.data as Record<string, { readSeconds: number; annotations: number }>;
+      return mainResult.data as UsageRecord;
     }
     return {};
   }
 
-  async saveUsageData(data: Record<string, { readSeconds: number; annotations: number }>): Promise<void> {
+  async saveUsageData(data: UsageRecord): Promise<void> {
     await this.safeSaveJSON('usage.json', 'Books', data);
   }
-
 
   private async loadJSONFile(
     path: string,
