@@ -11,6 +11,7 @@ export default function useReadingTracker(
   active: boolean, 
   bookKey: string,
   minSessionSeconds = 10, 
+  idleTimeoutSeconds = 60 * 5 // should be different for different screen size
 ) {
   const { envConfig } = useEnv();
   const now = () => Date.now();
@@ -41,14 +42,33 @@ export default function useReadingTracker(
       }
     };
 
+    // idle for idleTimeoutSeconds(no Activity),will end the session.
+    // During the idleTimeoutSeconds, should complete one page, 
+    // at least need to click/scroll... to paginate, 
+    // such activity will reset the timeout
+    const resetIdleTimer = () => {
+      // here to clear Timer if any active before the idleTimeout delay
+      if (idleTimer.current) window.clearTimeout(idleTimer.current);
+      // reset the timer
+      idleTimer.current = window.setTimeout(() => {
+        // for any unexpected idle
+        if (lastActivity.current) {
+          lastActivity.current += Math.min(minSessionSeconds, 10) * 1000;
+        }
+        
+        endSessionIfNeeded();
+      }, idleTimeoutSeconds * 1000);
+    };
+
     const onActivity = (_ev?: string) => {
       const t = now();
       lastActivity.current = t;
-      // re-active if not active 
+      // re-active if not active(ended before) 
       if (!sessionActive.current) {
         sessionActive.current = true;
         sessionStart.current = t;
       }
+      resetIdleTimer();
       // console.log(
       //   '>> Event ', _ev, 'active ', sessionActive, 'start ', sessionStart, 'last ', lastActivity
       // );
@@ -96,6 +116,9 @@ export default function useReadingTracker(
     document.addEventListener('visibilitychange', onVisibilityChange);
     window.addEventListener('beforeunload', onBeforeUnload);
 
+    // start idle timer initially
+    resetIdleTimer();
+
     return () => {
       document.removeEventListener('mousemove', () => onActivity());
       document.removeEventListener('wheel', () => onActivity());
@@ -112,5 +135,5 @@ export default function useReadingTracker(
       endSessionIfNeeded();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active, minSessionSeconds]);
+  }, [active, minSessionSeconds, idleTimeoutSeconds]);
 }
