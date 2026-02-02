@@ -31,7 +31,7 @@ export default function HeatMap(props: HeatMapProps) {
               onClick={onDayClick} 
             />
           ))}
-          {Array.from(Array(12).keys()).map(monIdx => (
+          {Array.from(Array(13).keys()).map(monIdx => (
             <text 
               key={`mon-${monIdx}`} 
               id={`start-${calcMonStart()}-idx-${monIdx}`}
@@ -149,13 +149,13 @@ function getDayStyle(data: ActivityRecord, weekIdx: number, dayIdx: number) {
 }
 
 function getMonthLabel(idx: number) {
-  if (idx > 11) return '';
+  if (idx > 12) return '';
   const months = [
     'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
     'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
   ];
   const nowMonth = new Date().getMonth();
-  const monIdx = nowMonth + idx + 1;
+  const monIdx = nowMonth + idx;
   const realIdx = monIdx >= 12 ? monIdx - 12 : monIdx;
   return months[realIdx] || '';
 }
