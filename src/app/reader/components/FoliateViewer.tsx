@@ -54,6 +54,7 @@ import {
 } from '../utils/iframeEventHandlers';
 import { TransformContext } from '../transformers/types';
 import { ParagraphControl } from './paragraph';
+import { RSVPControl } from './rsvp';
 
 declare global {
   interface Window {
@@ -444,6 +445,7 @@ const FoliateViewer: React.FC<{
         {...touchHandlers}
       />
       <ParagraphControl bookKey={bookKey} viewRef={viewRef} gridInsets={gridInsets} />
+      <RSVPControl bookKey={bookKey} />
       {!docLoaded.current && loading && <Spinner loading={true} />}
     </>
   );

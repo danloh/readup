@@ -85,6 +85,11 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
     }
   };
 
+  const handleStartRSVP = () => {
+    setIsDropdownOpen?.(false);
+    eventDispatcher.dispatch('rsvp-start', { bookKey });
+  };
+
   useEffect(() => {
     if (isScrolledMode === viewSettings!.scrolled) return;
     viewSettings!.scrolled = isScrolledMode;
@@ -266,6 +271,13 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
         onClick={toggleParagraphMode}
         disabled={bookData.isFixedLayout}
       />
+      <MenuItem
+        label={_('Speed Reading Mode')}
+        Icon={BiCheckbox}
+        onClick={handleStartRSVP}
+        disabled={bookData.isFixedLayout}
+      />
+
       {appService?.hasWindow && <MenuItem label={_('Fullscreen')} onClick={handleFullScreen} />}
       <MenuItem
         label={
