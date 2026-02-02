@@ -20,8 +20,8 @@ export default function HeatMap(props: HeatMapProps) {
   const hmLabelClass = 'text-xs fill-primary';
 
   return (
-    <div className='w-full overflow-auto p-1 m-0.5'>
-      <svg width='828' height='128' className='hm-svg w-full overflow-auto'>
+    <div className='overflow-auto p-1 m-1'>
+      <svg width='828' height='128' className='hm-svg'>
         <g transform='translate(10, 20)'>
           {Array.from(Array(53).keys()).map(weekIdx => (
             <WeekHeatMap 

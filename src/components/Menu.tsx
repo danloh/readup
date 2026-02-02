@@ -1,6 +1,6 @@
-import { useKeyDownActions } from '@/hooks/useKeyDownActions';
 import clsx from 'clsx';
-import React, { useEffect, useRef } from 'react';
+import { useRef } from 'react';
+import { useKeyDownActions } from '@/hooks/useKeyDownActions';
 
 interface MenuProps {
   children: React.ReactNode;
@@ -13,17 +13,6 @@ interface MenuProps {
 const Menu: React.FC<MenuProps> = ({ children, className, style, onCancel }) => {
   const menuRef = useRef<HTMLDivElement | null>(null);
   useKeyDownActions({ onCancel, elementRef: menuRef });
-
-  useEffect(() => {
-    setTimeout(() => {
-      if (menuRef.current) {
-        const firstItem = menuRef.current.querySelector('[role="menuitem"]');
-        if (firstItem) {
-          (firstItem as HTMLElement).focus();
-        }
-      }
-    }, 200);
-  }, []);
 
   return (
     <div

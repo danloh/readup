@@ -53,9 +53,9 @@ const StreakPage = () => {
   return (
     <div className='profile-view w-full h-full p-2 border-t-2 border-base-100'>
       <div className='flex h-full w-full flex-col items-center bg-base-200'>
-        <div className='flex flex-col gap-y-4 px-2'>
+        <div className='flex flex-col gap-y-4 px-2 w-full overlfow-y-auto'>
           <UserInfo />
-          <div className='flex items-center justify-center overlfow-auto p-4'>
+          <div className='flex items-center justify-center p-2'>
             <HeatMap data={usage} onClickCell={(d) => console.log('day click', d)} />
           </div>
         </div>

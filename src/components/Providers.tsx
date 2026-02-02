@@ -7,6 +7,7 @@ import { IconContext } from 'react-icons';
 import { AuthProvider } from '@/context/AuthContext';
 import { useEnv } from '@/context/EnvContext';
 import { CSPostHogProvider } from '@/context/PHContext';
+import { DropdownProvider } from '@/context/DropdownContext';
 import { useDefaultIconSize } from '@/hooks/useResponsiveSize';
 import { useSafeAreaInsets } from '@/hooks/useSafeAreaInsets';
 import { useEinkMode } from '@/hooks/useEinkMode';
@@ -63,10 +64,12 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
     <CSPostHogProvider>
       <AuthProvider>
         <IconContext.Provider value={{ size: `${iconSize}px` }}>
-          <CommandPaletteProvider>
-            {children}
-            <CommandPalette />
-          </CommandPaletteProvider>
+          <DropdownProvider>
+            <CommandPaletteProvider>
+              {children}
+              <CommandPalette />
+            </CommandPaletteProvider>
+          </DropdownProvider>
         </IconContext.Provider>
       </AuthProvider>
     </CSPostHogProvider>

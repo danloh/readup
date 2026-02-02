@@ -62,13 +62,11 @@ const UserInfo: React.FC = () => {
         <div className='text-sm opacity-70'>
           <a href={`https://bsky.app}/profile/${user?.handle}`}>@{user?.handle}</a>
         </div>
-        {/* {profile?.description ? (
-          <p className='mt-2 max-w-prose text-sm text-base-content break-words'>
+        {profile?.description && (
+          <p className='mt-2 max-w-prose text-sm line-clamp-1 text-base-content break-words'>
             {profile.description}
           </p>
-        ) : error && !loading ? (
-          <p className='mt-2 text-sm text-error'>Failed to load profile</p>
-        ) : null} */}
+        )}
         <button className='link text-xs' onClick={logout}>Log Out</button>
       </div>
     </div>

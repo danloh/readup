@@ -367,10 +367,10 @@ const SearchBar: React.FC<SearchBarProps> = ({
           <Dropdown
             label={_('Search Options')}
             className={clsx(
-              window.innerWidth < 640 && 'dropdown-end',
-              'dropdown-bottom flex justify-center',
+              window.innerWidth < 640 ? 'dropdown-end' : 'dropdown-center',
+              'dropdown-bottom',
             )}
-            menuClassName={window.innerWidth < 640 ? 'no-triangle mt-1' : 'dropdown-center mt-3'}
+            menuClassName={clsx('no-triangle mt-1', window.innerWidth < 640 ? '' : '!relative')}
             buttonClassName={clsx(
               'btn btn-ghost h-8 min-h-8 w-8 p-0 rounded-none rounded-r-lg',
               viewSettings?.isEink ? '!bg-transparent hover:!bg-transparent' : '',

@@ -188,7 +188,7 @@ export default function NavBar({ tab, children }: { tab: string; children: React
   return (
     <div 
       className={clsx(
-        'nav-page full-height bg-base-200 text-base-content flex select-none flex-col',
+        'nav-page full-height bg-base-200 text-base-content flex flex-col',
         viewSettings?.isEink ? 'bg-base-100' : 'bg-base-200',
         appService?.hasRoundedWindow && isRoundedWindow && 'window-border rounded-window',
       )}
