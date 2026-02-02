@@ -115,7 +115,7 @@ function getDataToolTips(data: ActivityRecord, weekIdx: number, dayIdx: number) 
   const date = getDate(weekIdx, dayIdx);
   const readMinutes = Math.ceil((aData?.readSeconds || 0) / 60);
   const noteNum = aData?.annotations || 0;
-  return `${date}:\nRead: ${readMinutes} min\nAnnotations: ${noteNum}`;
+  return `${date}:\nRead: ${readMinutes}\nWrite: ${noteNum}`;
 }
 
 function getDayStyle(data: ActivityRecord, weekIdx: number, dayIdx: number) {

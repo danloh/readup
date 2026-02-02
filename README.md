@@ -1,27 +1,24 @@
-A fork of [Foliate](https://github.com/johnfactotum/foliate) and [Readest](https://github.com/readest/readest), we add an atproto layer on the reader for social reading.
-
+A fork of [Readest](https://github.com/readest/readest), we add an atproto layer on the reader for social reading.
 
 ## Features
 
-<div align="left">✅ Implemented</div>
-
-| **Feature**                             | **Description**                                                                                | **Status** |
-| --------------------------------------- | ---------------------------------------------------------------------------------------------- | ---------- |
-| **Multi-Format Support**                | Support EPUB, MOBI, KF8 (AZW3), FB2, CBZ, TXT, PDF (experimental)                              | ✅         |
-| **Scroll/Page View Modes**              | Switch between scrolling or paginated reading modes.                                           | ✅         |
-| **Full-Text Search**                    | Search across the entire book to find relevant sections.                                       | ✅         |
-| **Annotations and Highlighting**        | Add highlights, bookmarks, and notes to enhance your reading experience.                       | ✅         |
-| **Excerpt Text for Note-Taking**        | Easily excerpt text from books for detailed notes and analysis.                                | ✅         |
-| **Dictionary/Wikipedia Lookup**         | Instantly look up words and terms when reading.                                                | ✅         |
-| **[Parallel Read][link-parallel-read]** | Read two books or documents simultaneously in a split-screen view.                             | ✅         |
-| **Customize Font and Layout**           | Adjust font, layout, theme mode, and theme colors for a personalized experience.               | ✅         |
-| **File Association and Open With**      | Quickly open files in Readup in your file browser with one-click.                             | ✅         |
-| **Sync across Platforms**               | Synchronize book files, reading progress, notes, and bookmarks across all supported platforms. | ✅         |
-| **Translate with DeepL**                | From a single sentence to the entire book—translate instantly with DeepL.                      | ✅         |
-| **Text-to-Speech (TTS) Support**        | Enjoy smooth, multilingual narration—even within a single book.                                | ✅         |
-| **Library Management**                  | Organize, sort, and manage your entire ebook library.                                          | ✅         |
-| **Code Syntax Highlighting**            | Read software manuals with rich coloring of code examples.                                     | ✅         |
-
+- [X] **Multi-Format Support** Support EPUB, MOBI, KF8 (AZW3), FB2, CBZ, TXT, PDF (experimental) 
+- [X] **Library Management** Organize, sort, and manage your entire ebook library.
+- [X] **Multi Reading Modes** scrolling, paginated reading, paragraph reading, speed reading.
+- [X] **Parallel Read** Read two books or documents simultaneously in a split-screen view.
+- [X] **Full-Text Search** Search across the entire book to find relevant sections.
+- [X] **Proofread**
+- [X] **Annotations and Highlighting** Bookmark and add highlights/notes with customized styles.
+- [X] **Dictionary/Wikipedia Lookup** Instantly look up words and terms.
+- [X] **Translate** From a single sentence to the entire book translate instantly.
+- [X] **Customize Font and Layout** Adjust font, layout, theme mode, and theme colors.
+- [X] **OPDS Integration** Integrate OPDS to access online libraries and catalogs.
+- [X] **atproto layer** Synchronize book files, reading progress, notes with your PDS.
+- [X] **Share excerpt to ATmosphere** Share and start discussion the book with friends. 
+- [X] **Read RSS feed like a book** Convert your favorite feeds into a book and read it.
+- [ ] **Reading Stats** Track daily reading time and use heatmap to visualize your activities.
+- [ ] **AI Reading Assistant** Summarize, recommend and chat with AI.
+- [ ] **Text-to-Speech (TTS) Support** 
 
 ---
 
