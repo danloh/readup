@@ -1,6 +1,6 @@
 import clsx from 'clsx';
-import { useEffect, useRef } from 'react';
 import Image from 'next/image';
+import { memo, useEffect, useRef } from 'react';
 import { Book } from '@/types/book';
 import { LibraryViewModeType } from '@/types/settings';
 import { formatAuthors, formatTitle } from '@/utils/book';
@@ -14,14 +14,15 @@ interface BookCoverProps {
   onImageError?: () => void;
 }
 
-const BookCover: React.FC<BookCoverProps> = ({
-  book,
-  mode = 'grid',
-  className,
-  imageClassName,
-  isPreview,
-  onImageError,
-}) => {
+const BookCover: React.FC<BookCoverProps> = memo<BookCoverProps>((props: BookCoverProps) => {
+  const {
+    book,
+    mode = 'grid',
+    className,
+    imageClassName,
+    isPreview,
+    onImageError,
+  } = props;
   const coverRef = useRef<HTMLDivElement>(null);
 
   const toggleImageVisibility = (showImage: boolean) => {
@@ -51,31 +52,34 @@ const BookCover: React.FC<BookCoverProps> = ({
   }, [book.metadata?.coverImageUrl, book.coverImageUrl]);
 
   return (
-    <div 
+    <div
       ref={coverRef}
       className={clsx('book-cover-container relative flex h-full w-full', className)}
-    >
-      <div
-        className={clsx(
-          'flex h-full w-full justify-center',
-          mode === 'grid' ? 'items-end' : 'items-center',
-        )}
-      >
-        <Image
-          src={book.metadata?.coverImageUrl || book.coverImageUrl!}
-          alt={book.title}
-          fill={true}
-          width={0}
-          height={0}
-          sizes='100vw'
+    >  
+      <div className={clsx('flex h-full w-full justify-center')}>
+        <div
           className={clsx(
-            'cover-image fit-cover-img h-auto max-h-full w-auto max-w-full object-fit shadow-md',
-            imageClassName,
+            'flex h-full max-h-full',
+            mode === 'grid' ? 'items-end' : 'items-center',
           )}
-          onLoad={handleImageLoad}
-          onError={handleImageError}
-        />
+        >
+          <Image
+            src={book.metadata?.coverImageUrl || book.coverImageUrl!}
+            alt={book.title}
+            fill={true}
+            width={0}
+            height={0}
+            sizes='100vw'
+            className={clsx(
+              'cover-image fit-cover h-auto max-h-full w-auto max-w-full object-fit shadow-md',
+              imageClassName,
+            )}
+            onLoad={handleImageLoad}
+            onError={handleImageError}
+          />
+        </div>
       </div>
+
       <div
         className={clsx(
           'fallback-cover invisible absolute inset-0 p-2',
@@ -107,7 +111,20 @@ const BookCover: React.FC<BookCoverProps> = ({
         </div>
       </div>
     </div>
-  );
-};
+  );},
+  (prevProps, nextProps) => {
+    return (
+      prevProps.book.coverImageUrl === nextProps.book.coverImageUrl &&
+      prevProps.book.metadata?.coverImageUrl === nextProps.book.metadata?.coverImageUrl &&
+      prevProps.book.updatedAt === nextProps.book.updatedAt &&
+      prevProps.mode === nextProps.mode &&
+      prevProps.isPreview === nextProps.isPreview &&
+      prevProps.className === nextProps.className &&
+      prevProps.imageClassName === nextProps.imageClassName
+    );
+  },
+);
+
+BookCover.displayName = 'BookCover';
 
 export default BookCover;
