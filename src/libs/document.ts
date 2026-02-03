@@ -24,10 +24,12 @@ export interface TOCItem {
 export interface SectionItem {
   id: string;
   cfi: string;
+  href?: string;
   size: number;
   linear: string;
   location?: Location;
   pageSpread?: 'left' | 'right' | 'center' | '';
+  subitems?: Array<SectionItem>;
 }
 
 export type BookMetadata = {

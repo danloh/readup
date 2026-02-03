@@ -204,6 +204,7 @@ const BooksGrid: React.FC<BooksGridProps> = ({ bookKeys, onCloseBook }) => {
             {showFooter && (
               <ProgressInfoView
                 bookKey={bookKey}
+                toc={bookDoc.toc || []}
                 section={section}
                 pageinfo={pageinfo}
                 timeinfo={timeinfo}

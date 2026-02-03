@@ -156,6 +156,7 @@ const Dialog: React.FC<DialogProps> = ({
       ref={dialogRef}
       id={id ?? 'dialog'}
       open={isOpen}
+      aria-label={title}
       aria-hidden={!isOpen}
       tabIndex={-1}
       className={clsx(

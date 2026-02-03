@@ -617,14 +617,14 @@ export const READUP_OPDS_USER_AGENT = 'Readup/1.0 (OPDS Browser)';
 
 export const CHECK_UPDATE_INTERVAL_SEC = 24 * 60 * 60;
 export const RELOAD_BEFORE_SAVED_TIMEOUT_MS = 300;
-
 export const MAX_ZOOM_LEVEL = 500;
 export const MIN_ZOOM_LEVEL = 50;
 export const ZOOM_STEP = 10;
-
 export const DOUBLE_CLICK_INTERVAL_THRESHOLD_MS = 250;
 export const DISABLE_DOUBLE_CLICK_ON_MOBILE = true;
 export const LONG_HOLD_THRESHOLD = 500;
+export const SIZE_PER_LOC = 1500;
+export const SIZE_PER_TIME_UNIT = 1600;
 
 export const CUSTOM_THEME_TEMPLATES = [
   {

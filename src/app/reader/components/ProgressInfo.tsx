@@ -1,13 +1,15 @@
 import clsx from 'clsx';
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Insets } from '@/types/misc';
 import { useEnv } from '@/context/EnvContext';
 import { useReaderStore } from '@/store/readerStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PageInfo, TimeInfo } from '@/types/book';
 import { useBookDataStore } from '@/store/bookDataStore';
+import { TOCItem } from '@/libs/document';
+import { SIZE_PER_LOC, SIZE_PER_TIME_UNIT } from '@/services/constants';
 
-function formatReadingProgress(
+function formatProgress(
   current: number | undefined,
   total: number | undefined,
   template: string,
@@ -24,6 +26,7 @@ function formatReadingProgress(
 
 interface PageInfoProps {
   bookKey: string;
+  toc: TOCItem[];
   section?: PageInfo;
   pageinfo?: PageInfo;
   timeinfo?: TimeInfo;
@@ -34,20 +37,20 @@ interface PageInfoProps {
 
 const ProgressInfoView: React.FC<PageInfoProps> = ({
   bookKey,
+  toc,
   section,
   pageinfo,
-  timeinfo,
   horizontalGap,
   contentInsets,
   gridInsets,
 }) => {
   const _ = useTranslation();
   const { appService } = useEnv();
-  const { getView, getViewSettings } = useReaderStore();
-  const view = getView(bookKey);
-  const viewSettings = getViewSettings(bookKey)!;
+  const { getProgress, getViewSettings } = useReaderStore();
   const { getBookData } = useBookDataStore();
+  const viewSettings = getViewSettings(bookKey)!;
   const bookData = getBookData(bookKey); 
+  const progress = getProgress(bookKey);
   const showDoubleBorder = viewSettings.vertical && viewSettings.doubleBorder;
   const isScrolled = viewSettings.scrolled;
   const isVertical = viewSettings.vertical;
@@ -57,12 +60,26 @@ const ProgressInfoView: React.FC<PageInfoProps> = ({
     ? '{current} · {total} · {percent}%'
     : '{current} / {total} / {percent}%';
 
-  const progress = bookData?.isFixedLayout ? section : pageinfo;
-  const progressInfo = formatReadingProgress(progress?.current, progress?.total, formatTemplate);
+  const pageInfo = bookData?.isFixedLayout ? section : pageinfo;
+  const progressInfo = formatProgress(pageInfo?.current, pageInfo?.total, formatTemplate);
 
-  const timeLeft = timeinfo ? _('{{time}}m', { time: Math.round(timeinfo.section) }) : '';
-  const { page = 0, pages = 0 } = view?.renderer || {};
-  const pageLeft = pages - 1 > page ? _('{{count}}p', { count: pages - 1 - page }) : '';
+  const activeHref = useMemo(() => progress?.sectionHref || null, [progress?.sectionHref]);
+  const activeTOCItem = useMemo(() => {
+    if (!activeHref) return null;
+    for (const item of toc) {
+      if (item.href === activeHref) return item;
+      const subitem = item.subitems?.find((sub) => sub.href === activeHref);
+      if (subitem) return subitem;
+    }
+    return null;
+  }, [activeHref, toc]);
+  const current = pageInfo?.current || 0;
+  const total = activeTOCItem?.location ? activeTOCItem.location.next : pageInfo?.total || 0;
+  const pages = Math.max(total - current, 0);
+  const timeLeft = total - 1 >= current
+    ? _('{{time}}m', { time: Math.round((pages * SIZE_PER_LOC) / SIZE_PER_TIME_UNIT) })
+    : '';
+  const pageLeft = total - 1 >= current ? _('{{count}}p', { count: pages }) : '';
   const remainingInfo = `${timeLeft}${timeLeft && pageLeft ? ' § ' : ''}${pageLeft}`;
 
   return (
@@ -78,8 +95,8 @@ const ProgressInfoView: React.FC<PageInfoProps> = ({
         [
           progress
             ? _('On {{current}} of {{total}} page', {
-                current: progress.current + 1,
-                total: progress.total,
+                current: current + 1,
+                total: total,
               })
             : '',
           timeLeft,
