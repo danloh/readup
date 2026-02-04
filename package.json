@@ -164,15 +164,5 @@
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^4.0.15"
   },
-  "packageManager": "pnpm@10.28.2",
-  "pnpm": {
-    "overrides": {
-      "mdast-util-gfm-autolink-literal": "2.0.1",
-      "@ai-sdk/provider-utils": "4.0.8"
-    },
-    "patchedDependencies": {
-      "mdast-util-gfm-autolink-literal@2.0.1": "patches/mdast-util-gfm-autolink-literal@2.0.1.patch",
-      "@ai-sdk/provider-utils@4.0.8": "patches/@ai-sdk__provider-utils@4.0.8.patch"
-    }
-  }
+  "packageManager": "pnpm@10.28.2"
 }
