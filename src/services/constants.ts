@@ -14,7 +14,12 @@ import {
   ViewConfig,
   ViewSettings,
 } from '@/types/book';
-import { ReadSettings, SystemSettings } from '@/types/settings';
+import { 
+  LibraryGroupByType, 
+  LibrarySortByType, 
+  ReadSettings, 
+  SystemSettings 
+} from '@/types/settings';
 import { getDefaultMaxBlockSize, getDefaultMaxInlineSize } from '@/utils/config';
 import { stubTranslation as _ } from '@/utils/misc';
 import { DEFAULT_AI_SETTINGS } from './ai/constants';
@@ -57,7 +62,8 @@ export const DEFAULT_SYSTEM_SETTINGS: Partial<SystemSettings> = {
   autoImportBooksOnOpen: false,
   telemetryEnabled: false,
   libraryViewMode: 'grid',
-  librarySortBy: 'updated',
+  libraryGroupBy: LibraryGroupByType.Manual,
+  librarySortBy: LibrarySortByType.Updated,
   librarySortAscending: true,
   aiSettings: DEFAULT_AI_SETTINGS,
 };

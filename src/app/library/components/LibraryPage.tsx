@@ -42,8 +42,10 @@ import { useDragDropImport } from '../hooks/useDragDropImport';
 import BookDetailModal from './metadata/BookDetailModal';
 import LibraryHeader from './LibraryHeader';
 import Bookshelf from './Bookshelf';
-import { getBreadcrumbs } from './libraryUtils';
+import { createBookGroups, ensureLibraryGroupByType, findGroupById, getBreadcrumbs } from './libraryUtils';
 import TransferQueuePanel from './TransferQueuePanel';
+import { LibraryGroupByType } from '@/types/settings';
+import GroupHeader from './GroupHeader';
 
 const LibraryPageWithSearchParams = () => {
   const searchParams = useSearchParams();
@@ -83,6 +85,11 @@ const LibraryPageContent = (
   const [showGroupModal, setShowGroupModal] = useState(false);
   const [newGroupName, setNewGroupName] = useState(currentGroupPath);
 
+  const [currentSeriesAuthorGroup, setCurrentSeriesAuthorGroup] = useState<{
+    groupBy: typeof LibraryGroupByType.Series | typeof LibraryGroupByType.Author;
+    groupName: string;
+  } | null>(null);
+
   const viewSettings = settings.globalViewSettings;
   const osRef = useRef<OverlayScrollbarsComponentRef>(null);
   const containerRef: React.RefObject<HTMLDivElement | null> = useRef(null);
@@ -115,6 +122,36 @@ const LibraryPageContent = (
     setCurrentGroupPath(groupName);
     setNewGroupName(groupName);
   }, [libraryBooks, searchParams, getGroupName]);
+
+  // Track current series/author group for navigation header
+  useEffect(() => {
+    const groupId = searchParams?.get('group') || '';
+    const groupByParam = searchParams?.get('groupBy');
+    const groupBy = ensureLibraryGroupByType(groupByParam, settings.libraryGroupBy);
+
+    if (
+      groupId &&
+      (groupBy === LibraryGroupByType.Series || groupBy === LibraryGroupByType.Author)
+    ) {
+      // Find the group to get its name
+      const allGroups = createBookGroups(
+        libraryBooks.filter((b) => !b.deletedAt),
+        groupBy,
+      );
+      const targetGroup = findGroupById(allGroups, groupId);
+
+      if (targetGroup) {
+        setCurrentSeriesAuthorGroup({
+          groupBy,
+          groupName: targetGroup.displayName || targetGroup.name,
+        });
+      } else {
+        setCurrentSeriesAuthorGroup(null);
+      }
+    } else {
+      setCurrentSeriesAuthorGroup(null);
+    }
+  }, [libraryBooks, searchParams, settings.libraryGroupBy]);
 
   const handleImportBookFiles = useCallback(async (event: CustomEvent) => {
     const selectedFiles: SelectedFile[] = event.detail.files;
@@ -529,6 +566,12 @@ const LibraryPageContent = (
             </button>
           </div>
         </div>
+      )}
+      {currentSeriesAuthorGroup && (
+        <GroupHeader
+          groupBy={currentSeriesAuthorGroup.groupBy}
+          groupName={currentSeriesAuthorGroup.groupName}
+        />
       )}
       {showBookshelf &&
         (libraryBooks.some((book) => !book.deletedAt) ? (

@@ -1,8 +1,8 @@
 import clsx from 'clsx';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Book } from '@/types/book';
-import { LibraryViewModeType } from '@/types/settings';
+import { Book, BooksGroup } from '@/types/book';
+import { LibraryGroupByType, LibrarySortByType, LibraryViewModeType } from '@/types/settings';
 import { useEnv } from '@/context/EnvContext';
 import { useAutoFocus } from '@/hooks/useAutoFocus';
 import { useSettingsStore } from '@/store/settingsStore';
@@ -12,7 +12,7 @@ import { navigateToLibrary, navigateToReader } from '@/utils/nav';
 import { formatTitle } from '@/utils/book';
 import Spinner from '@/components/Spinner';
 import BookshelfItem, { generateBookshelfItems } from './BookshelfItem';
-import { createBookFilter, createBookSorter } from './libraryUtils';
+import { createBookFilter, createBookGroups, createBookSorter, createGroupSorter, createWithinGroupSorter, ensureLibraryGroupByType, ensureLibrarySortByType } from './libraryUtils';
 
 interface BookshelfProps {
   libraryBooks: Book[];
@@ -32,8 +32,9 @@ const Bookshelf: React.FC<BookshelfProps> = ({
   const groupId = searchParams?.get('group') || '';
   const queryTerm = searchParams?.get('q') || null;
   const viewMode = searchParams?.get('view') || settings.libraryViewMode;
-  const sortBy = searchParams?.get('sort') || settings.librarySortBy;
+  const sortBy = ensureLibrarySortByType(searchParams?.get('sort'), settings.librarySortBy);
   const sortOrder = searchParams?.get('order') || (settings.librarySortAscending ? 'asc' : 'desc');
+  const groupBy = ensureLibraryGroupByType(searchParams?.get('groupBy'), settings.libraryGroupBy);
 
   const [loading, setLoading] = useState(false);
   const [importBookUrl] = useState(searchParams?.get('url') || '');
@@ -56,7 +57,8 @@ const Bookshelf: React.FC<BookshelfProps> = ({
         }
       });
 
-      if (params.get('sort') === 'updated') params.delete('sort');
+      if (params.get('sort') === LibrarySortByType.Updated) params.delete('sort');
+      if (params.get('groupBy') === LibraryGroupByType.Manual) params.delete('groupBy');
       if (params.get('order') === 'desc') params.delete('order');
       if (params.get('cover') === 'crop') params.delete('cover');
       if (params.get('view') === 'grid') params.delete('view');
@@ -77,13 +79,33 @@ const Bookshelf: React.FC<BookshelfProps> = ({
   }, [libraryBooks, queryTerm]);
 
   const currentBookshelfItems = useMemo(() => {
-    const groupName = getGroupName(groupId) || '';
-    if (groupId && !groupName) {
-      return [];
+    if (groupBy === LibraryGroupByType.Manual) {
+      // Use existing generateBookshelfItems for manual mode
+      const groupName = getGroupName(groupId) || '';
+      if (groupId && !groupName) {
+        return [];
+      }
+      return generateBookshelfItems(filteredBooks, groupName);
+    } else {
+      // Use new createBookGroups for series/author/none modes
+      const allItems = createBookGroups(filteredBooks, groupBy);
+
+      // If navigating into a specific group, show only that group's books
+      if (groupId) {
+        const targetGroup = allItems.find(
+          (item): item is BooksGroup => 'books' in item && item.id === groupId,
+        );
+        if (targetGroup) {
+          // Return the books from the target group as individual items
+          return targetGroup.books;
+        }
+        // Group not found, return empty
+        return [];
+      }
+
+      return allItems;
     }
-    const items = generateBookshelfItems(filteredBooks, groupName);
-    return items;
-  }, [filteredBooks, groupId, getGroupName]);
+  }, [filteredBooks, groupBy, groupId, getGroupName]);
 
   useEffect(() => {
     if (groupId && currentBookshelfItems.length === 0) {
@@ -94,24 +116,34 @@ const Bookshelf: React.FC<BookshelfProps> = ({
   }, [searchParams, groupId, currentBookshelfItems.length, updateUrlParams]);
 
   const sortedBookshelfItems = useMemo(() => {
-    const bookSorter = createBookSorter(sortBy, uiLanguage);
     const sortOrderMultiplier = sortOrder === 'asc' ? 1 : -1;
-    return currentBookshelfItems.sort((a, b) => {
-      if (sortBy === 'updated') {
-        return (
-          (new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime()) * sortOrderMultiplier
-        );
-      } else if ('name' in a || 'name' in b) {
-        const aName = 'name' in a ? a.name : formatTitle(a.title);
-        const bName = 'name' in b ? b.name : formatTitle(b.title);
-        return aName.localeCompare(bName, uiLanguage || navigator.language) * sortOrderMultiplier;
-      } else if (!('name' in a || 'name' in b)) {
-        return bookSorter(a, b) * sortOrderMultiplier;
-      } else {
-        return 0;
-      }
+
+    // Separate into ungrouped books and groups
+    const ungroupedBooks = currentBookshelfItems.filter((item): item is Book => 'format' in item);
+    const groups = currentBookshelfItems.filter((item): item is BooksGroup => 'books' in item);
+
+    // Sort groups by aggregate value
+    const groupSorter = createGroupSorter(sortBy, uiLanguage);
+    groups.sort((a, b) => groupSorter(a, b) * sortOrderMultiplier);
+
+    // Sort books within each group
+    const withinGroupSorter = createWithinGroupSorter(groupBy, sortBy, uiLanguage);
+    groups.forEach((group) => {
+      group.books.sort((a, b) => withinGroupSorter(a, b) * sortOrderMultiplier);
     });
-  }, [sortOrder, sortBy, uiLanguage, currentBookshelfItems]);
+
+    // Sort ungrouped books - use within-group sorter if we're inside a group
+    // (for series, this ensures books are sorted by series index)
+    if (groupId && groupBy !== LibraryGroupByType.Manual && groupBy !== LibraryGroupByType.None) {
+      ungroupedBooks.sort((a, b) => withinGroupSorter(a, b) * sortOrderMultiplier);
+    } else {
+      const bookSorter = createBookSorter(sortBy, uiLanguage);
+      ungroupedBooks.sort((a, b) => bookSorter(a, b) * sortOrderMultiplier);
+    }
+
+    // Return groups first, then ungrouped books
+    return [...groups, ...ungroupedBooks];
+  }, [sortOrder, sortBy, groupBy, groupId, uiLanguage, currentBookshelfItems]);
 
   useEffect(() => {
     if (isImportingBook.current) return;

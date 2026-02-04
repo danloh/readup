@@ -14,6 +14,7 @@ interface MenuItemProps {
   noIcon?: boolean;
   Icon?: React.ReactNode | IconType;
   children?: React.ReactNode;
+  detailsOpen?: boolean;
   onClick?: () => void;
 }
 
@@ -28,6 +29,7 @@ const MenuItem: React.FC<MenuItemProps> = ({
   noIcon = false,
   Icon,
   children,
+  detailsOpen = false,
   onClick,
 }) => {
   const iconSize = useResponsiveSize(16);
@@ -94,7 +96,7 @@ const MenuItem: React.FC<MenuItemProps> = ({
     return (
       <ul className='menu rounded-box m-0 p-0'>
         <li>
-          <details>
+          <details open={detailsOpen}>
             <summary className='hover:bg-base-300 p-0 pr-3'>{menuButton}</summary>
             {children}
           </details>

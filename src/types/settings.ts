@@ -6,8 +6,26 @@ import { OPDSCatalog } from './opds';
 
 export type ThemeType = 'light' | 'dark' | 'auto';
 export type LibraryViewModeType = 'grid' | 'list';
-export type LibrarySortByType = 
-  'title' | 'author' | 'updated' | 'created' | 'size' | 'format' | 'published';
+export const LibrarySortByType = {
+  Title: 'title',
+  Author: 'author',
+  Updated: 'updated',
+  Created: 'created',
+  Size: 'size',
+  Format: 'format',
+  Published: 'published',
+} as const;
+
+export type LibrarySortByType = (typeof LibrarySortByType)[keyof typeof LibrarySortByType];
+
+export const LibraryGroupByType = {
+  None: 'none',
+  Manual: 'manual',
+  Series: 'series',
+  Author: 'author',
+} as const;
+
+export type LibraryGroupByType = (typeof LibraryGroupByType)[keyof typeof LibraryGroupByType];
 
 export interface ReadSettings {
   sideBarWidth: string;
@@ -43,6 +61,7 @@ export interface SystemSettings {
   autoImportBooksOnOpen: boolean;
   telemetryEnabled: boolean;
   libraryViewMode: LibraryViewModeType;
+  libraryGroupBy: LibraryGroupByType;
   librarySortBy: LibrarySortByType;
   librarySortAscending: boolean;
   opdsCatalogs: OPDSCatalog[];

@@ -4,7 +4,7 @@ import { MdCheck } from 'react-icons/md';
 import { useEnv } from '@/context/EnvContext';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useTranslation } from '@/hooks/useTranslation';
-import { LibrarySortByType, LibraryViewModeType } from '@/types/settings';
+import { LibraryGroupByType, LibrarySortByType, LibraryViewModeType } from '@/types/settings';
 import { navigateToLibrary } from '@/utils/nav';
 import Menu from '@/components/Menu';
 import MenuItem from '@/components/MenuItem';
@@ -22,6 +22,7 @@ const ViewMenu: React.FC<ViewMenuProps> = ({ setIsDropdownOpen }) => {
   const { settings } = useSettingsStore();
 
   const viewMode = settings.libraryViewMode;
+  const groupBy = settings.libraryGroupBy;
   const sortBy = settings.librarySortBy;
   const isAscending = settings.librarySortAscending;
 
@@ -30,13 +31,20 @@ const ViewMenu: React.FC<ViewMenuProps> = ({ setIsDropdownOpen }) => {
     { label: _('Grid'), value: 'grid' },
   ];
 
+  const groupByOptions = [
+    { label: _('None'), value: LibraryGroupByType.None },
+    { label: _('Manual'), value: LibraryGroupByType.Manual },
+    { label: _('Series'), value: LibraryGroupByType.Series },
+    { label: _('Author'), value: LibraryGroupByType.Author },
+  ];
+
   const sortByOptions = [
-    { label: _('Title'), value: 'title' },
-    { label: _('Author'), value: 'author' },
-    { label: _('Format'), value: 'format' },
-    { label: _('Date Read'), value: 'updated' },
-    { label: _('Date Added'), value: 'created' },
-    { label: _('Date Published'), value: 'published' },
+    { label: _('Title'), value: LibrarySortByType.Title },
+    { label: _('Author'), value: LibrarySortByType.Author },
+    { label: _('Format'), value: LibrarySortByType.Format },
+    { label: _('Date Read'), value: LibrarySortByType.Updated },
+    { label: _('Date Added'), value: LibrarySortByType.Created },
+    { label: _('Date Published'), value: LibrarySortByType.Published },
   ];
 
   const sortingOptions = [
@@ -50,6 +58,20 @@ const ViewMenu: React.FC<ViewMenuProps> = ({ setIsDropdownOpen }) => {
 
     const params = new URLSearchParams(searchParams?.toString());
     params.set('view', value);
+    navigateToLibrary(router, `${params.toString()}`);
+  };
+
+  const handleSetGroupBy = async (value: LibraryGroupByType) => {
+    await saveSysSettings(envConfig, 'libraryGroupBy', value);
+
+    const params = new URLSearchParams(searchParams?.toString());
+    if (value === LibraryGroupByType.Manual) {
+      params.delete('groupBy');
+    } else {
+      params.set('groupBy', value);
+    }
+    // Clear group navigation when changing groupBy mode
+    params.delete('group');
     navigateToLibrary(router, `${params.toString()}`);
   };
 
@@ -84,6 +106,22 @@ const ViewMenu: React.FC<ViewMenuProps> = ({ setIsDropdownOpen }) => {
           buttonClass='h-8'
           Icon={viewMode === option.value ? MdCheck : undefined}
           onClick={() => handleSetViewMode(option.value as LibraryViewModeType)}
+        />
+      ))}
+      <hr aria-hidden='true' className='border-base-200 my-1' />
+      <MenuItem
+        label={_('Group by...')}
+        buttonClass='h-8'
+        labelClass='text-sm sm:text-xs'
+        disabled
+      />
+      {groupByOptions.map((option) => (
+        <MenuItem
+          key={option.value}
+          label={option.label}
+          buttonClass='h-8'
+          Icon={groupBy === option.value ? MdCheck : undefined}
+          onClick={() => handleSetGroupBy(option.value as LibraryGroupByType)}
         />
       ))}
       <hr aria-hidden='true' className='border-base-200 my-1' />
