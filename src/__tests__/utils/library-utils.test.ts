@@ -231,6 +231,41 @@ describe('createBookGroups', () => {
     });
   });
 
+  describe('groupBy: status', () => {
+    it('should group books by status', () => {
+      const books = [
+        createMockBook({ hash: '1', title: 'Book 1', status: 'Todo' }),
+        createMockBook({ hash: '2', title: 'Book 2', status: 'Doing' }),
+        createMockBook({ hash: '3', title: 'Book 3', status: 'Todo' }),
+      ];
+
+      const result = createBookGroups(books, LibraryGroupByType.Status);
+
+      const groups = result.filter((item): item is BooksGroup => 'books' in item);
+      expect(groups).toHaveLength(2);
+
+      const statusTodo = groups.find((g) => g.name === 'Todo');
+      expect(statusTodo?.books).toHaveLength(2);
+    });
+
+    it('should leave books without status as ungrouped', () => {
+      const books = [
+        createMockBook({ hash: '1', title: 'Book 1', status: 'Todo' }),
+        createMockBook({ hash: '2', title: 'Book 2', status: '' }),
+        createMockBook({ hash: '3', title: 'Book 3', status: '   ' }),
+        createMockBook({ hash: '4', title: 'Book 4' }),
+      ];
+
+      const result = createBookGroups(books, LibraryGroupByType.Status);
+
+      const groups = result.filter((item): item is BooksGroup => 'books' in item);
+      const ungrouped = result.filter((item): item is Book => 'format' in item);
+
+      expect(groups).toHaveLength(1);
+      expect(ungrouped).toHaveLength(3);
+    });
+  });
+
   describe('groupBy: manual', () => {
     it('should return books as-is (manual mode handled elsewhere)', () => {
       const books = [

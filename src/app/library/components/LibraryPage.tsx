@@ -12,7 +12,7 @@ import 'overlayscrollbars/overlayscrollbars.css';
 
 import { Book } from '@/types/book';
 import { AppService } from '@/types/system';
-import { LibraryGroupByType } from '@/types/settings';
+import { EnhanceGroupByType, LibraryGroupByType } from '@/types/settings';
 import { navigateToLibrary, navigateToReader } from '@/utils/nav';
 import { listFormater } from '@/utils/book';
 import { getDirPath, getFilename, joinPaths } from '@/utils/path';
@@ -91,7 +91,7 @@ const LibraryPageContent = (
   const [newGroupName, setNewGroupName] = useState(currentGroupPath);
 
   const [currentSeriesAuthorGroup, setCurrentSeriesAuthorGroup] = useState<{
-    groupBy: typeof LibraryGroupByType.Series | typeof LibraryGroupByType.Author;
+    groupBy: EnhanceGroupByType;
     groupName: string;
   } | null>(null);
 
@@ -136,7 +136,10 @@ const LibraryPageContent = (
 
     if (
       groupId &&
-      (groupBy === LibraryGroupByType.Series || groupBy === LibraryGroupByType.Author)
+      ( groupBy === LibraryGroupByType.Series || 
+        groupBy === LibraryGroupByType.Author || 
+        groupBy === LibraryGroupByType.Status
+      )
     ) {
       // Find the group to get its name
       const allGroups = createBookGroups(

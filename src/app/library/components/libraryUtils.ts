@@ -182,6 +182,10 @@ export const createBookGroups = (
     return createAuthorGroups(activeBooks);
   }
 
+  if (groupBy === LibraryGroupByType.Status) {
+    return createStatusGroups(activeBooks);
+  }
+
   // 'manual' mode is handled separately by generateBookshelfItems
   return activeBooks;
 };
@@ -261,6 +265,40 @@ const createAuthorGroups = (books: Book[]): (Book | BooksGroup)[] => {
     displayName: authorName,
     books: authorBooks,
     updatedAt: Math.max(...authorBooks.map((b) => b.updatedAt)),
+  }));
+
+  return [...groups, ...ungroupedBooks];
+};
+
+/**
+ * Group books by status: such as tod/doing/done.
+ * Books without status appear as individual items.
+ */
+const createStatusGroups = (books: Book[]): (Book | BooksGroup)[] => {
+  const statusMap = new Map<string, Book[]>();
+  const ungroupedBooks: Book[] = [];
+
+  for (const book of books) {
+    const statusName = book.status?.trim();
+
+    if (statusName) {
+      const existing = statusMap.get(statusName);
+      if (existing) {
+        existing.push(book);
+      } else {
+        statusMap.set(statusName, [book]);
+      }
+    } else {
+      ungroupedBooks.push(book);
+    }
+  }
+
+  const groups: BooksGroup[] = Array.from(statusMap.entries()).map(([statusName, statusBooks]) => ({
+    id: md5Fingerprint(`Status:${statusName}`),
+    name: statusName,
+    displayName: statusName,
+    books: statusBooks,
+    updatedAt: Math.max(...statusBooks.map((b) => b.updatedAt)),
   }));
 
   return [...groups, ...ungroupedBooks];

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { MdCollectionsBookmark, MdOutlineDelete, MdOutlineEdit } from 'react-icons/md';
 import { LiaFileExportSolid } from 'react-icons/lia';
 
-import { Book, BookStatus } from '@/types/book';
+import { Book } from '@/types/book';
 import { BookMetadata } from '@/libs/document';
 import { useTranslation } from '@/hooks/useTranslation';
 import {
@@ -50,7 +50,7 @@ const BookDetailView: React.FC<BookDetailViewProps> = ({
 
   const handleMarkBook = async () => {
     const group = newMark.group;
-    const status = newMark.status.trim().toLocaleUpperCase();
+    const status = newMark.status.trim();
     let changed = true;
     // take blank group name as un-group
     if (!group && book.groupId) {
@@ -66,8 +66,8 @@ const BookDetailView: React.FC<BookDetailViewProps> = ({
       changed = false;
     }
     
-    if (status && ['TODO', 'DOING', 'DONE'].includes(status)) {
-      book.status = newMark.status as BookStatus;
+    if (status) {
+      book.status = newMark.status;
       changed = true;
     } 
     handleCloseDialog();
@@ -103,6 +103,9 @@ const BookDetailView: React.FC<BookDetailViewProps> = ({
             </p>
             <p className='text-neutral-content line-clamp-1'>
               {formatAuthors(book.author, book.primaryLanguage) || _('Unknown')}
+            </p>
+            <p className='bg-base-200 px-2 py-1 rounded text-[10px] my-1 line-clamp-1'>
+              {book.groupName || ''} {book.status || ''}
             </p>
           </div>
          <div className='flex flex-nowrap items-center gap-2 sm:gap-x-4'>

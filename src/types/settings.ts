@@ -23,9 +23,14 @@ export const LibraryGroupByType = {
   Manual: 'manual',
   Series: 'series',
   Author: 'author',
+  Status: 'status',
 } as const;
 
 export type LibraryGroupByType = (typeof LibraryGroupByType)[keyof typeof LibraryGroupByType];
+export type EnhanceGroupByType = 
+  typeof LibraryGroupByType.Series | 
+  typeof LibraryGroupByType.Author | 
+  typeof LibraryGroupByType.Status;
 
 export interface ReadSettings {
   sideBarWidth: string;

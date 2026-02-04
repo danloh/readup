@@ -34,6 +34,8 @@ const GroupHeader: React.FC<GroupHeaderProps> = ({ groupBy, groupName }) => {
         return _('Series');
       case LibraryGroupByType.Author:
         return _('Author');
+      case LibraryGroupByType.Status:
+        return _('Status');
       default:
         return _('Group');
     }
