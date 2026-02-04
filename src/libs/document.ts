@@ -145,7 +145,7 @@ export class DocumentLoader {
       '@zip.js/zip.js'
     );
     type Entry = import('@zip.js/zip.js').Entry;
-    configure({ useWebWorkers: false });
+    configure({ useWebWorkers: false, useCompressionStream: false });
     const reader = new ZipReader(new BlobReader(this.file));
     const entries = await reader.getEntries();
     const map = new Map(entries.map((entry) => [entry.filename, entry]));

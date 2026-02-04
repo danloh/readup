@@ -172,6 +172,7 @@ export interface ViewConfig {
   showHeader: boolean;
   showFooter: boolean;
   showBarsOnScroll: boolean;
+  showPaginationButtons: boolean;
 
   animated: boolean;
   isEink: boolean;
@@ -236,6 +237,7 @@ export interface NoteExportConfig {
   noteSeparator: string;
   useCustomTemplate: boolean;
   customTemplate: string;
+  exportAsPlainText: boolean;
 }
 
 export interface AnnotatorConfig {

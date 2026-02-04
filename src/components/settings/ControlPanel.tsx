@@ -39,6 +39,9 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
   const [isDisableDoubleClick, setIsDisableDoubleClick] = 
     useState(viewSettings.disableDoubleClick);
   const [swapClickArea, setSwapClickArea] = useState(viewSettings.swapClickArea);
+  const [showPaginationButtons, setShowPaginationButtons] = useState(
+    viewSettings.showPaginationButtons,
+  );
   const [animated, setAnimated] = useState(viewSettings.animated);
   const [allowScript, setAllowScript] = useState(viewSettings.allowScript);
   const [enableAnnotationQuickActions, setEnableAnnotationQuickActions] = useState(
@@ -129,6 +132,18 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
   }, [swapClickArea]);
 
   useEffect(() => {
+    saveViewSettings(
+      envConfig,
+      bookKey,
+      'showPaginationButtons',
+      showPaginationButtons,
+      false,
+      false,
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showPaginationButtons]);
+
+  useEffect(() => {
     saveViewSettings(envConfig, bookKey, 'animated', animated, false, false);
     if (animated) {
       getView(bookKey)?.renderer.setAttribute('animated', '');
@@ -211,6 +226,18 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
           className='toggle toggle-success h-5'
           checked={isDisableDoubleClick}
           onChange={() => setIsDisableDoubleClick(!isDisableDoubleClick)}
+        />
+      </div>
+      <div 
+        className='flex items-center justify-between' 
+        data-setting-id='settings.control.showPaginationButtons'
+      >
+        <b className=''>{_('Show Page Navigation Buttons')}</b>
+        <input
+          type='checkbox'
+          className='toggle toggle-success h-5'
+          checked={showPaginationButtons}
+          onChange={() => setShowPaginationButtons(!showPaginationButtons)}
         />
       </div>
       <div 

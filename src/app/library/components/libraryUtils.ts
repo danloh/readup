@@ -309,29 +309,63 @@ const createStatusGroups = (books: Book[]): (Book | BooksGroup)[] => {
  * For series groups: sort by seriesIndex first, then by global sort for items without index.
  * For author groups: follow global sort setting.
  */
-export const createWithinGroupSorter =
-  (groupBy: LibraryGroupByType, sortBy: LibrarySortByType, uiLanguage: string) =>
-  (a: Book, b: Book): number => {
-    if (groupBy === LibraryGroupByType.Series) {
-      const aIndex = a.metadata?.seriesIndex;
-      const bIndex = b.metadata?.seriesIndex;
+export const createWithinGroupSorter = (
+  groupBy: LibraryGroupByType, 
+  sortBy: LibrarySortByType, 
+  uiLanguage: string
+) => (a: Book, b: Book): number => {
+  if (groupBy === LibraryGroupByType.Series) {
+    const aIndex = a.metadata?.seriesIndex;
+    const bIndex = b.metadata?.seriesIndex;
 
-      // Both have series index - sort by index
-      if (aIndex != null && bIndex != null) {
-        return aIndex - bIndex;
-      }
-
-      // Only one has series index - the one with index comes first
-      if (aIndex != null) return -1;
-      if (bIndex != null) return 1;
-
-      // Neither has series index - fall back to global sort
-      return createBookSorter(sortBy, uiLanguage)(a, b);
+    // Both have series index - sort by index
+    if (aIndex != null && bIndex != null) {
+      return aIndex - bIndex;
     }
 
-    // For author and other groupings, use global sort
+    // Only one has series index - the one with index comes first
+    if (aIndex != null) return -1;
+    if (bIndex != null) return 1;
+
+    // Neither has series index - fall back to global sort
     return createBookSorter(sortBy, uiLanguage)(a, b);
-  };
+  }
+
+  // For author and other groupings, use global sort
+  return createBookSorter(sortBy, uiLanguage)(a, b);
+};
+
+/**
+ * Get the sort value from a book for comparison with groups.
+ */
+export const getBookSortValue = (book: Book, sortBy: LibrarySortByType): number | string => {
+  switch (sortBy) {
+    case LibrarySortByType.Title:
+      return formatTitle(book.title);
+
+    case LibrarySortByType.Author:
+      return formatAuthors(book.author, book?.primaryLanguage || 'en', true);
+
+    case LibrarySortByType.Updated:
+      return book.updatedAt;
+
+    case LibrarySortByType.Created:
+      return book.createdAt;
+
+    case LibrarySortByType.Format:
+      return book.format;
+
+    case LibrarySortByType.Published: {
+      const published = book.metadata?.published;
+      if (!published) return 0;
+      const publishedTime = new Date(published).getTime();
+      return isNaN(publishedTime) ? 0 : publishedTime;
+    }
+
+    default:
+      return book.updatedAt;
+  }
+};
 
 /**
  * Get the aggregate sort value from a group for sorting groups.
@@ -380,6 +414,27 @@ export const getGroupSortValue = (
     default:
       return Math.max(...books.map((b) => b.updatedAt));
   }
+};
+
+/**
+ * Compare two sort values (string or number) for sorting.
+ */
+export const compareSortValues = (
+  aValue: number | string,
+  bValue: number | string,
+  uiLanguage: string,
+): number => {
+  // String comparison for text-based sorts
+  if (typeof aValue === 'string' && typeof bValue === 'string') {
+    return aValue.localeCompare(bValue, uiLanguage || navigator.language);
+  }
+
+  // Numeric comparison for date-based sorts
+  if (typeof aValue === 'number' && typeof bValue === 'number') {
+    return aValue - bValue;
+  }
+
+  return 0;
 };
 
 /**

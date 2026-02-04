@@ -207,6 +207,7 @@ export const DEFAULT_VIEW_CONFIG: ViewConfig = {
   showHeader: true,
   showFooter: true,
   showBarsOnScroll: false,
+  showPaginationButtons: false,
 
   animated: false,
   isEink: false,
@@ -250,6 +251,7 @@ export const DEFAULT_NOTE_EXPORT_CONFIG: NoteExportConfig = {
   noteSeparator: '\n\n',
   useCustomTemplate: false,
   customTemplate: '',
+  exportAsPlainText: false,
 };
 
 export const DEFAULT_ANNOTATOR_CONFIG: AnnotatorConfig = {

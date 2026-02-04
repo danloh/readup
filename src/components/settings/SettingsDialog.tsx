@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { RiFontSize } from 'react-icons/ri';
 import { VscSymbolColor } from 'react-icons/vsc';
 import { PiDotsThreeVerticalBold, PiRobot } from 'react-icons/pi';
-import { MdArrowBackIosNew, MdArrowForwardIos, MdClose } from 'react-icons/md';
+import { MdClose } from 'react-icons/md';
 import { FaLanguage } from "react-icons/fa";
 import { BiCustomize, BiLayout } from "react-icons/bi";
 import { GiClick } from "react-icons/gi";
@@ -12,7 +12,6 @@ import { FiSearch } from 'react-icons/fi';
 import { useEnv } from '@/context/EnvContext';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useTranslation } from '@/hooks/useTranslation';
-import { getDirFromUILanguage } from '@/utils/rtl';
 import Dropdown from '@/components/Dropdown';
 import Dialog from '@/components/Dialog';
 import { getCommandPaletteShortcut } from '@/services/environment';
@@ -43,7 +42,6 @@ type TabConfig = {
 const SettingsDialog: React.FC<{ bookKey: string }> = ({ bookKey }) => {
   const _ = useTranslation();
   const { appService } = useEnv();
-  const [isRtl] = useState(() => getDirFromUILanguage() === 'rtl');
   const panelRef = useRef<HTMLDivElement | null>(null);
   const { setFontLayoutSettingsDialogOpen, activeSettingsItemId, setActiveSettingsItemId } = 
     useSettingsStore();
@@ -202,21 +200,11 @@ const SettingsDialog: React.FC<{ bookKey: string }> = ({ bookKey }) => {
             {currentPanel?.label || ''}
           </div>
           <div className='flex w-full flex-row items-center justify-between'>
-            <button
-              tabIndex={-1}
-              aria-label={_('Close')}
-              onClick={handleClose}
-              className={
-                'btn btn-ghost btn-circle flex h-8 min-h-8 w-8 hover:bg-transparent focus:outline-none sm:hidden'
-              }
-            >
-              {isRtl ? <MdArrowForwardIos /> : <MdArrowBackIosNew />}
-            </button>
             <div 
               role='group'
               aria-label={_('Settings Panels') + ' - ' + (currentPanel?.label || '')}
               className={clsx(
-                'dialog-tabs ms-1 flex h-10 w-full items-center gap-1 overflow-x-auto sm:ms-0',
+                'dialog-tabs ms-1 flex flex-wrap w-full items-center gap-1',
               )}
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
@@ -227,7 +215,7 @@ const SettingsDialog: React.FC<{ bookKey: string }> = ({ bookKey }) => {
                     <button
                       data-tab={tab}
                       className={clsx(
-                        'btn btn-ghost text-base-content btn-sm gap-1 px-2 max-[350px]:px-1',
+                        'btn btn-ghost text-base-content btn-sm gap-1 px-1',
                         activePanel === tab ? 'btn-active' : '',
                       )}
                       onClick={() => handleSetActivePanel(tab)}
@@ -243,13 +231,14 @@ const SettingsDialog: React.FC<{ bookKey: string }> = ({ bookKey }) => {
                 onClick={handleOpenCommandPalette}
                 aria-label={_('Search Settings')}
                 title={`${_('Search Settings')} (${getCommandPaletteShortcut()})`}
-                className='btn btn-ghost hidden h-8 min-h-8 w-8 items-center justify-center p-0 sm:flex'
+                className='btn btn-ghost flex h-6 min-h-6 w-6 items-center justify-center p-0'
               >
                 <FiSearch />
               </button>
               <Dropdown
+                label={_('Settings Menu')}
                 className='dropdown-bottom dropdown-end'
-                buttonClassName='btn btn-ghost h-8 min-h-8 w-8 p-0 flex items-center justify-center'
+                buttonClassName='btn btn-ghost h-6 min-h-6 w-6 p-0 flex items-center justify-center'
                 toggleButton={<PiDotsThreeVerticalBold />}
               >
                 <DialogMenu
@@ -263,10 +252,10 @@ const SettingsDialog: React.FC<{ bookKey: string }> = ({ bookKey }) => {
                 />
               </Dropdown>
               <button
-                aria-label={_('Close')}
                 onClick={handleClose}
+                aria-label={_('Close')}
                 className={
-                  'bg-base-300/65 btn btn-ghost btn-circle h-6 min-h-6 w-6 p-0 hidden sm:flex'
+                  'bg-base-300/65 btn btn-ghost btn-circle h-6 min-h-6 w-6 p-0 flex'
                 }
               >
                 <MdClose size={16} />

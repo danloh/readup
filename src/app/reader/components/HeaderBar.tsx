@@ -29,6 +29,7 @@ interface HeaderBarProps {
   isHoveredAnim: boolean;
   gridInsets: Insets;
   onCloseBook: (bookKey: string) => void;
+  onDropdownOpenChange?: (isOpen: boolean) => void;
 }
 
 const HeaderBar: React.FC<HeaderBarProps> = ({
@@ -38,6 +39,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
   isHoveredAnim,
   gridInsets,
   onCloseBook,
+  onDropdownOpenChange,
 }) => {
   const _ = useTranslation();
   const { envConfig, appService } = useEnv();
@@ -72,6 +74,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
 
   const handleToggleDropdown = (isOpen: boolean) => {
     setIsDropdownOpen(isOpen);
+    onDropdownOpenChange?.(isOpen);
     if (!isOpen) setHoveredBookKey('');
   };
 
