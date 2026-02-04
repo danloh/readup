@@ -9,10 +9,17 @@ import { useSettingsStore } from '@/store/settingsStore';
 import { useLibraryStore } from '@/store/libraryStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { navigateToLibrary, navigateToReader } from '@/utils/nav';
-import { formatTitle } from '@/utils/book';
 import Spinner from '@/components/Spinner';
 import BookshelfItem, { generateBookshelfItems } from './BookshelfItem';
-import { createBookFilter, createBookGroups, createBookSorter, createGroupSorter, createWithinGroupSorter, ensureLibraryGroupByType, ensureLibrarySortByType } from './libraryUtils';
+import { 
+  createBookFilter, 
+  createBookGroups, 
+  createBookSorter, 
+  createGroupSorter, 
+  createWithinGroupSorter, 
+  ensureLibraryGroupByType, 
+  ensureLibrarySortByType 
+} from './libraryUtils';
 
 interface BookshelfProps {
   libraryBooks: Book[];

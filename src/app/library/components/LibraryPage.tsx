@@ -12,6 +12,7 @@ import 'overlayscrollbars/overlayscrollbars.css';
 
 import { Book } from '@/types/book';
 import { AppService } from '@/types/system';
+import { LibraryGroupByType } from '@/types/settings';
 import { navigateToLibrary, navigateToReader } from '@/utils/nav';
 import { listFormater } from '@/utils/book';
 import { getDirPath, getFilename, joinPaths } from '@/utils/path';
@@ -42,9 +43,13 @@ import { useDragDropImport } from '../hooks/useDragDropImport';
 import BookDetailModal from './metadata/BookDetailModal';
 import LibraryHeader from './LibraryHeader';
 import Bookshelf from './Bookshelf';
-import { createBookGroups, ensureLibraryGroupByType, findGroupById, getBreadcrumbs } from './libraryUtils';
+import { 
+  createBookGroups, 
+  ensureLibraryGroupByType, 
+  findGroupById, 
+  getBreadcrumbs 
+} from './libraryUtils';
 import TransferQueuePanel from './TransferQueuePanel';
-import { LibraryGroupByType } from '@/types/settings';
 import GroupHeader from './GroupHeader';
 
 const LibraryPageWithSearchParams = () => {

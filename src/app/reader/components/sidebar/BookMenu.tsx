@@ -124,7 +124,7 @@ const BookMenu: React.FC<BookMenuProps> = ({ menuClassName, setIsDropdownOpen })
           <MenuItem label={_('Enter Parallel Read')} onClick={handleSetParallel} />
         ))
       }
-      <hr className='border-base-200 my-1' />
+      <hr aria-hidden='true' className='border-base-200 my-1' />
       <MenuItem
         label={_('Sort TOC by Page')}
         Icon={isSortedTOC ? MdCheck : undefined}
@@ -132,7 +132,7 @@ const BookMenu: React.FC<BookMenuProps> = ({ menuClassName, setIsDropdownOpen })
       />
       <MenuItem label={_('Proofread')} onClick={showProofreadRulesWindow} />
       <MenuItem label={_('Reload Page')} shortcut='Shift+R' onClick={handleReloadPage} />
-      <hr className='border-base-200 my-1' />
+      <hr aria-hidden='true' className='border-base-200 my-1' />
       <MenuItem label={_('Export Annotations')} onClick={handleExportAnnotations} />
     </Menu>
   );
