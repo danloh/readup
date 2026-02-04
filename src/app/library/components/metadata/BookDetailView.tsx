@@ -104,9 +104,11 @@ const BookDetailView: React.FC<BookDetailViewProps> = ({
             <p className='text-neutral-content line-clamp-1'>
               {formatAuthors(book.author, book.primaryLanguage) || _('Unknown')}
             </p>
-            <p className='bg-base-200 px-2 py-1 rounded text-[10px] my-1 line-clamp-1'>
-              {book.groupName || ''} {book.status || ''}
-            </p>
+            {(book.groupName || book.status) && (
+              <p className='bg-base-200 px-2 py-1 rounded text-[10px] my-1 line-clamp-1'>
+                {book.groupName || ''} {book.status || ''}
+              </p>
+            )}
           </div>
          <div className='flex flex-nowrap items-center gap-2 sm:gap-x-4'>
             {onEdit && showBtns && (
