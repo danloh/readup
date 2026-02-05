@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import clsx from 'clsx';
 import { LiaFileExportSolid, LiaFileImportSolid } from 'react-icons/lia';
 import { FaHeadphones, FaMinus, FaPlus, FaRss, FaTrashAlt } from 'react-icons/fa';
+import { CiMenuFries } from 'react-icons/ci';
 
 import * as dataAgent from './dataAgent';
 import { FeedType } from './dataAgent';
@@ -12,10 +13,11 @@ type Props = {
   handleAddFeed: (url: string, ty: string, title: string) => Promise<void>;
   handleDelete: (channel: FeedType) => Promise<void>;
   onImportFeeds?: (feeds: FeedType[]) => Promise<void>;
+  showSide?: () => void;
 };
 
 export function FeedManager(props: Props) {
-  const { channelList, handleAddFeed, handleDelete, onImportFeeds } = props;
+  const { channelList, handleAddFeed, handleDelete, onImportFeeds, showSide } = props;
 
   const [realList, setRealList] = useState<FeedType[]>(channelList);
   const [showAdd, setShowAdd] = useState(false);
@@ -121,7 +123,10 @@ export function FeedManager(props: Props) {
 
   return (
     <div className='flex flex-col items-start justify-center p-2'>
-      <div className='flex flex-row gap-2 items-center justify-center w-full mt-2'>
+      <div className='flex flex-row gap-2 items-center justify-start w-full mt-2'>
+        <button className='btn btn-xs btn-ghost' onClick={showSide}>
+          <CiMenuFries />
+        </button>
         <button
           className='btn btn-sm'
           onClick={() => setShowAdd(!showAdd)}
@@ -146,28 +151,30 @@ export function FeedManager(props: Props) {
             }}
           />
         </div>
-        <button
-          className='btn btn-sm'
-          onClick={handleImportOPML}
-          disabled={loading}
-          title='Import feeds from OPML'
-        >
-          <LiaFileImportSolid size={18} />
-        </button>
-        <input
-          ref={fileInputRef}
-          type='file'
-          accept='.opml,.xml'
-          onChange={handleFileChange}
-          style={{ display: 'none' }}
-        />
-        <button
-          className='btn btn-sm'
-          onClick={handleExportOPML}
-          title='Export feeds as OPML'
-        >
-          <LiaFileExportSolid size={18} />
-        </button>
+        <div className='flex items-center justify-end gap-2'>
+          <button
+            className='btn btn-xs p-1'
+            onClick={handleImportOPML}
+            disabled={loading}
+            title='Import feeds from OPML'
+          >
+            <LiaFileImportSolid size={18} />
+          </button>
+          <input
+            ref={fileInputRef}
+            type='file'
+            accept='.opml,.xml'
+            onChange={handleFileChange}
+            style={{ display: 'none' }}
+          />
+          <button
+            className='btn btn-xs p-1'
+            onClick={handleExportOPML}
+            title='Export feeds as OPML'
+          >
+            <LiaFileExportSolid size={18} />
+          </button>
+        </div>
       </div>
       {showAdd && (
         <div className='flex flex-col w-full p-4'>
@@ -234,13 +241,13 @@ export function FeedManager(props: Props) {
           </div>
         </div>
       )}
-      <div className='w-full flex flex-col items-between justify-center border-t-2 border-base-300 my-4'>
+      <div className='w-full flex flex-col items-between justify-center my-4'>
         {realList.map((channel: FeedType, idx: number) => {
           return (
             <div 
               key={idx} 
               className={clsx(
-                'flex items-center justify-between p-2 rounded',
+                'flex items-center justify-between gap-2 p-2 rounded',
                 idx / 2 === 0 ? 'bg-base-300' : 'bg-base-100',
               )}
             >
@@ -251,12 +258,12 @@ export function FeedManager(props: Props) {
                 }
                 <span className='text-sm'>{channel.title}</span>
               </span>
-              <span className='text-sm'>{channel.link}</span>
+              <span className='text-sm truncate'>{channel.link}</span>
               <button 
                 className='btn btn-xs btn-ghost' 
                 onClick={async () => await handleDelete(channel)}
               >
-                <FaTrashAlt className='fill-warning' />
+                <FaTrashAlt className='fill-warning' size={16} />
               </button>
             </div>
           )

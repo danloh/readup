@@ -111,8 +111,8 @@ importers:
         specifier: ^2.9.0
         version: 2.9.0
       '@zip.js/zip.js':
-        specifier: 2.8.15
-        version: 2.8.15
+        specifier: 2.8.17
+        version: 2.8.17
       ai:
         specifier: ^6.0.47
         version: 6.0.49(zod@4.3.6)
@@ -2602,8 +2602,8 @@ packages:
     resolution: {integrity: sha512-B02i6QDMUQ4c+5F9LmliBGA+jFsiEHIlF0eLQ6rWLaQOD3YwI6vyWwGkVCNJnVVguE2xYyr9fAwSD/3valm1/Q==}
     engines: {bun: '>=0.7.0', deno: '>=1.0.0', node: '>=16.5.0'}
 
-  '@zip.js/zip.js@2.8.15':
-    resolution: {integrity: sha512-HZKJLFe4eGVgCe9J87PnijY7T1Zn638bEHS+Fm/ygHZozRpefzWcOYfPaP52S8pqk9g4xN3+LzMDl3Lv9dLglA==}
+  '@zip.js/zip.js@2.8.17':
+    resolution: {integrity: sha512-3UdSsm9D9wy8+Oclimd3W9mWqiGptbrL7kBxAdXr/FLN2FSmNnAiyRol93heAffLGDzNwY5nnvDEjMmo8JbeeA==}
     engines: {bun: '>=0.7.0', deno: '>=1.0.0', node: '>=18.0.0'}
 
   a-sync-waterfall@1.0.1:
@@ -6163,6 +6163,9 @@ packages:
   web-vitals@4.2.4:
     resolution: {integrity: sha512-r4DIlprAGwJ7YM11VZp4R884m0Vmgr6EAKe3P+kO0PPj3Unqyvv59rczf6UiGcb9Z8QxZVcqKNwv/g0WNdWwsw==}
 
+  web-worker@1.5.0:
+    resolution: {integrity: sha512-RiMReJrTAiA+mBjGONMnjVDP2u3p9R1vkcGz6gDIrOMT3oGuYwX2WRMYI9ipkphSuE5XKEhydbhNEJh4NY9mlw==}
+
   webidl-conversions@3.0.1:
     resolution: {integrity: sha512-2JAn3z8AR6rjK8Sm8orRC0h/bcl/DqL7tRPdGZ4I1CjdF+EaMLmYxBHyXuKL849eucPFhvBoxMsflfOb8kxaeQ==}
 
@@ -8491,7 +8494,9 @@ snapshots:
 
   '@zip.js/zip.js@2.7.63': {}
 
-  '@zip.js/zip.js@2.8.15': {}
+  '@zip.js/zip.js@2.8.17':
+    dependencies:
+      web-worker: 1.5.0
 
   a-sync-waterfall@1.0.1: {}
 
@@ -12786,6 +12791,8 @@ snapshots:
   web-namespaces@2.0.1: {}
 
   web-vitals@4.2.4: {}
+
+  web-worker@1.5.0: {}
 
   webidl-conversions@3.0.1: {}
 

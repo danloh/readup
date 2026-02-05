@@ -122,17 +122,16 @@ export default function FeedPage() {
           />
         </div>
       ) : null}
-      {showManager ? (
-        <div className='flex-1 m-1 p-2 overflow-y-auto'>
+      <div className='flex-1 overflow-y-auto'>
+        {showManager ? (
           <FeedManager 
             channelList={channelList} 
             handleAddFeed={handleAddFeed}
             handleDelete={handleDeleteFeed}
             onImportFeeds={handleImportFeeds}
+            showSide={() => setShowFeedSide(prev => !prev)}
           />
-        </div>
-      ) : (
-        <div className={`flex-1 overflow-y-auto`}>
+        ) : (
           <Channel 
             channel={currentChannel} 
             isStarChannel={isStarChannel} 
@@ -140,8 +139,8 @@ export default function FeedPage() {
             loading={loading}
             showSide={() => setShowFeedSide(prev => !prev)}
           />
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
