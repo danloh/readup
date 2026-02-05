@@ -199,7 +199,7 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
   };
 
   return (
-    <div className='my-4 w-full space-y-6'>
+    <div className='my-4 w-full space-y-4'>
       <div 
         className='flex items-center justify-between' 
         data-setting-id='settings.control.clickToPaginate'

@@ -120,7 +120,7 @@ const LangPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
   }, [ttsReadAloudText]);
 
   return (
-    <div className='my-4 w-full space-y-6'>
+    <div className='my-4 w-full space-y-4'>
       <div 
         className='flex items-center justify-between' 
         data-setting-id='settings.language.interfaceLanguage'

@@ -57,7 +57,7 @@
     "@tauri-apps/plugin-process": "2.3.1",
     "@tauri-apps/plugin-shell": "2.3.4",
     "@tauri-apps/plugin-updater": "^2.9.0",
-    "@zip.js/zip.js": "2.8.15",
+    "@zip.js/zip.js": "2.8.17",
     "app-store-server-api": "0.17.3",
     "clsx": "^2.1.1",
     "cors": "^2.8.5",

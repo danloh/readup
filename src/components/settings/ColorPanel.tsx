@@ -210,30 +210,27 @@ const ColorPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset
           >
             <b className='font-medium'>{_('Theme Mode')}</b>
             <div className='flex gap-4'>
-              <div className='tooltip tooltip-bottom' data-tip={_('Light Mode')}>
-                <button
-                  className={`btn btn-ghost btn-circle btn-sm ${themeMode === 'light' ? 'btn-active bg-base-300' : ''}`}
-                  onClick={() => setThemeMode('light')}
-                >
-                  <MdOutlineLightMode />
-                </button>
-              </div>
-              <div className='tooltip tooltip-bottom' data-tip={_('Dark Mode')}>
-                <button
-                  className={`btn btn-ghost btn-circle btn-sm ${themeMode === 'dark' ? 'btn-active bg-base-300' : ''}`}
-                  onClick={() => setThemeMode('dark')}
-                >
-                  <MdOutlineDarkMode />
-                </button>
-              </div>
-              <div className='tooltip tooltip-bottom' data-tip={_('Auto Mode')}>
-                <button
-                  className={`btn btn-ghost btn-circle btn-sm ${themeMode === 'auto' ? 'btn-active bg-base-300' : ''}`}
-                  onClick={() => setThemeMode('auto')}
-                >
-                  <GrSystem />
-                </button>
-              </div>
+              <button
+                title={_('Light Mode')}
+                className={`btn btn-ghost btn-circle btn-xs ${themeMode === 'light' ? 'btn-active bg-base-300' : ''}`}
+                onClick={() => setThemeMode('light')}
+              >
+                <MdOutlineLightMode />
+              </button>
+              <button
+                title={_('Dark Mode')}
+                className={`btn btn-ghost btn-circle btn-xs ${themeMode === 'dark' ? 'btn-active bg-base-300' : ''}`}
+                onClick={() => setThemeMode('dark')}
+              >
+                <MdOutlineDarkMode />
+              </button>
+              <button
+                title={_('Auto Mode')}
+                className={`btn btn-ghost btn-circle btn-xs ${themeMode === 'auto' ? 'btn-active bg-base-300' : ''}`}
+                onClick={() => setThemeMode('auto')}
+              >
+                <GrSystem />
+              </button>
             </div>
           </div>
 

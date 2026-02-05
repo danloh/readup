@@ -311,7 +311,7 @@ const AIPanel: React.FC = () => {
   const disabledSection = !enabled ? 'opacity-50 pointer-events-none select-none' : '';
 
   return (
-    <div className='my-4 w-full space-y-6'>
+    <div className='my-4 w-full space-y-4'>
       <div className='w-full'>
         <div className='card border-base-200 bg-base-100 border shadow'>
           <div className='divide-base-200 divide-y'>

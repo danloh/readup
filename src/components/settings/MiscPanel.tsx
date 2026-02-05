@@ -197,7 +197,7 @@ const MiscPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
   return (
     <div
       className={clsx(
-        'my-4 w-full space-y-6',
+        'my-4 w-full space-y-4',
         inputFocusInAndroid && 'h-[50%] overflow-y-auto pb-[200px]',
       )}
     >

@@ -3,11 +3,10 @@ import clsx from 'clsx';
 import { MdOutlineScreenRotation } from 'react-icons/md';
 import { MdOutlineTextRotationNone, MdTextRotateVertical } from 'react-icons/md';
 import { IoPhoneLandscapeOutline, IoPhonePortraitOutline } from 'react-icons/io5';
-import { TfiLayoutWidthDefault } from "react-icons/tfi";
 import { TbNumber, TbTextDirectionRtl } from 'react-icons/tb';
 import { CgBorderBottom, CgBorderLeft, CgBorderRight, CgBorderTop } from "react-icons/cg";
 import { MdFormatLineSpacing } from "react-icons/md";
-import { LuWholeWord } from 'react-icons/lu';
+import { LuLetterText, LuWholeWord } from 'react-icons/lu';
 import { RiLetterSpacing2, RiPageSeparator } from 'react-icons/ri';
 import { PiSplitHorizontalBold } from "react-icons/pi";
 import { FaIndent } from 'react-icons/fa';
@@ -355,7 +354,7 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
   const isVertical = viewSettings.vertical || writingMode.includes('vertical');
 
   return (
-    <div className='my-4 w-full space-y-6'>
+    <div className='my-4 w-full space-y-4'>
       {mightBeRTLBook && (
         <div 
           className='flex items-center justify-between' 
@@ -363,50 +362,46 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
         >
           <b className=''>{_('Writing Mode')}</b>
           <div className='flex gap-4'>
-            <div className='tooltip tooltip-bottom' data-tip={_('Default')}>
-              <button
-                className={clsx(
-                  'btn btn-ghost btn-circle btn-sm',
-                  writingMode === 'auto' ? 'btn-active bg-base-300' : '',
-                )}
-                onClick={() => setWritingMode('auto')}
-              >
-                <TfiLayoutWidthDefault />
-              </button>
-            </div>
-            <div className='tooltip tooltip-bottom' data-tip={_('Horizontal Direction')}>
-              <button
-                className={clsx(
-                  'btn btn-ghost btn-circle btn-sm',
-                  writingMode === 'horizontal-tb' ? 'btn-active bg-base-300' : '',
-                )}
-                onClick={() => setWritingMode('horizontal-tb')}
-              >
-                <MdOutlineTextRotationNone />
-              </button>
-            </div>
-            <div className='tooltip tooltip-bottom' data-tip={_('Vertical Direction')}>
-              <button
-                className={clsx(
-                  'btn btn-ghost btn-circle btn-sm',
-                  writingMode === 'vertical-rl' ? 'btn-active bg-base-300' : '',
-                )}
-                onClick={() => setWritingMode('vertical-rl')}
-              >
-                <MdTextRotateVertical />
-              </button>
-            </div>
-            <div className='tooltip tooltip-bottom' data-tip={_('RTL Direction')}>
-              <button
-                className={clsx(
-                  'btn btn-ghost btn-circle btn-sm',
-                  writingMode === 'horizontal-rl' ? 'btn-active bg-base-300' : '',
-                )}
-                onClick={() => setWritingMode('horizontal-rl')}
-              >
-                <TbTextDirectionRtl />
-              </button>
-            </div>
+            <button
+              title={_('Default')}
+              className={clsx(
+                'btn btn-ghost btn-circle btn-xs',
+                writingMode === 'auto' ? 'btn-active bg-base-300' : '',
+              )}
+              onClick={() => setWritingMode('auto')}
+            >
+              <LuLetterText />
+            </button>
+            <button
+              title={_('Horizontal Direction')}
+              className={clsx(
+                'btn btn-ghost btn-circle btn-xs',
+                writingMode === 'horizontal-tb' ? 'btn-active bg-base-300' : '',
+              )}
+              onClick={() => setWritingMode('horizontal-tb')}
+            >
+              <MdOutlineTextRotationNone />
+            </button>
+            <button
+              title={_('Vertical Direction')}
+              className={clsx(
+                'btn btn-ghost btn-circle btn-xs',
+                writingMode === 'vertical-rl' ? 'btn-active bg-base-300' : '',
+              )}
+              onClick={() => setWritingMode('vertical-rl')}
+            >
+              <MdTextRotateVertical />
+            </button>
+            <button
+              title={_('RTL Direction')}
+              className={clsx(
+                'btn btn-ghost btn-circle btn-xs',
+                writingMode === 'horizontal-rl' ? 'btn-active bg-base-300' : '',
+              )}
+              onClick={() => setWritingMode('horizontal-rl')}
+            >
+              <TbTextDirectionRtl />
+            </button>
           </div>
         </div>
       )}
