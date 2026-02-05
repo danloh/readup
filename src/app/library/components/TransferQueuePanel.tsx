@@ -181,7 +181,7 @@ const TransferItemRow: React.FC<{
   );
 };
 
-type FilterType = 'all' | 'active' | 'pending' | 'completed' | 'failed' | 'pds';
+type FilterType = 'local' | 'pds' | 'active' | 'pending' | 'completed' | 'failed';
 
 const TransferQueuePanel: React.FC = () => {
   const _ = useTranslation();
@@ -206,7 +206,7 @@ const TransferQueuePanel: React.FC = () => {
     queueDelete, 
   } = useTransferQueue();
 
-  const [filter, setFilter] = useState<FilterType>('all');
+  const [filter, setFilter] = useState<FilterType>('local');
 
   const onClose = () => setIsOpen(false);
   const divRef = useKeyDownActions({ onCancel: onClose, onConfirm: onClose });
@@ -234,8 +234,8 @@ const TransferQueuePanel: React.FC = () => {
     }
   );
 
-  // all books as temp tranfer items
-  const allCanTransfer = booksToTransfers(getVisibleLibrary(), 'upload');
+  // all local books as temp tranfer items
+  const allLocalCanTransfer = booksToTransfers(getVisibleLibrary(), 'upload');
   const [pdsBooksToDownload, setPdsBooksToDownload] = useState<Book[]>([]);
   const [pdsLoaded, setPdsLoaded] = useState(false);
   const [pdsCanTransfer, setPdsCanTransfer] = useState<TransferItem[]>([]);
@@ -280,8 +280,8 @@ const TransferQueuePanel: React.FC = () => {
     pdsBooksToDownload.forEach((book) => queueDownload(book));
   };
 
-  const toFilterItems = filter === 'all' 
-    ? allCanTransfer 
+  const toFilterItems = filter === 'local' 
+    ? allLocalCanTransfer 
     : filter === 'pds' 
       ? pdsCanTransfer 
       : transfers;
@@ -316,12 +316,12 @@ const TransferQueuePanel: React.FC = () => {
     });
 
   const filterLabels: Record<FilterType, string> = {
-    all: _('All'),
+    local: _('Local'),
+    pds: _('PDS'),
     active: _('Active'),
     pending: _('Pending'),
     completed: _('Completed'),
     failed: _('Failed'),
-    pds: _('PDS'),
   };
 
   const getStat = (f: FilterType) => {
@@ -337,7 +337,7 @@ const TransferQueuePanel: React.FC = () => {
       case 'pds':
         return pdsCanTransfer.length;
       default:
-        return allCanTransfer.length;
+        return allLocalCanTransfer.length;
     }
   };
 
@@ -398,17 +398,18 @@ const TransferQueuePanel: React.FC = () => {
         </div>
 
         {/* Filter tabs */}
-        <div className='border-base-300 flex gap-2 border-b p-2'>
-          {(['all', 'active', 'pending', 'completed', 'failed', 'pds'] as const).map((f) => (
+        <div className='border-base-300 flex gap-2 border-b p-2 overflow-y-auto'>
+          {(['local', 'pds', 'active', 'pending', 'completed', 'failed'] as const).map((f) => (
             <button
               key={f}
               onClick={() => handleSetFilter(f)}
               className={clsx(
                 'rounded-sm px-2 py-1 text-sm transition-colors',
-                filter === f ? 'bg-primary text-primary-content' : 'bg-base-200 hover:bg-base-300',
+                filter === f ? 'border-primary border-b-2' : 'bg-base-200 hover:bg-base-300',
+                f === 'pds' ? 'text-success text-bold' : '',
               )}
             >
-              {filterLabels[f]}: {getStat(f)}
+              {`${filterLabels[f]} ${getStat(f)}`}
             </button>
           ))}
         </div>

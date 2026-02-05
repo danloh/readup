@@ -59,6 +59,8 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
     const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
     if (!iframeDoc) return;
 
+    const lang = localStorage?.getItem('i18nextLng') || navigator?.language;
+
     // Complete HTML document with responsive styling
     const htmlContent = `
       <!DOCTYPE html>
@@ -173,7 +175,12 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
               : ''
             }
             <div class="book-meta-item">
-              <b>Excerpted:</b> ${new Date().toLocaleDateString()}
+              ${new Date().toLocaleDateString(lang, {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
             </div>
           </div>
         </div>
@@ -193,7 +200,8 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
         const contentHeight = iframe.contentDocument.documentElement.scrollHeight;
         setIframeHeight(`${contentHeight + 24}px`);
       }
-    }, 100);  }, [isOpen, selection.text, styles, book, progress?.sectionLabel]);
+    }, 100);  
+  }, [isOpen, selection.text, styles, book, progress?.sectionLabel]);
 
   // Generate image from iframe
   useEffect(() => {
@@ -290,12 +298,12 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
         {/* Style Customization Options */}
         <div className='border-b border-base-300 pb-4'>
           <h3 className='text-sm font-semibold text-base-content mb-3'>
-            {_('Customize Style')}
+            {_('Custom Theme')}
           </h3>
           <div className='flex flex-wrap items-center justify-start gap-2'>
             {/* Background Color */}
             <div className='flex items-center gap-2'>
-              <label className='text-xs font-medium'>Background:</label>
+              <label className='text-xs font-medium'>{_('Background Color')}</label>
               <input
                 type='color'
                 value={styles.backgroundColor}
@@ -307,7 +315,7 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
 
             {/* Font Color */}
             <div className='flex items-center gap-2'>
-              <label className='text-xs font-medium'>Text:</label>
+              <label className='text-xs font-medium'>{_('Text Color')}</label>
               <input
                 type='color'
                 value={styles.fontColor}
@@ -319,7 +327,7 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
 
             {/* Font Size */}
             <div className='flex items-center gap-2'>
-              <label className='text-xs font-medium'>Size:</label>
+              <label className='text-xs font-medium'>{_('Font Size')}</label>
               <input
                 type='number'
                 min='12'
@@ -334,7 +342,7 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
 
             {/* Line Height */}
             <div className='flex items-center gap-2'>
-              <label className='text-xs font-medium text-base-content/70 whitespace-nowrap'>Height:</label>
+              <label className='text-xs font-medium'>{_('Line Spacing')}</label>
               <input
                 type='number'
                 min='1.2'
@@ -353,14 +361,14 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
         {/* Image Preview */}
         <div className='space-y-2'>
           <h3 className='text-sm font-semibold text-base-content'>
-            {_('Image Preview')}
+            {_('Preview')}
           </h3>
           {isRendering ? (
             <div className='flex items-center justify-center h-[300px]'>
               <div className='flex flex-col items-center gap-3'>
                 <span className='loading loading-spinner loading-lg'></span>
                 <p className='text-sm text-base-content/70'>
-                  {_('Generating image...')}
+                  {_('Generating image')}
                 </p>
               </div>
             </div>
@@ -369,7 +377,7 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
               <img
                 src={imageUrl}
                 alt='Excerpt preview'
-                className='border border-base-300 rounded-sm bg-base-100 max-w-full h-auto max-h-[40vh] object-contain'
+                className='border border-base-300 rounded-sm bg-base-100 max-w-full h-auto object-contain'
               />
             </div>
           ) : (
@@ -387,7 +395,7 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
             onClick={() => setShowContentPreview(!showContentPreview)}
             className='btn btn-sm btn-outline gap-2'
           >
-            {showContentPreview ? '▼' : '▶'} {_('Content Preview')}
+            {showContentPreview ? '▼' : '▶'} {_('Preview')}
           </button>
         </div>
 
@@ -427,14 +435,11 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
         </div>
 
         {/* Footer Actions */}
-        <div className='mt-4 flex justify-end gap-4 border-t border-base-300 pt-4'>
+        <div className='mt-4 flex justify-center gap-4 border-t border-base-300 pt-4'>
           <button onClick={onCancel} className='btn btn-ghost btn-sm'>
             {_('Cancel')}
           </button>
-          <button
-            onClick={handleShare}
-            className='btn btn-primary btn-sm'
-          >
+          <button onClick={handleShare} className='btn btn-primary btn-sm'>
             {_('Share')}
           </button>
         </div>

@@ -55,9 +55,9 @@ const LibraryHeader: React.FC<LibraryHeaderProps> = (
 
   return (
     <div className='library-head bg-base-200 z-10 flex h-[48px] w-full items-center p-2'>
-      <div className='flex w-full items-center justify-between space-x-6 sm:space-x-12'>
-        <div className='exclude-title-bar-mousedown relative flex w-full items-center pl-4'>
-          <div className='relative flex h-9 w-full items-center sm:h-7'>
+      <div className='flex w-full items-center justify-between space-x-6'>
+        <div className='exclude-title-bar-mousedown relative flex w-full items-center'>
+          <div className='relative flex h-9 w-full items-center'>
             <span className='text-base-content/50 absolute ps-3'>
               <FaSearch className='h-4 w-4' />
             </span>

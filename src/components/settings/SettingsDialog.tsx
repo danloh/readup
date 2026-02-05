@@ -196,9 +196,6 @@ const SettingsDialog: React.FC<{ bookKey: string }> = ({ bookKey }) => {
       snapHeight={appService?.isMobile ? 0.7 : undefined}
       header={
         <div className='flex w-full flex-col items-center'>
-          <div className='tab-title flex pb-2 text-base font-semibold'>
-            {currentPanel?.label || ''}
-          </div>
           <div className='flex w-full flex-row items-center justify-between'>
             <div 
               role='group'
@@ -261,6 +258,9 @@ const SettingsDialog: React.FC<{ bookKey: string }> = ({ bookKey }) => {
                 <MdClose size={16} />
               </button>
             </div>
+          </div>
+          <div className='tab-title flex py-1 text-base text-success font-bold'>
+            {currentPanel?.label || ''}
           </div>
         </div>
       }
