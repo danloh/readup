@@ -625,12 +625,12 @@ const actionItems = [
   },
   {
     id: 'action.about',
-    labelKey: _('About Readest'),
-    keywords: ['about', 'readest', 'version', 'info'],
+    labelKey: _('About Readup'),
+    keywords: ['about', 'readup', 'version', 'info'],
   },
   {
     id: 'action.telemetry',
-    labelKey: _('Help improve Readest'),
+    labelKey: _('Help improve Readup'),
     keywords: ['telemetry', 'analytics', 'improve', 'statistics'],
   },
 ];

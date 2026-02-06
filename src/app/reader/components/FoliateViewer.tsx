@@ -33,7 +33,7 @@ import { lockScreenOrientation } from '@/utils/bridge';
 import { manageSyntaxHighlighting } from '@/utils/highlightjs';
 import { getViewInsets } from '@/utils/insets';
 import Spinner from '@/components/Spinner';
-import { removeTabIndex } from '@/utils/a11y';
+import { handleAccessibilityEvents } from '@/utils/a11y';
 import { transformContent } from '../transformers/transformService';
 import { useMouseEvent, useTouchEvent } from '../hooks/useIframeEvents';
 import { usePagination } from '../hooks/usePagination';
@@ -184,7 +184,7 @@ const FoliateViewer: React.FC<{
       applyThemeModeClass(detail.doc, isDarkMode);
       applyScrollModeClass(detail.doc, viewSettings.scrolled || false);
       keepTextAlignment(detail.doc);
-      removeTabIndex(detail.doc);
+      handleAccessibilityEvents(viewRef.current, detail.doc, detail.index);
 
       // Inline scripts in tauri platforms are not executed by default
       if (viewSettings.allowScript && isTauriAppPlatform()) {
@@ -310,8 +310,8 @@ const FoliateViewer: React.FC<{
       });
       const viewWidth = appService?.isMobile ? screen.width : window.innerWidth;
       const viewHeight = appService?.isMobile ? screen.height : window.innerHeight;
-      const width = viewWidth;
-      const height = viewHeight;
+      const width = viewWidth - insets.left - insets.right;
+      const height = viewHeight - insets.top - insets.bottom;
       book.transformTarget?.addEventListener('data', getDocTransformHandler({ width, height }));
       view.renderer.setStyles?.(getStyles(viewSettings));
       applyTranslationStyle(viewSettings);

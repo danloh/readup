@@ -16,6 +16,7 @@ export interface TOCItem {
   id: number;
   label: string;
   href: string;
+  index: number; // Page index for PDF books
   cfi?: string;
   location?: Location;
   subitems?: TOCItem[];
@@ -30,6 +31,8 @@ export interface SectionItem {
   location?: Location;
   pageSpread?: 'left' | 'right' | 'center' | '';
   subitems?: Array<SectionItem>;
+
+  createDocument: () => Promise<Document>;
 }
 
 export type BookMetadata = {
