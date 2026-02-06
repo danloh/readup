@@ -1,3 +1,4 @@
+import clsx from 'clsx';
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useEnv } from '@/context/EnvContext';
 import { useBookDataStore } from '@/store/bookDataStore';
@@ -39,9 +40,11 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey, iconRef }) => {
   const { getView, getProgress, getViewSettings } = useReaderStore();
   const { setViewSettings, setTTSEnabled } = useReaderStore();
   const viewSettings = getViewSettings(bookKey);
-  const { isDarkMode } = useThemeStore();
+  const { safeAreaInsets, isDarkMode } = useThemeStore();
   const { settings } = useSettingsStore();
   const { getMergedRules } = useProofreadStore();
+  const progress = getProgress(bookKey);
+
   const [ttsLang, setTtsLang] = useState<string>('en');
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -52,6 +55,12 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey, iconRef }) => {
   const [timeoutOption, setTimeoutOption] = useState(0);
   const [timeoutTimestamp, setTimeoutTimestamp] = useState(0);
   const [timeoutFunc, setTimeoutFunc] = useState<ReturnType<typeof setTimeout> | null>(null);
+
+  const [showBackToCurrentTTSLocation, setShowBackToCurrentTTSLocation] = useState(false);
+  const [shouldMountBackButton, setShouldMountBackButton] = useState(false);
+  const [isBackButtonVisible, setIsBackButtonVisible] = useState(false);
+  const backButtonTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const followingTTSLocationRef = useRef(true);
 
   const popupPadding = useResponsiveSize(POPUP_PADDING);
   const maxWidth = window.innerWidth - 2 * popupPadding;
@@ -195,24 +204,32 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey, iconRef }) => {
     };
 
     const handleHighlightMark = (e: Event) => {
-      const range = (e as CustomEvent<Range>).detail;
+      const { cfi } = (e as CustomEvent<{ cfi: string }>).detail;
       const view = getView(bookKey);
-      const progress = getProgress(bookKey);
       const viewSettings = getViewSettings(bookKey);
-      if (!range || !view || !progress || !viewSettings) return;
+      if (!cfi || !view || !viewSettings) return;
 
-      const { location } = progress;
-      const { index } = view.resolveCFI(location);
-      const cfi = view?.getCFI(index, range);
-      if (cfi) {
-        viewSettings.ttsLocation = cfi || '';
-        setViewSettings(bookKey, viewSettings);
-      }
+      viewSettings.ttsLocation = cfi;
+      setViewSettings(bookKey, viewSettings);
+
+      if (!followingTTSLocationRef.current) return;
 
       const docs = view.renderer.getContents();
       if (docs.some(({ doc }) => (doc.getSelection()?.toString().length ?? 0) > 0)) {
         return;
       }
+
+      const { doc, index: viewSectionIndex } = view.renderer.getContents()[0] as {
+        doc: Document;
+        index?: number;
+      };
+
+      const { anchor, index: ttsSectionIndex } = view.resolveCFI(cfi);
+      if (viewSectionIndex !== ttsSectionIndex) {
+        return;
+      }
+
+      const range = anchor(doc);
 
       if (!view.renderer.scrolled) {
         view.renderer.scrollToAnchor(range);
@@ -247,6 +264,47 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey, iconRef }) => {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ttsController, bookKey]);
+
+  useEffect(() => {
+    const ttsController = ttsControllerRef.current;
+    if (!ttsController) return;
+
+    const view = getView(bookKey);
+    const viewSettings = getViewSettings(bookKey);
+    const ttsLocation = viewSettings?.ttsLocation;
+    const { location } = progress || {};
+    if (!location || !ttsLocation) return;
+
+    const ttsInCurrentLocation = isCfiInLocation(ttsLocation, location);
+    if (ttsInCurrentLocation) {
+      setShowBackToCurrentTTSLocation(false);
+      const { doc, index: viewSectionIndex } = view?.renderer.getContents()[0] as {
+        doc: Document;
+        index?: number;
+      };
+      const { anchor, index: ttsSectionIndex } = view?.resolveCFI(ttsLocation) || {};
+      if (viewSectionIndex !== ttsSectionIndex) {
+        return;
+      }
+      const range = anchor?.(doc);
+      if (range) {
+        view?.tts?.highlight(range);
+      }
+    } else {
+      setShowBackToCurrentTTSLocation(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [progress]);
+
+  const handleBackToCurrentTTSLocation = () => {
+    const view = getView(bookKey);
+    const viewSettings = getViewSettings(bookKey);
+    const ttsLocation = viewSettings?.ttsLocation;
+    if (!view || !ttsLocation) return;
+
+    const resolved = view.resolveNavigation(ttsLocation);
+    view.renderer.goTo?.(resolved);
+  };
 
   const getTTSTargetLang = useCallback((): string | null => {
     const ttsReadAloudText = viewSettings?.ttsReadAloudText;
@@ -481,6 +539,7 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey, iconRef }) => {
       getView(bookKey)?.deselect();
       setIsPlaying(false);
       setShowPanel(false);
+      setShowBackToCurrentTTSLocation(false);
     }
     if (appService?.isIOSApp) {
       await invokeUseBackgroundAudio({ enabled: false });
@@ -649,6 +708,27 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey, iconRef }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showPanel]);
 
+  useEffect(() => {
+    if (showBackToCurrentTTSLocation) {
+      followingTTSLocationRef.current = false;
+      setShouldMountBackButton(true);
+      const fadeInTimeout = setTimeout(() => {
+        setIsBackButtonVisible(true);
+      }, 10);
+      return () => clearTimeout(fadeInTimeout);
+    } else {
+      followingTTSLocationRef.current = true;
+      setIsBackButtonVisible(false);
+      if (backButtonTimeoutRef.current) {
+        clearTimeout(backButtonTimeoutRef.current);
+      }
+      backButtonTimeoutRef.current = setTimeout(() => {
+        setShouldMountBackButton(false);
+      }, 300);
+      return;
+    }
+  }, [showBackToCurrentTTSLocation]);
+
   const handleTTSPopup = (_event: CustomEvent) => {
     togglePopup();
   };
@@ -663,6 +743,29 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey, iconRef }) => {
 
   return (
     <>
+      {shouldMountBackButton && (
+        <div
+          className={clsx(
+            'absolute left-1/2 top-0 z-50 -translate-x-1/2',
+            'transition-opacity duration-300',
+            isBackButtonVisible ? 'opacity-100' : 'opacity-0',
+            safeAreaInsets?.top ? '' : 'py-1',
+          )}
+          style={{
+            top: `${safeAreaInsets?.top || 0}px`,
+          }}
+        >
+          <button
+            onClick={handleBackToCurrentTTSLocation}
+            className={clsx(
+              'bg-base-300 rounded-full px-4 py-2 font-sans text-sm shadow-lg',
+              safeAreaInsets?.top ? 'h-11' : 'h-9',
+            )}
+          >
+            {_('Back to TTS Location')}
+          </button>
+        </div>
+      )}
       {showPanel && <Overlay onDismiss={handleDismissPopup} />}
       {showPanel && panelPosition && trianglePosition && ttsClientsInited && (
         <Popup

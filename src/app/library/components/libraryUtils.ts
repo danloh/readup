@@ -186,7 +186,7 @@ export const createBookGroups = (
     return createStatusGroups(activeBooks);
   }
 
-  // 'manual' mode is handled separately by generateBookshelfItems
+  // 'Group' mode is handled separately by generateBookshelfItems
   return activeBooks;
 };
 

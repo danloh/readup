@@ -75,6 +75,7 @@ export const NavTab: React.FC<{activeTab: string}> = ({ activeTab }) => {
     >
       <div className='flex font-bold items-center justify-start mx-1'>
         <Dropdown
+          label={_('Menu')}
           className='exclude-title-bar-mousedown dropdown-bottom z-50'
           buttonClassName='btn btn-ghost btn-xs'
           toggleButton={<Logo />}

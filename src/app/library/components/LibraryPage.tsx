@@ -78,7 +78,7 @@ const LibraryPageContent = (
   const _ = useTranslation();
   const { selectFiles } = useFileSelector(appService, _);
   const { safeAreaInsets: insets } = useThemeStore();
-  const { settings, setSettings, saveSettings } = useSettingsStore();
+  const { settings, setSettings } = useSettingsStore();
   const { setFontLayoutSettingsDialogOpen } = useSettingsStore();
   const { isTransferQueueOpen } = useTransferStore();
   const [loading, setLoading] = useState(false);
@@ -271,20 +271,6 @@ const LibraryPageContent = (
     if (isInitiating.current) return;
     isInitiating.current = true;
 
-    const initLogin = async () => {
-      const appService = await envConfig.getAppService();
-      const settings = await appService.loadSettings();
-      if (user) {
-        if (!settings.keepLogin) {
-          settings.keepLogin = true;
-          setSettings(settings);
-          saveSettings(envConfig, settings);
-        }
-      } else if (settings.keepLogin) {
-        router.push('/auth');
-      }
-    };
-
     // support 'Open with ..' function
     const handleOpenWithBooks = async (appService: AppService, library: Book[]) => {
       const openWithFiles = (await parseOpenWithFiles(appService)) || [];
@@ -318,7 +304,6 @@ const LibraryPageContent = (
       setLoading(false);
     };
 
-    initLogin();
     initLibrary();
     return () => {
       setCheckOpenWithBooks(false);

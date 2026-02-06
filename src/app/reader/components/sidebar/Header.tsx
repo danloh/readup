@@ -15,7 +15,14 @@ const SidebarHeader: React.FC<{
   onClose: () => void;
   onTogglePin: () => void;
   onToggleSearchBar: () => void;
-}> = ({ isPinned, isSearchBarVisible, onGoToLibrary, onClose, onTogglePin, onToggleSearchBar }) => {
+}> = ({ 
+  isPinned, 
+  isSearchBarVisible, 
+  onGoToLibrary, 
+  onClose, 
+  onTogglePin, 
+  onToggleSearchBar 
+}) => {
   const _ = useTranslation();
   const { isTrafficLightVisible } = useTrafficLight();
   const iconSize14 = useResponsiveSize(14);

@@ -20,7 +20,7 @@ export type LibrarySortByType = (typeof LibrarySortByType)[keyof typeof LibraryS
 
 export const LibraryGroupByType = {
   None: 'none',
-  Manual: 'manual',
+  Group: 'group',
   Series: 'series',
   Author: 'author',
   Status: 'status',

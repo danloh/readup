@@ -266,16 +266,16 @@ describe('createBookGroups', () => {
     });
   });
 
-  describe('groupBy: manual', () => {
-    it('should return books as-is (manual mode handled elsewhere)', () => {
+  describe('groupBy: group', () => {
+    it('should return books as-is (group mode handled elsewhere)', () => {
       const books = [
         createMockBook({ hash: '1', title: 'Book 1' }),
         createMockBook({ hash: '2', title: 'Book 2' }),
       ];
 
-      const result = createBookGroups(books, LibraryGroupByType.Manual);
+      const result = createBookGroups(books, LibraryGroupByType.Group);
 
-      // Manual mode just returns filtered books - actual grouping is in generateBookshelfItems
+      // Group mode just returns filtered books - actual grouping is in generateBookshelfItems
       expect(result).toHaveLength(2);
     });
   });
@@ -761,23 +761,23 @@ describe('ensureLibrarySortByType', () => {
 
 describe('ensureLibraryGroupByType', () => {
   it('should return valid group type when value is valid', () => {
-    expect(ensureLibraryGroupByType('none', LibraryGroupByType.Manual)).toBe(
+    expect(ensureLibraryGroupByType('none', LibraryGroupByType.Group)).toBe(
       LibraryGroupByType.None,
     );
-    expect(ensureLibraryGroupByType('manual', LibraryGroupByType.None)).toBe(
-      LibraryGroupByType.Manual,
+    expect(ensureLibraryGroupByType('group', LibraryGroupByType.None)).toBe(
+      LibraryGroupByType.Group,
     );
-    expect(ensureLibraryGroupByType('series', LibraryGroupByType.Manual)).toBe(
+    expect(ensureLibraryGroupByType('series', LibraryGroupByType.Group)).toBe(
       LibraryGroupByType.Series,
     );
-    expect(ensureLibraryGroupByType('author', LibraryGroupByType.Manual)).toBe(
+    expect(ensureLibraryGroupByType('author', LibraryGroupByType.Group)).toBe(
       LibraryGroupByType.Author,
     );
   });
 
   it('should return fallback when value is null', () => {
-    expect(ensureLibraryGroupByType(null, LibraryGroupByType.Manual)).toBe(
-      LibraryGroupByType.Manual,
+    expect(ensureLibraryGroupByType(null, LibraryGroupByType.Group)).toBe(
+      LibraryGroupByType.Group,
     );
   });
 
@@ -788,8 +788,8 @@ describe('ensureLibraryGroupByType', () => {
   });
 
   it('should return fallback when value is invalid', () => {
-    expect(ensureLibraryGroupByType('invalid', LibraryGroupByType.Manual)).toBe(
-      LibraryGroupByType.Manual,
+    expect(ensureLibraryGroupByType('invalid', LibraryGroupByType.Group)).toBe(
+      LibraryGroupByType.Group,
     );
     expect(ensureLibraryGroupByType('random', LibraryGroupByType.Author)).toBe(
       LibraryGroupByType.Author,
@@ -797,7 +797,7 @@ describe('ensureLibraryGroupByType', () => {
   });
 
   it('should return fallback when value is empty string', () => {
-    expect(ensureLibraryGroupByType('', LibraryGroupByType.Manual)).toBe(LibraryGroupByType.Manual);
+    expect(ensureLibraryGroupByType('', LibraryGroupByType.Group)).toBe(LibraryGroupByType.Group);
   });
 });
 

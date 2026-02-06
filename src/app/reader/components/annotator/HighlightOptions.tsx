@@ -8,9 +8,17 @@ import { useThemeStore } from '@/store/themeStore';
 import { useResponsiveSize } from '@/hooks/useResponsiveSize';
 import { saveSysSettings } from '@/helpers/settings';
 import { useEnv } from '@/context/EnvContext';
+import { stubTranslation as _ } from '@/utils/misc';
+import { useTranslation } from '@/hooks/useTranslation';
 
-const styles = ['highlight', 'underline', 'squiggly'] as HighlightStyle[];
-const colors = ['red', 'violet', 'blue', 'green', 'yellow'] as HighlightColor[];
+const styles = [_('highlight'), _('underline'), _('squiggly')] as HighlightStyle[];
+const defaultColors = [
+  _('red'),
+  _('violet'),
+  _('blue'),
+  _('green'),
+  _('yellow'),
+] as HighlightColor[];
 
 interface HighlightOptionsProps {
   isVertical: boolean;
@@ -34,6 +42,7 @@ const HighlightOptions: React.FC<HighlightOptionsProps> = ({
   selectedColor: _selectedColor,
   onHandleHighlight,
 }) => {
+  const _ = useTranslation();
   const { envConfig } = useEnv();
   const { settings } = useSettingsStore();
   const { isDarkMode } = useThemeStore();
@@ -101,6 +110,7 @@ const HighlightOptions: React.FC<HighlightOptionsProps> = ({
         {styles.map((style) => (
           <button
             key={style}
+            aria-label={_('Select {{style}} style', { style: _(style) })}
             onClick={() => handleSelectStyle(style)}
             className='not-eink:bg-gray-700 eink-bordered flex items-center justify-center rounded-full p-0'
             style={{ width: size28, height: size28, minHeight: size28 }}
@@ -147,11 +157,12 @@ const HighlightOptions: React.FC<HighlightOptionsProps> = ({
         )}
         style={isVertical ? { width: size28 } : { height: size28 }}
       >
-        {colors
+        {defaultColors
           .filter((c) => (isBwEink ? selectedColor === c : true))
           .map((color) => (
             <button
               key={color}
+              aria-label={_('Select {{color}} color', { color: _(color) })}
               onClick={() => handleSelectColor(color)}
               style={{
                 width: size16,

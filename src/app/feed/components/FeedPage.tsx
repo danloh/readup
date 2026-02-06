@@ -82,31 +82,30 @@ export default function FeedPage() {
     if (feeds.findIndex(f => f.link === link) === -1) {
       feeds.push(newFeed);
     }
-    const appService = await envConfig.getAppService();
     setChannelList(feeds);
+    const appService = await envConfig.getAppService();
     await appService.saveFeeds(feeds);
+    // setShowManager(false);
   };
 
   const handleDeleteFeed = async (channel: FeedType) => {
     const feeds = channelList;
     const newFeeds = feeds.filter(f => f.link !== channel.link);
-    const appService = await envConfig.getAppService();
     setChannelList(newFeeds);
+    const appService = await envConfig.getAppService();
     await appService.saveFeeds(newFeeds);
   };
 
   const handleImportFeeds = async (importedFeeds: FeedType[]) => {
     const feeds = channelList;
-    
     // Only add feeds that don't already exist
     for (const feed of importedFeeds) {
       if (!feeds.find(f => f.link === feed.link)) {
         feeds.push(feed);
       }
     }
-
-    const appService = await envConfig.getAppService();
     setChannelList(feeds);
+    const appService = await envConfig.getAppService();
     await appService.saveFeeds(feeds);
   };
 
@@ -115,6 +114,7 @@ export default function FeedPage() {
       {showFeedSide ? (
         <div className='w-52 p-1 bg-base-300 overflow-y-auto'>
           <ChannelList 
+            key={`list-${channelList.length}`}
             channelList={channelList} 
             onShowManager={() => setShowManager(prev => !prev)} 
             onClickFeed={onClickFeed}

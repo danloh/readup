@@ -33,7 +33,7 @@ import { lockScreenOrientation } from '@/utils/bridge';
 import { manageSyntaxHighlighting } from '@/utils/highlightjs';
 import { getViewInsets } from '@/utils/insets';
 import Spinner from '@/components/Spinner';
-import { handleAccessibilityEvents } from '@/utils/a11y';
+import { handleA11yNavigation } from '@/utils/a11y';
 import { transformContent } from '../transformers/transformService';
 import { useMouseEvent, useTouchEvent } from '../hooks/useIframeEvents';
 import { usePagination } from '../hooks/usePagination';
@@ -184,7 +184,7 @@ const FoliateViewer: React.FC<{
       applyThemeModeClass(detail.doc, isDarkMode);
       applyScrollModeClass(detail.doc, viewSettings.scrolled || false);
       keepTextAlignment(detail.doc);
-      handleAccessibilityEvents(viewRef.current, detail.doc, detail.index);
+      handleA11yNavigation(viewRef.current, detail.doc, detail.index);
 
       // Inline scripts in tauri platforms are not executed by default
       if (viewSettings.allowScript && isTauriAppPlatform()) {

@@ -62,7 +62,7 @@ export const DEFAULT_SYSTEM_SETTINGS: Partial<SystemSettings> = {
   autoImportBooksOnOpen: false,
   telemetryEnabled: false,
   libraryViewMode: 'grid',
-  libraryGroupBy: LibraryGroupByType.Manual,
+  libraryGroupBy: LibraryGroupByType.Group,
   librarySortBy: LibrarySortByType.Updated,
   librarySortAscending: true,
   aiSettings: DEFAULT_AI_SETTINGS,

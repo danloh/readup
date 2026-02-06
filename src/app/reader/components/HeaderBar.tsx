@@ -220,6 +220,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
             headerRef={headerRef}
             showMinimize={bookKeys.length == 1 && windowButtonVisible}
             showMaximize={bookKeys.length == 1 && windowButtonVisible}
+            closeButtonLabel={_('Close Book')}
             onClose={() => {
               setHoveredBookKey(null);
               onCloseBook(bookKey);

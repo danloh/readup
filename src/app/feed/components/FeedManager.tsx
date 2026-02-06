@@ -23,7 +23,7 @@ export function FeedManager(props: Props) {
   const [showAdd, setShowAdd] = useState(false);
   const [searchText, setSearchText] = useState<string>('');
 
-  const [feedUrl, setFeedUrl] = useState('https://www.propublica.org/feeds/propublica/main');
+  const [feedUrl, setFeedUrl] = useState('');
   const [feedType, setFeedType] = useState('rss');
   const [feedTitle, setFeedTitle] = useState('');
   const [description, setDescription] = useState('');

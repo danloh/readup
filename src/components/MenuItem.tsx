@@ -33,6 +33,8 @@ const MenuItem: React.FC<MenuItemProps> = ({
   onClick,
 }) => {
   const iconSize = useResponsiveSize(16);
+  const [isDetailsOpen, setIsDetailsOpen] = React.useState(detailsOpen);
+  
   const menuButton = (
     <button
       role={disabled ? 'none' : 'menuitem'}
@@ -96,8 +98,15 @@ const MenuItem: React.FC<MenuItemProps> = ({
     return (
       <ul className='menu rounded-box m-0 p-0'>
         <li>
-          <details open={detailsOpen}>
-            <summary className='hover:bg-base-300 p-0 pr-3'>{menuButton}</summary>
+          <details open={detailsOpen} onToggle={(e) => setIsDetailsOpen(e.currentTarget.open)}>
+            <summary 
+              role='button'
+              tabIndex={-1}
+              aria-expanded={isDetailsOpen}
+              className='hover:bg-base-300 p-0 pr-3'
+            >
+              {menuButton}
+            </summary>
             {children}
           </details>
         </li>
