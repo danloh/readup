@@ -162,16 +162,12 @@ const BookDetailModal: React.FC<BookDetailModalProps> = ({
       eventDispatcher.dispatch('toast', {
         type: 'info',
         timeout: 2000,
-        message: _('Book deleted: {{title}}', {
-          title: book.title,
-        }),
+        message: _('Book deleted: {{title}}', { title: book.title }),
       });
       return true;
     } catch {
       eventDispatcher.dispatch('toast', {
-        message: _('Failed to delete book: {{title}}', {
-          title: book.title,
-        }),
+        message: _('Failed to delete book: {{title}}', { title: book.title }),
         type: 'error',
       });
       return false;

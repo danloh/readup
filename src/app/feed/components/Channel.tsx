@@ -6,6 +6,7 @@ import { CiMenuFries } from "react-icons/ci";
 import { useEnv } from '@/context/EnvContext';
 import { useRouter } from 'next/navigation';
 import { mergeArrays } from '@/utils/book';
+import { eventDispatcher } from '@/utils/event';
 import { isWebAppPlatform } from '@/services/environment';
 import { useTranslation } from '@/hooks/useTranslation';
 import { FeedEpubService } from '../epub/feedEpubService';
@@ -69,11 +70,19 @@ function ArticleList(props: ListProps) {
 
   const handleExportToEpub = useCallback(async (createFresh: boolean = false) => {
     if (createFresh && freshTitle.trim()) {
-      alert('Need to name the fresh EPUB');
+      eventDispatcher.dispatch('toast', {
+        type: 'info',
+        timeout: 2000,
+        message: _('Need to name the fresh EPUB'),
+      });
       return;
     }
     if (sortedArticles.length === 0) {
-      alert('No articles to export');
+      eventDispatcher.dispatch('toast', {
+        type: 'warn',
+        timeout: 2000,
+        message: _('No articles to export'),
+      });
       return;
     }
 
@@ -97,9 +106,17 @@ function ArticleList(props: ListProps) {
       if (migrationWarnings.length > 0) {
         console.warn('Migration warnings:', migrationWarnings);
         const warningMsg = migrationWarnings.join('\n');
-        alert(`EPUB updated. Annotation status:\n\n${warningMsg}`);
+        eventDispatcher.dispatch('toast', {
+          type: 'warn',
+          timeout: 2000,
+          message: _('EPUB updated. Annotation status: {{msg}}', { msg: warningMsg }),
+        });
       } else {
-        alert('EPUB created successfully!');
+        eventDispatcher.dispatch('toast', {
+          type: 'info',
+          timeout: 2000,
+          message: _('EPUB created successfully')
+        });
       }
 
       // Navigate to reader with the starred EPUB
@@ -109,7 +126,11 @@ function ArticleList(props: ListProps) {
       }, 500);
     } catch (error) {
       console.error('Failed to export to EPUB:', error);
-      alert(`Failed to export: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      eventDispatcher.dispatch('toast', {
+        type: 'warn',
+        timeout: 2000,
+        message: _('Failed to export')
+      });
     } finally {
       setExporting(false);
       setShowFreshEpubConfirm(false);

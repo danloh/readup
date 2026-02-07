@@ -4,6 +4,8 @@ import { LiaFileExportSolid, LiaFileImportSolid } from 'react-icons/lia';
 import { FaHeadphones, FaMinus, FaPlus, FaRss, FaTrashAlt } from 'react-icons/fa';
 import { CiMenuFries } from 'react-icons/ci';
 
+import { useTranslation } from '@/hooks/useTranslation';
+import { eventDispatcher } from '@/utils/event';
 import * as dataAgent from './dataAgent';
 import { FeedType } from './dataAgent';
 import { exportOPML, downloadOPML, parseOPMLFile } from './opmlManager';
@@ -17,6 +19,7 @@ type Props = {
 };
 
 export function FeedManager(props: Props) {
+  const _ = useTranslation();
   const { channelList, handleAddFeed, handleDelete, onImportFeeds, showSide } = props;
 
   const [realList, setRealList] = useState<FeedType[]>(channelList);
@@ -81,7 +84,11 @@ export function FeedManager(props: Props) {
       downloadOPML(opmlContent);
     } catch (error) {
       console.error('Error exporting OPML:', error);
-      alert('Failed to export feeds');
+      eventDispatcher.dispatch('toast', {
+        type: 'error',
+        timeout: 2000,
+        message: _('Failed to export feeds'),
+      });
     }
   };
 
@@ -98,7 +105,11 @@ export function FeedManager(props: Props) {
       const feeds = await parseOPMLFile(file);
       
       if (feeds.length === 0) {
-        alert('No feeds found in the OPML file');
+        eventDispatcher.dispatch('toast', {
+          type: 'warn',
+          timeout: 2000,
+          message: _('No feeds found in the OPML file'),
+        });
         return;
       }
 
@@ -112,10 +123,18 @@ export function FeedManager(props: Props) {
         fileInputRef.current.value = '';
       }
 
-      alert(`Successfully imported ${feeds.length} feed(s)`);
+      eventDispatcher.dispatch('toast', {
+        type: 'warn',
+        timeout: 2000,
+        message: _('Successfully imported {{len}} feed(s)', { len: feeds.length }),
+      });
     } catch (error) {
       console.error('Error importing OPML:', error);
-      alert('Failed to import feeds. Please ensure the file is a valid OPML file.');
+      eventDispatcher.dispatch('toast', {
+        type: 'error',
+        timeout: 2000,
+        message: _('Failed to import feeds. Please ensure the file is a valid OPML file'),
+      });
     } finally {
       setLoading(false);
     }

@@ -61,6 +61,15 @@ body {
   cursor: default;
 }
 
+/* hide the default triangle marker in an HTML <details> element */
+summary {
+  list-style: none !important;
+}
+/* Specific rule for Safari and older WebKit browsers */
+summary::-webkit-details-marker {
+  display: none !important;
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;
