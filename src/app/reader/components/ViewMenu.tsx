@@ -23,6 +23,7 @@ import { eventDispatcher } from '@/utils/event';
 import { getMaxInlineSize } from '@/utils/config';
 import { tauriHandleToggleFullScreen } from '@/utils/window';
 import { saveViewSettings } from '@/helpers/settings';
+import { formatLocaleDateTime } from '@/utils/book';
 
 interface ViewMenuProps {
   bookKey: string;
@@ -302,7 +303,7 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
             ? _('Sign in to Sync')
             : lastSyncTime
               ? _('Synced at {{time}}', {
-                  time: new Date(lastSyncTime).toLocaleString(),
+                  time: formatLocaleDateTime(lastSyncTime),
                 })
               : _('Never synced')
         }
