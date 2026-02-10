@@ -1,11 +1,9 @@
 import clsx from 'clsx';
-import React, { useMemo } from 'react';
 import { Insets } from '@/types/misc';
 import { useEnv } from '@/context/EnvContext';
 import { useReaderStore } from '@/store/readerStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useBookDataStore } from '@/store/bookDataStore';
-import { SectionItem } from '@/libs/document';
 import { SIZE_PER_LOC, SIZE_PER_TIME_UNIT } from '@/services/constants';
 
 function formatProgress(
@@ -25,7 +23,6 @@ function formatProgress(
 
 interface PageInfoProps {
   bookKey: string;
-  sections: SectionItem[];
   horizontalGap: number;
   contentInsets: Insets;
   gridInsets: Insets;
@@ -33,14 +30,14 @@ interface PageInfoProps {
 
 const ProgressInfoView: React.FC<PageInfoProps> = ({
   bookKey,
-  sections,
   horizontalGap,
   contentInsets,
   gridInsets,
 }) => {
   const _ = useTranslation();
   const { appService } = useEnv();
-  const { getProgress, getViewSettings } = useReaderStore();
+  const { getProgress, getViewSettings, getView } = useReaderStore();
+  const view = getView(bookKey);
   const { getBookData } = useBookDataStore();
   const viewSettings = getViewSettings(bookKey)!;
   const bookData = getBookData(bookKey); 
@@ -59,24 +56,11 @@ const ProgressInfoView: React.FC<PageInfoProps> = ({
   const pageInfo = bookData?.isFixedLayout ? section : pageinfo;
   const progressInfo = formatProgress(pageInfo?.current, pageInfo?.total, formatTemplate);
 
-  const activeHref = useMemo(() => progress?.sectionHref || null, [progress?.sectionHref]);
-  const activeSection = useMemo(() => {
-    if (!activeHref) return null;
-    for (const section of sections) {
-      if (section.id === activeHref) return section;
-      const subitem = section.subitems?.find((sub) => sub.id === activeHref);
-      if (subitem) return section;
-    }
-    return null;
-  }, [activeHref, sections]);
-
-  const current = pageInfo?.current || 0;
-  const total = activeSection?.location ? activeSection.location.next : pageInfo?.total || 0;
-  const pages = Math.max(total - current, 0);
-  const timeLeft = total - 1 >= current
-    ? _('{{time}}m', { time: Math.round((pages * SIZE_PER_LOC) / SIZE_PER_TIME_UNIT) })
-    : '';
-  const pageLeft = total - 1 >= current ? _('{{count}}p', { count: pages }) : '';
+  const { page = 0, pages = 0 } = view?.renderer || {};
+  const pagesLeft = Math.max(pages - page - 1, 0);
+  const calcTime = Math.round((pagesLeft * SIZE_PER_LOC) / SIZE_PER_TIME_UNIT)
+  const timeLeft = pages - 1 > page ? _('{{time}}m', { time: calcTime }) : '';
+  const pageLeft = pages - 1 > page ? _('{{count}}p', { count: pagesLeft }) : '';
   const remainingInfo = `${timeLeft}${timeLeft && pageLeft ? ' § ' : ''}${pageLeft}`;
 
   return (
@@ -92,8 +76,8 @@ const ProgressInfoView: React.FC<PageInfoProps> = ({
         [
           progress
             ? _('On {{current}} of {{total}} page', {
-                current: current + 1,
-                total: total,
+                current: page + 1,
+                total: pages,
               })
             : '',
           timeLeft,

@@ -81,7 +81,7 @@ const BookItem: React.FC<BookItemProps> = ({
           style={{ height: `${iconSize18}px`,minHeight: `${iconSize18}px` }}
         >
           {book.progress && <ReadingProgress book={book} />}
-          <div className='flex items-center justify-center gap-x-2'>
+          <div className='flex items-center justify-center gap-x-2 opacity-20'>
             <button
               aria-label={_('Show Book Details')}
               className='show-detail-button -m-2 p-2'

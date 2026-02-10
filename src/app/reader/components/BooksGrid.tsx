@@ -211,7 +211,6 @@ const BooksGrid: React.FC<BooksGridProps> = ({ bookKeys, onCloseBook }) => {
             {showFooter && (
               <ProgressInfoView
                 bookKey={bookKey}
-                sections={bookDoc.sections || []}
                 horizontalGap={horizontalGapPercent}
                 contentInsets={contentInsets}
                 gridInsets={gridInsets}
