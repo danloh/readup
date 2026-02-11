@@ -445,7 +445,7 @@ const FoliateViewer: React.FC<{
         {...touchHandlers}
       />
       <ParagraphControl bookKey={bookKey} viewRef={viewRef} gridInsets={gridInsets} />
-      <RSVPControl bookKey={bookKey} />
+      <RSVPControl bookKey={bookKey} gridInsets={gridInsets}  />
       {!docLoaded.current && loading && <Spinner loading={true} />}
     </>
   );
