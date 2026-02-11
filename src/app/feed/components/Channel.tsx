@@ -137,8 +137,6 @@ function ArticleList(props: ListProps) {
     }
   }, [freshTitle]);
 
-  console.log('sorted: ', sortedArticles)
-
   return (
     <div className='flex flex-col'>
       {isInStar && sortedArticles.length > 0 && (
@@ -273,7 +271,7 @@ const ArticleItem = memo(function ArticleItm(props: ItemProps) {
         </span>
       </div>
       {expanded 
-        ? <ArticleView entry={article} />
+        ? <ArticleView entry={article} onClick={() => setExpanded(prev => !prev)} />
         : <ArticlePreview 
             content={article.description || ''} 
             onClick={() => setExpanded(prev => !prev)}
@@ -283,7 +281,7 @@ const ArticleItem = memo(function ArticleItm(props: ItemProps) {
   );
 });
 
-function ArticleView({ entry } : { entry: ArticleType; }) {
+function ArticleView({ entry, onClick } : { entry: ArticleType; onClick: () => void; }) {
   const { envConfig } = useEnv();
   const [pageContent, setPageContent] = useState('');
   const [loading, setLoading] = useState(true);
@@ -339,6 +337,7 @@ function ArticleView({ entry } : { entry: ArticleType; }) {
         // eslint-disable-next-line react/no-danger
         dangerouslySetInnerHTML={{__html: pageContent}}
       />
+      <div className='mt-1 text-center' onClick={onClick}>-·-·-</div>
     </div>
   );
 }
@@ -354,7 +353,7 @@ function ArticlePreview({ content, onClick } : { content: string; onClick: () =>
   return (
     <div className='h-full p-2' onClick={onClick}>
       <div
-        className='content prose prose-sm'
+        className='content prose prose-sm max-h-[128px] overflow-auto'
         // eslint-disable-next-line react/no-danger
         dangerouslySetInnerHTML={{__html: pageContent}}
       />

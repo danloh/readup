@@ -21,7 +21,7 @@ const BookItem: React.FC<BookItemProps> = ({
   showBookDetailsModal,
 }) => {
   const _ = useTranslation();
-  const iconSize18 = useResponsiveSize(18);
+  const iconSize16 = useResponsiveSize(16);
 
   return (
     <div
@@ -78,7 +78,7 @@ const BookItem: React.FC<BookItemProps> = ({
             'flex items-center', 
             book.progress ? 'justify-between' : 'justify-end'
           )}
-          style={{ height: `${iconSize18}px`,minHeight: `${iconSize18}px` }}
+          style={{ height: `${iconSize16}px`,minHeight: `${iconSize16}px` }}
         >
           {book.progress && <ReadingProgress book={book} />}
           <div className='flex items-center justify-center gap-x-2 opacity-20'>
@@ -92,7 +92,7 @@ const BookItem: React.FC<BookItemProps> = ({
               }}
             >
               <div className='pt-[1px]'>
-                <LiaInfoCircleSolid size={iconSize18} />
+                <LiaInfoCircleSolid size={iconSize16} />
               </div>
             </button>
           </div>

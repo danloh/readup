@@ -26,8 +26,8 @@ export function ChannelList(props: Props) {
             <div 
               key={`${title}-${idx}`}
               className={`m-1 flex flex-row items-center justify-between cursor-pointer ${activeClass}`}
-              onClick={() => {
-                onClickFeed(link);
+              onClick={async () => {
+                await onClickFeed(link);
                 setHighlighted(channel);
               }}
             >

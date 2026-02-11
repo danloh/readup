@@ -36,8 +36,7 @@ export default function FeedPage() {
   const loadFeed = async (link: string) => {
     const res = await dataAgent.fetchFeed(link);
     const articles = res.articles; 
-    // console.log('current articles', res);
-    if (isWebAppPlatform()) {
+    if (!isWebAppPlatform()) {
       // Tauri fetch, with full articles
       if (articles && articles.length > 0) {
         const appService = await envConfig.getAppService();
