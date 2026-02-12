@@ -11,14 +11,12 @@ import BookMenu from './BookMenu';
 const SidebarHeader: React.FC<{
   isPinned: boolean;
   isSearchBarVisible: boolean;
-  onGoToLibrary: () => void;
   onClose: () => void;
   onTogglePin: () => void;
   onToggleSearchBar: () => void;
 }> = ({ 
   isPinned, 
   isSearchBarVisible, 
-  onGoToLibrary, 
   onClose, 
   onTogglePin, 
   onToggleSearchBar 
@@ -45,13 +43,7 @@ const SidebarHeader: React.FC<{
         >
           <MdArrowBackIosNew size={iconSize22} />
         </button>
-        <button
-          title={_('Go to Library')}
-          className='btn btn-ghost hidden h-8 min-h-8 w-8 p-0 sm:flex'
-          onClick={onGoToLibrary}
-        >
-          <Logo />
-        </button>
+        <Logo />
       </div>
       <div className='flex min-w-24 max-w-32 items-center justify-between sm:size-[70%]'>
         <button 

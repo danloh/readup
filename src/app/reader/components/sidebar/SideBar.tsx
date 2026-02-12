@@ -26,9 +26,7 @@ const MAX_SIDEBAR_WIDTH = 0.45;
 
 const VELOCITY_THRESHOLD = 0.5;
 
-const SideBar: React.FC<{
-  onGoToLibrary: () => void;
-}> = ({ onGoToLibrary }) => {
+const SideBar: React.FC = () => {
   const _ = useTranslation();
   const { appService } = useEnv();
   const { updateAppTheme, safeAreaInsets } = useThemeStore();
@@ -268,7 +266,6 @@ const SideBar: React.FC<{
           <SidebarHeader
             isPinned={isSideBarPinned}
             isSearchBarVisible={isSearchBarVisible}
-            onGoToLibrary={onGoToLibrary}
             onClose={() => setSideBarVisible(false)}
             onTogglePin={handleSideBarTogglePin}
             onToggleSearchBar={handleToggleSearchBar}

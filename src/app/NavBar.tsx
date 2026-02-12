@@ -7,6 +7,8 @@ import { ImFeed } from "react-icons/im";
 import { BiLibrary } from 'react-icons/bi';
 import { SiProgress } from "react-icons/si";
 import { GrCatalog } from 'react-icons/gr';
+import { IoMenu } from 'react-icons/io5';
+
 import { useTranslation } from '@/hooks/useTranslation';
 import { useTrafficLight } from '@/hooks/useTrafficLight';
 import { useEnv } from '@/context/EnvContext';
@@ -70,15 +72,18 @@ export const NavTab: React.FC<{activeTab: string}> = ({ activeTab }) => {
       style={{
         marginTop: appService?.hasSafeAreaInset
           ? `max(${insets.top}px, ${systemUIVisible ? statusBarHeight : 0}px)`
-          : '0px',
+          : appService?.hasTrafficLight
+            ? '-2px'
+            : '0px',
       }}
     >
       <div className='flex font-bold items-center justify-start mx-1'>
+        <Logo />
         <Dropdown
           label={_('Menu')}
           className='exclude-title-bar-mousedown dropdown-bottom z-50'
           buttonClassName='btn btn-ghost btn-xs'
-          toggleButton={<Logo />}
+          toggleButton={<IoMenu size={12} />}
         >
           <SettingsMenu />
         </Dropdown>
