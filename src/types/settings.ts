@@ -9,6 +9,7 @@ export type LibraryViewModeType = 'grid' | 'list';
 export const LibrarySortByType = {
   Title: 'title',
   Author: 'author',
+  Series: 'series',
   Updated: 'updated',
   Created: 'created',
   Size: 'size',

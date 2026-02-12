@@ -43,6 +43,7 @@ const ViewMenu: React.FC<ViewMenuProps> = ({ setIsDropdownOpen }) => {
     { label: _('Title'), value: LibrarySortByType.Title },
     { label: _('Author'), value: LibrarySortByType.Author },
     { label: _('Format'), value: LibrarySortByType.Format },
+    { label: _('Series'), value: LibrarySortByType.Series },
     { label: _('Date Read'), value: LibrarySortByType.Updated },
     { label: _('Date Added'), value: LibrarySortByType.Created },
     { label: _('Date Published'), value: LibrarySortByType.Published },
@@ -125,7 +126,7 @@ const ViewMenu: React.FC<ViewMenuProps> = ({ setIsDropdownOpen }) => {
           onClick={() => handleSetGroupBy(option.value as LibraryGroupByType)}
         />
       ))}
-      <hr aria-hidden='true' className='border-base-200 my-1' />
+      <hr aria-hidden='true' className='border-primary/50 my-1' />
       <MenuItem
         label={_('Sort by...')}
         buttonClass='h-8'
@@ -141,7 +142,7 @@ const ViewMenu: React.FC<ViewMenuProps> = ({ setIsDropdownOpen }) => {
           onClick={() => handleSetSortBy(option.value as LibrarySortByType)}
         />
       ))}
-      <hr aria-hidden='true' className='border-base-200 my-1' />
+      <hr aria-hidden='true' className='border-primary/30 my-1' />
       {sortingOptions.map((option) => (
         <MenuItem
           key={option.value.toString()}

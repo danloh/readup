@@ -319,6 +319,15 @@ export abstract class BaseAppService implements AppService {
         downloadedAt: Date.now(),
         updatedAt: Date.now(),
       };
+      // update series info from metadata
+      if (book.metadata?.belongsTo?.series) {
+        const belongsTo = book.metadata.belongsTo.series;
+        const series = Array.isArray(belongsTo) ? belongsTo[0] : belongsTo;
+        if (series) {
+          book.metadata.series = formatTitle(series.name);
+          book.metadata.seriesIndex = parseFloat(series.position || '0');
+        }
+      }
       // update book metadata when reimporting the same book
       if (existingBook) {
         existingBook.format = book.format;
@@ -326,7 +335,7 @@ export abstract class BaseAppService implements AppService {
         existingBook.sourceTitle = existingBook.sourceTitle ?? book.sourceTitle;
         existingBook.author = existingBook.author ?? book.author;
         existingBook.fileSize = fileSize;
-        existingBook.metadata = existingBook.metadata ?? loadedBook.metadata;
+        existingBook.metadata = book.metadata;
         existingBook.primaryLanguage = existingBook.primaryLanguage ?? book.primaryLanguage;
         existingBook.downloadedAt = Date.now();
       }
