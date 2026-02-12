@@ -237,6 +237,10 @@ const getMetadata = opf => {
         // NOTE: webpub requires number but EPUB allows values like "2.2.1"
         position: one(x.props?.['group-position']),
     })
+    const makeSeries = x => ({
+        name: x.value,
+        position: one(x.props?.['group-position']),
+    })
     const makeAltIdentifier = x => {
         const { value } = x
         if (/^urn:/i.test(value)) return value
@@ -277,11 +281,11 @@ const getMetadata = opf => {
         subject: dc.subject?.map(makeContributor),
         belongsTo: {
             collection: belongsTo.collection?.map(makeCollection),
-            series: belongsTo.series?.map(makeCollection)
-            ?? legacyMeta?.['calibre:series'] ? {
+            series: belongsTo.series?.map(makeSeries)
+            ?? (legacyMeta?.['calibre:series'] ? {
                 name: legacyMeta?.['calibre:series'],
                 position: parseFloat(legacyMeta?.['calibre:series_index']),
-            } : null,
+            } : null),
         },
         altIdentifier: dc.identifier?.map(makeAltIdentifier),
         source: dc.source?.map(makeAltIdentifier), // NOTE: not in webpub schema
@@ -753,7 +757,7 @@ class Loader {
         const url = URL.createObjectURL(new Blob([newData], { type: newType }))
         this.#cache.set(href, url)
         this.#refCount.set(href, 1)
-        if (newType === MIME.XHTML) {
+        if (newType === MIME.XHTML || newType === MIME.HTML) {
             this.#cacheXHTMLContent.set(url, {href, type: newType, data: newData})
         }
         if (parent) {

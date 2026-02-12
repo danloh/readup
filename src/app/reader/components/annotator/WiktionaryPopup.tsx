@@ -52,7 +52,7 @@ const WiktionaryPopup: React.FC<WiktionaryPopupProps> = ({
           isLookingUp.current = false;
         });
 
-        link.className = 'text-primary underline cursor-pointer';
+        link.className = 'not-eink:text-primary underline cursor-pointer';
       }
     });
 
@@ -95,7 +95,7 @@ const WiktionaryPopup: React.FC<WiktionaryPopupProps> = ({
 
         const p = document.createElement('p');
         p.innerText = results[0]!.language;
-        p.className = 'text-sm italic opacity-75';
+        p.className = 'text-sm italic not-eink:opacity-75';
         hgroup.append(h1, p);
         main.append(hgroup);
 
@@ -115,7 +115,7 @@ const WiktionaryPopup: React.FC<WiktionaryPopupProps> = ({
 
             if (examples) {
               const ul = document.createElement('ul');
-              ul.className = 'pl-8 list-disc text-sm italic opacity-75';
+              ul.className = 'pl-8 list-disc text-sm italic not-eink:opacity-75';
 
               examples.forEach((example) => {
                 const exampleLi = document.createElement('li');
@@ -147,7 +147,7 @@ const WiktionaryPopup: React.FC<WiktionaryPopupProps> = ({
         h1.className = 'text-lg font-bold';
 
         const p = document.createElement('p');
-        p.innerHTML = _(`Unable to find the word. Try searching directly on <a href="https://en.wiktionary.org/w/index.php?search=${encodeURIComponent(word)}" target="_blank" rel="noopener noreferrer" class="text-primary underline">Wiktionary</a>.`);
+        p.innerHTML = _(`Unable to find the word. Try searching directly on <a href="https://en.wiktionary.org/w/index.php?search=${encodeURIComponent(word)}" target="_blank" rel="noopener noreferrer" class="not-eink:text-primary underline">Wiktionary</a>.`);
 
         div.append(h1, p);
         main.append(div);
@@ -172,7 +172,7 @@ const WiktionaryPopup: React.FC<WiktionaryPopupProps> = ({
           <main className='flex-grow overflow-y-auto p-4 font-sans' />
           <footer className='mt-auto hidden data-[state=loaded]:block data-[state=error]:hidden data-[state=loading]:hidden'>
             <a 
-              className='flex items-center p-2 text-xs opacity-60 link'
+              className='not-eink:opacity-60 flex items-center p-2 text-xs link'
               href={`https://en.wiktionary.org/wiki/${encodeURIComponent(lookupWord)}`}
               target="_blank" 
               rel="noopener noreferrer"

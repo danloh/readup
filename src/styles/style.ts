@@ -839,7 +839,12 @@ export const applyTableStyle = (document: Document) => {
     const computedTableStyle = window.getComputedStyle(table);
     const computedWidth = computedTableStyle.width;
     if (computedWidth && computedWidth !== 'auto' && computedWidth !== '0px') {
-      table.style.width = `calc(min(${computedWidth}, var(--available-width)))`;
+      const widthValue = parseFloat(computedWidth);
+      const widthUnit = computedWidth.replace(widthValue.toString(), '').trim();
+      if (widthUnit !== '%') {
+        // Workaround for hardcoded table layout
+        table.style.width = `calc(min(${computedWidth}, var(--available-width)))`;
+      }
     }
 
     if (totalTableWidth > 0) {
