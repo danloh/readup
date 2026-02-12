@@ -7,16 +7,21 @@ import { useTrafficLight } from '@/hooks/useTrafficLight';
 import Dropdown from '@/components/Dropdown';
 import Logo from '@/components/Logo';
 import BookMenu from './BookMenu';
+import SidebarToggler from '../SidebarToggler';
 
 const SidebarHeader: React.FC<{
+  bookKey: string;
   isPinned: boolean;
   isSearchBarVisible: boolean;
+  onGoToLibrary: () => void;
   onClose: () => void;
   onTogglePin: () => void;
   onToggleSearchBar: () => void;
 }> = ({ 
+  bookKey,
   isPinned, 
   isSearchBarVisible, 
+  onGoToLibrary, 
   onClose, 
   onTogglePin, 
   onToggleSearchBar 
@@ -35,7 +40,7 @@ const SidebarHeader: React.FC<{
       )}
       dir='ltr'
     >
-      <div className='flex items-center gap-x-8'>
+      <div className='flex items-center justify-start gap-x-2'>
         <button
           title={_('Close')}
           onClick={onClose}
@@ -43,7 +48,16 @@ const SidebarHeader: React.FC<{
         >
           <MdArrowBackIosNew size={iconSize22} />
         </button>
-        <Logo />
+        <button
+          title={_('Go to Library')}
+          className='btn btn-ghost hidden h-8 min-h-8 w-8 p-0 sm:flex'
+          onClick={onGoToLibrary}
+        >
+          <Logo />
+        </button>
+        <div className='hidden sm:flex'>
+          <SidebarToggler bookKey={bookKey} />
+        </div>
       </div>
       <div className='flex min-w-24 max-w-32 items-center justify-between sm:size-[70%]'>
         <button 

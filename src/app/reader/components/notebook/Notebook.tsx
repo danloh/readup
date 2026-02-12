@@ -23,7 +23,7 @@ import { incrementAnnotations } from '@/services/usageService';
 import { Overlay } from '@/components/Overlay';
 import BooknoteItem from '../sidebar/BooknoteItem';
 import AIAssistant from './AIAssistant';
-import NotebookHeader from './Header';
+import NotebookHeader from './NotebookHeader';
 import NoteEditor from './NoteEditor';
 import SearchBar from './SearchBar';
 import NotebookTabNavigation from './NotebookTabNavigation';

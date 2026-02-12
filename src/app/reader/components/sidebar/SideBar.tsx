@@ -14,7 +14,7 @@ import useShortcuts from '@/hooks/useShortcuts';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Overlay } from '@/components/Overlay';
 import { useThemeStore } from '@/store/themeStore';
-import SidebarHeader from './Header';
+import SidebarHeader from './SidebarHeader';
 import SidebarContent from './Content';
 import BookCard from './BookCard';
 import useSidebar from '../../hooks/useSidebar';
@@ -26,7 +26,9 @@ const MAX_SIDEBAR_WIDTH = 0.45;
 
 const VELOCITY_THRESHOLD = 0.5;
 
-const SideBar: React.FC = () => {
+const SideBar: React.FC<{
+  onGoToLibrary: () => void;
+}> = ({ onGoToLibrary }) => {
   const _ = useTranslation();
   const { appService } = useEnv();
   const { updateAppTheme, safeAreaInsets } = useThemeStore();
@@ -264,8 +266,10 @@ const SideBar: React.FC = () => {
             </div>
           )}
           <SidebarHeader
+            bookKey={sideBarBookKey!}
             isPinned={isSideBarPinned}
             isSearchBarVisible={isSearchBarVisible}
+            onGoToLibrary={onGoToLibrary}
             onClose={() => setSideBarVisible(false)}
             onTogglePin={handleSideBarTogglePin}
             onToggleSearchBar={handleToggleSearchBar}

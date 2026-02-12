@@ -162,19 +162,19 @@ const ReaderContent: React.FC<{ids?: string; settings: SystemSettings}> = ({ ids
     await saveSettings(envConfig, settings);
   }, 200);
 
-  // const handleCloseBooksToLibrary = () => {
-  //   handleCloseBooks();
-  //   if (isTauriAppPlatform()) {
-  //     const currentWindow = getCurrentWindow();
-  //     if (currentWindow.label === 'main') {
-  //       navigateBackToLibrary();
-  //     } else {
-  //       currentWindow.close();
-  //     }
-  //   } else {
-  //     navigateBackToLibrary();
-  //   }
-  // };
+  const handleCloseBooksToLibrary = () => {
+    handleCloseBooks();
+    if (isTauriAppPlatform()) {
+      const currentWindow = getCurrentWindow();
+      if (currentWindow.label === 'main') {
+        navigateBackToLibrary();
+      } else {
+        currentWindow.close();
+      }
+    } else {
+      navigateBackToLibrary();
+    }
+  };
 
   const handleCloseBook = async (bookKey: string) => {
     saveConfigAndCloseBook(bookKey);
@@ -214,8 +214,12 @@ const ReaderContent: React.FC<{ids?: string; settings: SystemSettings}> = ({ ids
 
   return (
     <div className='reader-content flex full-height'>
-      <SideBar />
-      <BooksGrid bookKeys={bookKeys} onCloseBook={handleCloseBook} />
+      <SideBar onGoToLibrary={handleCloseBooksToLibrary} />
+      <BooksGrid
+        bookKeys={bookKeys}
+        onCloseBook={handleCloseBook}
+        onGoToLibrary={handleCloseBooksToLibrary}
+      />
       {isFontLayoutSettingsDialogOpen && <SettingsDialog bookKey={settingsDialogBookKey} />}
       <Notebook />
       {showDetailsBook && (
