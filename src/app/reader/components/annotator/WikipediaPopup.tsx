@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import Popup from '@/components/Popup';
 import { Position } from '@/utils/sel';
+import { detectLanguage } from '@/utils/lang';
 import { useTranslation } from '@/hooks/useTranslation';
 
 interface WikipediaPopupProps {
@@ -26,7 +27,10 @@ const WikipediaPopup: React.FC<WikipediaPopupProps> = ({
   const isLoading = useRef(false);
 
   const bookLang = typeof lang === 'string' ? lang : lang?.[0];
-  const langCode = bookLang ? bookLang.split('-')[0]! : 'en';
+  const langCode = bookLang ? bookLang.split(/[-_]|\s+/)[0]! : 'en';
+  // FIXME: detect wrong lang sometimes
+  const realLang = detectLanguage(text, false) || langCode;
+  // console.log('>> lang', bookLang, lang, langCode, realLang);
 
   useEffect(() => {
     if (isLoading.current) {
@@ -101,8 +105,8 @@ const WikipediaPopup: React.FC<WikipediaPopupProps> = ({
       }
     };
 
-    fetchSummary(text, langCode);
-  }, [_, text, langCode]);
+    fetchSummary(text, realLang);
+  }, [_, text, realLang]);
 
   return (
     <div>
@@ -119,7 +123,7 @@ const WikipediaPopup: React.FC<WikipediaPopupProps> = ({
           <footer className='mt-auto hidden data-[state=loaded]:block data-[state=error]:hidden data-[state=loading]:hidden'>
             <a 
               className='not-eink:opacity-60 flex items-center p-2 text-xs link'
-              href={`https://${lang}.wikipedia.org/wiki/${encodeURIComponent(text)}`}
+              href={`https://${realLang}.wikipedia.org/wiki/${encodeURIComponent(text)}`}
               target="_blank" 
               rel="noopener noreferrer"
             >

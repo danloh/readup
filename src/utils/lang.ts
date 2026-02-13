@@ -133,14 +133,14 @@ export const inferLangFromScript = (text: string, lang: string): string => {
   return lang;
 };
 
-export const detectLanguage = (content: string): string => {
+export const detectLanguage = (content: string, fallback = true): string => {
   try {
     const iso6393Lang = franc(content.substring(0, 1000));
-    const iso6391Lang = code6393to6391(iso6393Lang) || 'en';
-    return iso6391Lang;
+    const iso6391Lang = code6393to6391(iso6393Lang);
+    return fallback ? iso6391Lang || 'en' : iso6391Lang;
   } catch {
     console.warn('Language detection failed, defaulting to en.');
-    return 'en';
+    return fallback ? 'en' : '';
   }
 };
 
