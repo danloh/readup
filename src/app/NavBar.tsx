@@ -7,7 +7,6 @@ import { ImFeed } from "react-icons/im";
 import { BiLibrary } from 'react-icons/bi';
 import { SiProgress } from "react-icons/si";
 import { GrCatalog } from 'react-icons/gr';
-import { IoMenu } from 'react-icons/io5';
 
 import { useTranslation } from '@/hooks/useTranslation';
 import { useTrafficLight } from '@/hooks/useTrafficLight';
@@ -77,13 +76,12 @@ export const NavTab: React.FC<{activeTab: string}> = ({ activeTab }) => {
             : '0px',
       }}
     >
-      <div className='flex font-bold items-center justify-start mx-1'>
-        <Logo />
+      <div className='flex font-bold items-center justify-start mx-1 logo-menu'>
         <Dropdown
           label={_('Menu')}
           className='exclude-title-bar-mousedown dropdown-bottom z-50'
           buttonClassName='btn btn-ghost btn-xs'
-          toggleButton={<IoMenu size={12} />}
+          toggleButton={<Logo />}
         >
           <SettingsMenu />
         </Dropdown>

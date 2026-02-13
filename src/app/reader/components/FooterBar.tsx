@@ -48,7 +48,7 @@ const FooterBar: React.FC<FooterBarProps> = ({
   const { isSideBarVisible, setSideBarVisible } = useSidebarStore();
   const { acquireBackKeyInterception, releaseBackKeyInterception } = useDeviceControlStore();
 
-  const [actionTab, setActionTab] = useState('progress');
+  const [actionTab, setActionTab] = useState('');
   const sliderHeight = useResponsiveSize(20);
 
   const config = getConfig(bookKey);

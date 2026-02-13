@@ -70,6 +70,21 @@ summary::-webkit-details-marker {
   display: none !important;
 }
 
+.logo-menu {
+  display: inline-block;
+  position: relative;
+}
+.logo-menu::after {
+  content: '';
+  position: absolute;
+  top: 50%; 
+  right: -5px;
+  transform: translateY(-50%);
+  border-top: 5px solid green;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;
