@@ -76,10 +76,10 @@ export const NavTab: React.FC<{activeTab: string}> = ({ activeTab }) => {
             : '0px',
       }}
     >
-      <div className='flex font-bold items-center justify-start mx-1 logo-menu'>
+      <div className='flex font-bold items-center z-50 justify-start mx-1 logo-menu'>
         <Dropdown
           label={_('Menu')}
-          className='exclude-title-bar-mousedown dropdown-bottom z-50'
+          className='exclude-title-bar-mousedown dropdown-bottom'
           buttonClassName='btn btn-ghost btn-xs'
           toggleButton={<Logo />}
         >
