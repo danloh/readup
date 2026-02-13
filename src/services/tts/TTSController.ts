@@ -26,6 +26,7 @@ export class TTSController extends EventTarget {
   appService: AppService | null = null;
   view: FoliateView;
   preprocessCallback?: (ssml: string) => Promise<string>;
+  onSectionChange?: (sectionIndex: number) => Promise<void>;
   #nossmlCnt: number = 0;
   #currentSpeakAbortController: AbortController | null = null;
   #currentSpeakPromise: Promise<void> | null = null;
@@ -49,6 +50,7 @@ export class TTSController extends EventTarget {
     appService: AppService | null,
     view: FoliateView,
     preprocessCallback?: (ssml: string) => Promise<string>,
+    onSectionChange?: (sectionIndex: number) => Promise<void>,
   ) {
     super();
     this.ttsWebClient = new WebSpeechClient(this);
@@ -61,6 +63,7 @@ export class TTSController extends EventTarget {
     this.appService = appService;
     this.view = view;
     this.preprocessCallback = preprocessCallback;
+    this.onSectionChange = onSectionChange;
   }
 
   async init() {
@@ -126,9 +129,8 @@ export class TTSController extends EventTarget {
   }
 
   async #initTTSForSection(sectionIndex: number): Promise<boolean> {
-    const currentSection = this.view.renderer.getContents()[0];
     const sections = this.view.book.sections;
-    if (!sections || sectionIndex < 0 || sectionIndex >= sections.length || !currentSection) {
+    if (!sections || sectionIndex < 0 || sectionIndex >= sections.length) {
       return false;
     }
 
@@ -138,6 +140,11 @@ export class TTSController extends EventTarget {
     }
 
     this.#ttsSectionIndex = sectionIndex;
+
+    const currentSection = this.view.renderer.getContents()[0];
+    if (currentSection?.index !== sectionIndex) {
+      await this.onSectionChange?.(sectionIndex);
+    }
 
     let doc: Document;
     if (currentSection?.index === sectionIndex && currentSection?.doc) {
