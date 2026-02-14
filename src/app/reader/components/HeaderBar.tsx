@@ -50,7 +50,8 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
   const { isTrafficLightVisible } = useTrafficLight();
   const { trafficLightInFullscreen, setTrafficLightVisibility } = useTrafficLightStore();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const { bookKeys, hoveredBookKey, getView, getViewSettings, setHoveredBookKey } = useReaderStore();
+  const { bookKeys, getView, getViewSettings, hoveredBookKey, setHoveredBookKey } = 
+    useReaderStore();
   const { systemUIVisible, statusBarHeight } = useThemeStore();
   const { isSideBarVisible } = useSidebarStore();
   const iconSize16 = useResponsiveSize(16);

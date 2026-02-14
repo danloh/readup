@@ -26,8 +26,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const syncSession = (user: User | null | undefined) => {
       if (user) {
         console.log('Syncing session');
-        localStorage.setItem('user', JSON.stringify(user));
-        // posthog.identify(user.id);
+        // posthog.identify(user.handle);
         setUser(user);
       } else {
         console.log('Clearing session');
@@ -84,10 +83,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const refresh = async () => {
     try {
-      // refresh session
+      // refresh session and save to localStorage
       const usr = await refreshSession();
       setUser(usr);
-      localStorage.setItem('user', JSON.stringify(usr));
     } catch (e) {
       console.log('Error on refresh session: ', e);
     }

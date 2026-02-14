@@ -164,13 +164,17 @@ export async function refreshSession(): Promise<User> {
         refreshJwt: res.refreshJwt,
       };
       console.log('Session refreshed successfully');
+      localStorage.setItem('user', JSON.stringify(newUser));
       return newUser;
     }
     
     console.log('Current session is still valid');
     return usr;
   } catch (error) {
-    console.error('Error refreshing session:', error);
+    console.error('Error on refreshing session:', error);
+    if ((error as any).message == 'ExpiredToken') {
+      localStorage.removeItem('user');
+    }
     throw error;
   }
 }
@@ -201,10 +205,8 @@ async function refreshToken(host: string, refreshToken: string): Promise<AuthTok
     });
 
     if (!response.ok) {
-      const errorText = await response.text().catch(() => 'Unknown error');
-      throw new Error(
-        `Failed to refresh token: ${response.status} ${response.statusText}${errorText ? ` - ${errorText}` : ''}`
-      );
+      const errorJson = await response.json();
+      throw new Error(errorJson.error || 'unkonwn error');
     }
 
     const result = await response.json() as AuthToken;
