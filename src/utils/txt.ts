@@ -49,6 +49,11 @@ const escapeXml = (str: string) => {
     .replace(/'/g, '&apos;');
 };
 
+export const configureZip = async () => {
+  const { configure } = await import('@zip.js/zip.js');
+  configure({ useWebWorkers: false, useCompressionStream: false });
+};
+
 export class TxtToEpubConverter {
   public async convert(options: Txt2EpubOptions): Promise<ConversionResult> {
     const { file: txtFile, author: providedAuthor, language: providedLanguage } = options;
@@ -273,6 +278,7 @@ export class TxtToEpubConverter {
   }
 
   private async createEpub(chapters: Chapter[], metadata: Metadata): Promise<Blob> {
+    await configureZip();
     const { BlobWriter, TextReader, ZipWriter } = await import('@zip.js/zip.js');
     const { bookTitle, author, language, identifier } = metadata;
 
