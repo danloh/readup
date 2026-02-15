@@ -1,4 +1,5 @@
 import clsx from 'clsx';
+import Head from 'next/head';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { PiDotsThreeVerticalBold } from 'react-icons/pi';
 
@@ -117,6 +118,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
         paddingTop: appService?.hasSafeAreaInset ? `${gridInsets.top}px` : '0px',
       }}
     >
+      <Head><title>{bookTitle}</title></Head>
       <div
         role='none'
         className={clsx('absolute top-0 z-10 h-11 w-full', pointerInDoc && 'pointer-events-none')}

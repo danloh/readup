@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react';
 
 import { useEnv } from '@/context/EnvContext';
 import { useReaderStore } from '@/store/readerStore';
-import { useSidebarStore } from '@/store/sidebarStore';
 import { useBookDataStore } from '@/store/bookDataStore';
 import { useThemeStore } from '@/store/themeStore';
 import { getGridTemplate, getInsetEdges } from '@/utils/grid';
@@ -36,20 +35,11 @@ const BooksGrid: React.FC<BooksGridProps> = ({ bookKeys, onCloseBook, onGoToLibr
   const { getConfig, getBookData } = useBookDataStore();
   const { getProgress, getViewState, getViewSettings } = useReaderStore();
   const { setGridInsets, hoveredBookKey } = useReaderStore();
-  const { sideBarBookKey } = useSidebarStore();
   const [dropdownOpenBook, setDropdownOpenBook] = useState<string>('');
 
   const { safeAreaInsets: screenInsets } = useThemeStore();
   const aspectRatio = window.innerWidth / window.innerHeight;
   const gridTemplate = getGridTemplate(bookKeys.length, aspectRatio);
-
-  useEffect(() => {
-    if (!sideBarBookKey) return;
-    const bookData = getBookData(sideBarBookKey);
-    if (!bookData || !bookData.book) return;
-    document.title = bookData.book.title;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sideBarBookKey]);
 
   const calcGridInsets = (index: number, count: number) => {
     if (!screenInsets) return { top: 0, right: 0, bottom: 0, left: 0 };

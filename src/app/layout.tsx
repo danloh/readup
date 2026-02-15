@@ -15,12 +15,7 @@ export const metadata = {
   generator: 'Next.js',
   manifest: '/manifest.json',
   keywords: ['epub', 'pdf', 'ebook', 'reader', 'readup', 'pwa'],
-  authors: [
-    {
-      name: 'readup',
-      url: 'https://github.com/danloh/readup',
-    },
-  ],
+  authors: [{name: 'readup'}],
   icons: [
     { rel: 'apple-touch-icon', url: '/apple-touch-icon.png' },
     { rel: 'icon', url: '/icon.png' },
