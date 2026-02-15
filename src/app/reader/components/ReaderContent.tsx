@@ -62,7 +62,7 @@ const ReaderContent: React.FC<{ids?: string; settings: SystemSettings}> = ({ ids
     const initialBookKeys = initialIds.map((id) => `${id}-${uniqueId()}`);
     setBookKeys(initialBookKeys);
     const uniqueIds = new Set<string>();
-    console.log('Initialize books', initialBookKeys);
+    // console.log('Initialize books', initialBookKeys);
     initialBookKeys.forEach((key, index) => {
       const id = key.split('-')[0]!;
       const isPrimary = !uniqueIds.has(id);
@@ -135,12 +135,11 @@ const ReaderContent: React.FC<{ids?: string; settings: SystemSettings}> = ({ ids
   };
 
   const saveConfigAndCloseBook = async (bookKey: string) => {
-    console.log('Closing book', bookKey);
     try {
       getView(bookKey)?.close();
       getView(bookKey)?.remove();
-    } catch {
-      console.info('Error closing book', bookKey);
+    } catch(error) {
+      console.info('Error on closing book', bookKey, error);
     }
     eventDispatcher.dispatch('tts-stop', { bookKey });
     await saveBookConfig(bookKey);

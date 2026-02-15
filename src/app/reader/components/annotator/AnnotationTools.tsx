@@ -4,8 +4,9 @@ import { FiCopy } from 'react-icons/fi';
 import { PiHighlighterFill, PiNotePencil } from 'react-icons/pi';
 import { FaWikipediaW } from 'react-icons/fa';
 import { BsTranslate } from 'react-icons/bs';
-import { TbHexagonLetterD, TbQuotes, TbZoomReplace } from 'react-icons/tb';
+import { TbHexagonLetterD, TbZoomReplace } from 'react-icons/tb';
 import { FaHeadphones } from 'react-icons/fa6';
+import { CgScreenShot } from 'react-icons/cg';
 import { AnnotationToolType } from '@/types/annotator';
 import { stubTranslation as _ } from '@/utils/misc';
 
@@ -72,7 +73,7 @@ export const annotationToolButtons = createAnnotationToolButtons([
     type: 'excerpt',
     label: _('Excerpt'),
     tooltip: _('Share excerpt'),
-    Icon: TbQuotes,
+    Icon: CgScreenShot,
   },
   {
     type: 'wikipedia',

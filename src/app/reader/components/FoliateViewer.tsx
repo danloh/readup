@@ -157,7 +157,7 @@ const FoliateViewer: React.FC<{
     setLoading(false);
     docLoaded.current = true;
     const detail = (event as CustomEvent).detail;
-    console.log('doc index loaded:', detail.index);
+    // console.log('doc index loaded:', detail.index);
     if (detail.doc) {
       const writingDir = viewRef.current?.renderer.setStyles && getDirection(detail.doc);
       const viewSettings = getViewSettings(bookKey)!;
@@ -271,7 +271,7 @@ const FoliateViewer: React.FC<{
     setTimeout(() => setLoading(true), 200);
 
     const openBook = async () => {
-      console.log('Opening book', bookKey);
+      // console.log('Opening book', bookKey);
       await import('foliate-js/view.js');
       const view = wrappedFoliateView(document.createElement('foliate-view') as FoliateView);
       view.id = `foliate-view-${bookKey}`;

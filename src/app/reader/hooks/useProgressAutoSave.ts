@@ -27,7 +27,6 @@ export const useProgressAutoSave = (bookKey: string) => {
   );
 
   useEffect(() => {
-    console.log("auto save config here");
     saveBookConfig();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [progress, bookKey]);

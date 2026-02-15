@@ -225,7 +225,7 @@ const LibraryPageContent = (
       setLibrary(libraryBooks);
       appService.saveLibraryBooks(libraryBooks);
 
-      console.log('Opening books:', bookIds);
+      // console.log('Opening books:', bookIds);
       if (bookIds.length > 0) {
         setPendingNavigationBookIds(bookIds);
         return true;
