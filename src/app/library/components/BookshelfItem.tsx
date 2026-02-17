@@ -197,7 +197,6 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
     [handleBookClick, handleGroupClick],
   );
 
-  // FIXME
   const bookContextMenuHandler = async (book: Book) => {
     if (!appService?.hasContextMenu) return;
     const osPlatform = getOSPlatform();

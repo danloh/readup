@@ -249,7 +249,7 @@ export class FeedEpubService {
   }
 
   /**
-   * Rollback to previous EPUB version
+   * Rollback to previous EPUB version　 // TO DEL
    */
   static async rollbackToPreviousVersion(
     appService: AppService,

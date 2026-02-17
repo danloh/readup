@@ -411,7 +411,6 @@ const LibraryPageContent = (
     console.log('Importing books from directory...');
     let importDirectory: string | undefined = '';
     if (appService.isAndroidApp) {
-      // FIXME on sync 
       if (!(await requestStoragePermission())) return;
       const response = await selectDirectory();
       importDirectory = response.path;

@@ -656,7 +656,6 @@ export abstract class BaseAppService implements AppService {
     const rkey = book.hash;
     const res = 
       await downloadBookFile(rkey, needDownCover, needDownBook, needDownConfig, handleProgress);
-    // FIXME: upload/download config file... 
     const coverBlob = res.coverData;
     const docBlob = res.docData;
     const configBlob = res.configData;

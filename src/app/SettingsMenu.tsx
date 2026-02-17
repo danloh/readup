@@ -312,6 +312,7 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
         onClick={handleReloadPage} 
       />
       <hr aria-hidden='true' className='border-base-200 my-1' />
+      <div className='hidden'>
       <MenuItem
         label={_('Help improve Readup')}
         description={isTelemetryEnabled ? _('Sharing anonymized statistics') : ''}
@@ -332,6 +333,7 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
           onClick={toggleAutoCheckUpdates}
         />
       )}
+      </div>
       <MenuItem 
         label={_('About Readup')} 
         Icon={FaInfo}
