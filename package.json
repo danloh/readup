@@ -41,6 +41,7 @@
     "build-check": "pnpm build && pnpm build-web && pnpm check:all"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
     "@fabianlars/tauri-plugin-oauth": "2",
     "@serwist/next": "^9.4.2",
     "@choochmeque/tauri-plugin-sharekit-api": "^0.3.0",

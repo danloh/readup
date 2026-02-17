@@ -16,7 +16,7 @@ A fork of [Readest](https://github.com/readest/readest), we add an atproto layer
 - [X] **atproto layer** Synchronize book files, reading progress, notes with your PDS.
 - [X] **Share excerpt to ATmosphere** Share and start discussion the book with friends. 
 - [X] **Read RSS feed like a book** Convert your favorite feeds into a book and read it.
-- [ ] **Reading Stats** Track daily reading time and use heatmap to visualize your activities.
+- [X] **Reading Stats** Track daily reading time and use heatmap to visualize your activities.
 - [ ] **AI Reading Assistant** Summarize, recommend and chat with AI.
 - [ ] **Text-to-Speech (TTS) Support** 
 

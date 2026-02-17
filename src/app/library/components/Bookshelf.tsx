@@ -1,6 +1,16 @@
 import clsx from 'clsx';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  DndContext,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  useDraggable,
+  useDroppable,
+  DragEndEvent,
+} from '@dnd-kit/core';
+
 import { Book, BooksGroup } from '@/types/book';
 import { LibraryGroupByType, LibrarySortByType, LibraryViewModeType } from '@/types/settings';
 import { useEnv } from '@/context/EnvContext';
@@ -36,7 +46,7 @@ const Bookshelf: React.FC<BookshelfProps> = ({
   const _ = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { appService } = useEnv();
+  const { envConfig, appService } = useEnv();
   const { settings } = useSettingsStore();
 
   const groupId = searchParams?.get('group') || '';
@@ -51,7 +61,9 @@ const Bookshelf: React.FC<BookshelfProps> = ({
 
   const isImportingBook = useRef(false);
   const autofocusRef = useAutoFocus<HTMLDivElement>();
-  const { setCurrentBookshelf, setLibrary, getGroupName } = useLibraryStore();
+  const { 
+    setCurrentBookshelf, setLibrary, getGroupName, addGroup, updateBooks, library 
+  } = useLibraryStore();
 
   const uiLanguage = localStorage?.getItem('i18nextLng') || '';
 
@@ -124,6 +136,56 @@ const Bookshelf: React.FC<BookshelfProps> = ({
       updateUrlParams({});
     }
   }, [searchParams, groupId, currentBookshelfItems.length, updateUrlParams]);
+
+  // DnD sensors
+  const pointerSensor = useSensor(
+    PointerSensor, { activationConstraint: { distance: 5 } }
+  );
+  const sensors = useSensors(pointerSensor);
+
+  // Drag-n-Drop to group books
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over) return;
+    if (active.id === over.id) return;
+
+    // ensure there is no `:` in book/group's hash/id, so just split
+    const parseId = (dndId: string) => {
+      const [type, id] = dndId.split(':');
+      return { type, id };
+    };
+
+    const a = parseId(String(active.id));
+    const b = parseId(String(over.id));
+
+    // Only support dragging books (not groups)
+    if (a.type !== 'book') return;
+
+    const bookA = library.find((book) => book.hash === a.id);
+    if (!bookA) return;
+
+    if (b.type === 'book') {
+      const bookB = library.find((book) => book.hash === b.id);
+      if (!bookB) return;
+
+      const newGroupName = `${bookA.title.substring(0, 5)}-${bookB.title.substring(0, 5)}`;
+      const newGroup = addGroup(newGroupName);
+
+      bookA.groupName = newGroupName;
+      bookA.groupId = newGroup.id;
+      bookB.groupName = newGroupName;
+      bookB.groupId = newGroup.id;
+      await updateBooks(envConfig, [bookA, bookB]);
+    } else if (b.type === 'group') {
+      const groupId = b.id;
+      if (!groupId) return;
+      const targetGroupName = getGroupName(groupId);
+      if (!targetGroupName) return;
+      bookA.groupName = targetGroupName;
+      bookA.groupId = groupId;
+      await updateBooks(envConfig, [bookA]);
+    }
+  };
 
   const sortedBookshelfItems = useMemo(() => {
     const sortOrderMultiplier = sortOrder === 'asc' ? 1 : -1;
@@ -206,28 +268,65 @@ const Bookshelf: React.FC<BookshelfProps> = ({
 
   return (
     <div className='bookshelf'>
-      <div
-        ref={autofocusRef}
-        tabIndex={-1}
-        className={clsx(
-          'bookshelf-items transform-wrapper focus:outline-none',
-          viewMode === 'grid' && 'grid flex-1 grid-cols-3 gap-x-4 px-4 sm:gap-x-0 sm:px-2',
-          viewMode === 'grid' && 'sm:grid-cols-4 md:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-12',
-          viewMode === 'list' && 'flex flex-col',
-        )}
-        role='main'
-        aria-label={_('Bookshelf')}
-      >
-        {sortedBookshelfItems.map((item) => (
-          <BookshelfItem
-            key={`library-item-${'hash' in item ? item.hash : item.id}`}
-            item={item}
-            mode={viewMode as LibraryViewModeType}
-            setLoading={setLoading}
-            handleShowDetailsBook={handleShowDetailsBook}
-          />
-        ))}
-      </div>
+      <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+        <div
+          ref={autofocusRef}
+          tabIndex={-1}
+          className={clsx(
+            'bookshelf-items transform-wrapper focus:outline-none',
+            viewMode === 'grid' && 'grid flex-1 grid-cols-3 gap-x-4 px-4 sm:gap-x-0 sm:px-2',
+            viewMode === 'grid' && 'sm:grid-cols-4 md:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-12',
+            viewMode === 'list' && 'flex flex-col',
+          )}
+          role='main'
+          aria-label={_('Bookshelf')}
+        >
+          {sortedBookshelfItems.map((item) => {
+            const dndId = 'format' in item ? `book:${item.hash}` : `group:${item.id}`;
+
+            const DraggableWrapper: React.FC<{ 
+              id: string; 
+              children: React.ReactNode 
+            }> = ({ id, children }) => {
+              const { 
+                attributes, 
+                listeners, 
+                setNodeRef: setDragRef, 
+                transform 
+              } = useDraggable({ id });
+              const { setNodeRef: setDropRef } = useDroppable({ id });
+              const setRef = (node: HTMLElement | null) => {
+                setDragRef(node);
+                setDropRef(node);
+              };
+
+              const style = transform
+                ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` }
+                : undefined;
+
+              return (
+                <div ref={setRef} style={style} {...attributes} {...listeners}>
+                  {children}
+                </div>
+              );
+            };
+
+            return (
+              <DraggableWrapper 
+                key={`library-item-${'hash' in item ? item.hash : item.id}`} 
+                id={dndId}
+              >
+                <BookshelfItem
+                  item={item}
+                  mode={viewMode as LibraryViewModeType}
+                  setLoading={setLoading}
+                  handleShowDetailsBook={handleShowDetailsBook}
+                />
+              </DraggableWrapper>
+            );
+          })}
+        </div>
+      </DndContext>
       {loading && (
         <div className='fixed inset-0 z-50 flex items-center justify-center'>
           <Spinner loading />
