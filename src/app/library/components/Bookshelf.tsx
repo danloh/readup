@@ -19,6 +19,7 @@ import { useSettingsStore } from '@/store/settingsStore';
 import { useLibraryStore } from '@/store/libraryStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { navigateToLibrary, navigateToReader } from '@/utils/nav';
+import { saveSysSettings } from '@/helpers/settings';
 import Spinner from '@/components/Spinner';
 import BookshelfItem, { generateBookshelfItems } from './BookshelfItem';
 import { 
@@ -82,7 +83,6 @@ const Bookshelf: React.FC<BookshelfProps> = ({
       if (params.get('sort') === LibrarySortByType.Updated) params.delete('sort');
       if (params.get('groupBy') === LibraryGroupByType.Group) params.delete('groupBy');
       if (params.get('order') === 'desc') params.delete('order');
-      if (params.get('cover') === 'crop') params.delete('cover');
       if (params.get('view') === 'grid') params.delete('view');
 
       const newParamString = params.toString();
@@ -184,6 +184,15 @@ const Bookshelf: React.FC<BookshelfProps> = ({
       bookA.groupName = targetGroupName;
       bookA.groupId = groupId;
       await updateBooks(envConfig, [bookA]);
+    }
+    // nav to group view if not groupBy Groups
+    const groupBy = settings.libraryGroupBy;
+    if (groupBy !== 'group') {
+      await saveSysSettings(envConfig, 'libraryGroupBy', 'group');
+      const params = new URLSearchParams(searchParams?.toString());
+      params.delete('groupBy');
+      params.delete('group');
+      navigateToLibrary(router, `${params.toString()}`);
     }
   };
 
