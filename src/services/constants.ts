@@ -216,8 +216,8 @@ export const DEFAULT_VIEW_CONFIG: ViewConfig = {
   readingRulerEnabled: false,
   readingRulerLines: 2,
   readingRulerPosition: 33,
-  readingRulerOpacity: 0.5,
-  readingRulerColor: 'transparent',
+  readingRulerOpacity: 0.6,
+  readingRulerColor: 'green',
 };
 
 export const DEFAULT_PARAGRAPH_MODE_CONFIG: ParagraphModeConfig = {
