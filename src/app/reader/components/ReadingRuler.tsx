@@ -1,6 +1,5 @@
 import clsx from 'clsx';
 import React, { useCallback, useRef, useState, useEffect } from 'react';
-import { Insets } from '@/types/misc';
 import { BookFormat, FIXED_LAYOUT_FORMATS, ViewSettings } from '@/types/book';
 import { useEnv } from '@/context/EnvContext';
 import { useReaderStore } from '@/store/readerStore';
@@ -18,7 +17,6 @@ interface ReadingRulerProps {
   color: keyof typeof READING_RULER_COLORS;
   bookFormat: BookFormat;
   viewSettings: ViewSettings;
-  gridInsets: Insets;
 }
 
 const FIXED_LAYOUT_LINE_HEIGHT = 28;
@@ -46,7 +44,6 @@ const ReadingRuler: React.FC<ReadingRulerProps> = ({
   color,
   bookFormat,
   viewSettings,
-  gridInsets,
 }) => {
   const { envConfig } = useEnv();
   const { getProgress } = useReaderStore();
@@ -292,11 +289,6 @@ const ReadingRuler: React.FC<ReadingRulerProps> = ({
 
   const cssFilter = colorToFilter[color] || colorToFilter['yellow'];
 
-  // Insets based on orientation
-  const containerStyle = isVertical
-    ? { left: `${gridInsets.left}px`, right: `${gridInsets.right}px` }
-    : { top: `${gridInsets.top}px`, bottom: `${gridInsets.bottom}px` };
-
   const backdropFilterStyle = {
     backdropFilter: cssFilter,
     WebkitBackdropFilter: cssFilter,
@@ -315,7 +307,6 @@ const ReadingRuler: React.FC<ReadingRulerProps> = ({
           'pointer-events-none absolute inset-0 z-[5] transition-opacity duration-150 ease-out',
           isVisible ? 'opacity-100' : 'opacity-0',
         )}
-        style={containerStyle}
       >
         {/* Left overlay */}
         <div
@@ -372,7 +363,6 @@ const ReadingRuler: React.FC<ReadingRulerProps> = ({
         'pointer-events-none absolute inset-0 z-[5] transition-opacity duration-150 ease-out',
         isVisible ? 'opacity-100' : 'opacity-0',
       )}
-      style={containerStyle}
     >
       {/* Top overlay */}
       <div

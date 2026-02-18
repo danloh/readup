@@ -230,11 +230,27 @@ const BookDetailView: React.FC<BookDetailViewProps> = ({
                   </div>
                   <input
                     type='text'
+                    list='status-options'
                     value={newMark.status}
                     onChange={(e) => setNewMark({ ...newMark, status: e.target.value.trim() })}
                     placeholder={_('Status: todo, doing, done, ...')}
                     className='input input-bordered placeholder:text-sm'
                   />
+                  <datalist id="status-options">
+                    {['Todo', 'Doing', 'Done'].map((val) => (
+                      <option key={val} value={_(val)}></option>
+                    ))}
+                  </datalist>
+                  {/* <select
+                    value={newMark.status}
+                    onChange={(e) => setNewMark({ ...newMark, status: e.target.value.trim() })}
+                    onKeyDown={(e) => e.stopPropagation()}
+                    className='select bg-base-200 h-8 min-h-8 rounded-md border-none text-sm'
+                  >
+                    {['Todo', 'Doing', 'Done'].map((val) => (
+                      <option key={val} value={val}>{_(val)}</option>
+                    ))}
+                  </select> */}
                 </div>
                 <div className='modal-action'>
                   <button

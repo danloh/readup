@@ -31,9 +31,7 @@ export default function Select({
       onKeyDown={(e) => e.stopPropagation()}
       className={clsx('select bg-base-200 h-8 min-h-8 rounded-md border-none text-sm', className)}
       disabled={disabled}
-      style={{
-        textAlignLast: 'end',
-      }}
+      style={{ textAlignLast: 'end' }}
     >
       {options.map(({ value, label }) => (
         <option key={value} value={value}>
