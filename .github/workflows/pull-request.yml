@@ -1,5 +1,6 @@
 name: PR checks
 on:
+  workflow_dispatch:
   pull_request:
     branches: [main]
 permissions:
@@ -11,7 +12,7 @@ jobs:
     env:
       RUSTFLAGS: '-C target-cpu=skylake'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: 'true'
       - name: Install minimal stable with clippy and rustfmt
@@ -19,6 +20,7 @@ jobs:
         with:
           toolchain: stable
           override: true
+          components: rustfmt, clippy
       - name: Install system dependencies
         run: |
           sudo apt-get update
@@ -32,8 +34,13 @@ jobs:
 
   build_web_app:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        config:
+          - platform: 'web'
+          - platform: 'tauri'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: 'true'
 
@@ -41,22 +48,47 @@ jobs:
         uses: pnpm/action-setup@v4
 
       - name: setup node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: pnpm
 
+      - name: cache Next.js build
+        uses: actions/cache@v5
+        with:
+          path: .next/cache
+          key: nextjs-${{ matrix.config.platform }}-${{ github.sha }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            nextjs-${{ matrix.config.platform }}-${{ github.sha }}-
+            nextjs-${{ matrix.config.platform }}-
+
       - name: install Dependencies
         working-directory: /
         run: |
-          pnpm install && pnpm setup-pdfjs 
-          
+          pnpm install && pnpm setup-vendors
+
+      - name: run format check
+        run: |
+          pnpm format:check || (pnpm format && git diff && exit 1)
+
       - name: run tests
+        working-directory: .
+        run: |
+          pnpm test -- --watch=false
+
+      - name: run lint
         working-directory: /
         run: |
-          pnpm test -- --watchAll=false
+          pnpm lint
 
       - name: build the web App
+        if: matrix.config.platform == 'web'
         working-directory: /
         run: |
-          pnpm build-web
+          pnpm build-web && pnpm check:all
+
+      - name: build the Tauri App
+        if: matrix.config.platform == 'tauri'
+        working-directory: /
+        run: |
+          pnpm build && pnpm check:all
