@@ -69,7 +69,7 @@ export async function xhrUploadFile(
   // const data = await file.bytes(); // limited availability
   // const arrayBuffer = await file.arrayBuffer();
   // const data = new Uint8Array(arrayBuffer);
-  console.log("User info: ", usr);
+  // console.log("User info: ", usr);
   const mimeType = file.type || "application/octet-stream";
   // Upload url
   const pdsUrl = `${usr.service}/xrpc/com.atproto.repo.uploadBlob`;
