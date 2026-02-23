@@ -248,7 +248,7 @@ const TransferQueuePanel: React.FC = () => {
     const res = await appService?.listPdsBooks();
     const books = res ? res[0] : [];
     const libraryBooks = res ? res[1] : [];
-    // save to library? 
+    // need save to library
     setLibrary(libraryBooks);
     setPdsBooksToDownload(books);
     setPdsCanTransfer(booksToTransfers(books, 'download'));

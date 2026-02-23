@@ -66,56 +66,61 @@ export async function xhrUploadFile(
   onProgress?: ProgressHandler,
 ): Promise<BlobRef | undefined> {
   const startTime = Date.now();
-  // const data = await file.bytes(); // limited availability
-  // const arrayBuffer = await file.arrayBuffer();
-  // const data = new Uint8Array(arrayBuffer);
-  // console.log("User info: ", usr);
   const mimeType = file.type || "application/octet-stream";
   // Upload url
   const pdsUrl = `${usr.service}/xrpc/com.atproto.repo.uploadBlob`;
 
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', pdsUrl, true);
+  return new Promise(async (resolve, reject) => {
+    try {
+      // Convert file to ArrayBuffer to ensure compatibility with Tauri and web platforms
+      // This is necessary because Tauri's NativeFile/RemoteFile implementations
+      // don't work properly with xhr.send() directly
+      const arrayBuffer = await file.arrayBuffer();
+      const fileblob = new Blob([arrayBuffer], { type: mimeType });
 
-    // Set necessary headers
-    xhr.setRequestHeader('Authorization', 'Bearer ' + usr.accessJwt);
-    xhr.setRequestHeader('Content-Type', mimeType); 
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', pdsUrl, true);
 
-    xhr.upload.onprogress = (event) => {
-      if (onProgress && event.lengthComputable) {
-        onProgress({
-          progress: event.loaded,
-          total: event.total,
-          transferSpeed: event.loaded / ((Date.now() - startTime) / 1000),
-        });
-      }
-    };
+      // Set necessary headers
+      xhr.setRequestHeader('Authorization', 'Bearer ' + usr.accessJwt);
+      xhr.setRequestHeader('Content-Type', mimeType); 
 
-    xhr.onload = () => {
-      if (xhr.status >= 200 && xhr.status < 300) {
-        console.log("xhr upload resp: ", xhr.response);
-        console.log("xhr upload resp text: ", xhr.responseText);
-        const resp: BlobResp = JSON.parse(xhr.responseText); 
-        const blob = resp.blob;
-        const blobCid = blob.ref?.["$link"] ?? blob.ref;
-        console.log(`✓ Blob uploaded: ${blobCid}`);
-        console.log("Blob structure:", JSON.stringify(blob, null, 2));
-
-        if (!blob) {
-          console.error("Upload failed: no blob returned");
-          reject(new Error(`Upload failed: no blob returned. ${xhr.status}`));
+      xhr.upload.onprogress = (event) => {
+        if (onProgress && event.lengthComputable) {
+          onProgress({
+            progress: event.loaded,
+            total: event.total,
+            transferSpeed: event.loaded / ((Date.now() - startTime) / 1000),
+          });
         }
+      };
 
-        resolve(blob);
-      } else {
-        reject(new Error(`Upload failed with status ${xhr.status}`));
-      }
-    };
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          console.log("xhr upload resp: ", JSON.stringify(xhr.response, null, 2));
+          const resp: BlobResp = JSON.parse(xhr.responseText); 
+          const blob = resp.blob;
+          const blobCid = blob.ref?.["$link"] ?? blob.ref;
+          console.log(`✓ Blob uploaded: ${blobCid}`);
+          console.log("Blob structure:", JSON.stringify(blob, null, 2));
 
-    xhr.onerror = () => reject(new Error('Upload failed'));
+          if (!blob) {
+            console.error("Upload failed: no blob returned");
+            reject(new Error(`Upload failed: no blob returned. ${xhr.status}`));
+          }
 
-    xhr.send(file);
+          resolve(blob);
+        } else {
+          reject(new Error(`Upload failed with status ${xhr.status}`));
+        }
+      };
+
+      xhr.onerror = () => reject(new Error('Upload failed'));
+
+      xhr.send(fileblob);
+    } catch (error) {
+      reject(error);
+    }
   });
 }
 

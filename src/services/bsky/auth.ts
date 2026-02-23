@@ -87,7 +87,7 @@ export async function createSession(
     }
 
     const result = await response.json() as AuthToken;
-    console.log(result);
+    // console.log(result);
     return result;
   } catch (error) {
     if (error instanceof TypeError) {

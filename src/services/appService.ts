@@ -664,6 +664,7 @@ export abstract class BaseAppService implements AppService {
     if (needDownCover && coverBlob) {
       const coverDst = `${this.localBooksDir}/${getCoverFilename(book)}`;
       await this.writeFile(coverDst, 'None', await coverBlob.arrayBuffer());
+      book.coverImageUrl = await this.generateCoverImageUrl(book);
       bookCoverDownloaded = await this.fs.exists(coverDst, 'None');
     }
     if (needDownBook && docBlob) {

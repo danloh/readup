@@ -48,9 +48,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const login = async (handle: string, passwd: string, host: string) => {
-    console.log('Logging in');
     const res: AuthToken | undefined = await createSession(handle, passwd, host);
-    console.log('Logg result: ', res);
     if (res) {
       // build User
       let serv = await resolveDid(res.did);
