@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { BookDoc, getDirection } from '@/libs/document';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { BookDoc, convertBlobUrlToDataUrl, getDirection } from '@/libs/document';
 import { BookConfig } from '@/types/book';
 import { FoliateView, wrappedFoliateView } from '@/types/view';
 import { Insets } from '@/types/misc';
@@ -35,13 +35,14 @@ import { getViewInsets } from '@/utils/insets';
 import Spinner from '@/components/Spinner';
 import { handleA11yNavigation } from '@/utils/a11y';
 import { transformContent } from '../transformers/transformService';
-import { useMouseEvent, useTouchEvent } from '../hooks/useIframeEvents';
+import { useLongPressEvent, useMouseEvent, useTouchEvent } from '../hooks/useIframeEvents';
 import { usePagination } from '../hooks/usePagination';
 import { useFoliateEvents } from '../hooks/useFoliateEvents';
 import { useProgressAutoSave } from '../hooks/useProgressAutoSave';
 import { useTextTranslation } from '../hooks/useTextTranslation';
 import useReadingTracker from '../hooks/useReadingTracker';
 import {
+  addLongPressListeners,
   handleKeydown,
   handleKeyup,
   handleMousedown,
@@ -55,6 +56,8 @@ import {
 import { TransformContext } from '../transformers/types';
 import { ParagraphControl } from './paragraph';
 import { RSVPControl } from './rsvp';
+import TableViewer from './TableViewer';
+import ImageViewer from './ImageViewer';
 
 declare global {
   interface Window {
@@ -217,6 +220,7 @@ const FoliateViewer: React.FC<{
         detail.doc.addEventListener('touchstart', handleTouchStart.bind(null, bookKey));
         detail.doc.addEventListener('touchmove', handleTouchMove.bind(null, bookKey));
         detail.doc.addEventListener('touchend', handleTouchEnd.bind(null, bookKey));
+        addLongPressListeners(bookKey, detail.doc);
       }
     }
   };
@@ -257,6 +261,88 @@ const FoliateViewer: React.FC<{
   const { handlePageFlip, handleContinuousScroll } = usePagination(bookKey, viewRef, containerRef);
   const mouseHandlers = useMouseEvent(bookKey, handlePageFlip, handleContinuousScroll);
   const touchHandlers = useTouchEvent(bookKey, handlePageFlip, handleContinuousScroll);
+
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedTableHtml, setSelectedTableHtml] = useState<string | null>(null);
+  const [imageList, setImageList] = useState<{ src: string; cfi: string | null }[]>([]);
+  const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
+
+  const handleImagePress = useCallback(async (src: string) => {
+    try {
+      // Get all images from the current document
+      const docs = viewRef.current?.renderer.getContents();
+      const allImages: { src: string; cfi: string | null }[] = [];
+
+      docs?.forEach(({ doc, index }) => {
+        const images = doc.querySelectorAll('img');
+        images.forEach((img) => {
+          if (img.src && index !== undefined && img.parentNode) {
+            const range = doc.createRange();
+            range.selectNodeContents(img);
+            const cfi = viewRef.current?.getCFI(index, range) || null;
+            allImages.push({ src: img.src, cfi });
+          }
+        });
+      });
+
+      // Find the index of the pressed image
+      const index = allImages.findIndex((img) => img.src === src);
+
+      setImageList(allImages);
+      setCurrentImageIndex(index >= 0 ? index : 0);
+
+      const dataUrl = await convertBlobUrlToDataUrl(src);
+      setSelectedImage(dataUrl);
+    } catch (error) {
+      console.error('Failed to load image:', error);
+    }
+  }, []);
+
+  const handleTablePress = useCallback((html: string) => {
+    setSelectedTableHtml(html);
+  }, []);
+
+  const handlePreviousImage = useCallback(async () => {
+    if (currentImageIndex > 0 && imageList.length > 0) {
+      const newIndex = currentImageIndex - 1;
+      setCurrentImageIndex(newIndex);
+      try {
+        const { src, cfi } = imageList[newIndex]!;
+        const dataUrl = await convertBlobUrlToDataUrl(src);
+        setSelectedImage(dataUrl);
+        if (cfi && viewRef.current) {
+          viewRef.current?.goTo(cfi);
+        }
+      } catch (error) {
+        console.error('Failed to load previous image:', error);
+      }
+    }
+  }, [currentImageIndex, imageList]);
+
+  const handleNextImage = useCallback(async () => {
+    if (currentImageIndex < imageList.length - 1 && imageList.length > 0) {
+      const newIndex = currentImageIndex + 1;
+      setCurrentImageIndex(newIndex);
+      try {
+        const { src, cfi } = imageList[newIndex]!;
+        const dataUrl = await convertBlobUrlToDataUrl(src);
+        setSelectedImage(dataUrl);
+        if (cfi && viewRef.current) {
+          viewRef.current?.goTo(cfi);
+        }
+      } catch (error) {
+        console.error('Failed to load next image:', error);
+      }
+    }
+  }, [currentImageIndex, imageList]);
+
+  const handleCloseImage = useCallback(() => {
+    setSelectedImage(null);
+    setImageList([]);
+    setCurrentImageIndex(0);
+  }, []);
+
+  useLongPressEvent(bookKey, handleImagePress, handleTablePress);
 
   useFoliateEvents(viewRef.current, {
     onLoad: docLoadHandler,
@@ -435,6 +521,21 @@ const FoliateViewer: React.FC<{
 
   return (
     <>
+      {selectedImage && (
+        <ImageViewer
+          src={selectedImage}
+          onClose={handleCloseImage}
+          onPrevious={currentImageIndex > 0 ? handlePreviousImage : undefined}
+          onNext={currentImageIndex < imageList.length - 1 ? handleNextImage : undefined}
+        />
+      )}
+      {selectedTableHtml && (
+        <TableViewer
+          html={selectedTableHtml}
+          isDarkMode={isDarkMode}
+          onClose={() => setSelectedTableHtml(null)}
+        />
+      )}
       <div
         ref={containerRef}
         tabIndex={-1}

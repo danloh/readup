@@ -405,7 +405,7 @@ const TransferQueuePanel: React.FC = () => {
               onClick={() => handleSetFilter(f)}
               className={clsx(
                 'rounded-sm px-2 py-1 text-sm transition-colors',
-                filter === f ? 'border-primary border-b-2' : 'bg-base-200 hover:bg-base-300',
+                filter === f ? 'border-primary border-b-2 pb-2' : 'bg-base-200 hover:bg-base-300',
                 f === 'pds' ? 'text-success text-bold' : '',
               )}
             >
