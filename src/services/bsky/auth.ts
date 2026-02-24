@@ -300,7 +300,7 @@ export async function resolveDid(did: string): Promise<string> {
     // Cache the result
     didCache.set(did, endpoint);
     
-    console.log(`✓ DID resolved: ${did} -> ${endpoint}`);
+    // console.log(`✓ DID resolved: ${did} -> ${endpoint}`);
     return endpoint;
   } catch (error) {
     if (error instanceof Error) {

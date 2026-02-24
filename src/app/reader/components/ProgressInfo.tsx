@@ -109,8 +109,8 @@ const ProgressInfoView: React.FC<PageInfoProps> = ({
           isVertical ? 'h-full' : 'h-[42px] w-full',
         )}
       >
-        <span className='text-start truncate'>{remainingInfo}</span>
-        <span className='ms-auto text-end truncate'>{progressInfo}</span>
+        <span className='remaining-info-label text-start truncate'>{remainingInfo}</span>
+        <span className='progress-info-label ms-auto text-end truncate'>{progressInfo}</span>
       </div>
     </div>
   );

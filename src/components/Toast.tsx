@@ -88,7 +88,7 @@ export const Toast = () => {
     toastMessage && (
       <div
         className={clsx(
-          'toast z-55 w-auto max-w-screen-sm transition-all duration-300',
+          'toast z-50 w-auto max-w-screen-sm transition-all duration-300',
           toastClassMap[toastType],
           isVisible ? 'scale-100 opacity-100' : 'hidden',
         )}

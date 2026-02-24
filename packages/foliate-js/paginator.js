@@ -937,6 +937,9 @@ export class Paginator extends HTMLElement {
             this.#header.replaceChildren()
             this.#footer.replaceChildren()
 
+            this.columnCount = 1
+            this.#replaceBackground(background, this.columnCount)
+
             return { flow, marginTop, marginRight, marginBottom, marginLeft, gap, columnWidth }
         }
 

@@ -28,6 +28,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         console.log('Syncing session');
         // posthog.identify(user.handle);
         setUser(user);
+        localStorage.setItem('user', JSON.stringify(user));
       } else {
         console.log('Clearing session');
         localStorage.removeItem('user');
@@ -84,6 +85,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // refresh session and save to localStorage
       const usr = await refreshSession();
       setUser(usr);
+      localStorage.setItem('user', JSON.stringify(usr));
     } catch (e) {
       console.log('Error on refresh session: ', e);
     }
