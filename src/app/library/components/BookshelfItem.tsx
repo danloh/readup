@@ -1,10 +1,10 @@
 import clsx from 'clsx';
 import { useCallback } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useTransitionRouter } from 'next-view-transitions';
 import { Menu, MenuItem } from '@tauri-apps/api/menu';
 import { revealItemInDir } from '@tauri-apps/plugin-opener';
 
-import { navigateToLibrary, navigateToReader, showReaderWindow } from '@/utils/nav';
+import { navigateToReader, showReaderWindow } from '@/utils/nav';
 import { useEnv } from '@/context/EnvContext';
 import { useLibraryStore } from '@/store/libraryStore';
 import { useSettingsStore } from '@/store/settingsStore';
@@ -91,6 +91,7 @@ interface BookshelfItemProps {
   item: Book | BooksGroup;
   setLoading: React.Dispatch<React.SetStateAction<boolean>>;
   handleShowDetailsBook: (book: Book) => void;
+  handleLibraryNavigation: (targetGroup: string) => void;
 }
 
 const BookshelfItem: React.FC<BookshelfItemProps> = ({
@@ -98,10 +99,10 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
   item,
   setLoading,
   handleShowDetailsBook,
+  handleLibraryNavigation,
 }) => {
   const _ = useTranslation();
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  const router = useTransitionRouter();
   const { envConfig, appService } = useEnv();
   const { settings } = useSettingsStore();
   const { updateBook } = useLibraryStore();
@@ -175,14 +176,10 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
 
   const handleGroupClick = useCallback(
     (group: BooksGroup) => {
-      const params = new URLSearchParams(searchParams?.toString());
-      params.set('group', group.id);
-      setTimeout(() => {
-        navigateToLibrary(router, `${params.toString()}`);
-      }, 0);
+      handleLibraryNavigation(group.id);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [searchParams],
+    [handleLibraryNavigation],
   );
 
   // eslint-disable-next-line react-hooks/exhaustive-deps

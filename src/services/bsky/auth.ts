@@ -210,7 +210,7 @@ async function refreshToken(host: string, refreshToken: string): Promise<AuthTok
     }
 
     const result = await response.json() as AuthToken;
-    console.log('refresh token', result);
+    // console.log('refresh token', result);
     return result;
   } catch (error) {
     if (error instanceof TypeError) {

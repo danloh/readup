@@ -2,7 +2,8 @@ import clsx from 'clsx';
 import * as React from 'react';
 import { useState, useRef, useEffect, Suspense, useCallback } from 'react';
 import { getCurrentWebview } from '@tauri-apps/api/webview';
-import { ReadonlyURLSearchParams, useRouter, useSearchParams } from 'next/navigation';
+import { ReadonlyURLSearchParams, useSearchParams } from 'next/navigation';
+import { useTransitionRouter } from 'next-view-transitions';
 import { MdChevronRight } from 'react-icons/md';
 import { LiaInfoCircleSolid } from 'react-icons/lia';
 import { 
@@ -60,7 +61,7 @@ const LibraryPageWithSearchParams = () => {
 const LibraryPageContent = (
   { searchParams }: { searchParams: ReadonlyURLSearchParams | null }
 ) => {
-  const router = useRouter();
+  const router = useTransitionRouter();
   const { envConfig, appService } = useEnv();
   const { user } = useAuth();
   const {
@@ -100,6 +101,53 @@ const LibraryPageContent = (
   const containerRef: React.RefObject<HTMLDivElement | null> = useRef(null);
   const pageRef = useRef<HTMLDivElement>(null);
 
+  const getScrollKey = (group: string) => `library-scroll-${group || 'all'}`;
+
+  const saveScrollPosition = (group: string) => {
+    const viewport = osRef.current?.osInstance()?.elements().viewport;
+    if (viewport) {
+      const scrollTop = viewport.scrollTop;
+      sessionStorage.setItem(getScrollKey(group), scrollTop.toString());
+    }
+  };
+
+  const restoreScrollPosition = useCallback((group: string) => {
+    const savedPosition = sessionStorage.getItem(getScrollKey(group));
+    if (savedPosition) {
+      const scrollTop = parseInt(savedPosition, 10);
+      const viewport = osRef.current?.osInstance()?.elements().viewport;
+      if (viewport) {
+        viewport.scrollTop = scrollTop;
+      }
+    }
+  }, []);
+
+  // Unified navigation function that handles scroll position and direction
+  const handleLibraryNavigation = useCallback(
+    (targetGroup: string) => {
+      const currentGroup = searchParams?.get('group') || '';
+
+      // Save current scroll position BEFORE navigation
+      saveScrollPosition(currentGroup);
+
+      // Detect and set navigation direction
+      const direction = currentGroup && !targetGroup ? 'back' : 'forward';
+      document.documentElement.setAttribute('data-nav-direction', direction);
+
+      // Build query params
+      const params = new URLSearchParams(searchParams?.toString());
+      if (targetGroup) {
+        params.set('group', targetGroup);
+      } else {
+        params.delete('group');
+      }
+
+      navigateToLibrary(router, `${params.toString()}`);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [searchParams, router],
+  );
+
   useTheme({ systemUIVisible: true, appThemeColor: 'base-200' });
   useUICSS();
 
@@ -127,6 +175,11 @@ const LibraryPageContent = (
     setCurrentGroupPath(groupName);
     setNewGroupName(groupName);
   }, [libraryBooks, searchParams, getGroupName]);
+
+  useEffect(() => {
+    const group = searchParams?.get('group') || '';
+    restoreScrollPosition(group);
+  }, [searchParams, restoreScrollPosition]);
 
   // Track current series/author group for navigation header
   useEffect(() => {
@@ -443,15 +496,8 @@ const LibraryPageContent = (
   };
 
   const handleNavigateToPath = (path: string | undefined) => {
-    const groupId = path ? getGroupId(path) : '';
-    const params = new URLSearchParams(searchParams?.toString());
-    if (groupId) {
-      params.set('group', groupId);
-    } else {
-      params.delete('group');
-    }
-    navigateToLibrary(router, `${params.toString()}`);
-    setTimeout(() => { setCurrentGroupPath(path); }, 300);
+    const groupId = path ? getGroupId(path) || '' : '';
+    handleLibraryNavigation(groupId);
   };
 
   const handleRenameGroup = async () => {
@@ -595,6 +641,7 @@ const LibraryPageContent = (
               <Bookshelf
                 libraryBooks={libraryBooks}
                 handleShowDetailsBook={handleShowDetailsBook}
+                handleLibraryNavigation={handleLibraryNavigation}
               />
             </div>
           </OverlayScrollbarsComponent>

@@ -38,11 +38,13 @@ import {
 interface BookshelfProps {
   libraryBooks: Book[];
   handleShowDetailsBook: (book: Book) => void;
+  handleLibraryNavigation: (targetGroup: string) => void;
 }
 
 const Bookshelf: React.FC<BookshelfProps> = ({
   libraryBooks,
   handleShowDetailsBook,
+  handleLibraryNavigation,
 }) => {
   const _ = useTranslation();
   const router = useRouter();
@@ -330,6 +332,7 @@ const Bookshelf: React.FC<BookshelfProps> = ({
                   mode={viewMode as LibraryViewModeType}
                   setLoading={setLoading}
                   handleShowDetailsBook={handleShowDetailsBook}
+                  handleLibraryNavigation={handleLibraryNavigation}
                 />
               </DraggableWrapper>
             );
