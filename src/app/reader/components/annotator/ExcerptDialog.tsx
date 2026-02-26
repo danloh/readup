@@ -7,7 +7,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import Dialog from '@/components/Dialog';
 import { useAuth } from '@/context/AuthContext';
 import { TextSelection } from '@/utils/sel';
-import { getContrastHex, hexToRgba } from '@/styles/color';
+import { getContrastHex, hexToRgba } from '@/styles/themes';
 import { useReaderStore } from '@/store/readerStore';
 import { eventDispatcher } from '@/utils/event';
 import { setAuthDialogVisible } from '@/components/AuthWindow';
