@@ -649,6 +649,10 @@ const LibraryPageContent = (
           <div className='hero drop-zone h-screen items-center justify-center'>
             <div className='hero-content text-neutral-content text-center'>
               <div className='max-w-md'>
+                <h1 className='mb-5 text-5xl font-bold'>{_('Welcome to Readup')}</h1>
+                <p className='mb-5'>
+                  {_('Feed & eBook Reader on top of the AT Protocol')}
+                </p>
                 <button 
                   className='btn btn-primary rounded-xl' 
                   onClick={handleImportBooksFromFiles}

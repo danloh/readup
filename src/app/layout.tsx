@@ -6,7 +6,7 @@ import Providers from '@/components/Providers';
 import '../styles/globals.css';
 
 const url = 'https://web.readup.cc/';
-const title = 'Readup';
+const title = 'Readup: Feed & eBook Reader on AT Protocol';
 const description = 'Feed and ebook reader';
 const previewImage = 'https://readup.cc/images/open_graph_preview_read_now.png'; // TODO
 

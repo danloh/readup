@@ -52,3 +52,45 @@ export namespace AtBook {
     attribution?: string;
   };
 }
+
+export namespace AtData {
+  export type RLibrary = {
+    $type: "cc.readup.library";
+    name: string;
+    createdAt: string;
+    updatedAt: string;
+    docblob?: BlobRef;
+  };
+
+  export type RSetting = {
+    $type: "cc.readup.setting";
+    name: string;
+    createdAt: string;
+    updatedAt: string;
+    docblob?: BlobRef;
+  };
+
+  export type RFeed = {
+    $type: "cc.readup.feed";
+    name: string;
+    createdAt: string;
+    updatedAt: string;
+    docblob?: BlobRef;
+  };
+
+  export type RUsage = {
+    $type: "cc.readup.usage";
+    name: string;
+    createdAt: string;
+    updatedAt: string;
+    docblob?: BlobRef;
+  };
+
+  export type RStar = {
+    $type: "cc.readup.star";
+    name: string;
+    createdAt: string;
+    updatedAt: string;
+    docblob?: BlobRef;
+  };
+}

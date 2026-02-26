@@ -1,13 +1,13 @@
 //  Upload, list, and manage files on AT Protocol PDS
 
 import { AtpAgent, AtpSessionData, BlobRef } from "@atproto/api";
-import type { AtBook } from "./types";
+import type { AtBook, AtData } from "./types";
 import { refreshSession, resolveDid, User } from "./auth";
 import { Book } from "@/types/book";
 import { ProgressHandler, webDownload } from "@/utils/transfer";
 
 // Create record according to cc.readup.rbook lexicon (corrected collection name)
-const COLLECTION = "cc.readup.rbook";
+const RBOOK_COLLECTION = "cc.readup.rbook";
 
 export interface BlobResp {
   blob: BlobRef;
@@ -178,7 +178,7 @@ export async function uploadBookFile(
   }; 
 
   const recordData: AtBook.RBook = {
-    $type: COLLECTION,
+    $type: RBOOK_COLLECTION,
     name: book.title,
     bookmeta,
     coverblob: coverBlob,
@@ -189,10 +189,10 @@ export async function uploadBookFile(
   };
 
   console.log("Record data:", JSON.stringify(recordData, null, 2));
-  console.log(`Creating record in ${COLLECTION}...`);
+  console.log(`Creating record in ${RBOOK_COLLECTION}...`);
   const createRes = await agent.com.atproto.repo.putRecord({
     repo: did,
-    collection: COLLECTION,
+    collection: RBOOK_COLLECTION,
     rkey: book.hash,
     record: recordData,
   });
@@ -213,7 +213,7 @@ export async function uploadBookFile(
 /**
  * Result returned after successfully download a book
  */
-export interface DownloadResult {
+export interface DownloadBookResult {
   rkey: string;
   coverData?: Blob;
   docData?: Blob;
@@ -237,7 +237,7 @@ export async function downloadBookFile(
   needDoc: boolean,
   needConfig: boolean,
   onProgress?: ProgressHandler,
-): Promise<DownloadResult> {
+): Promise<DownloadBookResult> {
   const usr = await refreshSession();
   const serv = usr.service;
   // Initialize agent
@@ -257,7 +257,7 @@ export async function downloadBookFile(
 
   const recordResponse = await agent.com.atproto.repo.getRecord({
     repo: did,
-    collection: COLLECTION,
+    collection: RBOOK_COLLECTION,
     rkey,
   });
 
@@ -339,7 +339,7 @@ export async function downloadPdsBook(
   rkey: string,
   did: string,
   onProgress?: ProgressHandler,
-): Promise<DownloadResult> {
+): Promise<DownloadBookResult> {
   if (!did || !rkey) {
     throw new Error("No DID or rkey provided");
   }
@@ -353,7 +353,7 @@ export async function downloadPdsBook(
   const agent = new AtpAgent({ service: serv });
   const recordResponse = await agent.com.atproto.repo.getRecord({
     repo: did,
-    collection: COLLECTION,
+    collection: RBOOK_COLLECTION,
     rkey,
   });
 
@@ -408,7 +408,7 @@ export async function downloadPdsBook(
 /**
  * item of the list record
  */
-export interface RecordItem {
+export interface RbookRecordItem {
   uri: string;  // at-uri
   cid: string;
   value: AtBook.RBook;
@@ -418,13 +418,12 @@ export interface RecordItem {
  * List all rbook records for the authenticated user
  *
  * Retrieves and displays all file records stored under the cc.readup.rbook
-
  *
  * @param limit - Maximum number of records to retrieve. Defaults to 100
  * @returns A promise that resolves when the list is displayed
  * @throws {Error} If authentication fails or the PDS is unreachable
  */
-export async function listRecords(limit = 100): Promise<RecordItem[]> {
+export async function listRecords(limit = 100): Promise<RbookRecordItem[]> {
   const usr = await refreshSession();
   // Initialize agent
   const agent = new AtpAgent({ service: `https://${usr.host}` });
@@ -439,11 +438,11 @@ export async function listRecords(limit = 100): Promise<RecordItem[]> {
   // List records
   const response = await agent.com.atproto.repo.listRecords({
     repo: did,
-    collection: COLLECTION,
+    collection: RBOOK_COLLECTION,
     limit,
   });
 
-  const records = response.data.records as RecordItem[];
+  const records = response.data.records as RbookRecordItem[];
 
   if (records.length === 0) {
     console.log("No rbook records found.");
@@ -453,6 +452,38 @@ export async function listRecords(limit = 100): Promise<RecordItem[]> {
   return records;
 }
 
+/**
+ * Get an atproto record without authentication
+ *
+ * Retrieves a record from any user's repository using their DID and the record key.
+ * No authentication is required as this uses the public read API.
+ *
+ * @param rkey - The record key
+ * @param did - The DID (Decentralized Identifier) of the record owner
+ * @returns A promise that resolves to the record data
+ * @throws {Error} If the record is not found or retrieval fails
+ */
+export async function getPublicRecord(rkey: string, did: string): Promise<AtBook.RBook> {
+  // Create an unauthenticated agent
+  const agent = new AtpAgent({ service: "https://public.api.bsky.app" });
+
+  try {
+    const recordResponse = await agent.com.atproto.repo.getRecord({
+      repo: did,
+      collection: RBOOK_COLLECTION,
+      rkey,
+    });
+
+    const record = recordResponse.data.value as AtBook.RBook;
+    console.log(`✓ Record retrieved: ${rkey} from ${did}`);
+    return record;
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("not found")) {
+      throw new Error(`Record not found: ${rkey} in repository ${did}`);
+    }
+    throw error;
+  }
+}
 
 /**
  * Delete an rbook record and its associated blob
@@ -462,11 +493,11 @@ export async function listRecords(limit = 100): Promise<RecordItem[]> {
  * blob deletion is handled by the PDS garbage collector and occurs when no other
  * records reference the blob.
  *
- * @param rkey 
+ * @param rkey
  * @returns A promise that resolves when the record is deleted
  * @throws {Error} If authentication fails, record is not found, or deletion fails
  */
-export async function deleteRecord(rkey: string): Promise<void> {
+export async function deleteRecord(rkey: string, col = RBOOK_COLLECTION): Promise<void> {
   const usr = await refreshSession();
   // Initialize agent
   const agent = new AtpAgent({ service: `https://${usr.host}` });
@@ -482,7 +513,7 @@ export async function deleteRecord(rkey: string): Promise<void> {
   try {
     const recordResponse = await agent.com.atproto.repo.getRecord({
       repo: did,
-      collection: COLLECTION,
+      collection: col,
       rkey,
     });
 
@@ -494,7 +525,7 @@ export async function deleteRecord(rkey: string): Promise<void> {
     console.log(`🗑  Deleting record ${rkey}...`);
     await agent.com.atproto.repo.deleteRecord({
       repo: did,
-      collection: COLLECTION,
+      collection: col,
       rkey,
     });
 
@@ -528,35 +559,116 @@ export async function deleteRecord(rkey: string): Promise<void> {
   }
 }
 
+// ==========================================================================================
+// ========= Data ===========================================================================
+// ==========================================================================================
+
+type DataRecord = 
+  AtData.RLibrary | AtData.RSetting | AtData.RFeed | AtData.RUsage | AtData.RStar;
+
 /**
- * Get an atproto record without authentication
- *
- * Retrieves a record from any user's repository using their DID and the record key.
- * No authentication is required as this uses the public read API.
- *
- * @param rkey - The record key
- * @param did - The DID (Decentralized Identifier) of the record owner
- * @returns A promise that resolves to the record data
- * @throws {Error} If the record is not found or retrieval fails
+ * Upload a file and create an AtData record that references the uploaded blob
+ * The created record will include `docblob` pointing to the uploaded blob.
  */
-export async function getPublicRecord(rkey: string, did: string): Promise<AtBook.RBook> {
-  // Create an unauthenticated agent
-  const agent = new AtpAgent({ service: "https://public.api.bsky.app" });
+export async function uploadDataFile(
+  name: string,
+  file: File | undefined,
+  collection = "cc.readup.library",
+  rkey?: string,
+  onProgress?: ProgressHandler,
+): Promise<{ 
+  success: boolean; 
+  blob?: BlobRef; 
+  record?: { uri: string; cid: string } 
+}> {
+  const usr = await refreshSession();
+  const agent = new AtpAgent({ service: `https://${usr.host}` });
+  await agent.resumeSession(usr as AtpSessionData);
 
-  try {
-    const recordResponse = await agent.com.atproto.repo.getRecord({
-      repo: did,
-      collection: COLLECTION,
-      rkey,
-    });
-
-    const record = recordResponse.data.value as AtBook.RBook;
-    console.log(`✓ Record retrieved: ${rkey} from ${did}`);
-    return record;
-  } catch (error) {
-    if (error instanceof Error && error.message.includes("not found")) {
-      throw new Error(`Record not found: ${rkey} in repository ${did}`);
-    }
-    throw error;
+  let blob: BlobRef | undefined;
+  if (file) {
+    blob = await xhrUploadFile(file, usr, onProgress);
+  } else {
+    throw new Error(`no file`);
   }
+
+  const now = new Date().toISOString();
+  const recordData: any = {
+    $type: collection,
+    name,
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  if (blob) {
+    recordData.docblob = blob;
+  } else {
+    throw new Error("no blob"); 
+  }
+
+  const did = agent.session?.did;
+  if (!did) { 
+    throw new Error("Could not determine DID from session"); 
+  }
+
+  const putRes = await agent.com.atproto.repo.putRecord({
+    repo: did,
+    collection,
+    rkey: rkey ?? name,
+    record: recordData,
+  });
+
+  return {
+    success: putRes.success,
+    blob,
+    record: putRes.data,
+  };
+}
+
+/**
+ * Download the `docblob` from a generic AtData record for the authenticated user
+ */
+export async function downloadDataFile(
+  rkey: string,
+  collection = "cc.readup.library",
+  onProgress?: ProgressHandler,
+): Promise<{ 
+  rkey: string; 
+  docData?: Blob; 
+  record: DataRecord; 
+}> {
+  const usr = await refreshSession();
+  const serv = usr.service;
+  const agent = new AtpAgent({ service: `https://${usr.host}` });
+  await agent.resumeSession(usr as AtpSessionData);
+
+  const did = agent.session?.did;
+  if (!did) throw new Error("Could not determine DID from session");
+
+  const recordResponse = await agent.com.atproto.repo.getRecord({
+    repo: did,
+    collection,
+    rkey,
+  });
+
+  const record = recordResponse.data.value as any;
+
+  let docCid = "";
+  const docblob = record.docblob;
+
+  if (!docblob || typeof docblob !== "object" || !("ref" in docblob)) {
+    console.error("No Doc blob found in record");
+  } else {
+    const docRef = docblob.ref;
+    docCid = typeof docRef === "object" && docRef && "$link" in docRef
+      ? docRef.$link as string
+      : docRef as string;
+  }
+
+  const docUrl = docCid 
+    ? `${serv}/xrpc/com.atproto.sync.getBlob?did=${did}&cid=${docCid}` 
+    : undefined;
+  const docData = docUrl ? (await webDownload(docUrl, onProgress)).blob : undefined;
+
+  return { rkey, docData, record };
 }
