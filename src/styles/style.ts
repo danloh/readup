@@ -165,6 +165,9 @@ const getColorStyles = (
       ${invertImgColor ? 'filter: invert(100%);' : ''}
       ${overrideColor ? 'mix-blend-mode: multiply;' : ''}
     }
+    svg, img {
+      ${overrideColor ? `background-color: transparent !important;` : ''};
+    }
     /* horizontal rule */
     *:has(> hr.background-img):not(body) {
       background-color: ${bg};
@@ -269,9 +272,6 @@ const getLayoutStyles = (
   body {
     overflow: unset;
     zoom: ${zoomLevel};
-  }
-  svg, img {
-    background-color: transparent !important;
   }
   svg:where(:not([width])), img:where(:not([width])) {
     width: auto;
@@ -774,6 +774,11 @@ export const transformStylesheet = (css: string, vw: number, vh: number, vertica
     })
     .replace(/(\d*\.?\d+)vw/gi, (_, d) => (parseFloat(d) * vw) / 100 + 'px')
     .replace(/(\d*\.?\d+)vh/gi, (_, d) => (parseFloat(d) * vh) / 100 + 'px')
+    .replace(/([\s;])-webkit-user-select\s*:\s*none/gi, '$1-webkit-user-select: unset')
+    .replace(/([\s;])-moz-user-select\s*:\s*none/gi, '$1-moz-user-select: unset')
+    .replace(/([\s;])-ms-user-select\s*:\s*none/gi, '$1-ms-user-select: unset')
+    .replace(/([\s;])-o-user-select\s*:\s*none/gi, '$1-o-user-select: unset')
+    .replace(/([\s;])user-select\s*:\s*none/gi, '$1user-select: unset')
     .replace(/([\s;])font-family\s*:\s*monospace/gi, '$1font-family: var(--monospace)')
     .replace(/([\s;])color\s*:\s*black/gi, '$1color: var(--theme-fg-color)')
     .replace(/([\s;])font-weight\s*:\s*normal/gi, '$1font-weight: var(--font-weight)')

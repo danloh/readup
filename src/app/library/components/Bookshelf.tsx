@@ -294,7 +294,6 @@ const Bookshelf: React.FC<BookshelfProps> = ({
         >
           {sortedBookshelfItems.map((item) => {
             const dndId = 'format' in item ? `book:${item.hash}` : `group:${item.id}`;
-
             const DraggableWrapper: React.FC<{ 
               id: string; 
               children: React.ReactNode 
@@ -310,7 +309,6 @@ const Bookshelf: React.FC<BookshelfProps> = ({
                 setDragRef(node);
                 setDropRef(node);
               };
-
               const style = transform
                 ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` }
                 : undefined;

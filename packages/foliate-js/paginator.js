@@ -1040,19 +1040,23 @@ export class Paginator extends HTMLElement {
             this.containerPosition + delta))
     }
 
-    snap(vx, vy) {
+    // vx, vy: velocity at the end of the swipe (pixels per ms)
+    // dx, dy: total distance swiped
+    // dt: total time of the swipe (ms)
+    snap(vx, vy, dx, dy, dt) {
         const velocity = this.#vertical ? vy : vx
+        const avgVelocity = this.#vertical ? dy / dt : dx / dt
         const horizontal = Math.abs(vx) * 2 > Math.abs(vy)
         const orthogonal = this.#vertical ? !horizontal : horizontal
         const [offset, a, b] = this.#scrollBounds
         const { start, end, pages, size } = this
         const min = Math.abs(offset) - a
         const max = Math.abs(offset) + b
-        const d = velocity * (this.#rtl ? -size : size) * (orthogonal ? 1 : 0)
-        const page = Math.floor(
-            Math.max(min, Math.min(max, (start + end) / 2
-                + (isNaN(d) ? 0 : d * 2))) / size)
-
+        const snapping = this.hasAttribute('animated') && !this.hasAttribute('eink')
+        const v =  snapping ? velocity : avgVelocity
+        const d = v * (this.#rtl ? -size : size) * (orthogonal ? 1 : 0)
+        const snapOffset = (isNaN(d) ? 0 : snapping ? d * 2 : d * 10)
+        const page = Math.floor(Math.max(min, Math.min(max, (start + end) / 2 + snapOffset)) / size)
         this.#scrollToPage(page, 'snap').then(() => {
             const dir = page <= 0 ? -1 : page >= pages - 1 ? 1 : null
             if (dir) return this.#goTo({
@@ -1068,6 +1072,7 @@ export class Paginator extends HTMLElement {
             t: e.timeStamp,
             vx: 0, xy: 0,
             dx: 0, dy: 0,
+            dt: 0,
         }
     }
     #onTouchMove(e) {
@@ -1098,6 +1103,7 @@ export class Paginator extends HTMLElement {
         state.vy = dy / dt
         state.dx += dx
         state.dy += dy
+        state.dt += dt
         this.#touchScrolled = true
         if (!this.hasAttribute('animated') || this.hasAttribute('eink')) return
         if (!this.#vertical && Math.abs(state.dx) >= Math.abs(state.dy) && !this.hasAttribute('eink') && (!isStylus || Math.abs(dx) > 1)) {
@@ -1115,8 +1121,10 @@ export class Paginator extends HTMLElement {
         // at this point I'm basically throwing `requestAnimationFrame` at
         // anything that doesn't work
         requestAnimationFrame(() => {
-            if (globalThis.visualViewport.scale === 1)
-                this.snap(this.#touchState.vx, this.#touchState.vy)
+            if (globalThis.visualViewport.scale === 1) {
+                const { vx, vy, dx, dy, dt } = this.#touchState
+                this.snap(vx, vy, dx, dy, dt)
+            }
         })
     }
     // allows one to process rects as if they were LTR and horizontal
