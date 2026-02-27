@@ -2,6 +2,7 @@ import { BookMetadata } from '@/libs/document';
 import { ProgressHandler } from '@/utils/transfer';
 import { ArticleType, FeedType } from '@/app/feed/components/dataAgent';
 import { UsageRecord } from '@/services/usageService';
+import { DownloadDataResult } from '@/services/bsky/atfile';
 import { SystemSettings } from './settings';
 import { Book, BookConfig, BookContent, ViewSettings } from './book';
 
@@ -158,7 +159,7 @@ export interface AppService {
     override?: boolean,
     collection?: string,
     onProgress?: ProgressHandler,
-  ): Promise<string>;
+  ): Promise<DownloadDataResult | undefined>;
   // for ai assistant
   ask(message: string): Promise<boolean>;
   // for feeds

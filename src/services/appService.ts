@@ -49,6 +49,7 @@ import {
   UploadBookResult,
   uploadDataFile,
   downloadDataFile,
+  DownloadDataResult,
 } from './bsky/atfile';
 import {
   DEFAULT_BOOK_LAYOUT,
@@ -645,7 +646,7 @@ export abstract class BaseAppService implements AppService {
     override?: boolean,
     collection?: string,
     onProgress?: ProgressHandler,
-  ): Promise<string> {
+  ): Promise<DownloadDataResult | undefined> {
     console.log(`Download data file ${rkey} from ${collection}...`);
     const filename = rkey;
     if (override || !(await this.fs.exists(filename, base))) {
@@ -654,14 +655,16 @@ export abstract class BaseAppService implements AppService {
       if (!blob) {
         throw new Error('No data blob returned');
       }
-      
+
       if (!(await this.fs.exists('', base))) {
         await this.fs.createDir('', base, true);
       }
-      await this.writeFile(filename, base, await blob.arrayBuffer());
+
+      await this.writeFile(filename, base, await blob.text());
+      return res;
     }
-    
-    return filename;
+
+    return;
   }
 
   async downloadBook(

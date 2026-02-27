@@ -30,6 +30,7 @@ import { useAuth } from '@/context/AuthContext';
 import { eventDispatcher } from '@/utils/event';
 import { BaseDir } from '@/types/system';
 import { ClosableFile } from '@/utils/file';
+import { DownloadDataResult } from '@/services/bsky/atfile';
 
 const formatSpeed = (bytesPerSec: number): string => {
   return `${formatBytes(bytesPerSec) || '0 B'}/s`;
@@ -93,10 +94,21 @@ type DataFileItem = {
 const DataFileRow: React.FC<{
   item: DataFileItem;
   onUpload: (item: any) => void;
-  onDownload: (item: any) => void;
+  onDownload: (item: any) => Promise<DownloadDataResult | undefined>;
   iconSize: number;
 }> = ({ item, onUpload, onDownload, iconSize }) => {
   const _ = useTranslation();
+  const [itemSize, setItemSize] = useState<number>(item.size || 0);
+
+  const handleDownload = useCallback(
+    async () => {
+      const res = await onDownload(item);
+      if (res) {
+        const fileSize = res.docData?.size || 0;
+        setItemSize(fileSize);
+      }
+    }, [item],
+  );
 
   return (
     <div className='hover:bg-base-200 flex items-center gap-3 rounded-lg p-3'>
@@ -104,8 +116,8 @@ const DataFileRow: React.FC<{
       <div className='min-w-0 flex-1'>
         <div className='truncate font-medium'>{item.name}</div>
         <div className='inline-flex gap-1 text-base-content/60 text-xs'>
-          {item.size && <span className='text-info'>{formatBytes(item.size)}</span>}
-          {item.local && _('Local')}
+          {itemSize > 0 && <span className='text-info'>{formatBytes(itemSize)}</span>}
+          {(item.local || itemSize > 0) && _('Local')}
         </div>
       </div>
       <div className='flex items-center gap-1'>
@@ -119,9 +131,10 @@ const DataFileRow: React.FC<{
           </button>
         ) : (
           <button
-            onClick={() => onDownload(item)}
+            onClick={handleDownload}
             className='btn btn-ghost btn-sm btn-circle'
             title={_('Download')}
+            disabled={itemSize > 0}
           >
             <MdCloudDownload size={iconSize} />
           </button>
@@ -354,17 +367,19 @@ const TransferQueuePanel: React.FC = () => {
   };
 
   const handleDownloadData = async (item: DataFileItem) => {
-    if (!appService || !item.record) return;
+    if (!appService) return;
     if (!user) {
       eventDispatcher.dispatch('toast', { type: 'error', message: _('Need to Log in') });
       return;
     }
     try {
-      await appService.downloadData(item.name, item.base as BaseDir);
+      const res = await appService.downloadData(item.name, item.base as BaseDir);
       eventDispatcher.dispatch('toast', { type: 'success', message: _('Download succeeded') });
+      return res;
     } catch (err) {
       console.error('download data file error', err);
       eventDispatcher.dispatch('toast', { type: 'error', message: _('Download failed') });
+      return;
     }
   };
 
@@ -555,15 +570,24 @@ const TransferQueuePanel: React.FC = () => {
             dataItems.length === 0 ? (
               <div className='text-base-content/60 py-8 text-center'>{_('No data files')}</div>
             ) : (
-              dataItems.map((item) => (
-                <DataFileRow
-                  key={item.name}
-                  item={item}
-                  onUpload={handleUploadData}
-                  onDownload={handleDownloadData}
-                  iconSize={iconSize}
-                />
-              ))
+              <>
+                {dataItems.map((item) => (
+                  <DataFileRow
+                    key={item.name}
+                    item={item}
+                    onUpload={handleUploadData}
+                    onDownload={handleDownloadData}
+                    iconSize={iconSize}
+                  />
+                ))}
+                <button 
+                  onClick={() => window.location.reload()} 
+                  className='btn btn-ghost btn-sm gap-1 mt-1'
+                >
+                  <MdRefresh size={iconSize} />
+                  {_('Reload Page')}
+                </button>
+              </>
             )
           ) : filteredTransfers.length === 0 ? (
             <div className='text-base-content/60 py-8 text-center'>{_('No transfers')}</div>

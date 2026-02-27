@@ -622,17 +622,22 @@ export async function uploadDataFile(
 }
 
 /**
+ * Result returned after successfully download a book
+ */
+export interface DownloadDataResult {
+  rkey: string; 
+  docData?: Blob; 
+  record: AtData.RData; 
+}
+
+/**
  * Download the `docblob` from a generic AtData record for the authenticated user
  */
 export async function downloadDataFile(
   rkey: string,
   collection = RDATA_COLLECTION,
   onProgress?: ProgressHandler,
-): Promise<{ 
-  rkey: string; 
-  docData?: Blob; 
-  record: AtData.RData; 
-}> {
+): Promise<DownloadDataResult> {
   const usr = await refreshSession();
   const serv = usr.service;
   const agent = new AtpAgent({ service: `https://${usr.host}` });
