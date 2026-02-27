@@ -643,6 +643,7 @@ export abstract class BaseAppService implements AppService {
     rkey: string,
     collection: string,
     base: BaseDir,
+    override?: boolean,
     onProgress?: ProgressHandler,
   ): Promise<string> {
     console.log(`Download data file ${rkey} from ${collection}...`);
@@ -652,12 +653,14 @@ export abstract class BaseAppService implements AppService {
       throw new Error('No data blob returned');
     }
 
-    if (!(await this.fs.exists('', base))) {
-      await this.fs.createDir('', base, true);
-    }
-
     const filename = rkey;
-    await this.writeFile(filename, base, await blob.arrayBuffer());
+    if (override || !(await this.fs.exists(filename, base))) {
+      if (!(await this.fs.exists('', base))) {
+        await this.fs.createDir('', base, true);
+      }
+      await this.writeFile(filename, base, await blob.arrayBuffer());
+    }
+    
     return filename;
   }
 

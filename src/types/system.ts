@@ -156,6 +156,7 @@ export interface AppService {
     rkey: string,
     collection: string,
     base: BaseDir,
+    override?: boolean,
     onProgress?: ProgressHandler,
   ): Promise<string>;
   // for ai assistant

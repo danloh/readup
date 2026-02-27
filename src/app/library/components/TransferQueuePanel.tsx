@@ -109,20 +109,23 @@ const DataFileRow: React.FC<{
         </div>
       </div>
       <div className='flex items-center gap-1'>
-        <button
-          onClick={() => onUpload(item)}
-          className='btn btn-ghost btn-sm btn-circle text-accent'
-          title={_('Upload')}
-        >
-          <MdCloudUpload size={iconSize} />
-        </button>
-        <button
-          onClick={() => onDownload(item)}
-          className='btn btn-ghost btn-sm btn-circle'
-          title={_('Download')}
-        >
-          <MdCloudDownload size={iconSize} />
-        </button>
+        {item.local && item.size ? (
+          <button
+            onClick={() => onUpload(item)}
+            className='btn btn-ghost btn-sm btn-circle text-accent'
+            title={_('Upload')}
+          >
+            <MdCloudUpload size={iconSize} />
+          </button>
+        ) : (
+          <button
+            onClick={() => onDownload(item)}
+            className='btn btn-ghost btn-sm btn-circle'
+            title={_('Download')}
+          >
+            <MdCloudDownload size={iconSize} />
+          </button>
+        )}
       </div>
     </div>
   );
@@ -234,6 +237,7 @@ const TransferItemRow: React.FC<{
 };
 
 type FilterType = 'local' | 'pds' | 'data' | 'active' | 'pending' | 'completed' | 'failed';
+const TabList = ['local', 'pds', 'data', 'active', 'pending', 'completed', 'failed'] as const;
 
 const TransferQueuePanel: React.FC = () => {
   const _ = useTranslation();
@@ -340,9 +344,8 @@ const TransferQueuePanel: React.FC = () => {
       return;
     }
     try {
-      const file = await appService.openFile(item.name, 'Books');
+      const file = await appService.openFile(item.name, item.base as BaseDir);
       await appService.uploadDataFile(file, item.name, item.col);
-      // await loadDataItems();
       eventDispatcher.dispatch('toast', { type: 'success', message: _('Upload succeeded') });
     } catch (err) {
       console.error('upload data file error', err);
@@ -531,21 +534,19 @@ const TransferQueuePanel: React.FC = () => {
 
         {/* Filter tabs */}
         <div className='border-base-300 flex gap-2 border-b p-2 overflow-y-auto'>
-          {(['local', 'pds', 'data', 'active', 'pending', 'completed', 'failed'] as const).map(
-            (f) => (
-              <button
-                key={f}
-                onClick={() => handleSetFilter(f)}
-                className={clsx(
-                  'rounded-sm px-2 py-1 text-sm transition-colors',
-                  filter === f ? 'border-primary border-b-2 pb-2' : 'bg-base-200 hover:bg-base-300',
-                  f === 'pds' ? 'text-success text-bold' : '',
-                )}
-              >
-                {`${filterLabels[f]} ${getStat(f)}`}
-              </button>
-            )
-          )}
+          {(TabList).map((f) => (
+            <button
+              key={f}
+              onClick={() => handleSetFilter(f)}
+              className={clsx(
+                'rounded-sm px-2 py-1 text-sm transition-colors',
+                filter === f ? 'border-primary border-b-2 pb-2' : 'bg-base-200 hover:bg-base-300',
+                f === 'pds' ? 'text-success text-bold' : '',
+              )}
+            >
+              {`${filterLabels[f]} ${getStat(f)}`}
+            </button>
+          ))}
         </div>
 
         {/* Transfer list or data list */}
