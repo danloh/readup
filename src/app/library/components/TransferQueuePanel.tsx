@@ -82,8 +82,8 @@ const StatusIcon: React.FC<{
 // data file state
 type DataFileItem = {
   name: string; 
-  col: string;
   base: string;
+  col?: string;
   size?: number;
   local?: boolean;
   remote?: boolean;
@@ -298,10 +298,10 @@ const TransferQueuePanel: React.FC = () => {
 
   // TODO: stared articles
   const dataFiles: DataFileItem[] = [
-    {name: 'library.json', col: 'cc.readup.library', base: 'Books'}, 
-    {name: 'feeds.json',  col: 'cc.readup.feed', base: 'Books'},
-    {name: 'usage.json',  col: 'cc.readup.usage', base: 'Books'},
-    {name: 'settings.json', col: 'cc.readup.setting', base: 'Settings'},
+    {name: 'library.json', col: 'cc.readup.rdata', base: 'Books'}, 
+    {name: 'feeds.json',  col: 'cc.readup.rdata', base: 'Books'},
+    {name: 'usage.json',  col: 'cc.readup.rdata', base: 'Books'},
+    {name: 'settings.json', col: 'cc.readup.rdata', base: 'Settings'},
   ];
 
   const [dataItems, setDataItems] = useState<DataFileItem[]>(dataFiles);
@@ -345,7 +345,7 @@ const TransferQueuePanel: React.FC = () => {
     }
     try {
       const file = await appService.openFile(item.name, item.base as BaseDir);
-      await appService.uploadDataFile(file, item.name, item.col);
+      await appService.uploadData(file, item.name);
       eventDispatcher.dispatch('toast', { type: 'success', message: _('Upload succeeded') });
     } catch (err) {
       console.error('upload data file error', err);
@@ -360,7 +360,7 @@ const TransferQueuePanel: React.FC = () => {
       return;
     }
     try {
-      await appService.downloadDataFile(item.name, item.col, item.base as BaseDir);
+      await appService.downloadData(item.name, item.base as BaseDir);
       eventDispatcher.dispatch('toast', { type: 'success', message: _('Download succeeded') });
     } catch (err) {
       console.error('download data file error', err);

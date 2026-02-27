@@ -6,8 +6,9 @@ import { refreshSession, resolveDid, User } from "./auth";
 import { Book } from "@/types/book";
 import { ProgressHandler, webDownload } from "@/utils/transfer";
 
-// Create record according to cc.readup.rbook lexicon (corrected collection name)
+// Create record according to lexicon
 const RBOOK_COLLECTION = "cc.readup.rbook";
+const RDATA_COLLECTION = "cc.readup.rdata";
 
 export interface BlobResp {
   blob: BlobRef;
@@ -563,9 +564,6 @@ export async function deleteRecord(rkey: string, col = RBOOK_COLLECTION): Promis
 // ========= Data ===========================================================================
 // ==========================================================================================
 
-type DataRecord = 
-  AtData.RLibrary | AtData.RSetting | AtData.RFeed | AtData.RUsage | AtData.RStar;
-
 /**
  * Upload a file and create an AtData record that references the uploaded blob
  * The created record will include `docblob` pointing to the uploaded blob.
@@ -573,8 +571,7 @@ type DataRecord =
 export async function uploadDataFile(
   name: string,
   file: File | undefined,
-  collection = "cc.readup.library",
-  rkey?: string,
+  collection = RDATA_COLLECTION,
   onProgress?: ProgressHandler,
 ): Promise<{ 
   success: boolean; 
@@ -596,7 +593,6 @@ export async function uploadDataFile(
   const recordData: any = {
     $type: collection,
     name,
-    createdAt: now,
     updatedAt: now,
   };
 
@@ -614,7 +610,7 @@ export async function uploadDataFile(
   const putRes = await agent.com.atproto.repo.putRecord({
     repo: did,
     collection,
-    rkey: rkey ?? name,
+    rkey: name,
     record: recordData,
   });
 
@@ -630,12 +626,12 @@ export async function uploadDataFile(
  */
 export async function downloadDataFile(
   rkey: string,
-  collection = "cc.readup.library",
+  collection = RDATA_COLLECTION,
   onProgress?: ProgressHandler,
 ): Promise<{ 
   rkey: string; 
   docData?: Blob; 
-  record: DataRecord; 
+  record: AtData.RData; 
 }> {
   const usr = await refreshSession();
   const serv = usr.service;

@@ -1,7 +1,7 @@
 {
   "lexicon": 1,
-  "id": "cc.readup.rfile",
-  "description": "A record for uploading and tracking binary blob files with metadata.",
+  "id": "cc.readup.rbook",
+  "description": "A record for uploading book files with metadata.",
   "defs": {
     "metadata": {
       "type": "object",
@@ -69,7 +69,7 @@
             "type": "blob",
             "accept": ["*/*"],
             "maxSize": 1000000000,
-            "description": "The config json file blob reference of book including reading setting, progress, notes, etc. Note: Individual PDS instances may enforce lower size limits."
+            "description": "The config json file blob reference of book config including reading setting, progress, notes, etc. Note: Individual PDS instances may enforce lower size limits."
           },
           "createdAt": {
             "type": "string",

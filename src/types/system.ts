@@ -146,17 +146,17 @@ export interface AppService {
   generateCoverImageUrl(book: Book): Promise<string>;
   updateCoverImage(book: Book, imageUrl?: string, imageFile?: string): Promise<void>;
   // for data files 
-  uploadDataFile(
+  uploadData(
     file: File,
     name: string,
-    collection: string,
+    collection?: string,
     onProgress?: ProgressHandler,
   ): Promise<void>;
-  downloadDataFile(
+  downloadData(
     rkey: string,
-    collection: string,
     base: BaseDir,
     override?: boolean,
+    collection?: string,
     onProgress?: ProgressHandler,
   ): Promise<string>;
   // for ai assistant

@@ -1,0 +1,35 @@
+{
+  "lexicon": 1,
+  "id": "cc.readup.rdata",
+  "description": "A record for data.",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "A record representing a data.",
+      "key": "any",
+      "record": {
+        "type": "object",
+        "properties": {
+          "docblob": {
+            "type": "blob",
+            "accept": ["*/*"],
+            "maxSize": 1000000000,
+            "description": "The uploaded blob reference of json file."
+          },
+
+          "updatedAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Timestamp when this record was updated."
+          },
+
+          "name": {
+            "type": "string",
+            "description": "The name of the blob file."
+          }
+        },
+        "required": ["name", "docblob", "updatedAt"]
+      }
+    }
+  }
+}

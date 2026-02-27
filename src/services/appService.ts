@@ -626,35 +626,35 @@ export abstract class BaseAppService implements AppService {
     return [books, mergedBooks];
   }
 
-  async uploadDataFile(
+  async uploadData(
     file: File,
     name: string,
-    collection: string,
+    collection?: string,
     onProgress?: ProgressHandler,
   ): Promise<void> {
     console.log(`Upload data file ${name} to ${collection}...`);
-    const res = await uploadDataFile(name, file, collection, undefined, onProgress);
+    const res = await uploadDataFile(name, file, collection, onProgress);
     if (!res.success) {
       throw new Error('Data file upload failed');
     }
   }
 
-  async downloadDataFile(
+  async downloadData(
     rkey: string,
-    collection: string,
     base: BaseDir,
     override?: boolean,
+    collection?: string,
     onProgress?: ProgressHandler,
   ): Promise<string> {
     console.log(`Download data file ${rkey} from ${collection}...`);
-    const res = await downloadDataFile(rkey, collection, onProgress);
-    const blob = res.docData;
-    if (!blob) {
-      throw new Error('No data blob returned');
-    }
-
     const filename = rkey;
     if (override || !(await this.fs.exists(filename, base))) {
+      const res = await downloadDataFile(rkey, collection, onProgress);
+      const blob = res.docData;
+      if (!blob) {
+        throw new Error('No data blob returned');
+      }
+      
       if (!(await this.fs.exists('', base))) {
         await this.fs.createDir('', base, true);
       }
