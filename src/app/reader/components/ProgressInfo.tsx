@@ -15,7 +15,12 @@ function formatProgress(
     return template
       .replace('{current}', String(current + 1))
       .replace('{total}', String(total))
-      .replace('{percent}', (((current + 1) / total) * 100).toFixed(1));
+      .replace(
+        '{percent}',
+        (((current + 1) / total) * 100).toFixed(
+          current + 1 < total && total > 100 ? 1 : 0,
+        ),
+      );
   } else {
     return '';
   }

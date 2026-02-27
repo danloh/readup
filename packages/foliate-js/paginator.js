@@ -14,26 +14,60 @@ const debounce = (f, wait, immediate) => {
     }
 }
 
-const lerp = (min, max, x) => x * (max - min) + min
-const easeOutQuad = x => 1 - (1 - x) * (1 - x)
-const animate = (a, b, duration, ease, render) => new Promise(resolve => {
-    let start
-    const step = now => {
-        if (document.hidden) {
-            render(lerp(a, b, 1))
-            return resolve()
-        }
-        start ??= now
-        const fraction = Math.min(1, (now - start) / duration)
-        render(lerp(a, b, ease(fraction)))
-        if (fraction < 1) requestAnimationFrame(step)
-        else resolve()
-    }
+// GPU-accelerated scroll animation using CSS transforms
+const animateScroll = (element, scrollProp, startValue, endValue, duration) => new Promise(resolve => {
     if (document.hidden) {
-        render(lerp(a, b, 1))
+        element[scrollProp] = endValue
         return resolve()
     }
-    requestAnimationFrame(step)
+
+    const isHorizontal = scrollProp === 'scrollLeft'
+    const delta = endValue - startValue
+    const content = element.firstElementChild
+    if (!content) {
+        // Fallback if no content element
+        element[scrollProp] = endValue
+        return resolve()
+    }
+
+    // Prepare for animation
+    const transformProp = isHorizontal ? 'translateX' : 'translateY'
+    content.style.willChange = 'transform'
+    content.style.transform = `${transformProp}(0px)`
+    content.style.transition = 'none'
+
+    // Force reflow to apply initial state
+    content.getBoundingClientRect()
+
+    // Start animation
+    content.style.transition = `transform ${duration}ms cubic-bezier(0.25, 0.46, 0.45, 0.94)`
+    content.style.transform = `${transformProp}(${-delta}px)`
+
+    let resolved = false
+    const cleanup = () => {
+        if (resolved) return
+        resolved = true
+
+        content.style.willChange = 'transform'
+        content.style.transform = `${transformProp}(0px)`
+        content.style.transition = 'none'
+
+        // Apply final scroll position
+        element[scrollProp] = endValue
+        resolve()
+    }
+
+    // Listen for transition end
+    const onTransitionEnd = (e) => {
+        if (e.target === content && e.propertyName === 'transform') {
+            content.removeEventListener('transitionend', onTransitionEnd)
+            cleanup()
+        }
+    }
+    content.addEventListener('transitionend', onTransitionEnd)
+
+    // Fallback timeout in case transitionend doesn't fire
+    setTimeout(cleanup, duration + 50)
 })
 
 // collapsed range doesn't return client rects sometimes (or always?)
@@ -622,6 +656,7 @@ export class Paginator extends HTMLElement {
     #touchScrolled
     #lastVisibleRange
     #scrollLocked = false
+    #isAnimating = false
     constructor() {
         super()
         this.#root.innerHTML = `<style>
@@ -685,6 +720,18 @@ export class Paginator extends HTMLElement {
             grid-column: 2 / 5;
             grid-row: 1 / -1;
             overflow: hidden;
+            /* GPU acceleration hints for smoother scrolling on high refresh rate displays */
+            transform: translateZ(0);
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            perspective: 1000px;
+            -webkit-perspective: 1000px;
+        }
+        #container > * {
+            /* Ensure child elements are GPU-accelerated for smooth transform animations */
+            transform: translateZ(0);
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
         }
         :host([flow="scrolled"]) #container {
             grid-column: 2 / 5;
@@ -738,9 +785,12 @@ export class Paginator extends HTMLElement {
         this.#footer = this.#root.getElementById('footer')
 
         this.#observer.observe(this.#container)
-        this.#container.addEventListener('scroll', () => this.dispatchEvent(new Event('scroll')))
+        this.#container.addEventListener('scroll', () => {
+            // Don't dispatch scroll events during animation to prevent jank
+            if (!this.#isAnimating) this.dispatchEvent(new Event('scroll'))
+        })
         this.#container.addEventListener('scroll', debounce(() => {
-            if (this.scrolled) {
+            if (this.scrolled && !this.#isAnimating) {
                 if (this.#justAnchored) this.#justAnchored = false
                 else this.#afterScroll('scroll')
             }
@@ -1074,6 +1124,10 @@ export class Paginator extends HTMLElement {
             dx: 0, dy: 0,
             dt: 0,
         }
+        // Hint to browser that scrolling will occur for better GPU layer management
+        if (this.#view?.element) {
+            this.#view.element.style.willChange = 'transform'
+        }
     }
     #onTouchMove(e) {
         const state = this.#touchState
@@ -1113,6 +1167,11 @@ export class Paginator extends HTMLElement {
         }
     }
     #onTouchEnd() {
+        // Remove will-change hint to free GPU resources
+        // if (this.#view?.element) {
+        //     this.#view.element.style.willChange = 'auto'
+        // }
+
         if (!this.#touchScrolled) return
         this.#touchScrolled = false
         if (this.scrolled) return
@@ -1163,14 +1222,22 @@ export class Paginator extends HTMLElement {
         }
         // FIXME: vertical-rl only, not -lr
         if (this.scrolled && this.#vertical) offset = -offset
-        if ((reason === 'snap' || smooth) && this.hasAttribute('animated') && !this.hasAttribute('eink')) return animate(
-            this.containerPosition, offset, 300, easeOutQuad,
-            x => this.containerPosition = x,
-        ).then(() => {
-            this.#scrollBounds = [offset, this.atStart ? 0 : size, this.atEnd ? 0 : size]
-            this.#afterScroll(reason)
-        })
-        else {
+        if ((reason === 'snap' || smooth) && this.hasAttribute('animated') && !this.hasAttribute('eink')) {
+            const startPosition = this.containerPosition
+            // Use GPU-accelerated scroll animation for smoother experience on high refresh rate screens
+            this.#isAnimating = true
+            return animateScroll(
+                this.#container,
+                this.scrollProp,
+                startPosition,
+                offset,
+                300,
+            ).then(() => {
+                this.#isAnimating = false
+                this.#scrollBounds = [offset, this.atStart ? 0 : size, this.atEnd ? 0 : size]
+                this.#afterScroll(reason)
+            })
+        } else {
             this.containerPosition = offset
             this.#scrollBounds = [offset, this.atStart ? 0 : size, this.atEnd ? 0 : size]
             this.#afterScroll(reason)

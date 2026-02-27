@@ -611,6 +611,11 @@ foliate-fxl {
   transition: none !important;
 }
 
+input[type='range'].slider-input {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
 /* settings highlight animation for command palette */
 @keyframes settings-highlight-pulse {
   0%,

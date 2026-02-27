@@ -384,6 +384,12 @@ export class FixedLayout extends HTMLElement {
     get isOverflowY() {
         return this.#isOverflowY
     }
+    get atStart() {
+        return this.#index <= 0
+    }
+    get atEnd() {
+        return this.#index >= this.#spreads.length - 1
+    }
     #reportLocation(reason) {
         this.dispatchEvent(new CustomEvent('relocate', { detail:
             { reason, range: null, index: this.index, fraction: 0, size: 1 } }))

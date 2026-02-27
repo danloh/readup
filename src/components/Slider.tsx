@@ -24,7 +24,7 @@ const Slider: React.FC<SliderProps> = ({
   max = 100,
   step = 1,
   initialValue = 50,
-  heightPx = 40,
+  heightPx = 42,
   minLabel = '',
   maxLabel = '',
   bubbleElement,
@@ -112,7 +112,7 @@ const Slider: React.FC<SliderProps> = ({
           max={max}
           step={step}
           value={value}
-          className='absolute inset-0 h-full w-full cursor-pointer opacity-0'
+          className='slider-input absolute inset-0 h-full w-full min-h-12 cursor-pointer opacity-0'
           onChange={handleChange}
         />
       </div>
