@@ -1,5 +1,6 @@
 import clsx from 'clsx';
 import React, { useCallback, useState } from 'react';
+import { TbJson } from 'react-icons/tb';
 import {
   MdClose,
   MdRefresh,
@@ -19,7 +20,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useResponsiveSize } from '@/hooks/useResponsiveSize';
 import { useKeyDownActions } from '@/hooks/useKeyDownActions';
 import { useLibraryStore } from '@/store/libraryStore';
-import { 
+import {
   TransferItem, TransferStatus, TransferType, useTransferStore 
 } from '@/store/transferStore';
 import { Book } from '@/types/book';
@@ -27,6 +28,8 @@ import { formatBytes } from '@/utils/book';
 import { useEnv } from '@/context/EnvContext';
 import { useAuth } from '@/context/AuthContext';
 import { eventDispatcher } from '@/utils/event';
+import { BaseDir } from '@/types/system';
+import { ClosableFile } from '@/utils/file';
 
 const formatSpeed = (bytesPerSec: number): string => {
   return `${formatBytes(bytesPerSec) || '0 B'}/s`;
@@ -74,6 +77,55 @@ const StatusIcon: React.FC<{
         <MdCloudDownload className='text-primary' size={size} />
       );
   }
+};
+
+// data file state
+type DataFileItem = {
+  name: string; 
+  col: string;
+  base: string;
+  size?: number;
+  local?: boolean;
+  remote?: boolean;
+  record?: any;
+};
+
+const DataFileRow: React.FC<{
+  item: DataFileItem;
+  onUpload: (item: any) => void;
+  onDownload: (item: any) => void;
+  iconSize: number;
+}> = ({ item, onUpload, onDownload, iconSize }) => {
+  const _ = useTranslation();
+
+  return (
+    <div className='hover:bg-base-200 flex items-center gap-3 rounded-lg p-3'>
+      <TbJson className='text-success' size={iconSize} />
+      <div className='min-w-0 flex-1'>
+        <div className='truncate font-medium'>{item.name}</div>
+        <div className='inline-flex gap-1 text-base-content/60 text-xs'>
+          {item.size && <span className='text-info'>{formatBytes(item.size)}</span>}
+          {item.local && _('Local')}
+        </div>
+      </div>
+      <div className='flex items-center gap-1'>
+        <button
+          onClick={() => onUpload(item)}
+          className='btn btn-ghost btn-sm btn-circle text-accent'
+          title={_('Upload')}
+        >
+          <MdCloudUpload size={iconSize} />
+        </button>
+        <button
+          onClick={() => onDownload(item)}
+          className='btn btn-ghost btn-sm btn-circle'
+          title={_('Download')}
+        >
+          <MdCloudDownload size={iconSize} />
+        </button>
+      </div>
+    </div>
+  );
 };
 
 const TransferItemRow: React.FC<{
@@ -181,7 +233,7 @@ const TransferItemRow: React.FC<{
   );
 };
 
-type FilterType = 'local' | 'pds' | 'active' | 'pending' | 'completed' | 'failed';
+type FilterType = 'local' | 'pds' | 'data' | 'active' | 'pending' | 'completed' | 'failed';
 
 const TransferQueuePanel: React.FC = () => {
   const _ = useTranslation();
@@ -239,6 +291,80 @@ const TransferQueuePanel: React.FC = () => {
   const [pdsBooksToDownload, setPdsBooksToDownload] = useState<Book[]>([]);
   const [pdsLoaded, setPdsLoaded] = useState(false);
   const [pdsCanTransfer, setPdsCanTransfer] = useState<TransferItem[]>([]);
+
+  // TODO: stared articles
+  const dataFiles: DataFileItem[] = [
+    {name: 'library.json', col: 'cc.readup.library', base: 'Books'}, 
+    {name: 'feeds.json',  col: 'cc.readup.feed', base: 'Books'},
+    {name: 'usage.json',  col: 'cc.readup.usage', base: 'Books'},
+    {name: 'settings.json', col: 'cc.readup.setting', base: 'Settings'},
+  ];
+
+  const [dataItems, setDataItems] = useState<DataFileItem[]>(dataFiles);
+  const [dataLoaded, setDataLoaded] = useState(false);
+
+  const getItemSize = async (item: DataFileItem) => {
+    if (appService) {
+      const name = item.name;
+      const base = item.base as BaseDir;
+      if (await appService.exists(name, base)) {
+        const file = await appService.openFile(name, base);
+        const size = file.size;
+        const f = file as ClosableFile;
+        if (f && f.close) {
+          await f.close();
+        }
+        item.size = size;
+        item.local = size > 0;
+        console.log('item size: ', name, item.size);
+      }
+    }
+    return item;
+  };
+
+  const listDataItems = async () => {
+    const finalItems: DataFileItem[] = [];
+    for ( const item of dataFiles) {
+      const newItem = await getItemSize(item);
+      finalItems.push(newItem);
+    }
+    
+    setDataItems(finalItems);
+    setDataLoaded(true);
+  };
+
+  const handleUploadData = async (item: DataFileItem) => {
+    if (!appService) return;
+    if (!user) {
+      eventDispatcher.dispatch('toast', { type: 'error', message: _('Need to Log in') });
+      return;
+    }
+    try {
+      const file = await appService.openFile(item.name, 'Books');
+      await appService.uploadDataFile(file, item.name, item.col);
+      // await loadDataItems();
+      eventDispatcher.dispatch('toast', { type: 'success', message: _('Upload succeeded') });
+    } catch (err) {
+      console.error('upload data file error', err);
+      eventDispatcher.dispatch('toast', { type: 'error', message: _('Upload failed') });
+    }
+  };
+
+  const handleDownloadData = async (item: DataFileItem) => {
+    if (!appService || !item.record) return;
+    if (!user) {
+      eventDispatcher.dispatch('toast', { type: 'error', message: _('Need to Log in') });
+      return;
+    }
+    try {
+      await appService.downloadDataFile(item.name, item.col, item.base as BaseDir);
+      eventDispatcher.dispatch('toast', { type: 'success', message: _('Download succeeded') });
+    } catch (err) {
+      console.error('download data file error', err);
+      eventDispatcher.dispatch('toast', { type: 'error', message: _('Download failed') });
+    }
+  };
+
   const booksToUpload = getVisibleLibrary().filter(
     (book) => book.downloadedAt && !book.uploadedAt
   );
@@ -268,8 +394,11 @@ const TransferQueuePanel: React.FC = () => {
       if (f === 'pds' && user && !pdsLoaded) {
         await listBooksInPds();
       }
+      if (f === 'data' && !dataLoaded) {
+        await listDataItems();
+      }
       setFilter(f);
-    }, [],
+    }, [pdsLoaded, dataLoaded, user],
   );
 
   const handleUploadAll = () => {
@@ -318,6 +447,7 @@ const TransferQueuePanel: React.FC = () => {
   const filterLabels: Record<FilterType, string> = {
     local: _('Local'),
     pds: _('PDS'),
+    data: _('Data'),
     active: _('Active'),
     pending: _('Pending'),
     completed: _('Completed'),
@@ -336,6 +466,8 @@ const TransferQueuePanel: React.FC = () => {
         return stats.failed;
       case 'pds':
         return pdsCanTransfer.length;
+      case 'data':
+        return dataItems.length;
       default:
         return allLocalCanTransfer.length;
     }
@@ -399,24 +531,40 @@ const TransferQueuePanel: React.FC = () => {
 
         {/* Filter tabs */}
         <div className='border-base-300 flex gap-2 border-b p-2 overflow-y-auto'>
-          {(['local', 'pds', 'active', 'pending', 'completed', 'failed'] as const).map((f) => (
-            <button
-              key={f}
-              onClick={() => handleSetFilter(f)}
-              className={clsx(
-                'rounded-sm px-2 py-1 text-sm transition-colors',
-                filter === f ? 'border-primary border-b-2 pb-2' : 'bg-base-200 hover:bg-base-300',
-                f === 'pds' ? 'text-success text-bold' : '',
-              )}
-            >
-              {`${filterLabels[f]} ${getStat(f)}`}
-            </button>
-          ))}
+          {(['local', 'pds', 'data', 'active', 'pending', 'completed', 'failed'] as const).map(
+            (f) => (
+              <button
+                key={f}
+                onClick={() => handleSetFilter(f)}
+                className={clsx(
+                  'rounded-sm px-2 py-1 text-sm transition-colors',
+                  filter === f ? 'border-primary border-b-2 pb-2' : 'bg-base-200 hover:bg-base-300',
+                  f === 'pds' ? 'text-success text-bold' : '',
+                )}
+              >
+                {`${filterLabels[f]} ${getStat(f)}`}
+              </button>
+            )
+          )}
         </div>
 
-        {/* Transfer list */}
+        {/* Transfer list or data list */}
         <div className='flex-1 overflow-y-auto p-2'>
-          {filteredTransfers.length === 0 ? (
+          {filter === 'data' ? (
+            dataItems.length === 0 ? (
+              <div className='text-base-content/60 py-8 text-center'>{_('No data files')}</div>
+            ) : (
+              dataItems.map((item) => (
+                <DataFileRow
+                  key={item.name}
+                  item={item}
+                  onUpload={handleUploadData}
+                  onDownload={handleDownloadData}
+                  iconSize={iconSize}
+                />
+              ))
+            )
+          ) : filteredTransfers.length === 0 ? (
             <div className='text-base-content/60 py-8 text-center'>{_('No transfers')}</div>
           ) : (
             filteredTransfers.map((transfer) => (

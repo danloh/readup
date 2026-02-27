@@ -41,8 +41,14 @@ import { svg2png } from '@/utils/svg';
 import { ArticleType, FeedType } from '@/app/feed/components/dataAgent';
 import { BOOK_FILE_NOT_FOUND_ERROR } from './errors';
 import { 
-  deleteRecord, downloadBookFile, downloadPdsBook, listRecords, 
-  uploadBookFile, UploadResult 
+  deleteRecord,
+  downloadBookFile,
+  downloadPdsBook,
+  listBookRecords,
+  uploadBookFile,
+  UploadBookResult,
+  uploadDataFile,
+  downloadDataFile,
 } from './bsky/atfile';
 import {
   DEFAULT_BOOK_LAYOUT,
@@ -574,7 +580,7 @@ export abstract class BaseAppService implements AppService {
     const handleProgress = createProgressHandler(toUploadFpCount, completedFiles, onProgress);
 
     // upload and create a book record on PDS
-    const res: UploadResult = 
+    const res: UploadBookResult = 
       await uploadBookFile(book, bookFile, coverFile, configFile, handleProgress);
     // close files
     const cf = coverFile as ClosableFile;
@@ -609,7 +615,7 @@ export abstract class BaseAppService implements AppService {
   async listPdsBooks(): Promise<[Book[], Book[]]> {
     console.log('List books in PDS...');
 
-    const records = await listRecords();
+    const records = await listBookRecords();
     const books = records.map(rec => rec.value.bookmeta as Book);
 
     // merge with local books and save
@@ -618,6 +624,41 @@ export abstract class BaseAppService implements AppService {
     await this.saveLibraryBooks(mergedBooks);
 
     return [books, mergedBooks];
+  }
+
+  async uploadDataFile(
+    file: File,
+    name: string,
+    collection: string,
+    onProgress?: ProgressHandler,
+  ): Promise<void> {
+    console.log(`Upload data file ${name} to ${collection}...`);
+    const res = await uploadDataFile(name, file, collection, undefined, onProgress);
+    if (!res.success) {
+      throw new Error('Data file upload failed');
+    }
+  }
+
+  async downloadDataFile(
+    rkey: string,
+    collection: string,
+    base: BaseDir,
+    onProgress?: ProgressHandler,
+  ): Promise<string> {
+    console.log(`Download data file ${rkey} from ${collection}...`);
+    const res = await downloadDataFile(rkey, collection, onProgress);
+    const blob = res.docData;
+    if (!blob) {
+      throw new Error('No data blob returned');
+    }
+
+    if (!(await this.fs.exists('', base))) {
+      await this.fs.createDir('', base, true);
+    }
+
+    const filename = rkey;
+    await this.writeFile(filename, base, await blob.arrayBuffer());
+    return filename;
   }
 
   async downloadBook(
@@ -1013,5 +1054,4 @@ export abstract class BaseAppService implements AppService {
       throw new Error(`Failed to save ${filename}: ${error}`);
     }
   }
-  
 }

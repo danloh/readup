@@ -16,7 +16,7 @@ export interface BlobResp {
 /**
  * Result returned after successfully uploading a book
  */
-export interface UploadResult {
+export interface UploadBookResult {
   success: boolean;
   /** The uploaded blob reference */
   coverblob: unknown; // book's cover image
@@ -134,7 +134,7 @@ export async function uploadBookFile(
   coverFile?: File,
   configFile?: File,
   onProgress?: ProgressHandler,
-): Promise<UploadResult> {
+): Promise<UploadBookResult> {
   const usr = await refreshSession();
   // Initialize agent
   const agent = new AtpAgent({ service: `https://${usr.host}` });
@@ -423,7 +423,7 @@ export interface RbookRecordItem {
  * @returns A promise that resolves when the list is displayed
  * @throws {Error} If authentication fails or the PDS is unreachable
  */
-export async function listRecords(limit = 100): Promise<RbookRecordItem[]> {
+export async function listBookRecords(limit = 100): Promise<RbookRecordItem[]> {
   const usr = await refreshSession();
   // Initialize agent
   const agent = new AtpAgent({ service: `https://${usr.host}` });
@@ -463,7 +463,7 @@ export async function listRecords(limit = 100): Promise<RbookRecordItem[]> {
  * @returns A promise that resolves to the record data
  * @throws {Error} If the record is not found or retrieval fails
  */
-export async function getPublicRecord(rkey: string, did: string): Promise<AtBook.RBook> {
+export async function getPublicBookRecord(rkey: string, did: string): Promise<AtBook.RBook> {
   // Create an unauthenticated agent
   const agent = new AtpAgent({ service: "https://public.api.bsky.app" });
 

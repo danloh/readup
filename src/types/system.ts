@@ -145,6 +145,19 @@ export interface AppService {
   getCoverImageBlobUrl(book: Book): Promise<string>;
   generateCoverImageUrl(book: Book): Promise<string>;
   updateCoverImage(book: Book, imageUrl?: string, imageFile?: string): Promise<void>;
+  // for data files 
+  uploadDataFile(
+    file: File,
+    name: string,
+    collection: string,
+    onProgress?: ProgressHandler,
+  ): Promise<void>;
+  downloadDataFile(
+    rkey: string,
+    collection: string,
+    base: BaseDir,
+    onProgress?: ProgressHandler,
+  ): Promise<string>;
   // for ai assistant
   ask(message: string): Promise<boolean>;
   // for feeds
