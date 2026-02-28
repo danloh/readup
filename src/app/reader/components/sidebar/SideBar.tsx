@@ -31,7 +31,7 @@ const SideBar: React.FC<{
 }> = ({ onGoToLibrary }) => {
   const _ = useTranslation();
   const { appService } = useEnv();
-  const { updateAppTheme, safeAreaInsets } = useThemeStore();
+  const { updateAppTheme, safeAreaInsets, systemUIVisible, statusBarHeight } = useThemeStore();
   const { settings } = useSettingsStore();
   const { sideBarBookKey, setSideBarBookKey, getSearchNavState, setSearchTerm, clearSearch } =
     useSidebarStore();
@@ -231,7 +231,9 @@ const SideBar: React.FC<{
           width: `${sideBarWidth}`,
           maxWidth: `${MAX_SIDEBAR_WIDTH * 100}%`,
           position: isSideBarPinned ? 'relative' : 'absolute',
-          paddingTop: `${safeAreaInsets?.top || 0}px`,
+          paddingTop: systemUIVisible
+            ? `${Math.max(safeAreaInsets?.top || 0, statusBarHeight)}px`
+            : `${safeAreaInsets?.top || 0}px`,
         }}
       >
         <style jsx>{`

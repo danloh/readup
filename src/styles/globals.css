@@ -454,6 +454,10 @@ foliate-fxl {
   user-select: text !important;
 }
 
+.btn-ghost.btn-active {
+  background-color: theme('colors.base-300');
+}
+
 @keyframes spin-counterclockwise {
   from {
     transform: rotate(0deg);
