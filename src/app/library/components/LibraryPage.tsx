@@ -3,7 +3,6 @@ import * as React from 'react';
 import { useState, useRef, useEffect, Suspense, useCallback } from 'react';
 import { getCurrentWebview } from '@tauri-apps/api/webview';
 import { ReadonlyURLSearchParams, useSearchParams } from 'next/navigation';
-import { useTransitionRouter } from 'next-view-transitions';
 import { MdChevronRight } from 'react-icons/md';
 import { LiaInfoCircleSolid } from 'react-icons/lia';
 import { 
@@ -35,6 +34,7 @@ import { SelectedFile, useFileSelector } from '@/hooks/useFileSelector';
 import { useOpenWithBooks } from '@/hooks/useOpenWithBooks';
 import useShortcuts from '@/hooks/useShortcuts';
 import { useTransferQueue } from '@/hooks/useTransferQueue';
+import { useAppRouter } from '@/hooks/useAppRouter';
 import { selectDirectory } from '@/utils/bridge';
 import { requestStoragePermission } from '@/utils/permission';
 import DropIndicator from '@/components/DropIndicator';
@@ -61,7 +61,7 @@ const LibraryPageWithSearchParams = () => {
 const LibraryPageContent = (
   { searchParams }: { searchParams: ReadonlyURLSearchParams | null }
 ) => {
-  const router = useTransitionRouter();
+  const router = useAppRouter();
   const { envConfig, appService } = useEnv();
   const { user } = useAuth();
   const {

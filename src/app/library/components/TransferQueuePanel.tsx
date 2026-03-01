@@ -548,7 +548,7 @@ const TransferQueuePanel: React.FC = () => {
         </div>
 
         {/* Filter tabs */}
-        <div className='border-base-300 flex gap-2 border-b p-2 overflow-y-auto'>
+        <div className='border-base-300 flex gap-1 border-b p-2 overflow-y-auto'>
           {(TabList).map((f) => (
             <button
               key={f}

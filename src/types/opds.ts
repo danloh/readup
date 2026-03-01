@@ -51,6 +51,7 @@ export interface OPDSPublication {
     identifier?: string;
     subject?: OPDSSubject[];
     rights?: string;
+    content?: OPDSContent;
     [SYMBOL.CONTENT]?: OPDSContent;
   };
   links: OPDSLink[];
