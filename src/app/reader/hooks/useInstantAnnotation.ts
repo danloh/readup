@@ -1,6 +1,6 @@
 import { useCallback, useRef } from 'react';
 import { BookNote } from '@/types/book';
-import { Point, snapRangeToWords, TextSelection } from '@/utils/sel';
+import { Point, TextSelection, snapRangeToWords } from '@/utils/sel';
 import { useEnv } from '@/context/EnvContext';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useBookDataStore } from '@/store/bookDataStore';
@@ -13,13 +13,11 @@ interface UseInstantAnnotationProps {
   setSelection: React.Dispatch<React.SetStateAction<TextSelection | null>>;
 }
 
-export const useInstantAnnotation = (
-  { bookKey, getAnnotationText }: UseInstantAnnotationProps
-) => {
+export const useInstantAnnotation = ({ bookKey, getAnnotationText }: UseInstantAnnotationProps) => {
   const { envConfig } = useEnv();
   const { settings } = useSettingsStore();
   const { getConfig, saveConfig, updateBooknotes } = useBookDataStore();
-  const { getView, getViewsById, getViewSettings } = useReaderStore();
+  const { getView, getViewsById, getViewSettings, getProgress } = useReaderStore();
 
   const startPointRef = useRef<Point | null>(null);
   const startDocRef = useRef<Document | null>(null);
@@ -122,7 +120,7 @@ export const useInstantAnnotation = (
         if (newRange.collapsed) {
           return null;
         }
-        
+
         snapRangeToWords(newRange);
         return newRange;
       } catch (e) {
@@ -263,6 +261,7 @@ export const useInstantAnnotation = (
       views.forEach((v) => v?.addAnnotation(annotation));
 
       const config = getConfig(bookKey)!;
+      const progress = getProgress(bookKey)!;
       const { booknotes: annotations = [] } = config;
       const existingIndex = annotations.findIndex(
         (a) => a.cfi === cfi && a.type === 'annotation' && a.style && !a.deletedAt,
@@ -272,10 +271,11 @@ export const useInstantAnnotation = (
         annotations[existingIndex] = {
           ...annotations[existingIndex]!,
           ...annotation,
+          page: progress.page,
           id: annotations[existingIndex]!.id,
         };
       } else {
-        annotations.push(annotation);
+        annotations.push({ ...annotation, page: progress.page });
       }
 
       const updatedConfig = updateBooknotes(bookKey, annotations);

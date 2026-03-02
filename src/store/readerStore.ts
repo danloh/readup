@@ -288,7 +288,8 @@ export const useReaderStore = create<ReaderStore>((set, get) => ({
       const viewState = state.viewStates[key];
       if (!viewState || !bookData) return state;
 
-      const progress: [number, number] = [(pageinfo.next ?? pageinfo.current) + 1, pageinfo.total];
+      const pageInfo = bookData.isFixedLayout ? section : pageinfo;
+      const progress: [number, number] = [pageInfo.current + 1, pageInfo.total];
 
       // Update library book progress
       const { library, setLibrary } = useLibraryStore.getState();
@@ -337,6 +338,7 @@ export const useReaderStore = create<ReaderStore>((set, get) => ({
               pageinfo,
               timeinfo,
               range,
+              page: pageInfo.current + 1, // 1-based page number
             },
           },
         },
