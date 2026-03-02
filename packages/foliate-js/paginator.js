@@ -335,7 +335,7 @@ class View {
         if (this.#column) this.columnize(layout)
         else this.scrolled(layout)
     }
-    scrolled({ marginTop, marginRight, marginBottom, marginLeft, gap, columnWidth }) {
+    scrolled({ width, height, marginTop, marginRight, marginBottom, marginLeft, gap, columnWidth }) {
         const vertical = this.#vertical
         const doc = this.document
         setStylesImportant(doc.documentElement, {
@@ -344,6 +344,8 @@ class View {
             'height': 'auto',
             'width': 'auto',
         })
+        const availableWidth = Math.trunc(width - marginLeft - marginRight)
+        const availableHeight = Math.trunc(height - marginTop - marginBottom)
         setStyles(doc.documentElement, {
             'padding': vertical
                 ? `${marginTop * 1.5}px ${marginRight}px ${marginBottom * 1.5}px ${marginLeft}px`
@@ -354,14 +356,14 @@ class View {
             '--page-margin-left': `${vertical ? marginLeft : marginLeft + gap / 2}px`,
             '--full-width': `${Math.trunc(window.innerWidth)}`,
             '--full-height': `${Math.trunc(window.innerHeight)}`,
-            '--available-width': `${Math.trunc(Math.min(window.innerWidth, columnWidth) - marginLeft - marginRight - gap - 60)}`,
-            '--available-height': `${Math.trunc(window.innerHeight - marginTop - marginBottom)}`,
+            '--available-width': `${availableWidth}`,
+            '--available-height': `${availableHeight}`,
         })
         setStylesImportant(doc.body, {
             [vertical ? 'max-height' : 'max-width']: `${columnWidth}px`,
             'margin': 'auto',
         })
-        this.setImageSize()
+        this.setImageSize(availableWidth, availableHeight)
         this.expand()
     }
     columnize({ width, height, marginTop, marginRight, marginBottom, marginLeft, gap, columnWidth }) {
@@ -387,6 +389,8 @@ class View {
             // fix glyph clipping in WebKit
             '-webkit-line-box-contain': 'block glyphs replaced',
         })
+        const availableWidth = Math.trunc(columnWidth - marginLeft - marginRight - gap)
+        const availableHeight = Math.trunc(height - marginTop - marginBottom)
         setStyles(doc.documentElement, {
             'padding': vertical
                 ? `${marginTop * 1.5}px ${marginRight}px ${marginBottom * 1.5}px ${marginLeft}px`
@@ -397,36 +401,63 @@ class View {
             '--page-margin-left': `${vertical ? marginLeft : marginLeft / 2 + gap / 2}px`,
             '--full-width': `${Math.trunc(window.innerWidth)}`,
             '--full-height': `${Math.trunc(window.innerHeight)}`,
-            '--available-width': `${Math.trunc(columnWidth - marginLeft - marginRight - gap)}`,
-            '--available-height': `${Math.trunc(height - marginTop - marginBottom)}`,
+            '--available-width': `${availableWidth}`,
+            '--available-height': `${availableHeight}`,
         })
         setStylesImportant(doc.body, {
             'max-height': 'none',
             'max-width': 'none',
             'margin': '0',
         })
-        this.setImageSize()
+        this.setImageSize(availableWidth, availableHeight)
         this.expand()
     }
-    setImageSize() {
+    setImageSize(availableWidth, availableHeight) {
         const { width, height, marginTop, marginRight, marginBottom, marginLeft } = this.#layout
         const vertical = this.#vertical
         const doc = this.document
+        const pageFullscreen = doc.documentElement.hasAttribute('data-duokan-page-fullscreen')
         for (const el of doc.body.querySelectorAll('img, svg, video')) {
             // preserve max size if they are already set
-            const { maxHeight, maxWidth } = doc.defaultView.getComputedStyle(el)
+            let { maxHeight, maxWidth } = doc.defaultView.getComputedStyle(el)
+            if (parseInt(maxWidth) > availableWidth) {
+                maxWidth = `${availableWidth}px`
+            }
+            if (parseInt(maxHeight) > availableHeight) {
+                maxHeight = `${availableHeight}px`
+            }
             setStylesImportant(el, {
                 'max-height': vertical
                     ? (maxHeight !== 'none' && maxHeight !== '0px' ? maxHeight : '100%')
-                    : `${height - marginTop - marginBottom }px`,
+                    : `${height - (pageFullscreen ? 0 : (marginTop + marginBottom))}px`,
                 'max-width': vertical
-                    ? `${width - marginLeft - marginRight }px`
+                    ? `${width - (pageFullscreen ? 0 : (marginLeft + marginRight))}px`
                     : (maxWidth !== 'none' && maxWidth !== '0px' ? maxWidth : '100%'),
-                'object-fit': 'contain',
+                'object-fit': pageFullscreen ? 'cover': 'contain',
                 'page-break-inside': 'avoid',
                 'break-inside': 'avoid',
                 'box-sizing': 'border-box',
             })
+            if (pageFullscreen) {
+                setStylesImportant(el, {
+                    position: 'fixed',
+                    inset: '0',
+                })
+                let ancestor = el.parentElement
+                while (ancestor && ancestor !== doc.body) {
+                    setStylesImportant(ancestor, {
+                        position: 'relative',
+                        width: '100%',
+                        height: '100%',
+                        margin: '0',
+                        padding: '0',
+                    })
+                    ancestor = ancestor.parentElement
+                }
+                if (el.localName === 'svg') {
+                    el.setAttribute('preserveAspectRatio', 'xMidYMid slice')
+                }
+            }
         }
     }
     get #zoom() {
@@ -932,6 +963,7 @@ export class Paginator extends HTMLElement {
         for (let i = 0; i < columnCount; i++) {
             const column = document.createElement('div')
             column.style.background = background
+            column.style.backgroundAttachment = 'initial'
             column.style.width = '100%'
             column.style.height = '100%'
             this.#background.appendChild(column)
@@ -990,7 +1022,7 @@ export class Paginator extends HTMLElement {
             this.columnCount = 1
             this.#replaceBackground(background, this.columnCount)
 
-            return { flow, marginTop, marginRight, marginBottom, marginLeft, gap, columnWidth }
+            return { width, height, flow, marginTop, marginRight, marginBottom, marginLeft, gap, columnWidth }
         }
 
         const divisor = Math.min(maxColumnCount + (vertical ? 1 : 0), Math.ceil(Math.floor(size) / Math.floor(maxInlineSize)))
@@ -1021,7 +1053,7 @@ export class Paginator extends HTMLElement {
         this.#header.replaceChildren(...heads)
         this.#footer.replaceChildren(...feet)
 
-        return { height, width, marginTop, marginRight, marginBottom, marginLeft, gap, columnWidth }
+        return { width, height, marginTop, marginRight, marginBottom, marginLeft, gap, columnWidth }
     }
     render() {
         if (!this.#view) return
@@ -1329,6 +1361,8 @@ export class Paginator extends HTMLElement {
                     doc.head.prepend($styleBefore)
                     const $style = doc.createElement('style')
                     doc.head.append($style)
+                    this.sections[index].spineProperties?.forEach(
+                        prop => doc.documentElement.setAttribute('data-' + prop, ''))
                     this.#styleMap.set(doc, [$styleBefore, $style])
                 }
                 onLoad?.({ doc, index })
