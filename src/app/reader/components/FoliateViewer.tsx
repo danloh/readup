@@ -1,3 +1,4 @@
+import clsx from 'clsx';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { BookDoc, convertBlobUrlToDataUrl, getDirection } from '@/libs/document';
 import { BookConfig, PageInfo } from '@/types/book';
@@ -74,13 +75,14 @@ const FoliateViewer: React.FC<{
 }> = ({ bookKey, bookDoc, config, gridInsets, contentInsets: insets }) => {
   const _ = useTranslation();
   const { getView, setView: setFoliateView, setViewInited, setProgress } = useReaderStore();
-  const { getViewSettings, setViewSettings } = useReaderStore();
+  const { getViewState, getViewSettings, setViewSettings } = useReaderStore();
   const { getParallels } = useParallelViewStore();
   const { getBookData } = useBookDataStore();
   const { appService } = useEnv();
   const { themeCode, isDarkMode } = useThemeStore();
   const { applyEinkMode } = useEinkMode();
   const viewSettings = getViewSettings(bookKey);
+  const viewState = getViewState(bookKey);
 
   const viewRef = useRef<FoliateView | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -278,13 +280,29 @@ const FoliateViewer: React.FC<{
       const allImages: { src: string; cfi: string | null }[] = [];
 
       docs?.forEach(({ doc, index }) => {
-        const images = doc.querySelectorAll('img');
-        images.forEach((img) => {
-          if (img.src && index !== undefined && img.parentNode) {
-            const range = doc.createRange();
-            range.selectNodeContents(img);
-            const cfi = viewRef.current?.getCFI(index, range) || null;
-            allImages.push({ src: img.src, cfi });
+        const elements = doc.querySelectorAll('img, svg');
+        elements.forEach((el) => {
+          if (index === undefined) return;
+          if (el.localName === 'img') {
+            const img = el as HTMLImageElement;
+            if (img.src && img.parentNode) {
+              const range = doc.createRange();
+              range.selectNodeContents(img);
+              const cfi = viewRef.current?.getCFI(index, range) || null;
+              allImages.push({ src: img.src, cfi });
+            }
+          } else if (el.localName === 'svg') {
+            const svg = el as unknown as SVGSVGElement;
+            const svgImage = svg.querySelector('image');
+            const href =
+              svgImage?.getAttribute('href') ||
+              svgImage?.getAttributeNS('http://www.w3.org/1999/xlink', 'href');
+            if (href) {
+              const range = doc.createRange();
+              range.selectNodeContents(svg);
+              const cfi = viewRef.current?.getCFI(index, range) || null;
+              allImages.push({ src: href, cfi });
+            }
           }
         });
       });
@@ -527,6 +545,7 @@ const FoliateViewer: React.FC<{
     <>
       {selectedImage && (
         <ImageViewer
+          gridInsets={gridInsets}
           src={selectedImage}
           onClose={handleCloseImage}
           onPrevious={currentImageIndex > 0 ? handlePreviousImage : undefined}
@@ -535,6 +554,7 @@ const FoliateViewer: React.FC<{
       )}
       {selectedTableHtml && (
         <TableViewer
+          gridInsets={gridInsets}
           html={selectedTableHtml}
           isDarkMode={isDarkMode}
           onClose={() => setSelectedTableHtml(null)}
@@ -545,13 +565,22 @@ const FoliateViewer: React.FC<{
         tabIndex={-1}
         role='document'
         aria-label={_('Book Content')}
-        className='foliate-viewer h-[100%] w-[100%] focus:outline-none'
+        // className='foliate-viewer h-[100%] w-[100%] focus:outline-none'
+        className={clsx(
+          'foliate-viewer h-[100%] w-[100%] focus:outline-none',
+          viewState?.loading && 'bg-base-100',
+        )}
         {...mouseHandlers}
         {...touchHandlers}
       />
       <ParagraphControl bookKey={bookKey} viewRef={viewRef} gridInsets={gridInsets} />
       <RSVPControl bookKey={bookKey} gridInsets={gridInsets}  />
       {!docLoaded.current && loading && <Spinner loading={true} />}
+      {((!docLoaded.current && loading) || viewState?.loading) && (
+        <div className='bg-base-100/85 absolute left-0 top-0 z-10 flex h-full w-full items-center justify-center'>
+          <Spinner loading={true} />
+        </div>
+      )}
     </>
   );
 };

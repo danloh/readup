@@ -340,14 +340,14 @@ class View {
         const doc = this.document
         setStylesImportant(doc.documentElement, {
             'box-sizing': 'border-box',
-            'padding': vertical
-                ? `${marginTop * 1.5}px ${marginRight}px ${marginBottom * 1.5}px ${marginLeft}px`
-                : `${marginTop}px ${gap / 2 + marginRight / 2}px ${marginBottom}px ${gap / 2 + marginLeft / 2}px`,
             'column-width': 'auto',
             'height': 'auto',
             'width': 'auto',
         })
         setStyles(doc.documentElement, {
+            'padding': vertical
+                ? `${marginTop * 1.5}px ${marginRight}px ${marginBottom * 1.5}px ${marginLeft}px`
+                : `${marginTop}px ${gap / 2 + marginRight / 2}px ${marginBottom}px ${gap / 2 + marginLeft / 2}px`,
             '--page-margin-top': `${vertical ? marginTop * 1.5 : marginTop}px`,
             '--page-margin-right': `${vertical ? marginRight : marginRight + gap /2}px`,
             '--page-margin-bottom': `${vertical ? marginBottom * 1.5 : marginBottom}px`,
@@ -377,9 +377,6 @@ class View {
             ...(vertical
                 ? { 'width': `${width}px` }
                 : { 'height': `${height}px` }),
-            'padding': vertical
-                ? `${marginTop * 1.5}px ${marginRight}px ${marginBottom * 1.5}px ${marginLeft}px`
-                : `${marginTop}px ${gap / 2 + marginRight / 2}px ${marginBottom}px ${gap / 2 + marginLeft / 2}px`,
             'overflow': 'hidden',
             // force wrap long words
             'overflow-wrap': 'break-word',
@@ -391,6 +388,9 @@ class View {
             '-webkit-line-box-contain': 'block glyphs replaced',
         })
         setStyles(doc.documentElement, {
+            'padding': vertical
+                ? `${marginTop * 1.5}px ${marginRight}px ${marginBottom * 1.5}px ${marginLeft}px`
+                : `${marginTop}px ${gap / 2 + marginRight / 2}px ${marginBottom}px ${gap / 2 + marginLeft / 2}px`,
             '--page-margin-top': `${vertical ? marginTop * 1.5 : marginTop}px`,
             '--page-margin-right': `${vertical ? marginRight : marginRight / 2 + gap /2}px`,
             '--page-margin-bottom': `${vertical ? marginBottom * 1.5 : marginBottom}px`,
@@ -1290,6 +1290,7 @@ export class Paginator extends HTMLElement {
         await this.#scrollToPage(newPage + 1, reason)
     }
     #getVisibleRange() {
+        if (!this.#view.document) return
         if (this.scrolled) return getVisibleRange(this.#view.document,
             this.start, this.end, this.#getRectMapper())
         const size = this.#rtl ? -this.size : this.size
@@ -1298,6 +1299,7 @@ export class Paginator extends HTMLElement {
     }
     #afterScroll(reason) {
         const range = this.#getVisibleRange()
+        if (!range) return
         this.#lastVisibleRange = range
         // don't set new anchor if relocation was to scroll to anchor
         if (reason !== 'selection' && reason !== 'navigation' && reason !== 'anchor')
