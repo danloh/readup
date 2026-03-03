@@ -4,7 +4,7 @@ import { ArticleType, FeedType } from '@/app/feed/components/dataAgent';
 import { UsageRecord } from '@/services/usageService';
 import { DownloadDataResult } from '@/services/bsky/atfile';
 import { SystemSettings } from './settings';
-import { Book, BookConfig, BookContent, ViewSettings } from './book';
+import { Book, BookConfig, BookContent, Review, ViewSettings } from './book';
 
 export type AppPlatform = 'web' | 'tauri';
 export type OsPlatform = 'android' | 'ios' | 'macos' | 'windows' | 'linux' | 'unknown';
@@ -167,6 +167,8 @@ export interface AppService {
   saveFeeds(feeds: FeedType[]): Promise<void>;
   loadArticles(): Promise<ArticleType[]>;
   saveArticles(articles: ArticleType[]): Promise<void>;
+  saveReviews(data: Review[]): Promise<void>;
+  loadReviews(): Promise<Review[]>;
   // for reading tracker 
   loadUsageData(): Promise<UsageRecord>;
   saveUsageData(data: UsageRecord): Promise<void>;

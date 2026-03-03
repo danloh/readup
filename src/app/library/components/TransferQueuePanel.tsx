@@ -314,6 +314,7 @@ const TransferQueuePanel: React.FC = () => {
     {name: 'library.json', col: 'cc.readup.rdata', base: 'Books'}, 
     {name: 'feeds.json',  col: 'cc.readup.rdata', base: 'Books'},
     {name: 'usage.json',  col: 'cc.readup.rdata', base: 'Books'},
+    {name: 'reviews.json', col: 'cc.readup.rdata', base: 'Books'},
     {name: 'settings.json', col: 'cc.readup.rdata', base: 'Settings'},
   ];
 

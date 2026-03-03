@@ -1,9 +1,14 @@
 import clsx from 'clsx';
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+
 import { Insets } from '@/types/misc';
 import { useEnv } from '@/context/EnvContext';
 import { useReaderStore } from '@/store/readerStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useBookDataStore } from '@/store/bookDataStore';
+import { useLibraryStore } from '@/store/libraryStore';
+import ModalPortal from '@/components/ModalPortal';
 import { SIZE_PER_LOC, SIZE_PER_TIME_UNIT } from '@/services/constants';
 
 function formatProgress(
@@ -40,7 +45,8 @@ const ProgressInfoView: React.FC<PageInfoProps> = ({
   gridInsets,
 }) => {
   const _ = useTranslation();
-  const { appService } = useEnv();
+  const { appService, envConfig } = useEnv();
+  const { updateBook } = useLibraryStore();
   const { getProgress, getViewSettings, getView } = useReaderStore();
   const view = getView(bookKey);
   const { getBookData } = useBookDataStore();
@@ -60,6 +66,19 @@ const ProgressInfoView: React.FC<PageInfoProps> = ({
   const { section, pageinfo } = progress || {};
   const pageInfo = bookData?.isFixedLayout ? section : pageinfo;
   const progressInfo = formatProgress(pageInfo?.current, pageInfo?.total, formatTemplate);
+
+  const [showModal, setShowModal] = useState(false);
+  const router = useRouter();
+
+  useEffect(() => {
+    const checkComplete = () => {
+      if (!pageInfo) return;
+      const finished = pageInfo.current + 1 >= (pageInfo.total || 0);
+      setShowModal(finished);
+    };
+    checkComplete();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pageInfo?.current, pageInfo?.total]);
 
   const { page = 0, pages = 0 } = view?.renderer || {};
   const pagesLeft = Math.max(pages - page - 1, 0);
@@ -117,6 +136,47 @@ const ProgressInfoView: React.FC<PageInfoProps> = ({
         <span className='remaining-info-label text-start truncate'>{remainingInfo}</span>
         <span className='progress-info-label ms-auto text-end truncate'>{progressInfo}</span>
       </div>
+      {showModal && (
+        <ModalPortal>
+          <div className="modal-box max-w-lg p-4 bg-base-200 rounded">
+            <h3 className="font-bold text-lg">You've finished the book</h3>
+            <p className="py-2">Would you like to mark this book or write a review?</p>
+            <div className="flex gap-2 mt-4">
+              <button
+                className="btn btn-primary"
+                onClick={async () => {
+                  try {
+                    const book = bookData?.book;
+                    if (book) {
+                      book.status = 'Done';
+                      await updateBook(envConfig, book);
+                    }
+                  } catch (e) {
+                    console.error(e);
+                  }
+                  setShowModal(false);
+                }}
+              >
+                {_('Mark as Read')}
+              </button>
+              <button
+                className="btn"
+                onClick={() => {
+                  localStorage.setItem('toReviewBook', JSON.stringify(bookData?.book));
+                  const id = bookKey.split('-')[0];
+                  router.push(`/write?book=${id}`);
+                  setShowModal(false);
+                }}
+              >
+                {_('Write review')}
+              </button>
+              <button className="btn btn-ghost" onClick={() => setShowModal(false)}>
+                {_('Dismiss')}
+              </button>
+            </div>
+          </div>
+        </ModalPortal>
+      )}
     </div>
   );
 };

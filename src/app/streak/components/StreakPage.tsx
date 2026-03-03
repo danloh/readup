@@ -1,24 +1,33 @@
 'use client';
 
-// import clsx from 'clsx';
+import clsx from 'clsx';
 import React, { useState, useEffect } from 'react';
+import { MdDelete, MdEdit } from 'react-icons/md';
+import { marked } from 'marked';
+
 import { useEnv } from '@/context/EnvContext';
 import { useTheme } from '@/hooks/useTheme';
 import { useTranslation } from '@/hooks/useTranslation';
 import { loadUsage, UsageDay, UsageRecord } from '@/services/usageService';
 import UserInfo from './UserInfo';
 import HeatMap, { ActivityRecord } from './HeatMap';
+import { useRouter } from 'next/navigation';
+import { useLibraryStore } from '@/store/libraryStore';
 
 const StreakPage = () => {
   const _ = useTranslation();
   const { appService, envConfig } = useEnv();
+  const router = useRouter();
+  const { library } = useLibraryStore();
 
   useTheme({ systemUIVisible: false });
 
   const [usage, setUsage] = useState<ActivityRecord>({});
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
-    (async () => {
+    const getUsage = async () => {
       try {
         const data: UsageRecord = await loadUsage(envConfig);
         const activityRecord: ActivityRecord = {};
@@ -35,7 +44,20 @@ const StreakPage = () => {
       } catch (err) {
         console.error('Failed to load usage data', err);
       }
-    })();
+    };
+
+    const getReviews = async () => {
+      if (!appService) return;
+      try {
+        const rs = await appService.loadReviews();
+        setReviews(Array.isArray(rs) ? rs : []);
+      } catch (e) {
+        console.error('Failed to load reviews', e);
+      }
+    };
+    
+    getUsage();
+    getReviews();
   }, [envConfig]);
 
   if (!appService) {
@@ -57,6 +79,71 @@ const StreakPage = () => {
           <UserInfo />
           <div className='flex items-center justify-center p-2'>
             <HeatMap data={usage} onClickCell={(d) => console.log('day click', d)} />
+          </div>
+          <div className='max-w-[835px] px-4 mt-4 mx-auto'>
+            {reviews.length === 0 ? (
+              <div className='text-sm text-muted'>{_('No reviews yet')}</div>
+            ) : (
+              <div className='flex flex-col gap-2'>
+                {reviews.map((r) => {
+                  const book = library.find((b) => b.hash === r.bookHash);
+                  return (
+                    <div 
+                      key={r.id} 
+                      className='p-2 shadow-sm flex items-start justify-between'
+                    >
+                      <div>
+                        <div className='w-full flex flex-row items-center justify-between gap-2'>
+                          <div className='text-xs text-success'>
+                            {r.title || book?.title || r.bookHash}
+                          </div>
+                          <div className='flex gap-2'>
+                            <button 
+                              className='btn btn-xs btn-ghost' 
+                              onClick={() => router.push(`/write?id=${r.id}`)}
+                            >
+                              <MdEdit size={16} />
+                            </button>
+                            <button
+                              className='btn btn-xs btn-ghost btn-warning'
+                              onClick={async () => {
+                                const ok = confirm('Delete this review?');
+                                if (!ok) return;
+                                try {
+                                  const rs = await appService.loadReviews();
+                                  const updated = (rs || []).filter((x: any) => x.id !== r.id);
+                                  await appService.saveReviews(updated);
+                                  setReviews(updated);
+                                } catch (e) {
+                                  console.error('Failed to delete review', e);
+                                }
+                              }}
+                            >
+                              <MdDelete size={16} />
+                            </button>
+                          </div>
+                        </div>
+                        <div
+                          className={clsx(
+                            'content prose prose-xl font-size-sm w-full mt-2',
+                            expanded ? 'h-full' : 'max-h-[200px] overflow-auto'
+                          )}
+                          dir='auto'
+                          dangerouslySetInnerHTML={{__html: marked.parse(r.text)}}
+                        />
+                        <div className='mt-1 text-center' onClick={() => setExpanded(prev => !prev)}>
+                          -·-·-
+                        </div>
+                        <div className='text-xs text-success opacity-65'>
+                          Rating: {r.rating || 0} • {new Date(r.createdAt).toLocaleString()}
+                        </div>
+                      </div>
+                      
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       </div>

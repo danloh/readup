@@ -13,7 +13,13 @@ import {
 } from '@/types/system';
 import { SystemSettings } from '@/types/settings';
 import { 
-  Book, BookConfig, BookContent, BookFormat, ViewSettings, FIXED_LAYOUT_FORMATS 
+  Book, 
+  BookConfig, 
+  BookContent, 
+  BookFormat, 
+  ViewSettings, 
+  FIXED_LAYOUT_FORMATS, 
+  Review
 } from '@/types/book';
 import {
   getDir,
@@ -976,6 +982,19 @@ export abstract class BaseAppService implements AppService {
 
   async saveUsageData(data: UsageRecord): Promise<void> {
     await this.safeSaveJSON('usage.json', 'Books', data);
+  }
+
+  // Reviews data management --------------------------------------------------
+  async loadReviews(): Promise<Review[]> {
+    const mainResult = await this.loadJSONFile('reviews.json', 'Books');
+    if (mainResult.success) {
+      return mainResult.data as any[];
+    }
+    return [];
+  }
+
+  async saveReviews(data: Review[]): Promise<void> {
+    await this.safeSaveJSON('reviews.json', 'Books', data);
   }
 
   private async loadJSONFile(

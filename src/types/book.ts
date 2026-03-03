@@ -343,3 +343,15 @@ export interface BookContent {
   book: Book;
   file: File;
 }
+
+// Book review or other article
+export interface Review {
+  bookHash?: string;
+  book?: Book;
+  rating?: number;
+  id: string;
+  title: string;
+  text: string;
+  createdAt?: number;
+  updatedAt?: number;
+}
