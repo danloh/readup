@@ -98,10 +98,10 @@ const WritePage = () => {
   };
 
   return (
-    <div className="p-4 max-w-[800px] mx-auto">
+    <div className="flex flex-col min-h-[100vh-52px] h-full py-4 px-8 w-full mx-auto">
       {book && (
         <>
-          <div className='flex-1'>
+          <div className=''>
             <h4 className='line-clamp-2 w-[90%] text-sm font-semibold'>
               {formatTitle(book.title).replace(/\u00A0/g, ' ')}
             </h4>
@@ -130,10 +130,9 @@ const WritePage = () => {
       />
       <textarea 
         value={text} 
-        rows={12}
         onChange={(e) => setText(e.target.value)} 
         placeholder={_('Start to write...')}
-        className="w-full mt-1 p-2 rounded-md bg-base-100 focus:outline-none focus:ring-1 focus:ring-blue-500" 
+        className="flex-1 w-full mt-1 p-2 rounded-md bg-base-100 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none overflow-y-auto" 
         required
       />
       <div className="flex gap-2 mt-2">

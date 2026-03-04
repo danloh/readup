@@ -227,29 +227,31 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
         </>
       )}
       <hr aria-hidden='true' className='border-base-200 my-1' />
-      {/* user &&  */(
-        <MenuItem
-          label={_('File Sync Transfers')}
-          Icon={AiOutlineCloudSync}
-          description={
-            hasActiveTransfers
-              ? _('{{activeCount}} active, {{pendingCount}} pending', {
-                  activeCount: stats.active,
-                  pendingCount: stats.pending,
-                })
-              : stats.failed > 0
-                ? _('{{failedCount}} failed', { failedCount: stats.failed })
-                : ''
-          }
-          onClick={openTransferQueue}
-        />
+      {window.location.pathname === '/library' && (
+        <>
+          <MenuItem
+            label={_('File Sync Transfers')}
+            Icon={AiOutlineCloudSync}
+            description={
+              hasActiveTransfers
+                ? _('{{activeCount}} active, {{pendingCount}} pending', {
+                    activeCount: stats.active,
+                    pendingCount: stats.pending,
+                  })
+                : stats.failed > 0
+                  ? _('{{failedCount}} failed', { failedCount: stats.failed })
+                  : ''
+            }
+            onClick={openTransferQueue}
+          />
+          <MenuItem
+            label={_('Auto Upload Books to PDS')}
+            Icon={isAutoUpload ? MdCheckBox : MdCheckBoxOutlineBlank}
+            onClick={toggleAutoUploadBooks}
+            disabled={true}
+          />
+        </>
       )}
-      <MenuItem
-        label={_('Auto Upload Books to PDS')}
-        Icon={isAutoUpload ? MdCheckBox : MdCheckBoxOutlineBlank}
-        onClick={toggleAutoUploadBooks}
-        disabled={true}
-      />
       <hr aria-hidden='true' className='border-base-200 my-1' />
       {appService?.hasWindow && (
         <MenuItem 
