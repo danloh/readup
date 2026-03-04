@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { marked } from 'marked';
+
 import { useEnv } from '@/context/EnvContext';
 import { Book, Review } from '@/types/book';
 import { formatAuthors, formatTitle } from '@/utils/book';
@@ -20,6 +22,7 @@ const WritePage = () => {
   const [title, setTitle] = useState<string>('');
   const [text, setText] = useState<string>('');
   const [saving, setSaving] = useState(false);
+  const [mode, setMode] = useState<'write' | 'preview'>('write');
 
   useEffect(() => {
     (async () => {
@@ -98,7 +101,7 @@ const WritePage = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-[100vh-52px] h-full py-4 px-8 w-full mx-auto">
+    <div className="flex flex-col h-[100vh-52px] h-full py-4 px-8 w-full mx-auto">
       {book && (
         <>
           <div className=''>
@@ -128,19 +131,36 @@ const WritePage = () => {
         className="w-full mt-1 p-2 rounded-md bg-base-100 focus:outline-none focus:ring-1 focus:ring-blue-500" 
         required
       />
-      <textarea 
-        value={text} 
-        onChange={(e) => setText(e.target.value)} 
-        placeholder={_('Start to write...')}
-        className="flex-1 w-full mt-1 p-2 rounded-md bg-base-100 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none overflow-y-auto" 
-        required
-      />
+      <div className="flex-1 flex flex-col">
+        {mode === 'write' && (
+          <textarea 
+            value={text} 
+            onChange={(e) => setText(e.target.value)} 
+            placeholder={_('Start to write...')}
+            className="flex-1 w-full mt-1 p-2 rounded-md bg-base-100 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none overflow-y-auto" 
+            required
+          />
+        )}
+        {mode === 'preview' && (
+          <div 
+            className="flex-1 prose max-w-none w-full mt-1 p-2 rounded-md bg-base-100 overflow-y-auto"
+            dangerouslySetInnerHTML={{ __html: marked.parse(text) }}
+          />
+        )}
+      </div>
       <div className="flex gap-2 mt-2">
         <button className="btn btn-sm btn-primary" onClick={onSave} disabled={saving}>
           {_('Save')}
         </button>
         <button className="btn btn-sm" onClick={() => router.back()} disabled={saving}>
           {_('Cancel')}
+        </button>
+        <button
+          type="button"
+          onClick={() => setMode(mode === 'write' ? 'preview' : 'write')}
+          className="btn btn-sm btn-outline"
+        >
+          {mode === 'write' ? _('Preview') : _('Write')}
         </button>
       </div>
     </div>

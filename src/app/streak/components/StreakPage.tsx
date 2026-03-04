@@ -82,7 +82,7 @@ const StreakPage = () => {
           <div className='flex items-center justify-center p-2'>
             <HeatMap data={usage} onClickCell={(d) => console.log('day click', d)} />
           </div>
-          <div className='max-w-[835px] px-4 mt-4 mx-auto'>
+          <div className='max-w-[835px] px-2 mt-4 mx-auto'>
             {reviews.length === 0 ? (
               <div className='text-sm text-muted'>{_('No reviews yet')}</div>
             ) : (
@@ -92,7 +92,7 @@ const StreakPage = () => {
                   return (
                     <div 
                       key={r.id} 
-                      className='p-2 shadow-sm flex items-start justify-between'
+                      className='py-2 shadow-sm flex items-start justify-between'
                     >
                       <div>
                         <div className='w-full flex flex-row items-center justify-between gap-2'>
@@ -129,7 +129,7 @@ const StreakPage = () => {
                         </div>
                         <div
                           className={clsx(
-                            'content prose prose-xl font-size-sm w-full mt-2',
+                            'content prose prose-xl font-size-sm w-full mt-2 max-w-none',
                             expanded ? 'h-full' : 'max-h-[200px] overflow-auto'
                           )}
                           dir='auto'
