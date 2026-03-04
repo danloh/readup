@@ -352,6 +352,6 @@ export interface Review {
   id: string;
   title: string;
   text: string;
-  createdAt?: number;
+  createdAt: number;
   updatedAt?: number;
 }

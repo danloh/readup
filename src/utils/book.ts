@@ -180,6 +180,25 @@ export const formatDate = (date: string | number | Date | null | undefined, isUT
   }
 };
 
+export const formatDateTime = (timestamp: number): string => {
+  const date = new Date(timestamp);
+  const now = new Date();
+  const isToday = date.toDateString() === now.toDateString();
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const isYesterday = date.toDateString() === yesterday.toDateString();
+
+  const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+  if (isToday) {
+    return timeStr;
+  } else if (isYesterday) {
+    return `Yesterday ${timeStr}`;
+  } else {
+    return date.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ' ' + timeStr;
+  }
+};
+
 export const formatLocaleDateTime = (date: number | Date) => {
   const userLang = getLocale();
   return new Date(date).toLocaleString(userLang);

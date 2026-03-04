@@ -2,6 +2,7 @@
 
 import clsx from 'clsx';
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { MdDelete, MdEdit } from 'react-icons/md';
 import { marked } from 'marked';
 
@@ -9,10 +10,11 @@ import { useEnv } from '@/context/EnvContext';
 import { useTheme } from '@/hooks/useTheme';
 import { useTranslation } from '@/hooks/useTranslation';
 import { loadUsage, UsageDay, UsageRecord } from '@/services/usageService';
+import { useLibraryStore } from '@/store/libraryStore';
+import { Review } from '@/types/book';
+import { formatDateTime } from '@/utils/book';
 import UserInfo from './UserInfo';
 import HeatMap, { ActivityRecord } from './HeatMap';
-import { useRouter } from 'next/navigation';
-import { useLibraryStore } from '@/store/libraryStore';
 
 const StreakPage = () => {
   const _ = useTranslation();
@@ -23,7 +25,7 @@ const StreakPage = () => {
   useTheme({ systemUIVisible: false });
 
   const [usage, setUsage] = useState<ActivityRecord>({});
-  const [reviews, setReviews] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
@@ -97,15 +99,17 @@ const StreakPage = () => {
                           <div className='text-xs text-success'>
                             {r.title || book?.title || r.bookHash}
                           </div>
-                          <div className='flex gap-2'>
+                          <div className='flex gap-2 opacity-0 hover:opacity-70'>
                             <button 
                               className='btn btn-xs btn-ghost' 
                               onClick={() => router.push(`/write?id=${r.id}`)}
+                              title={_('Edit')}
                             >
                               <MdEdit size={16} />
                             </button>
                             <button
-                              className='btn btn-xs btn-ghost btn-warning'
+                              className='btn btn-xs btn-ghost'
+                              title={_('Delete')}
                               onClick={async () => {
                                 const ok = confirm('Delete this review?');
                                 if (!ok) return;
@@ -119,7 +123,7 @@ const StreakPage = () => {
                                 }
                               }}
                             >
-                              <MdDelete size={16} />
+                              <MdDelete size={16} color={'orange'} />
                             </button>
                           </div>
                         </div>
@@ -134,11 +138,10 @@ const StreakPage = () => {
                         <div className='mt-1 text-center' onClick={() => setExpanded(prev => !prev)}>
                           -·-·-
                         </div>
-                        <div className='text-xs text-success opacity-65'>
-                          Rating: {r.rating || 0} • {new Date(r.createdAt).toLocaleString()}
+                        <div className='text-xs opacity-65'>
+                          {"⭐".repeat(r.rating || 1)} • {formatDateTime(r.createdAt!)}
                         </div>
                       </div>
-                      
                     </div>
                   );
                 })}

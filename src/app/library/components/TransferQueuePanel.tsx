@@ -24,7 +24,7 @@ import {
   TransferItem, TransferStatus, TransferType, useTransferStore 
 } from '@/store/transferStore';
 import { Book } from '@/types/book';
-import { formatBytes } from '@/utils/book';
+import { formatBytes, formatDateTime } from '@/utils/book';
 import { useEnv } from '@/context/EnvContext';
 import { useAuth } from '@/context/AuthContext';
 import { eventDispatcher } from '@/utils/event';
@@ -34,25 +34,6 @@ import { DownloadDataResult } from '@/services/bsky/atfile';
 
 const formatSpeed = (bytesPerSec: number): string => {
   return `${formatBytes(bytesPerSec) || '0 B'}/s`;
-};
-
-const formatDateTime = (timestamp: number): string => {
-  const date = new Date(timestamp);
-  const now = new Date();
-  const isToday = date.toDateString() === now.toDateString();
-  const yesterday = new Date(now);
-  yesterday.setDate(yesterday.getDate() - 1);
-  const isYesterday = date.toDateString() === yesterday.toDateString();
-
-  const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-  if (isToday) {
-    return timeStr;
-  } else if (isYesterday) {
-    return `Yesterday ${timeStr}`;
-  } else {
-    return date.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ' ' + timeStr;
-  }
 };
 
 const StatusIcon: React.FC<{
