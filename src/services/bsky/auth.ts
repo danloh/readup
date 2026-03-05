@@ -327,14 +327,13 @@ export type UserProfile = {
 /**
  * Get a user's profile by DID or handle.
  * @param identifier - DID or handle 
- * @param service - pds url of user
  * @returns The profile object returned by the server
  */
 export async function getProfile(
-  identifier: string, service: string
+  identifier: string
 ): Promise<UserProfile> {
-  if (!identifier?.trim() || !service.trim()) {
-    throw new Error('Identifier (did or handle) and service are required');
+  if (!identifier?.trim()) {
+    throw new Error('Identifier (did or handle) are required');
   }
 
   // public fetch from host's XRPC endpoint

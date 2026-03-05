@@ -16,13 +16,12 @@ const UserInfo: React.FC = () => {
       setError(null);
       try {
         const id = user?.did ?? user?.handle;
-        const svc = user?.service;
-        if (!id || !svc) {
+        if (!id) {
           setProfile(null);
           return;
         }
 
-        const prof = await getProfile(id, svc);
+        const prof = await getProfile(id);
         setProfile(prof as UserProfile);
       } catch (e) {
         console.error('Failed to load profile:', e);
@@ -60,7 +59,7 @@ const UserInfo: React.FC = () => {
           {profile?.displayName || user?.handle}
         </h2>
         <div className='text-sm opacity-70'>
-          <a href={`https://bsky.app}/profile/${user?.handle}`}>@{user?.handle}</a>
+          <a href={`https://bsky.app/profile/${user?.handle}`}>@{user?.handle}</a>
         </div>
         {profile?.description && (
           <p className='mt-2 max-w-prose text-sm line-clamp-1 text-base-content break-words'>

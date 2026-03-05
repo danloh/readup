@@ -10,7 +10,6 @@ import { useEnv } from '@/context/EnvContext';
 import { useTheme } from '@/hooks/useTheme';
 import { useTranslation } from '@/hooks/useTranslation';
 import { loadUsage, UsageDay, UsageRecord } from '@/services/usageService';
-import { useLibraryStore } from '@/store/libraryStore';
 import { Review } from '@/types/book';
 import { formatDateTime } from '@/utils/book';
 import UserInfo from './UserInfo';
@@ -20,7 +19,6 @@ const StreakPage = () => {
   const _ = useTranslation();
   const { appService, envConfig } = useEnv();
   const router = useRouter();
-  const { library } = useLibraryStore();
 
   useTheme({ systemUIVisible: false });
 
@@ -87,8 +85,7 @@ const StreakPage = () => {
               <div className='text-sm text-muted'>{_('No reviews yet')}</div>
             ) : (
               <div className='flex flex-col gap-2'>
-                {reviews.map((r) => {
-                  const book = library.find((b) => b.hash === r.bookHash);
+                {reviews.sort((a, b) => b.createdAt - a.createdAt).map((r) => {
                   return (
                     <div 
                       key={r.id} 
@@ -96,8 +93,8 @@ const StreakPage = () => {
                     >
                       <div>
                         <div className='w-full flex flex-row items-center justify-between gap-2'>
-                          <div className='text-xs text-success'>
-                            {r.title || book?.title || r.bookHash}
+                          <div className='text-sm text-success'>
+                            {r.title || r.book?.title}
                           </div>
                           <div className='flex gap-2 opacity-0 hover:opacity-70'>
                             <button 
@@ -127,6 +124,15 @@ const StreakPage = () => {
                             </button>
                           </div>
                         </div>
+                        <div className='text-xs opacity-65'>
+                          {!!r.book && (
+                            <a className="mr-1" title={r.book?.title} href={`/reader/${r.book?.hash}`}>
+                              {r.book?.title.substring(0, 12)}
+                            </a>
+                          )} • 
+                          {!!r.rating && (<span className="mx-1">{"⭐".repeat(r.rating || 1)}</span>)} • 
+                          <span className="ml-1">{formatDateTime(r.createdAt!)}</span>
+                        </div>
                         <div
                           className={clsx(
                             'content prose prose-xl font-size-sm w-full mt-2 max-w-none',
@@ -137,9 +143,6 @@ const StreakPage = () => {
                         />
                         <div className='mt-1 text-center' onClick={() => setExpanded(prev => !prev)}>
                           -·-·-
-                        </div>
-                        <div className='text-xs opacity-65'>
-                          {"⭐".repeat(r.rating || 1)} • {formatDateTime(r.createdAt!)}
                         </div>
                       </div>
                     </div>

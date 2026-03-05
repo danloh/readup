@@ -673,3 +673,61 @@ export async function downloadDataFile(
 
   return { rkey, docData, record };
 }
+
+/**
+ * Download public data file (usage.json, reviews.json, etc) from a user's PDS without authentication
+ *
+ * @param rkey - The data file name (e.g., "usage.json", "reviews.json")
+ * @param did - The DID (Decentralized Identifier) of the user
+ * @param collection - The collection to fetch from (defaults to RDATA_COLLECTION)
+ * @param onProgress - Optional progress callback
+ * @returns A promise that resolves to the downloaded data and record
+ * @throws {Error} If the record or data is not found
+ */
+export async function downloadPublicDataFile(
+  rkey: string,
+  did: string,
+  collection = RDATA_COLLECTION,
+  onProgress?: ProgressHandler,
+): Promise<DownloadDataResult> {
+  if (!did || !rkey) {
+    throw new Error("DID and rkey are required");
+  }
+
+  const serv = await resolveDid(did);
+  const agent = new AtpAgent({ service: serv });
+
+  try {
+    const recordResponse = await agent.com.atproto.repo.getRecord({
+      repo: did,
+      collection,
+      rkey,
+    });
+
+    const record = recordResponse.data.value as any;
+
+    let docCid = "";
+    const docblob = record.docblob;
+
+    if (!docblob || typeof docblob !== "object" || !("ref" in docblob)) {
+      console.error("No Doc blob found in record");
+    } else {
+      const docRef = docblob.ref;
+      docCid = typeof docRef === "object" && docRef && "$link" in docRef
+        ? docRef.$link as string
+        : docRef as string;
+    }
+
+    const docUrl = docCid 
+      ? `${serv}/xrpc/com.atproto.sync.getBlob?did=${did}&cid=${docCid}` 
+      : undefined;
+    const docData = docUrl ? (await webDownload(docUrl, onProgress)).blob : undefined;
+
+    return { rkey, docData, record };
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("not found")) {
+      throw new Error(`Data file not found: ${rkey} in repository ${did}`);
+    }
+    throw error;
+  }
+}
