@@ -565,7 +565,7 @@ const RSVPOverlay: React.FC<RSVPOverlayProps> = ({
               </button>
               <span
                 aria-label={_('Current Font Scale')}
-                className='text-center text-xs font-medium'
+                className='text-center text-xs font-medium tabular-nums'
               >
                 {`${state.scale}X`}
               </span>
@@ -609,7 +609,7 @@ const RSVPOverlay: React.FC<RSVPOverlayProps> = ({
               </button>
               <span
                 aria-label={_('Current speed')}
-                className='text-center text-xs font-medium'
+                className='text-center text-xs font-medium tabular-nums'
               >
                 {`${state.wpm}WPM`}
               </span>
