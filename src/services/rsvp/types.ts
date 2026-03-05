@@ -13,6 +13,7 @@ export interface RsvpState {
   words: RsvpWord[];
   currentIndex: number;
   wpm: number;
+  scale: number;
   punctuationPauseMs: number;
   progress: number;
   resumedFromIndex: number | null;

@@ -8,9 +8,14 @@ const DEFAULT_WPM = 300;
 const MIN_WPM = 100;
 const MAX_WPM = 1000;
 const WPM_STEP = 50;
+const DEFAULT_FONT_SCALE = 1;
+const MIN_SCALE = 1;
+const MAX_SCALE = 4;
+const SCALE_STEP = 1;
 const DEFAULT_PUNCTUATION_PAUSE_MS = 100;
 const PUNCTUATION_PAUSE_OPTIONS = [25, 50, 75, 100, 125, 150, 175, 200];
-const STORAGE_KEY_PREFIX = 'readup_rsvp_wpm_';
+const WPM_KEY_PREFIX = 'readup_rsvp_wpm_';
+const SCALE_KEY_PREFIX = 'readup_rsvp_scale_';
 const PUNCTUATION_PAUSE_KEY_PREFIX = 'readup_rsvp_pause_';
 const POSITION_KEY_PREFIX = 'readup_rsvp_pos_';
 
@@ -26,6 +31,7 @@ export class RSVPController extends EventTarget {
     words: [],
     currentIndex: 0,
     wpm: DEFAULT_WPM,
+    scale: DEFAULT_FONT_SCALE,
     punctuationPauseMs: DEFAULT_PUNCTUATION_PAUSE_MS,
     progress: 0,
     resumedFromIndex: null,
@@ -50,6 +56,10 @@ export class RSVPController extends EventTarget {
     const savedWpm = this.loadWpmFromStorage();
     if (savedWpm) {
       this.state.wpm = savedWpm;
+    }
+    const savedScale = this.loadScaleFromStorage();
+    if (savedScale) {
+      this.state.scale = savedScale;
     }
     const savedPause = this.loadPunctuationPauseFromStorage();
     if (savedPause) {
@@ -107,7 +117,7 @@ export class RSVPController extends EventTarget {
   }
 
   private loadWpmFromStorage(): number | null {
-    const stored = localStorage.getItem(`${STORAGE_KEY_PREFIX}${this.bookKey}`);
+    const stored = localStorage.getItem(`${WPM_KEY_PREFIX}${this.bookKey}`);
     if (stored) {
       const parsed = parseInt(stored, 10);
       if (!isNaN(parsed) && parsed >= MIN_WPM && parsed <= MAX_WPM) {
@@ -118,7 +128,22 @@ export class RSVPController extends EventTarget {
   }
 
   private saveWpmToStorage(wpm: number): void {
-    localStorage.setItem(`${STORAGE_KEY_PREFIX}${this.bookKey}`, wpm.toString());
+    localStorage.setItem(`${WPM_KEY_PREFIX}${this.bookKey}`, wpm.toString());
+  }
+
+  private loadScaleFromStorage(): number | null {
+    const stored = localStorage.getItem(`${SCALE_KEY_PREFIX}${this.bookKey}`);
+    if (stored) {
+      const parsed = parseInt(stored, 10);
+      if (!isNaN(parsed) && parsed >= MIN_SCALE && parsed <= MAX_SCALE) {
+        return parsed;
+      }
+    }
+    return null;
+  }
+
+  private saveScaleToStorage(scale: number): void {
+    localStorage.setItem(`${SCALE_KEY_PREFIX}${this.bookKey}`, scale.toString());
   }
 
   setCurrentCfi(cfi: string | null): void {
@@ -508,6 +533,20 @@ export class RSVPController extends EventTarget {
     const newWpm = Math.max(MIN_WPM, this.state.wpm - WPM_STEP);
     this.state.wpm = newWpm;
     this.saveWpmToStorage(newWpm);
+    this.emitStateChange();
+  }
+
+  increaseScale(): void {
+    const newScale = Math.min(MAX_SCALE, this.state.scale + SCALE_STEP);
+    this.state.scale = newScale;
+    this.saveScaleToStorage(newScale);
+    this.emitStateChange();
+  }
+
+  decreaseScale(): void {
+    const newScale = Math.max(MIN_SCALE, this.state.scale - SCALE_STEP);
+    this.state.scale = newScale;
+    this.saveScaleToStorage(newScale);
     this.emitStateChange();
   }
 

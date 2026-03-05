@@ -11,6 +11,8 @@ import {
   IoRemove,
   IoAdd,
 } from 'react-icons/io5';
+import { TbLetterA, TbLetterASmall } from 'react-icons/tb';
+import { MdOutlineMotionPhotosPause } from 'react-icons/md';
 
 import { Insets } from '@/types/misc';
 import { RsvpState, RsvpWord, RSVPController, isCJK } from '@/services/rsvp';
@@ -423,7 +425,17 @@ const RSVPOverlay: React.FC<RSVPOverlayProps> = ({
               )}
 
               {/* Word display */}
-              <div className='relative flex min-h-16 w-full items-center justify-center whitespace-nowrap px-2 py-4 font-mono text-2xl font-medium tracking-wide sm:min-h-20 sm:px-4 sm:py-6 sm:text-3xl md:text-4xl lg:text-5xl'>
+              <div 
+                className={clsx(
+                  'relative flex min-h-16 w-full items-center justify-center whitespace-nowrap',
+                  'px-2 py-4 font-mono font-medium tracking-wide',
+                  'sm:min-h-20 sm:px-4 sm:py-6', 
+                  // state.scale > 1 ? 'sm:text-4xl md:text-5xl lg:text-6xl' : 'sm:text-3xl md:text-4xl lg:text-5xl',
+                  // `md:text-[${36 * state.scale}px]`,
+                  // `lg:text-[${48 * state.scale}px]`,
+                )}
+                style={{ fontSize: `${36 * state.scale}px` }}
+              >
                 {currentWord ? (
                   <>
                     <span className={clsx(
@@ -508,9 +520,9 @@ const RSVPOverlay: React.FC<RSVPOverlayProps> = ({
         </div>
 
         {/* Controls */}
-        <div className='flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-4'>
+        <div className='flex flex-col gap-4 items-center justify-between'>
           {/* Playback controls - centered on mobile, middle on desktop */}
-          <div className='flex items-center justify-center gap-2 md:order-2 md:gap-4'>
+          <div className='flex items-center justify-center gap-2'>
             <button
               aria-label={_('Skip back 15 words')}
               className='flex cursor-pointer items-center gap-1 rounded-full border-none bg-transparent px-2 py-1.5 transition-colors hover:bg-gray-500/20 active:scale-95 md:px-3 md:py-2'
@@ -549,12 +561,37 @@ const RSVPOverlay: React.FC<RSVPOverlayProps> = ({
           </div>
 
           {/* Secondary controls row on mobile, split on desktop */}
-          <div className='flex items-center justify-between gap-4 md:contents'>
-            {/* Punctuation pause - left on desktop */}
-            <div className='flex items-center md:order-1 md:min-w-[140px] md:flex-1'>
-              <label className='flex cursor-pointer items-center gap-1.5 text-xs font-medium opacity-80 md:gap-2'>
-                <span className='hidden sm:inline'>{_('Pause:')}</span>
-                <span className='sm:hidden'>{_('Pause:')}</span>
+          <div className='flex items-center justify-between gap-4 flex-wrap'>
+            {/* Font Scale controls  */}
+            <div className='flex items-center justify-start gap-1'>
+              <button
+                aria-label={_('Decrease font scale')}
+                className='flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none bg-transparent transition-colors hover:bg-gray-500/20 active:scale-95'
+                onClick={() => controller.decreaseScale()}
+                title={_('Smaller')}
+              >
+                <TbLetterASmall className='h-4 w-4' />
+              </button>
+              <span
+                aria-label={_('Current Font Scale')}
+                className='min-w-8 text-center text-sm font-medium'
+              >
+                {state.scale}
+              </span>
+              <button
+                aria-label={_('Increase font scale')}
+                className='flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none bg-transparent transition-colors hover:bg-gray-500/20 active:scale-95'
+                onClick={() => controller.increaseScale()}
+                title={_('Bigger')}
+              >
+                <TbLetterA className='h-4 w-4' />
+              </button>
+            </div>
+
+            {/* Punctuation pause */}
+            <div className='flex items-center'>
+              <label className='flex cursor-pointer items-center gap-1 text-xs font-medium opacity-80'>
+                <span className='text-xs'><MdOutlineMotionPhotosPause size={18} /></span>
                 <select
                   className='cursor-pointer rounded border border-gray-500/30 bg-gray-500/20 px-1.5 py-1 text-xs font-medium transition-colors hover:border-gray-500/40 hover:bg-gray-500/30 md:px-2'
                   style={{ color: 'inherit' }}
@@ -570,29 +607,29 @@ const RSVPOverlay: React.FC<RSVPOverlayProps> = ({
               </label>
             </div>
 
-            {/* Speed controls - right on desktop */}
-            <div className='flex items-center justify-end gap-1.5 md:order-3 md:min-w-[140px] md:flex-1 md:gap-2'>
+            {/* Speed controls */}
+            <div className='flex items-center justify-end gap-1'>
               <button
                 aria-label={_('Decrease speed')}
-                className='flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border-none bg-transparent transition-colors hover:bg-gray-500/20 active:scale-95 md:h-10 md:w-10'
+                className='flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none bg-transparent transition-colors hover:bg-gray-500/20 active:scale-95'
                 onClick={() => controller.decreaseSpeed()}
                 title={_('Slower (Left/Down)')}
               >
-                <IoRemove className='h-4 w-4 md:h-5 md:w-5' />
+                <IoRemove className='h-4 w-4' />
               </button>
               <span
                 aria-label={_('Current speed')}
-                className='min-w-10 text-center text-sm font-medium md:min-w-12'
+                className='min-w-10 text-center text-sm font-medium'
               >
                 {state.wpm}
               </span>
               <button
                 aria-label={_('Increase speed')}
-                className='flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border-none bg-transparent transition-colors hover:bg-gray-500/20 active:scale-95 md:h-10 md:w-10'
+                className='flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none bg-transparent transition-colors hover:bg-gray-500/20 active:scale-95'
                 onClick={() => controller.increaseSpeed()}
                 title={_('Faster (Right/Up)')}
               >
-                <IoAdd className='h-4 w-4 md:h-5 md:w-5' />
+                <IoAdd className='h-4 w-4' />
               </button>
             </div>
           </div>
