@@ -368,12 +368,6 @@ const RSVPOverlay: React.FC<RSVPOverlayProps> = ({
             </>
           )}
         </div>
-
-        {/* WPM badge */}
-        <div className='shrink-0 rounded-full border border-gray-500/20 bg-gray-500/10 px-3 py-1.5 text-sm tabular-nums'>
-          <span className='font-semibold'>{state.wpm}</span>
-          <span className='ml-0.5 text-xs opacity-50'>WPM</span>
-        </div>
       </div>
 
       {/* Context panel (shown when paused) */}
@@ -427,14 +421,11 @@ const RSVPOverlay: React.FC<RSVPOverlayProps> = ({
               {/* Word display */}
               <div 
                 className={clsx(
-                  'relative flex min-h-16 w-full items-center justify-center whitespace-nowrap',
-                  'px-2 py-4 font-mono font-medium tracking-wide',
+                  'relative flex items-center justify-center whitespace-nowrap',
+                  'w-full min-h-16 px-2 py-4 font-mono font-medium tracking-wide',
                   'sm:min-h-20 sm:px-4 sm:py-6', 
-                  // state.scale > 1 ? 'sm:text-4xl md:text-5xl lg:text-6xl' : 'sm:text-3xl md:text-4xl lg:text-5xl',
-                  // `md:text-[${36 * state.scale}px]`,
-                  // `lg:text-[${48 * state.scale}px]`,
                 )}
-                style={{ fontSize: `${36 * state.scale}px` }}
+                style={{ fontSize: `${30 * state.scale}px` }}
               >
                 {currentWord ? (
                   <>
@@ -561,7 +552,7 @@ const RSVPOverlay: React.FC<RSVPOverlayProps> = ({
           </div>
 
           {/* Secondary controls row on mobile, split on desktop */}
-          <div className='flex items-center justify-between gap-4 flex-wrap'>
+          <div className='flex items-center justify-between gap-2 flex-wrap'>
             {/* Font Scale controls  */}
             <div className='flex items-center justify-start gap-1'>
               <button
@@ -574,9 +565,9 @@ const RSVPOverlay: React.FC<RSVPOverlayProps> = ({
               </button>
               <span
                 aria-label={_('Current Font Scale')}
-                className='min-w-8 text-center text-sm font-medium'
+                className='text-center text-xs font-medium'
               >
-                {state.scale}
+                {`${state.scale}X`}
               </span>
               <button
                 aria-label={_('Increase font scale')}
@@ -593,8 +584,7 @@ const RSVPOverlay: React.FC<RSVPOverlayProps> = ({
               <label className='flex cursor-pointer items-center gap-1 text-xs font-medium opacity-80'>
                 <span className='text-xs'><MdOutlineMotionPhotosPause size={18} /></span>
                 <select
-                  className='cursor-pointer rounded border border-gray-500/30 bg-gray-500/20 px-1.5 py-1 text-xs font-medium transition-colors hover:border-gray-500/40 hover:bg-gray-500/30 md:px-2'
-                  style={{ color: 'inherit' }}
+                  className='cursor-pointer rounded p-1 text-xs font-medium hover:bg-gray-500/30'
                   value={state.punctuationPauseMs}
                   onChange={(e) => controller.setPunctuationPause(parseInt(e.target.value, 10))}
                 >
@@ -619,9 +609,9 @@ const RSVPOverlay: React.FC<RSVPOverlayProps> = ({
               </button>
               <span
                 aria-label={_('Current speed')}
-                className='min-w-10 text-center text-sm font-medium'
+                className='text-center text-xs font-medium'
               >
-                {state.wpm}
+                {`${state.wpm}WPM`}
               </span>
               <button
                 aria-label={_('Increase speed')}
