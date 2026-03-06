@@ -6,6 +6,7 @@ import { Book } from '@/types/book';
 import { useTranslation } from '@/hooks/useTranslation';
 import Dialog from '@/components/Dialog';
 import { useAuth } from '@/context/AuthContext';
+import { useEnv } from '@/context/EnvContext';
 import { TextSelection } from '@/utils/sel';
 import { getContrastHex, hexToRgba } from '@/styles/themes';
 import { useReaderStore } from '@/store/readerStore';
@@ -31,6 +32,7 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
 }) => {
   const _ = useTranslation();
   const { user } = useAuth();
+  const { appService } = useEnv();
   const { getProgress } = useReaderStore();
   const progress = getProgress(bookKey);
   const [imageUrl, setImageUrl] = useState<string>('');
@@ -38,6 +40,8 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
   const [showContentPreview, setShowContentPreview] = useState(false);
   const [iframeHeight, setIframeHeight] = useState<string>('auto');
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [shouldUploadBook, setShouldUploadBook] = useState(true);
+  const [isUploading, setIsUploading] = useState(false);
 
   // Style customization state
   const [styles, setStyles] = useState({
@@ -267,22 +271,67 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
       });
       setAuthDialogVisible(true);
       onCancel();
-    } else {
+      return;
+    }
+
+    let bookUploaded = !!book.uploadedAt;
+
+    try {
+      // Upload book if toggle is enabled and book hasn't been uploaded yet
+      if (shouldUploadBook && !book.uploadedAt && appService) {
+        setIsUploading(true);
+        eventDispatcher.dispatch('toast', {
+          message: 'Uploading book to PDS...',
+          timeout: 2000,
+          type: 'info',
+        });
+        try {
+          await appService.uploadBook(book, false);
+          eventDispatcher.dispatch('toast', {
+            message: 'Book uploaded successfully',
+            timeout: 2000,
+            type: 'info',
+          });
+          bookUploaded = true;
+        } catch (uploadError) {
+          console.error('Failed to upload book:', uploadError);
+          eventDispatcher.dispatch('toast', {
+            message: 'Failed to upload book',
+            timeout: 2000,
+            type: 'warning',
+          });
+          setIsUploading(false);
+          return;
+        }
+      }
+
       const agent = await getAtpAgent();
       const resp = await postWithImageAndLink(agent, {
         text: `Excerpt from book: ${book.title} \n\n #booksky #readsky \n\n`,
         imageData: imageUrl,
         altText: selection.text,
-        url: `https://readup.cc/read/${book.hash}?did=${user.did}`,
-        linkTitle: 'Read the Book'
+        url: bookUploaded 
+          ? `https://readup.cc/read/${book.hash}?did=${user.did}` 
+          : 'https://readup.cc',
+        linkTitle: bookUploaded ? 'Read the Book' : undefined
       });
       if (resp.success) {
         eventDispatcher.dispatch('toast', {
-          message: 'Success to share on ATmosphere',
+          message: 'Success to share in ATmosphere',
           timeout: 2000,
           type: 'info',
         });
+        onCancel();
       }
+    } catch (error) {
+      console.error('Error sharing excerpt:', error);
+      eventDispatcher.dispatch('toast', {
+        message: 'Error sharing excerpt',
+        timeout: 2000,
+        type: 'error',
+      });
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -294,9 +343,9 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
       boxClassName='sm:!w-[75%] sm:h-auto sm:!max-h-[90vh] sm:!max-w-5xl'
       contentClassName='sm:!px-8 sm:!py-2'
     >
-      <div className='flex flex-col gap-6 max-h-[80vh] overflow-y-auto'>
+      <div className='flex flex-col gap-4 max-h-[80vh] overflow-y-auto'>
         {/* Style Customization Options */}
-        <div className='border-b border-base-300 pb-4'>
+        <div className='border-b border-base-300 pb-2'>
           <h3 className='text-sm font-semibold text-base-content mb-3'>
             {_('Custom Theme')}
           </h3>
@@ -434,13 +483,43 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
           )}
         </div>
 
+        {/* Upload Book Option */}
+        <div className='border-t border-base-300 pt-4'>
+          <label className='flex items-center gap-3 cursor-pointer'>
+            <input
+              type='checkbox'
+              checked={shouldUploadBook}
+              onChange={(e) => setShouldUploadBook(e.target.checked)}
+              className='checkbox checkbox-sm'
+              disabled={isUploading}
+            />
+            <span className='text-sm font-medium text-base-content'>
+              {_('Upload book to PDS before sharing')}
+            </span>
+          </label>
+          <p className='text-xs text-base-content/60 mt-2 ml-7'>
+            {_('This will make your book discoverable in the Atmosphere')}
+          </p>
+        </div>
+
         {/* Footer Actions */}
-        <div className='mt-4 flex justify-center gap-4 border-t border-base-300 pt-4'>
-          <button onClick={onCancel} className='btn btn-ghost btn-sm'>
+        <div className='mt-4 flex justify-center gap-4'>
+          <button onClick={onCancel} className='btn btn-ghost btn-sm' disabled={isUploading}>
             {_('Cancel')}
           </button>
-          <button onClick={handleShare} className='btn btn-primary btn-sm'>
-            {_('Share')}
+          <button 
+            onClick={handleShare} 
+            className='btn btn-primary btn-sm' 
+            disabled={isRendering || isUploading}
+          >
+            {isUploading ? (
+              <>
+                <span className='loading loading-spinner loading-xs'></span>
+                {_('Uploading...')}
+              </>
+            ) : (
+              _('Share')
+            )}
           </button>
         </div>
       </div>
