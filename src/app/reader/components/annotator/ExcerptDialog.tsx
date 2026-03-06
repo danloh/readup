@@ -270,7 +270,7 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
     } else {
       const agent = await getAtpAgent();
       const resp = await postWithImageAndLink(agent, {
-        text: `Excerpt from ${book.title} \n\n`,
+        text: `Excerpt from book: ${book.title} \n\n #booksky #readsky \n\n`,
         imageData: imageUrl,
         altText: selection.text,
         url: `https://readup.cc/read/${book.hash}?did=${user.did}`,

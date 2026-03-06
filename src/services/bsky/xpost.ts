@@ -4,49 +4,6 @@
 
 import { AtpAgent, RichText } from "@atproto/api";
 
-export interface PostWithImageOptions {
-  /** The text content of the post */
-  text: string;
-  /** Image data URL or file path */
-  imageData: string | Blob;
-  /** Optional alt text for the image */
-  altText?: string;
-  /** Optional reply reference (URI of post being replied to) */
-  replyTo?: {
-    uri: string;
-    cid: string;
-  };
-}
-
-export interface PostWithImageAndLinkOptions {
-  /** The text content of the post */
-  text: string;
-  /** Image data URL or file path */
-  imageData: string | Blob;
-  /** Optional alt text for the image */
-  altText?: string;
-  url: string;
-  linkTitle?: string;
-  /** Optional reply reference (URI of post being replied to) */
-  replyTo?: {
-    uri: string;
-    cid: string;
-  };
-}
-
-export interface PostWithExternalLinkOptions {
-  /** The text content of the post */
-  text: string;
-  /** URL to embed */
-  url: string;
-  /** Title for the link preview */
-  title?: string;
-  /** Description for the link preview */
-  description?: string;
-  /** Thumbnail image data URL or blob */
-  thumb?: string | Blob;
-}
-
 /**
  * Convert a data URL string to Blob
  */
@@ -60,6 +17,95 @@ function dataUrlToBlob(dataUrl: string): Blob {
     u8arr[i] = bstr.charCodeAt(i);
   }
   return new Blob([u8arr], { type: mime });
+}
+
+/**
+ * Extract hashtags from text
+ * Hashtags are identified as words starting with # followed by alphanumeric characters
+ *
+ * @param text - Text to search for hashtags
+ * @returns Array of hashtag objects with tag name and start/end positions
+ */
+function extractHashtags(text: string): Array<{ tag: string; index: number }> {
+  const hashtagRegex = /#[\p{L}\p{N}_]{1,}/gu;
+  const hashtags: Array<{ tag: string; index: number }> = [];
+  let match;
+
+  while ((match = hashtagRegex.exec(text)) !== null) {
+    hashtags.push({
+      tag: match[0].slice(1), // Remove the # prefix
+      index: match.index,
+    });
+  }
+
+  return hashtags;
+}
+
+/**
+ * Create hashtag facets for a RichText object
+ * Hashtags are automatically detected and formatted as clickable facets
+ *
+ * @param rt - RichText object to add hashtag facets to
+ * @param text - The text content
+ */
+function addHashtagFacets(rt: RichText, text: string): void {
+  const hashtags = extractHashtags(text);
+
+  if (hashtags.length === 0) {
+    return;
+  }
+
+  if (!rt.facets) {
+    rt.facets = [];
+  }
+
+  for (const hashtag of hashtags) {
+    const hashtagWithHash = `#${hashtag.tag}`;
+    const byteStart = Buffer.from(text.slice(0, hashtag.index)).length;
+    const byteEnd = Buffer.from(
+      text.slice(0, hashtag.index + hashtagWithHash.length)
+    ).length;
+
+    // Only add if not already present
+    const exists = rt.facets.some(
+      (f: any) =>
+        f.index.byteStart === byteStart &&
+        f.index.byteEnd === byteEnd &&
+        f.features.some((feat: any) => feat.$type === "app.bsky.richtext.facet#tag")
+    );
+
+    if (!exists) {
+      const hashtagFacet = {
+        $type: "app.bsky.richtext.facet",
+        features: [
+          {
+            $type: "app.bsky.richtext.facet#tag",
+            tag: hashtag.tag,
+          },
+        ],
+        index: {
+          byteStart,
+          byteEnd,
+        },
+      };
+
+      rt.facets.push(hashtagFacet as any);
+    }
+  }
+}
+
+export interface PostWithImageOptions {
+  /** The text content of the post */
+  text: string;
+  /** Image data URL or file path */
+  imageData: string | Blob;
+  /** Optional alt text for the image */
+  altText?: string;
+  /** Optional reply reference (URI of post being replied to) */
+  replyTo?: {
+    uri: string;
+    cid: string;
+  };
 }
 
 /**
@@ -108,18 +154,29 @@ export async function postWithImage(
     };
 
     // Create the record
+    const rt = new RichText({ text });
+    
+    // Add hashtag facets
+    addHashtagFacets(rt, text);
+
     const record: {
       $type: string;
       text: string;
       createdAt: string;
       embed: any;
       reply?: any;
+      facets?: any;
     } = {
       $type: "app.bsky.feed.post",
-      text: text,
+      text: rt.text,
       createdAt: new Date().toISOString(),
       embed: embed,
     };
+
+    // Add facets if present
+    if (rt.facets && rt.facets.length > 0) {
+      record.facets = rt.facets;
+    }
 
     // Remove undefined reply field if not replying
     if (replyTo) {
@@ -190,13 +247,22 @@ export async function postWithMultipleImages(
       images: uploadedImages,
     };
 
+    // Create RichText with hashtag facets
+    const rt = new RichText({ text });
+    addHashtagFacets(rt, text);
+
     // Create the record
-    const record = {
+    const record: any = {
       $type: "app.bsky.feed.post",
-      text: text,
+      text: rt.text,
       createdAt: new Date().toISOString(),
       embed: embed,
     };
+
+    // Add facets if present
+    if (rt.facets && rt.facets.length > 0) {
+      record.facets = rt.facets;
+    }
 
     // Post to the repository
     console.log("📝 Creating post with multiple images...");
@@ -212,6 +278,19 @@ export async function postWithMultipleImages(
     console.error("❌ Error posting with multiple images:", error);
     throw error;
   }
+}
+
+export interface PostWithExternalLinkOptions {
+  /** The text content of the post */
+  text: string;
+  /** URL to embed */
+  url: string;
+  /** Title for the link preview */
+  title?: string;
+  /** Description for the link preview */
+  description?: string;
+  /** Thumbnail image data URL or blob */
+  thumb?: string | Blob;
 }
 
 /**
@@ -260,13 +339,22 @@ export async function postWithExternalLink(
       embed.external.thumb = thumbBlob;
     }
 
+    // Create RichText with hashtag facets
+    const rt = new RichText({ text });
+    addHashtagFacets(rt, text);
+
     // Create the record
-    const record = {
+    const record: any = {
       $type: "app.bsky.feed.post",
-      text: text,
+      text: rt.text,
       createdAt: new Date().toISOString(),
       embed: embed,
     };
+
+    // Add facets if present
+    if (rt.facets && rt.facets.length > 0) {
+      record.facets = rt.facets;
+    }
 
     // Post to the repository
     console.log("📝 Creating post with external link...");
@@ -282,6 +370,22 @@ export async function postWithExternalLink(
     console.error("❌ Error posting with external link:", error);
     throw error;
   }
+}
+
+export interface PostWithImageAndLinkOptions {
+  /** The text content of the post */
+  text: string;
+  /** Image data URL or file path */
+  imageData: string | Blob;
+  /** Optional alt text for the image */
+  altText?: string;
+  url: string;
+  linkTitle?: string;
+  /** Optional reply reference (URI of post being replied to) */
+  replyTo?: {
+    uri: string;
+    cid: string;
+  };
 }
 
 /**
@@ -336,10 +440,13 @@ export async function postWithImageAndLink(
       ? `${text}\n\n🔗 ${linkTitle}`
       : `${text}\n\n${url}`;
 
-    // Create RichText with link facet
+    // Create RichText with link and hashtag facets
     const rt = new RichText({
       text: displayText,
     });
+
+    // Add hashtag facets first
+    addHashtagFacets(rt, displayText);
 
     // Add link facet
     // Find where the link text starts (either the URL or the linkTitle)
@@ -410,19 +517,29 @@ export async function postWithImageAndLink(
 }
 
 /**
- * Post simple text to Bluesky
+ * Post simple text to Bluesky with hashtag support
  *
  * @param agent - The ATP agent with active session
- * @param text - The post text content
+ * @param text - The post text content (hashtags starting with # will be auto-detected)
  * @returns The created post record
  */
 export async function postText(agent: AtpAgent, text: string) {
   try {
-    const record = {
+    const rt = new RichText({ text });
+    
+    // Add hashtag facets
+    addHashtagFacets(rt, text);
+
+    const record: any = {
       $type: "app.bsky.feed.post",
-      text: text,
+      text: rt.text,
       createdAt: new Date().toISOString(),
     };
+
+    // Only add facets if there are any
+    if (rt.facets && rt.facets.length > 0) {
+      record.facets = rt.facets;
+    }
 
     // Post to the repository
     console.log("📝 Creating text post...");
