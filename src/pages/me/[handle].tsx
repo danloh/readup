@@ -190,7 +190,7 @@ const PublicProfilePage = () => {
                             <a
                               className='mr-1'
                               title={r.book?.title}
-                              href={`/read/${r.book?.hash}`}
+                              href={`/read/${r.book?.hash}?did=${profile.did}`}
                             >
                               {r.book?.title.substring(0, 12)}
                             </a>

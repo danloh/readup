@@ -1,4 +1,6 @@
-A fork of [Readest](https://github.com/readest/readest), we add an atproto layer on the reader for social reading.
+A fork of [Readest](https://github.com/readest/readest), we add an atproto layer for social reading.
+
+🏗️ In Active Development
 
 ## Features
 
@@ -9,7 +11,7 @@ A fork of [Readest](https://github.com/readest/readest), we add an atproto layer
 - [X] **Full-Text Search** Search across the entire book to find relevant sections.
 - [X] **Proofread**
 - [X] **Annotations and Highlighting** Bookmark and add highlights/notes with customized styles.
-- [X] **Dictionary/Wikipedia Lookup** Instantly look up words and terms.
+- [X] **Wikipedia Lookup** Instantly look up words and terms.
 - [X] **Translate** From a single sentence to the entire book translate instantly.
 - [X] **Customize Font and Layout** Adjust font, layout, theme mode, and theme colors.
 - [X] **OPDS Integration** Integrate OPDS to access online libraries and catalogs.
