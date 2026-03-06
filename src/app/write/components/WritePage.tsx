@@ -101,7 +101,7 @@ const WritePage = () => {
   };
 
   return (
-    <div className="flex flex-col h-[100vh-52px] h-full py-4 px-8 w-full mx-auto">
+    <div className='flex flex-col h-[100vh-52px] h-full py-4 px-8 w-full mx-auto'>
       {book && (
         <>
           <div className=''>
@@ -110,12 +110,12 @@ const WritePage = () => {
             </h4>
             <p className='truncate text-xs opacity-75'>{formatAuthors(book.author)}</p>
           </div>
-          <label className="block mb-2">
+          <label className='block mb-2'>
             {_('Rating')}
             <select 
               value={rating} 
               onChange={(e) => setRating(Number(e.target.value))} 
-              className="ml-2 bg-base-100 text-sm"
+              className='ml-2 bg-base-100 text-sm'
             >
               <option value={0}>{_('Choose')}</option>
               {[1,2,3,4,5,6,7,8,9,10].map(n => (<option key ={n} value={n}>{n}</option>))}
@@ -128,37 +128,37 @@ const WritePage = () => {
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         placeholder={_('Title')}
-        className="w-full mt-1 p-2 rounded-md bg-base-100 focus:outline-none focus:ring-1 focus:ring-blue-500" 
+        className='w-full mt-1 p-2 rounded-md bg-base-100 focus:outline-none focus:ring-1 focus:ring-blue-500' 
         required
       />
-      <div className="flex-1 flex flex-col">
+      <div className='flex-1 flex flex-col'>
         {mode === 'write' && (
           <textarea 
             value={text} 
             onChange={(e) => setText(e.target.value)} 
             placeholder={_('Start to write...')}
-            className="flex-1 w-full mt-1 p-2 rounded-md bg-base-100 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none overflow-y-auto" 
+            className='flex-1 w-full mt-1 p-2 rounded-md bg-base-100 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none overflow-y-auto' 
             required
           />
         )}
         {mode === 'preview' && (
           <div 
-            className="flex-1 prose max-w-none w-full mt-1 p-2 rounded-md bg-base-100 overflow-y-auto"
+            className='flex-1 prose max-w-none w-full mt-1 p-2 rounded-md bg-base-100 overflow-y-auto'
             dangerouslySetInnerHTML={{ __html: marked.parse(text) }}
           />
         )}
       </div>
-      <div className="flex gap-2 mt-2">
-        <button className="btn btn-sm btn-primary" onClick={onSave} disabled={saving}>
+      <div className='flex gap-2 mt-2'>
+        <button className='btn btn-sm btn-primary' onClick={onSave} disabled={saving}>
           {_('Save')}
         </button>
-        <button className="btn btn-sm" onClick={() => router.back()} disabled={saving}>
+        <button className='btn btn-sm' onClick={() => router.back()} disabled={saving}>
           {_('Cancel')}
         </button>
         <button
-          type="button"
+          type='button'
           onClick={() => setMode(mode === 'write' ? 'preview' : 'write')}
-          className="btn btn-sm btn-outline"
+          className='btn btn-sm btn-outline'
         >
           {mode === 'write' ? _('Preview') : _('Write')}
         </button>

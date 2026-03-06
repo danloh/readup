@@ -73,7 +73,7 @@ const ProgressInfoView: React.FC<PageInfoProps> = ({
   useEffect(() => {
     const checkComplete = () => {
       if (!pageInfo) return;
-      const finished = pageInfo.current + 1 >= (pageInfo.total || 0);
+      const finished = pageInfo.current + 1 >= pageInfo.total;
       setShowModal(finished);
     };
     checkComplete();
@@ -138,12 +138,12 @@ const ProgressInfoView: React.FC<PageInfoProps> = ({
       </div>
       {showModal && (
         <ModalPortal>
-          <div className="modal-box max-w-lg p-4 bg-base-200 rounded">
-            <h3 className="font-bold text-lg">You've finished the book</h3>
-            <p className="py-2">Would you like to mark this book or write a review?</p>
-            <div className="flex gap-2 mt-4">
+          <div className='modal-box max-w-lg p-4 bg-base-200 rounded'>
+            <h3 className='font-bold text-lg'>{_('You have finished the book')}</h3>
+            <p className='py-2'>{_('Would you like to mark this book or write a review?')}</p>
+            <div className='flex items-center justify-center flex-wrap gap-2 mt-4'>
               <button
-                className="btn btn-primary"
+                className='btn btn-sm btn-primary'
                 onClick={async () => {
                   try {
                     const book = bookData?.book;
@@ -160,7 +160,7 @@ const ProgressInfoView: React.FC<PageInfoProps> = ({
                 {_('Mark as Read')}
               </button>
               <button
-                className="btn"
+                className='btn btn-sm'
                 onClick={() => {
                   localStorage.setItem('toReviewBook', JSON.stringify(bookData?.book));
                   const id = bookKey.split('-')[0];
@@ -168,9 +168,9 @@ const ProgressInfoView: React.FC<PageInfoProps> = ({
                   setShowModal(false);
                 }}
               >
-                {_('Write review')}
+                {_('Review')}
               </button>
-              <button className="btn btn-ghost" onClick={() => setShowModal(false)}>
+              <button className='btn btn-sm btn-ghost' onClick={() => setShowModal(false)}>
                 {_('Dismiss')}
               </button>
             </div>
