@@ -651,7 +651,7 @@ const LibraryPageContent = (
               <div className='max-w-md'>
                 <h1 className='mb-5 text-5xl font-bold'>{_('Welcome to Readup')}</h1>
                 <p className='mb-5'>
-                  {_('Feed & eBook Reader on top of the AT Protocol')}
+                  {_('Feed & eBook Reader on atproto')}
                 </p>
                 <button 
                   className='btn btn-primary rounded-xl' 

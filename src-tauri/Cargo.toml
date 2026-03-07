@@ -17,6 +17,8 @@ crate-type = ["staticlib", "cdylib", "lib"]
 [features]
 # Internal feature to suppress warnings from old objc crate
 cargo-clippy = []
+# Enable WebDriver plugin for E2E testing (use with `tauri build --debug --features webdriver`)
+webdriver = ["tauri-plugin-webdriver"]
 
 [build-dependencies]
 tauri-build = { version = "2.5.5", features = [] }
@@ -54,6 +56,7 @@ tauri-plugin-sign-in-with-apple = "1.0.2"
 tauri-plugin-haptics = "2.3.2"
 tauri-plugin-persisted-scope = "2.3.5"
 tauri-plugin-sharekit = "0.3"
+tauri-plugin-webdriver = { version = "0.2", optional = true }
 tauri-plugin-native-bridge = { path = "./plugins/tauri-plugin-native-bridge" }
 tauri-plugin-native-tts = { path = "./plugins/tauri-plugin-native-tts" }
 
