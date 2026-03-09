@@ -185,7 +185,7 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
               )}
               onClick={resetZoom}
             >
-              {zoomLevel}%
+              {Math.round(zoomLevel)}%
             </button>
             <button
               title={_('Zoom In')}

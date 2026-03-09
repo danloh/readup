@@ -171,11 +171,13 @@ describe('TxtToEpubConverter', () => {
     const reader = new ZipReader(new BlobReader(blob));
     try {
       const entries = await reader.getEntries();
-      const chapterEntry = entries.find((entry) => entry.filename === 'OEBPS/chapter1.xhtml');
+      const chapterEntry = entries.find((entry) => entry.filename === 'OEBPS/chapter1.xhtml') as {
+        getData?: (writer: unknown) => Promise<string>;
+      };
       expect(chapterEntry).toBeDefined();
-      // const chapterContent = await chapterEntry!.getData(new TextWriter());
-      // expect(chapterContent).toContain('lang="zh"');
-      // expect(chapterContent).toContain('xml:lang="zh"');
+      const chapterContent = await chapterEntry?.getData?.(new TextWriter());
+      expect(chapterContent).toContain('lang="zh"');
+      expect(chapterContent).toContain('xml:lang="zh"');
     } finally {
       await reader.close();
     }

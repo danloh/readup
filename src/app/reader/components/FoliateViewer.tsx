@@ -569,9 +569,8 @@ const FoliateViewer: React.FC<{
         tabIndex={-1}
         role='document'
         aria-label={_('Book Content')}
-        // className='foliate-viewer h-[100%] w-[100%] focus:outline-none'
         className={clsx(
-          'foliate-viewer h-[100%] w-[100%] focus:outline-none',
+          'foliate-viewer absolute h-[100%] w-[100%] focus:outline-none',
           viewState?.loading && 'bg-base-100',
         )}
         {...mouseHandlers}

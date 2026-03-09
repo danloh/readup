@@ -334,13 +334,14 @@ export const useReaderStore = create<ReaderStore>((set, get) => ({
               location,
               sectionHref: tocItem?.href,
               sectionLabel: tocItem?.label,
-              sectionId: tocItem?.id,
+              // sectionId: tocItem?.id,
               section,
               pageinfo,
               timeinfo,
+              index: section.current,
               range,
               page: pageInfo.current + 1, // 1-based page number
-            },
+            } as BookProgress,
           },
         },
       };

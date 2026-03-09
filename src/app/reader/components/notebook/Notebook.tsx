@@ -131,7 +131,6 @@ const Notebook: React.FC = ({}) => {
     if (!sideBarBookKey) return;
     const view = getView(sideBarBookKey);
     const config = getConfig(sideBarBookKey)!;
-    const progress = getProgress(sideBarBookKey)!;
 
     const cfi = view?.getCFI(selection.index, selection.range);
     if (!cfi) return;
@@ -142,7 +141,7 @@ const Notebook: React.FC = ({}) => {
       type: 'annotation',
       cfi,
       note,
-      page: progress.page,
+      page: selection.page,
       text: selection.text,
       createdAt: Date.now(),
       updatedAt: Date.now(),

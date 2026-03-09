@@ -11,7 +11,7 @@
     "start-web": "dotenv -e .env.web -- next start",
     "build-tauri": "dotenv -e .env.tauri -- next build",
     "i18n:extract": "i18next-scanner",
-    "lint": "eslint .",
+    "lint": "tsc --noEmit && eslint .",
     
     "tauri": "tauri",
     "prepare-public-vendor": "mkdirp ./public/vendor/pdfjs",
@@ -26,7 +26,7 @@
 
     "test": "dotenv -e .env -e .env.test.local vitest",
     "test:browser": "vitest --config vitest.browser.config.mts --watch=false",
-    "test:tauri": "vitest --config vitest.tauri.config.mts --watch=false",
+    "test:tauri": "bash scripts/test-tauri.sh",
     "test:e2e": "wdio run wdio.conf.ts",
     "tauri:dev:test": "dotenv -e .env.tauri -- tauri dev --features webdriver",
     "tauri:build:test": "dotenv -e .env.tauri -- tauri build --debug --features webdriver",
@@ -171,7 +171,7 @@
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "@sindresorhus/tsconfig": "^6.0.0",
     "i18next-scanner": "^4.6.0",
-    "jsdom": "^26.1.0",
+    "jsdom": "^28.1.0",
     "mkdirp": "^3.0.1",
     "node-env-run": "^4.0.2",
     "postcss": "^8.4.49",

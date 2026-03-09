@@ -141,7 +141,7 @@ export const useTTSControl = ({ bookKey, onRequestHidePanel }: UseTTSControlProp
 
       const range = anchor(doc);
       if (!view.renderer.scrolled) {
-        view.renderer.scrollToAnchor(range);
+        view.renderer.scrollToAnchor?.(range);
       } else {
         const rect = range.getBoundingClientRect();
         const { start, size, viewSize, sideProp } = view.renderer;
@@ -160,7 +160,7 @@ export const useTTSControl = ({ bookKey, onRequestHidePanel }: UseTTSControlProp
         const startInPrevView = offsetStart < start + headerScrollOverlap + scrollingOverlap;
         if (endInNextView || startInPrevView) {
           const scrollTo = offsetStart - headerScrollOverlap - scrollingOverlap;
-          view.renderer.scrollToAnchor(scrollTo / viewSize);
+          view.renderer.scrollToAnchor?.(scrollTo / viewSize);
         }
       }
     };
@@ -317,7 +317,7 @@ export const useTTSControl = ({ bookKey, onRequestHidePanel }: UseTTSControlProp
   useEffect(() => {
     const ttsHighlightColor = viewSettings?.ttsHighlightColor || 'green';
     if (ttsControllerRef.current) {
-      ttsControllerRef.current.initViewTTS(
+      ttsControllerRef.current.updateHighlightOptions(
         getTTSHighlightOptions(ttsHighlightColor, viewSettings?.isEink || false),
       );
     }
@@ -352,7 +352,7 @@ export const useTTSControl = ({ bookKey, onRequestHidePanel }: UseTTSControlProp
 
   // handleTTSSpeak / handleTTSStop (plain functions, registered once at mount via closure)
   const handleTTSSpeak = async (event: CustomEvent) => {
-    const { bookKey: ttsBookKey, range, oneTime = false } = event.detail;
+    const { bookKey: ttsBookKey, range, index, oneTime = false } = event.detail;
     if (bookKey !== ttsBookKey) return;
 
     const view = getView(bookKey);
@@ -361,16 +361,10 @@ export const useTTSControl = ({ bookKey, onRequestHidePanel }: UseTTSControlProp
     const bookData = getBookData(bookKey);
     const { location } = progress || {};
     if (!view || !progress || !viewSettings || !bookData || !bookData.book) return;
-    if (bookData.book?.format === 'PDF') {
-      eventDispatcher.dispatch('toast', {
-        message: _('TTS not supported for PDF'),
-        type: 'warning',
-      });
-      return;
-    }
 
     const ttsSpeakRange = range as Range | null;
     let ttsFromRange = ttsSpeakRange;
+    let ttsFromIndex = typeof index === 'number' ? index : null;
     if (!ttsFromRange && viewSettings.ttsLocation) {
       const ttsCfi = viewSettings.ttsLocation;
       if (isCfiInLocation(ttsCfi, location)) {
@@ -378,14 +372,16 @@ export const useTTSControl = ({ bookKey, onRequestHidePanel }: UseTTSControlProp
         const { doc } = view.renderer.getContents().find((x) => x.index === index) || {};
         if (doc) {
           ttsFromRange = anchor(doc);
+          ttsFromIndex = index;
         }
       }
     }
-    if (!ttsFromRange) {
+    if (!ttsFromRange || !ttsFromIndex) {
       ttsFromRange = progress.range;
+      ttsFromIndex = progress.index;
     }
 
-    const currentSection = view.renderer.getContents()[0];
+    const currentSection = view.renderer.getContents().find((x) => x.index === ttsFromIndex);
     if (ttsFromRange && currentSection) {
       const ttsLocation = view.getCFI(currentSection?.index || 0, ttsFromRange);
       viewSettings.ttsLocation = ttsLocation;
@@ -423,7 +419,8 @@ export const useTTSControl = ({ bookKey, onRequestHidePanel }: UseTTSControlProp
       setTtsController(ttsController);
 
       await ttsController.init();
-      await ttsController.initViewTTS(
+      await ttsController.initViewTTS(ttsFromIndex);
+      ttsController.updateHighlightOptions(
         getTTSHighlightOptions(viewSettings.ttsHighlightColor, viewSettings.isEink),
       );
       const ssml =
