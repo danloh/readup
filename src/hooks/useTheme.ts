@@ -6,6 +6,7 @@ import { themes, applyCustomTheme, Palette } from '@/styles/themes';
 import { getStatusBarHeight, setSystemUIVisibility } from '@/utils/bridge';
 import { getOSPlatform } from '@/utils/misc';
 import { parseWebViewVersion } from '@/utils/ua';
+import { useSafeAreaInsets } from './useSafeAreaInsets';
 
 type UseThemeProps = {
   systemUIVisible?: boolean;
@@ -31,6 +32,7 @@ export const useTheme = ({
     systemUIAlwaysHidden,
     setSystemUIAlwaysHidden,
   } = useThemeStore();
+  const { onUpdateInsets } = useSafeAreaInsets();
 
   const useFallbackColors = useRef(false);
 
@@ -42,22 +44,30 @@ export const useTheme = ({
           setStatusBarHeight(res.height / window.devicePixelRatio);
         }
       });
+      handleSystemUIVisibility(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appService?.isAndroidApp]);
 
-  const handleSystemUIVisibility = useCallback(() => {
-    if (!appService?.isMobileApp) return;
+  const handleSystemUIVisibility = useCallback(
+    (updateInsets = false) => {
+      if (!appService?.isMobileApp) return;
 
-    const visible = !!(systemUIVisible && !systemUIAlwaysHidden);
-    if (visible) {
-      showSystemUI();
-    } else {
-      dismissSystemUI();
-    }
-    setSystemUIVisibility({ visible, darkMode: isDarkMode });
+      const visible = !!(systemUIVisible && !systemUIAlwaysHidden);
+      if (visible) {
+        showSystemUI();
+      } else {
+        dismissSystemUI();
+      }
+      setSystemUIVisibility({ visible, darkMode: isDarkMode }).then(() => {
+        if (updateInsets) {
+          onUpdateInsets();
+        }
+      });
+    },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [appService, isDarkMode, systemUIVisible]);
+    [appService, isDarkMode, systemUIVisible],
+  );
 
   useEffect(() => {
     if (appService?.isMobileApp) {
