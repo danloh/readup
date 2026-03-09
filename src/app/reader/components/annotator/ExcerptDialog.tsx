@@ -119,6 +119,10 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
           
           .book-meta-item {
             margin: 4px 0;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 1;
           }
           
           .excerpt {
@@ -343,7 +347,7 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
       boxClassName='sm:!w-[75%] sm:h-auto sm:!max-h-[90vh] sm:!max-w-5xl'
       contentClassName='sm:!px-8 sm:!py-2'
     >
-      <div className='flex flex-col gap-4 max-h-[80vh] overflow-y-auto'>
+      <div className='flex flex-col gap-4 max-h-[80vh] px-2 overflow-y-auto'>
         {/* Style Customization Options */}
         <div className='border-b border-base-300 pb-2'>
           <h3 className='text-sm font-semibold text-base-content mb-3'>
@@ -490,14 +494,14 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
               type='checkbox'
               checked={shouldUploadBook}
               onChange={(e) => setShouldUploadBook(e.target.checked)}
-              className='checkbox checkbox-sm'
+              className='checkbox checkbox-xs'
               disabled={isUploading}
             />
             <span className='text-sm font-medium text-base-content'>
               {_('Upload book to PDS before sharing')}
             </span>
           </label>
-          <p className='text-xs text-base-content/60 mt-2 ml-7'>
+          <p className='text-xs text-base-content/60 mt-1 ml-6'>
             {_('This will make your book discoverable in the Atmosphere')}
           </p>
         </div>

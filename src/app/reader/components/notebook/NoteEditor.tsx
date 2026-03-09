@@ -8,6 +8,8 @@ import { BookNote } from '@/types/book';
 import useShortcuts from '@/hooks/useShortcuts';
 import TextEditor, { TextEditorRef } from '@/components/TextEditor';
 import TextButton from '@/components/TextButton';
+import { getAtpAgent } from '@/services/bsky/auth';
+import { postText } from '@/services/bsky/xpost';
 
 interface NoteEditorProps {
   onSave: (selection: TextSelection, note: string) => void;
@@ -27,6 +29,7 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ onSave, onEdit }) => {
 
   const editorRef = useRef<TextEditorRef>(null);
   const [note, setNote] = useState('');
+  const [crossPostToBluesky, setCrossPostToBluesky] = useState(false);
   const separatorWidth = useResponsiveSize(3);
 
   useEffect(() => {
@@ -65,9 +68,25 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ onSave, onEdit }) => {
     }
   };
 
-  const handleSaveNote = () => {
+  const handleSaveNote = async () => {
     const currentValue = editorRef.current?.getValue();
     if (currentValue) {
+      // Post to Bluesky if enabled
+      if (crossPostToBluesky) {
+        try {
+          const annotationText = getAnnotationText();
+          const blueskyText = annotationText 
+            ? `${currentValue}\n\n---\n\n${annotationText}`
+            : currentValue;
+          
+          const agent = await getAtpAgent();
+          await postText(agent, blueskyText);
+          console.log('✅ Note cross-posted to Bluesky');
+        } catch (error) {
+          console.error('❌ Failed to cross-post to Bluesky:', error);
+        }
+      }
+
       if (notebookNewAnnotation) {
         onSave(notebookNewAnnotation, currentValue);
       } else if (notebookEditAnnotation) {
@@ -87,10 +106,10 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ onSave, onEdit }) => {
   };
 
   useShortcuts({
-    onSaveNote: () => {
+    onSaveNote: async () => {
       const currentValue = editorRef.current?.getValue();
       if (currentValue) {
-        handleSaveNote();
+        await handleSaveNote();
       }
     },
     onEscape: handleEscape,
@@ -123,6 +142,20 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ onSave, onEdit }) => {
         <div className='content font-size-sm line-clamp-3'>
           <span className='content font-size-xs text-gray-500'>{getAnnotationText()}</span>
         </div>
+      </div>
+
+      <div className='flex items-center justify-between pt-2'>
+        <label className='flex items-center gap-2 cursor-pointer'>
+          <input
+            type='checkbox'
+            checked={crossPostToBluesky}
+            onChange={(e) => setCrossPostToBluesky(e.target.checked)}
+            className='checkbox checkbox-xs'
+          />
+          <span className='text-xs'>
+            {_('Cross-post to Bluesky')}
+          </span>
+        </label>
       </div>
 
       <div className='flex justify-end space-x-3 p-2' dir='ltr'>
