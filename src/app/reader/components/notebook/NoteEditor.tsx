@@ -4,7 +4,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useResponsiveSize } from '@/hooks/useResponsiveSize';
 import { TextSelection } from '@/utils/sel';
 import { md5Fingerprint } from '@/utils/md5';
-import { BookNote } from '@/types/book';
+import { Book, BookNote } from '@/types/book';
 import useShortcuts from '@/hooks/useShortcuts';
 import TextEditor, { TextEditorRef } from '@/components/TextEditor';
 import TextButton from '@/components/TextButton';
@@ -14,9 +14,10 @@ import { postText } from '@/services/bsky/xpost';
 interface NoteEditorProps {
   onSave: (selection: TextSelection, note: string) => void;
   onEdit: (annotation: BookNote) => void;
+  book: Book | null;
 }
 
-const NoteEditor: React.FC<NoteEditorProps> = ({ onSave, onEdit }) => {
+const NoteEditor: React.FC<NoteEditorProps> = ({ onSave, onEdit, book }) => {
   const _ = useTranslation();
   const {
     notebookNewAnnotation,
@@ -75,11 +76,13 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ onSave, onEdit }) => {
       if (crossPostToBluesky) {
         try {
           const annotationText = getAnnotationText();
+          const bookTitle = book?.title ? `\n\n ---${book?.title}` : '';
           const blueskyText = annotationText 
-            ? `${currentValue}\n\n---\n\n${annotationText}`
-            : currentValue;
+            ? `${currentValue}\n\n---\n\n${annotationText} ${bookTitle}`
+            : `${currentValue} ${bookTitle}`;
           
           const agent = await getAtpAgent();
+          // FIXME: how to handle the length limit? 
           await postText(agent, blueskyText);
           console.log('✅ Note cross-posted to Bluesky');
         } catch (error) {

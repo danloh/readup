@@ -386,7 +386,11 @@ const Notebook: React.FC = ({}) => {
               )}
             </div>
             {(notebookNewAnnotation || notebookEditAnnotation) && !isSearchBarVisible && (
-              <NoteEditor onSave={handleSaveNote} onEdit={(item) => handleEditNote(item, false)} />
+              <NoteEditor 
+                onSave={handleSaveNote} 
+                onEdit={(item) => handleEditNote(item, false)} 
+                book={bookData.book}
+              />
             )}
             <ul>
               {filteredAnnotationNotes.map((item, index) => (
