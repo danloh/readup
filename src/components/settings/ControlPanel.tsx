@@ -31,6 +31,7 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
     useState(viewSettings.continuousScroll);
   const [scrollingOverlap, setScrollingOverlap] = 
     useState(viewSettings.scrollingOverlap);
+  const [hideScrollbar, setHideScrollbar] = useState(viewSettings.hideScrollbar || false);
   const [volumeKeysToFlip, setVolumeKeysToFlip] = 
     useState(viewSettings.volumeKeysToFlip);
   const [isDisableClick, setIsDisableClick] = useState(viewSettings.disableClick);
@@ -59,6 +60,7 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
       scrolled: setScrolledMode,
       continuousScroll: setIsContinuousScroll,
       scrollingOverlap: setScrollingOverlap,
+      hideScrollbar: setHideScrollbar,
       volumeKeysToFlip: setVolumeKeysToFlip,
       disableClick: setIsDisableClick,
       swapClickArea: setSwapClickArea,
@@ -98,6 +100,11 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
     saveViewSettings(envConfig, bookKey, 'scrollingOverlap', scrollingOverlap, false, false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scrollingOverlap]);
+
+  useEffect(() => {
+    saveViewSettings(envConfig, bookKey, 'hideScrollbar', hideScrollbar, false, false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hideScrollbar]);
 
   useEffect(() => {
     saveViewSettings(envConfig, bookKey, 'volumeKeysToFlip', volumeKeysToFlip, false, false);
@@ -317,6 +324,19 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
           disabled={bookData?.isFixedLayout}
           checked={isContinuousScroll}
           onChange={() => setIsContinuousScroll(!isContinuousScroll)}
+        />
+      </div>
+      <div 
+        className='flex items-center justify-between' 
+        data-setting-id='settings.control.scroll.hideScrollbar'
+      >
+        <b className=''>{_('Hide Scrollbar')}</b>
+        <input
+          type='checkbox'
+          className='toggle toggle-success h-5'
+          checked={hideScrollbar}
+          disabled={!viewSettings.scrolled}
+          onChange={() => setHideScrollbar(!hideScrollbar)}
         />
       </div>
       <NumberInput

@@ -109,6 +109,7 @@ export interface BookLayout {
   vertical: boolean;
   rtl: boolean;
   scrollingOverlap: number;
+  hideScrollbar: boolean;
   allowScript: boolean;
 }
 

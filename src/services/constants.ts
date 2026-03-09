@@ -145,6 +145,7 @@ export const DEFAULT_BOOK_LAYOUT: BookLayout = {
   vertical: false,
   rtl: false,
   scrollingOverlap: 0,
+  hideScrollbar: true,
   allowScript: false,
 };
 
