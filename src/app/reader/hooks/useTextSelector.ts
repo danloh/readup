@@ -18,7 +18,6 @@ export const useTextSelector = (
   const { getView, getViewSettings, getProgress } = useReaderStore();
   const view = getView(bookKey);
   const bookData = getBookData(bookKey);
-  const progress = getProgress(bookKey)!;
   const osPlatform = getOSPlatform();
 
   const isPopuped = useRef(false);
@@ -49,11 +48,13 @@ export const useTextSelector = (
       sel.removeAllRanges();
       sel.addRange(range);
     }
+    const progress = getProgress(bookKey)!;
+    // console.log('Progress', progress);
     setSelection({
       key: bookKey,
       text: await getAnnotationText(range),
       cfi: view?.getCFI(index, range),
-      page: bookData?.isFixedLayout ? index + 1 : progress.page,
+      page: bookData?.isFixedLayout ? index + 1 : progress?.page,
       range,
       index,
     });
@@ -67,11 +68,13 @@ export const useTextSelector = (
       setTimeout(async () => {
         if (!isTextSelected.current) return;
         sel.addRange(range);
+        const progress = getProgress(bookKey)!;
+        // console.log('Progress', progress);
         setSelection({
           key: bookKey,
           text: await getAnnotationText(range),
           cfi: view?.getCFI(index, range),
-          page: bookData?.isFixedLayout ? index + 1 : progress.page,
+          page: bookData?.isFixedLayout ? index + 1 : progress?.page,
           range,
           index,
         });

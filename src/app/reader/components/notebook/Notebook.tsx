@@ -141,7 +141,7 @@ const Notebook: React.FC = ({}) => {
       type: 'annotation',
       cfi,
       note,
-      page: selection.page,
+      page: selection.page || (getProgress(sideBarBookKey)!).page,
       text: selection.text,
       createdAt: Date.now(),
       updatedAt: Date.now(),
