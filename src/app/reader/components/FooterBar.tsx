@@ -286,7 +286,11 @@ const FooterBar: React.FC<FooterBarProps> = ({
           className={clsx(
             'bg-base-200 z-30 mt-auto flex w-full items-center gap-x-2 justify-center p-1',
           )}
-          style={{ paddingBottom: `${gridInsets.bottom * 0.33 + 16}px` }}
+          style={{
+            paddingBottom: appService?.isAndroidApp
+              ? `calc(env(safe-area-inset-bottom) + 16px)`
+              : isMobile ? `${gridInsets.bottom * 0.33 + 16}px` : '0px',
+          }}
         >
           {!isSideBarVisible && (
             <Button
