@@ -91,6 +91,7 @@ const FoliateViewer: React.FC<{
   const doubleClickDisabled = useRef(!!viewSettings?.disableDoubleClick);
   const [toastMessage, setToastMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [scrollMargins, setScrollMargins] = useState({ top: 0, bottom: 0 });
   const docLoaded = useRef(false);
 
   useAutoFocus<HTMLDivElement>({ ref: containerRef });
@@ -494,6 +495,18 @@ const FoliateViewer: React.FC<{
     viewRef.current?.renderer.setAttribute('margin-right', `${rightMargin}px`);
     viewRef.current?.renderer.setAttribute('margin-bottom', `${bottomMargin}px`);
     viewRef.current?.renderer.setAttribute('margin-left', `${leftMargin}px`);
+    if (viewSettings.scrolled) {
+      const showBarsOnScroll = viewSettings.showBarsOnScroll;
+      const headerVisible = showTopHeader && showBarsOnScroll;
+      const footerVisible = showBottomFooter && showBarsOnScroll;
+      const safeBottomPadding = appService?.hasSafeAreaInset ? gridInsets.bottom * 0.33 : 0;
+      const footerBarHeight = 44 + safeBottomPadding;
+      const scrollTop = headerVisible ? gridInsets.top + 44 : 0;
+      const scrollBottom = footerVisible ? footerBarHeight : 0;
+      setScrollMargins({ top: scrollTop, bottom: scrollBottom });
+    } else {
+      setScrollMargins({ top: 0, bottom: 0 });
+    }
     viewRef.current?.renderer.setAttribute('gap', `${viewSettings.gapPercent}%`);
     if (viewSettings.scrolled) {
       viewRef.current?.renderer.setAttribute('flow', 'scrolled');
@@ -543,6 +556,8 @@ const FoliateViewer: React.FC<{
     viewSettings?.doubleBorder,
     viewSettings?.showHeader,
     viewSettings?.showFooter,
+    viewSettings?.showBarsOnScroll,
+    viewSettings?.scrolled,
   ]);
 
   return (
@@ -573,6 +588,10 @@ const FoliateViewer: React.FC<{
           'foliate-viewer absolute h-[100%] w-[100%] focus:outline-none',
           viewState?.loading && 'bg-base-100',
         )}
+        style={{
+          paddingTop: scrollMargins.top,
+          paddingBottom: scrollMargins.bottom,
+        }}
         {...mouseHandlers}
         {...touchHandlers}
       />

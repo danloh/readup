@@ -5,6 +5,7 @@ import { useEnv } from '@/context/EnvContext';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useOpenWithBooks } from '@/hooks/useOpenWithBooks';
 import { useSettingsStore } from '@/store/settingsStore';
+import { tauriHandleSetAlwaysOnTop } from '@/utils/window';
 import { checkForAppUpdates, checkAppReleaseNotes } from '@/helpers/updater';
 import Reader from './components/Reader';
 
@@ -24,6 +25,9 @@ export default function ReadPage() {
         checkAppReleaseNotes();
       }
     };
+    if (appService?.hasWindow && settings.alwaysOnTop) {
+      tauriHandleSetAlwaysOnTop(settings.alwaysOnTop);
+    }
     doCheckAppUpdates();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appService?.hasUpdater, settings.autoCheckUpdates]);
