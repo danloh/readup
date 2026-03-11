@@ -50,7 +50,7 @@ jobs:
       - name: setup node
         uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 24
           cache: pnpm
 
       - name: cache Next.js build
@@ -63,7 +63,7 @@ jobs:
             nextjs-${{ matrix.config.platform }}-
 
       - name: install Dependencies
-        working-directory: /
+        working-directory: .
         run: |
           pnpm install && pnpm setup-vendors
 
@@ -77,18 +77,18 @@ jobs:
           pnpm test -- --watch=false
 
       - name: run lint
-        working-directory: /
+        working-directory: .
         run: |
           pnpm lint
 
       - name: build the web App
         if: matrix.config.platform == 'web'
-        working-directory: /
+        working-directory: .
         run: |
           pnpm build-web && pnpm check:all
 
       - name: build the Tauri App
         if: matrix.config.platform == 'tauri'
-        working-directory: /
+        working-directory: .
         run: |
           pnpm build && pnpm check:all

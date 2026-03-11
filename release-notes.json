@@ -1,9 +1,9 @@
 {
   "releases": {
     "0.1.0": {
-      "date": "2025-07-07",
+      "date": "2026-03-10",
       "notes": [
-        
+        "Initial release with full functionality as an eBook and feed reader."
       ]
     }
   }

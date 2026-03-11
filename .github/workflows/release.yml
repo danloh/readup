@@ -17,11 +17,11 @@ jobs:
       release_version: ${{ steps.get-release-notes.outputs.release_version }}
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: setup node
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
       - name: get version
-        run: echo "PACKAGE_VERSION=$(node -p "require('./apps/readup-app/package.json').version")" >> $GITHUB_ENV
+        run: echo "PACKAGE_VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_ENV
       - name: get release
         id: get-release
         uses: actions/github-script@v8
@@ -39,8 +39,8 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            const version = require('./apps/readup-app/package.json').version;
-            const releaseNotesFileContent = fs.readFileSync('./apps/readup-app/release-notes.json', 'utf8');
+            const version = require('./package.json').version;
+            const releaseNotesFileContent = fs.readFileSync('./release-notes.json', 'utf8');
             const releaseNotes = JSON.parse(releaseNotesFileContent).releases[version] || {};
             const notes = releaseNotes.notes || [];
             const releaseNote = notes.map((note, index) => `${index + 1}. ${note}`).join(' ');
@@ -69,7 +69,7 @@ jobs:
               repo: context.repo.repo,
               tag_name: process.env.release_tag,
             })
-            const notes = process.env.release_note.split(/(?:\d\.\s)/).filter(Boolean);
+            const notes = process.env.release_note.split(/\d+\.\s/).filter(Boolean);
             const formattedNotes = notes.map(note => `* ${note.trim()}`).join("\n");
             const body = `## Release Highlight\n${formattedNotes}\n\n${data.body}`;
             github.rest.repos.updateRelease({
@@ -124,7 +124,7 @@ jobs:
     runs-on: ${{ matrix.config.os }}
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: initialize git submodules
         run: git submodule update --init --recursive
@@ -133,9 +133,9 @@ jobs:
         uses: pnpm/action-setup@v4
 
       - name: setup node
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 24
           cache: pnpm
 
       - name: setup Java (for Android build only)
@@ -157,7 +157,7 @@ jobs:
         run: pnpm install
 
       - name: copy pdfjs-dist to public directory
-        run: pnpm --filter @readup/readup-app setup-pdfjs
+        run: pnpm setup-pdfjs 
 
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable
@@ -187,12 +187,7 @@ jobs:
 
       - name: create .env.local file for Next.js
         run: |
-          echo "NEXT_PUBLIC_POSTHOG_KEY=${{ secrets.NEXT_PUBLIC_POSTHOG_KEY }}" >> .env.local
-          echo "NEXT_PUBLIC_POSTHOG_HOST=${{ secrets.NEXT_PUBLIC_POSTHOG_HOST }}" >> .env.local
-          echo "NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}" >> .env.local
-          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}" >> .env.local
           echo "NEXT_PUBLIC_APP_PLATFORM=tauri" >> .env.local
-          cp .env.local apps/readup-app/.env.local
 
       - name: build and upload Android apks
         if: matrix.config.release == 'android'
@@ -202,10 +197,9 @@ jobs:
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: |
-          cd apps/readup-app/
           rm -rf src-tauri/gen/android
           pnpm tauri android init
-          pnpm tauri icon ../../data/icons/readup-book.png
+          pnpm tauri icon ./public/icon.png
           git checkout .
 
           pushd src-tauri/gen/android
@@ -239,7 +233,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          cd apps/readup-app/
           curl -sL https://github.com/danloh/readup/releases/latest/download/latest.json -o latest.json
 
           version=${{ needs.get-release.outputs.release_version }}
@@ -259,7 +252,7 @@ jobs:
 
           echo "Uploading updated latest.json to GitHub release"
           gh release upload ${{ needs.get-release.outputs.release_tag }} latest.json --clobber
-      
+
       - name: Override tauri-cli with custom AppImage format (Linux)
         if: matrix.config.release == 'linux'
         run: cargo install tauri-cli --git https://github.com/tauri-apps/tauri --branch feat/truly-portable-appimage --force
@@ -279,7 +272,7 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           NODE_OPTIONS: '--max-old-space-size=8192'
         with:
-          projectPath: apps/readup-app
+          projectPath: .
           releaseId: ${{ needs.get-release.outputs.release_id }}
           releaseBody: ${{ needs.get-release.outputs.release_note }}
           args: ${{ matrix.config.args || '' }}
@@ -289,7 +282,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Uploading release notes to GitHub release"
-          gh release upload ${{ needs.get-release.outputs.release_tag }} apps/readup-app/release-notes.json --clobber
+          gh release upload ${{ needs.get-release.outputs.release_tag }} ./release-notes.json --clobber
 
       - name: build and upload portable binaries (Windows only)
         if: matrix.config.os == 'windows-latest'
@@ -302,7 +295,7 @@ jobs:
         shell: bash
         run: |
           echo "Building Portable Binaries"
-          pushd apps/readup-app/
+          pushd .
           echo "NEXT_PUBLIC_PORTABLE_APP=true" >> .env.local
           pnpm tauri build ${{ matrix.config.args }}
 
@@ -330,10 +323,12 @@ jobs:
           gh release upload ${{ needs.get-release.outputs.release_tag }} $bin_file --clobber
 
           echo "Signing portable binary"
-          pnpm tauri signer sign $bin_file
+          pushd .
+          pnpm tauri signer sign "./$bin_file"
+          popd
           echo "Uploading signature to GitHub release"
           gh release upload ${{ needs.get-release.outputs.release_tag }} $bin_file.sig --clobber
-     
+
       - name: download and update latest.json for Windows portable release
         if: matrix.config.os == 'windows-latest'
         env:

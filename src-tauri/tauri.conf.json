@@ -162,13 +162,6 @@
       "desktop": {
         "schemes": ["readup"]
       }
-    },
-    "updater": {
-      "pubkey": "",
-      "endpoints": [
-        "https://download.readup.cc/releases/latest.json",
-        "https://github.com/danloh/readup/releases/latest/download/latest.json"
-      ]
     }
   }
 }
