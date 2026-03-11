@@ -67,3 +67,4 @@ src-tauri/target
 
 # dev
 devlog.md
+OAUTH_SETUP.md

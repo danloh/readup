@@ -3,10 +3,13 @@
 import { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 // import posthog from 'posthog-js';
 import { AuthToken, createSession, refreshSession, resolveDid, User } from '@/services/bsky/auth';
+import { startOAuthFlow, getAuthorizationCode } from '@/services/bsky/oauth';
 
 interface AuthContextType {
   user: User | null;
   login: (handle: string, passwd: string, host: string) => Promise<boolean>;
+  loginWithOAuth: (code: string, codeVerifier: string, host: string, clientId: string) => Promise<boolean>;
+  startOAuthLogin: (clientId: string, host?: string) => Promise<void>;
   logout: () => void;
   refresh: () => void;
 }
@@ -74,6 +77,63 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const startOAuthLogin = async (clientId: string, host: string = 'bsky.social') => {
+    const redirectUri = `${window.location.origin}/auth/callback`;
+    await startOAuthFlow({ clientId, redirectUri, host });
+  };
+
+  const loginWithOAuth = async (
+    code: string, 
+    codeVerifier: string, 
+    host: string, 
+    clientId: string
+  ) => {
+    try {
+      const redirectUri = `${window.location.origin}/auth/callback`;
+      
+      // Call backend API to exchange code for tokens
+      const response = await fetch('/api/auth/oauth/callback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code,
+          codeVerifier,
+          redirectUri,
+          host,
+          clientId,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to exchange authorization code');
+      }
+
+      const data = await response.json();
+      if (!data.success) {
+        throw new Error(data.error || 'OAuth authentication failed');
+      }
+
+      // Create user object from OAuth response
+      const newUser: User = {
+        host,
+        did: data.data.did,
+        handle: data.data.handle,
+        email: data.data.email || '',
+        accessJwt: data.data.accessToken,
+        refreshJwt: data.data.refreshToken || '',
+        service: data.data.service,
+      };
+
+      setUser(newUser);
+      localStorage.setItem('user', JSON.stringify(newUser));
+      return true;
+    } catch (error) {
+      console.error('OAuth login error:', error);
+      return false;
+    }
+  };
+
   const logout = () => {
     console.log('Logging out');
     localStorage.removeItem('user');
@@ -92,7 +152,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, refresh }}>
+    <AuthContext.Provider value={{ user, login, loginWithOAuth, startOAuthLogin, logout, refresh }}>
       {children}
     </AuthContext.Provider>
   );
