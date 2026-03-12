@@ -51,6 +51,7 @@ const TOCView: React.FC<{
 
   const hasInteractedWithTOCRef = useRef(false);
   const lastInteractionTimeRef = useRef<number>(0);
+  const prevSideBarVisibleRef = useRef(false);
   const interactionCooldownMs = 10000;
   const containerRef = useRef<HTMLDivElement | null>(null);
   const listOuterRef = useRef<HTMLDivElement | null>(null);
@@ -195,7 +196,7 @@ const TOCView: React.FC<{
     setExpandedItems(new Set(parentItems));
   }, []);
 
-  const scrollToActiveItem = useCallback(() => {
+  const scrollToActiveItem = useCallback((shouldFocus = false) => {
     if (!activeHref) return;
 
     if (vitualListRef.current) {
@@ -207,7 +208,9 @@ const TOCView: React.FC<{
 
     if (staticListRef.current) {
       const hrefMd5 = activeHref ? getContentMd5(activeHref) : '';
-      const activeItem = staticListRef.current?.querySelector(`[data-href="${hrefMd5}"]`);
+      const activeItem = staticListRef.current?.querySelector<HTMLElement>(
+        `[data-href="${hrefMd5}"]`,
+      );
       if (activeItem) {
         const container = staticListRef.current.parentElement!;
         const containerRect = container.getBoundingClientRect();
@@ -215,9 +218,11 @@ const TOCView: React.FC<{
         const isVisible =
           itemRect.top >= containerRect.top && itemRect.bottom <= containerRect.bottom;
         if (!isVisible) {
-          (activeItem as HTMLElement).scrollIntoView({ behavior: 'instant', block: 'center' });
+          activeItem.scrollIntoView({ behavior: 'instant', block: 'center' });
         }
-        (activeItem as HTMLElement).setAttribute('aria-current', 'page');
+        if (shouldFocus) {
+          activeItem.focus({ preventScroll: true });
+        }
       }
     }
   }, [flatItems, activeHref]);
@@ -261,12 +266,22 @@ const TOCView: React.FC<{
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [progress, scrollToActiveItem, isInCooldown]);
 
+  useEffect(() => {
+    const wasVisible = prevSideBarVisibleRef.current;
+    prevSideBarVisibleRef.current = isSideBarVisible;
+
+    if (isSideBarVisible && !wasVisible && sideBarBookKey === bookKey) {
+      setTimeout(() => scrollToActiveItem(true), appService?.isAndroidApp ? 400 : 200);
+    }
+  }, [isSideBarVisible, sideBarBookKey, bookKey, scrollToActiveItem, appService]);
+
   const useVirtualization = sections && sections.length > 256;
 
   return useVirtualization ? (
     <div
       className='virtual-list mt-2 rounded'
       data-overlayscrollbars-initialize=''
+      role='tree'
       ref={containerRef}
     >
       <VirtualList
@@ -288,7 +303,7 @@ const TOCView: React.FC<{
       </VirtualList>
     </div>
   ) : (
-    <div className='static-list mt-2 rounded' ref={staticListRef}>
+    <div className='static-list mt-2 rounded' role='tree' ref={staticListRef}>
       {flatItems.map((flatItem, index) => (
         <StaticListRow
           key={`static-row-${index}`}

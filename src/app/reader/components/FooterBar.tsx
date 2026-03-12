@@ -212,7 +212,7 @@ const FooterBar: React.FC<FooterBarProps> = ({
         onTouchStart={() => !isMobile && setHoveredBookKey(bookKey)}
       />
       <div
-        role='group'
+        role='contentinfo'
         aria-label={_('Footer Bar')}
         className={clsx(
           'footer-bar shadow-xs absolute bottom-0 z-30 flex w-full flex-col h-[42px]',

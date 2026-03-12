@@ -319,7 +319,7 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
           getIndexFromCfi(booknote.cfi) === detail.index,
       )
       .map((annotation) => {
-        console.log('Adding annotation to overlay', annotation);
+        // console.log('Adding annotation to overlay', annotation);
         view?.addAnnotation(annotation);
       });
   };
@@ -661,7 +661,7 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
   };
 
   const handleHighlight = (update = false, highlightStyle?: HighlightStyle) => {
-    console.log("click highlight", update);
+    // console.log("click highlight", update);
     if (!selection || !selection.text) return;
     setHighlightOptionsVisible(true);
     const { booknotes: annotations = [] } = config;
