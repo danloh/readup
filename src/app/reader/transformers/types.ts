@@ -3,6 +3,7 @@ import { ViewSettings } from '@/types/book';
 export type TransformContext = {
   bookKey: string;
   viewSettings: ViewSettings;
+  isFixedLayout: boolean;
   primaryLanguage?: string;
   width?: number;
   height?: number;

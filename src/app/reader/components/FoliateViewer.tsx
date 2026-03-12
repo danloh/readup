@@ -138,6 +138,7 @@ const FoliateViewer: React.FC<{
             const ctx: TransformContext = {
               bookKey,
               viewSettings,
+              isFixedLayout: bookData.isFixedLayout,
               width,
               height,
               primaryLanguage: bookData.book?.primaryLanguage,

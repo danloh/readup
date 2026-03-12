@@ -31,18 +31,26 @@ const SectionInfo: React.FC<SectionInfoProps> = ({
   gridInsets,
 }) => {
   const { appService } = useEnv();
-  const { hoveredBookKey, setHoveredBookKey } = useReaderStore();
+  const { hoveredBookKey, getView, setHoveredBookKey } = useReaderStore();
   const { systemUIVisible, statusBarHeight } = useThemeStore();
   const topInset = Math.max(
     gridInsets.top,
     appService?.isAndroidApp && systemUIVisible ? statusBarHeight / 2 : 0,
   );
 
+  const handleNotchClick = () => {
+    if (isScrolled) {
+      getView(bookKey)?.renderer.scrollToAnchor?.(0, 'anchor', true);
+    }
+  };
+
   return (
     <>
       <div
+        role='none'
+        onClick={handleNotchClick}
         className={clsx(
-          'absolute left-0 right-0 top-0 z-10',
+          'notch-area absolute left-0 right-0 top-0 z-10',
           isScrolled && !isVertical && 'bg-base-100',
         )}
         style={{ height: `${topInset}px` }}
