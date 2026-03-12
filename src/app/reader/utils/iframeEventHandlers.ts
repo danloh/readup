@@ -189,7 +189,13 @@ export const handleClick = (
       return;
     }
     const footnote = element?.closest(
-      '.js_readerFooterNote, .zhangyue-footnote, .duokan-footnote'
+      [
+        '.js_readerFooterNote',
+        '.zhangyue-footnote',
+        '.duokan-footnote',
+        '.qqreader-footnote',
+      ]
+      .join(', ')
     );
     if (footnote) {
       eventDispatcher.dispatch('footnote-popup', {
