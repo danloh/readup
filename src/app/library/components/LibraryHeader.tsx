@@ -6,8 +6,10 @@ import { PiDotsThreeCircle } from 'react-icons/pi';
 import { LiaFileImportSolid } from 'react-icons/lia';
 import { IoMdCloseCircle } from 'react-icons/io';
 import { IoFileTray } from 'react-icons/io5';
+import { AiOutlineCloudSync } from 'react-icons/ai';
 
 import { useTranslation } from '@/hooks/useTranslation';
+import { useTransferQueue } from '@/hooks/useTransferQueue';
 import { useLibraryStore } from '@/store/libraryStore';
 import { debounce } from '@/utils/debounce';
 import Dropdown from '@/components/Dropdown';
@@ -25,6 +27,7 @@ const LibraryHeader: React.FC<LibraryHeaderProps> = (
   const router = useRouter();
   const searchParams = useSearchParams();
   const { currentBookshelf } = useLibraryStore();
+  const { stats, hasActiveTransfers, setIsTransferQueueOpen } = useTransferQueue();
 
   const [searchQuery, setSearchQuery] = useState(searchParams?.get('q') ?? '');
 
@@ -121,6 +124,29 @@ const LibraryHeader: React.FC<LibraryHeaderProps> = (
               </button>
             </div>
           )}
+          <div 
+            className='tooltip tooltip-bottom' 
+            title={_('Sync')}
+            data-tip={
+              hasActiveTransfers
+                ? _('{{activeCount}} active, {{pendingCount}} pending', {
+                    activeCount: stats.active,
+                    pendingCount: stats.pending,
+                  })
+                : stats.failed > 0
+                  ? _('{{failedCount}} failed', { failedCount: stats.failed })
+                  : undefined
+            }
+          >
+            <button
+              type='button'
+              className='btn btn-ghost h-8 min-h-8 w-8 p-0'
+              onClick={() => setIsTransferQueueOpen(true)}
+              aria-label={_('Import Books')}
+            >
+              <AiOutlineCloudSync className='m-0.5 h-5 w-5' />
+            </button>
+          </div>
           <Dropdown
             label={_('View Menu')}
             className='exclude-title-bar-mousedown dropdown-bottom dropdown-end'
