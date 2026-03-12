@@ -105,6 +105,7 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
   }, [isScrolledMode]);
 
   useEffect(() => {
+    if (zoomLevel === viewSettings.zoomLevel) return;
     saveViewSettings(envConfig, bookKey, 'zoomLevel', zoomLevel, true, true);
     if (bookData.bookDoc?.rendition?.layout === 'pre-paginated') {
       getView(bookKey)?.renderer.setAttribute('scale-factor', zoomLevel);
@@ -263,7 +264,6 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
         shortcut='Shift+J'
         Icon={isScrolledMode ? PiScrollLight : PiBookOpenLight}
         onClick={toggleScrolledMode}
-        disabled={bookData.isFixedLayout}
       />
       <MenuItem
         label={_('Paragraph Mode')}
