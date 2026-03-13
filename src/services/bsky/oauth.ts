@@ -1,252 +1,174 @@
 /**
- * OAuth 2.0 client-side utilities for ATProto/Bluesky authentication
- * Uses one-time codes (RFC 8252) for secure authorization code flow
+ * OAuth wrapper using @atproto/oauth-client-browser
+ * Provides simplified OAuth 2.0 with PKCE for ATProto/Bluesky
+ * 
+ * Client Metadata:
+ * The client_id must be a URL pointing to client metadata JSON.
+ * This identifies your application to the OAuth server.
+ * See /oauth/metadata endpoint for details.
  */
 
+import { BrowserOAuthClient } from '@atproto/oauth-client-browser';
+import type { OAuthSession as OAuthClientSession } from '@atproto/oauth-client';
+
 /**
- * Configuration for OAuth client
+ * OAuthSession represents a user's OAuth session
+ * Mapped from @atproto/oauth-client OAuthSession
  */
+export interface OAuthSession {
+  sub: string; // DID of the user
+  handle: string; // Handle of the user
+  accessToken: string; // Access token for API calls
+  refreshToken?: string; // Refresh token if available
+}
+
 export interface OAuthConfig {
   clientId: string;
-  redirectUri: string;
   host?: string; // Defaults to bsky.social
 }
 
-/**
- * OAuth state stored in sessionStorage for security
- */
-interface OAuthState {
-  verifier: string;
-  timestamp: number;
-  host: string;
-}
+let oauthClient: BrowserOAuthClient | null = null;
 
 /**
- * Generate a random code verifier for PKCE (Proof Key for Public Clients)
- * @returns Base64url encoded random string
+ * Map the library's OAuthSession to our OAuthSession
  */
-function generateCodeVerifier(): string {
-  const random = new Uint8Array(32);
-  crypto.getRandomValues(random);
-  return btoa(String.fromCharCode(...random))
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=/g, '');
-}
-
-/**
- * Generate code challenge from verifier using SHA-256
- * @param verifier The code verifier
- * @returns Base64url encoded SHA-256 hash
- */
-async function generateCodeChallenge(verifier: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(verifier);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const hashString = String.fromCharCode(...hashArray);
-  return btoa(hashString)
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=/g, '');
-}
-
-/**
- * Store OAuth state in sessionStorage
- * @param host The ATProto host
- */
-function storeOAuthState(host: string): string {
-  const verifier = generateCodeVerifier();
-  const state: OAuthState = {
-    verifier,
-    timestamp: Date.now(),
-    host,
+function mapSession(session: OAuthClientSession): OAuthSession {
+  return {
+    sub: session.sub || session.did,
+    handle: (session as any).handle || '',
+    accessToken: (session as any).accessToken || '',
+    refreshToken: (session as any).refreshToken,
   };
-  sessionStorage.setItem('oauth_state', JSON.stringify(state));
-  return verifier;
 }
 
 /**
- * Retrieve and clear OAuth state from sessionStorage
- * @returns The stored OAuth state or null
+ * Initialize the OAuth client by loading metadata from clientId URL
+ * The official library fetches and validates client metadata automatically
+ * @param config OAuth configuration
+ * @returns Initialized OAuth client
  */
-export function getOAuthState(): OAuthState | null {
-  const stateJson = sessionStorage.getItem('oauth_state');
-  if (!stateJson) return null;
+async function getOAuthClient(config: OAuthConfig): Promise<BrowserOAuthClient> {
+  const clientId = config.clientId;
   
-  const state = JSON.parse(stateJson) as OAuthState;
-  
-  // Validate state is not too old (5 minute timeout)
-  if (Date.now() - state.timestamp > 5 * 60 * 1000) {
-    sessionStorage.removeItem('oauth_state');
-    return null;
+  if (!clientId) {
+    throw new Error('OAuth clientId is required');
   }
-  
-  sessionStorage.removeItem('oauth_state');
-  return state;
+
+  // Validate that client_id is a URL (required by ATProto OAuth spec)
+  if (!clientId.startsWith('http://') && !clientId.startsWith('https://')) {
+    throw new Error(
+      'Invalid client_id: must be a URL pointing to client metadata. ' +
+      'Example: https://readup.cc/oauth/metadata.json'
+    );
+  }
+
+  // Create or return cached client
+  if (!oauthClient) {
+    // Load the client from the metadata URL
+    oauthClient = await BrowserOAuthClient.load({
+      clientId,
+      allowHttp: process.env.NODE_ENV === 'development',
+    });
+  }
+
+  return oauthClient;
 }
 
 /**
  * Start the OAuth authorization flow
- * Redirects user to the authorization endpoint
+ * Redirects user to the Bluesky authorization endpoint
  * @param config OAuth configuration
+ * @param host Optional ATProto host (defaults to bsky.social)
  */
-export async function startOAuthFlow(config: OAuthConfig): Promise<void> {
-  const host = config.host || 'bsky.social';
+export async function startOAuthFlow(config: OAuthConfig, host?: string): Promise<void> {
+  const client = await getOAuthClient(config);
   
-  // Validate config
-  if (!config.clientId) {
-    throw new Error('OAuth clientId is required');
-  }
-  if (!config.redirectUri) {
-    throw new Error('OAuth redirectUri is required');
-  }
-
-  // Generate and store verifier
-  const verifier = storeOAuthState(host);
-  const challenge = await generateCodeChallenge(verifier);
-
-  // Build authorization URL
-  const params = new URLSearchParams({
-    client_id: config.clientId,
-    redirect_uri: config.redirectUri,
-    response_type: 'code',
-    scope: 'atproto transition:generic',
-    code_challenge: challenge,
-    code_challenge_method: 'S256',
-  });
-
-  const authUrl = `https://${host}/oauth/authorize?${params.toString()}`;
-  
-  // Redirect to authorization endpoint
-  window.location.href = authUrl;
-}
-
-/**
- * Extract authorization code from URL query parameters
- * @returns The authorization code or null
- */
-export function getAuthorizationCode(): string | null {
-  if (typeof window === 'undefined') return null;
-  
-  const params = new URLSearchParams(window.location.search);
-  const code = params.get('code');
-  const error = params.get('error');
-
-  if (error) {
-    console.error('OAuth error:', error);
-    const errorDescription = params.get('error_description');
-    throw new Error(
-      `OAuth authorization failed: ${error}${errorDescription ? ` - ${errorDescription}` : ''}`
-    );
-  }
-
-  return code;
-}
-
-/**
- * Exchange authorization code for tokens
- * Must be called on the backend to keep client credentials secret
- * @param code The authorization code
- * @param host The ATProto host
- * @param clientId The OAuth client ID
- * @param clientSecret The OAuth client secret (backend only)
- * @param redirectUri The redirect URI
- * @returns Object with accessToken and refreshToken
- */
-export async function exchangeCodeForTokens(
-  code: string,
-  host: string,
-  clientId: string,
-  clientSecret: string,
-  redirectUri: string,
-  codeVerifier: string
-): Promise<{
-  access_token: string;
-  refresh_token: string;
-  expires_in: number;
-  token_type: string;
-}> {
-  const url = `https://${host}/oauth/token`;
-
-  const params = new URLSearchParams({
-    grant_type: 'authorization_code',
-    code,
-    client_id: clientId,
-    code_verifier: codeVerifier,
-    redirect_uri: redirectUri,
-  });
-
-  // Note: client_secret is only included if provided (for confidential clients)
-  if (clientSecret) {
-    params.append('client_secret', clientSecret);
-  }
-
   try {
-    const response = await fetch(url, {
-      method: 'POST',
-      body: params.toString(),
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      signal: AbortSignal.timeout(10000),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text().catch(() => 'Unknown error');
-      throw new Error(
-        `Failed to exchange code for tokens: ${response.status} ${response.statusText}${
-          errorText ? ` - ${errorText}` : ''
-        }`
-      );
-    }
-
-    return await response.json();
+    // Use redirect flow to send user to Bluesky
+    // This will throw Promise<never> to redirect
+    await client.signInRedirect(host || 'bsky.social');
   } catch (error) {
-    if (error instanceof TypeError) {
-      throw new Error(`Network error exchanging code: ${error.message}`);
-    }
+    // signInRedirect throws Promise<never> on redirect
+    // If we get here, it's an actual error
+    console.error('OAuth authorization error:', error);
     throw error;
   }
 }
 
 /**
- * Get user info from access token
- * @param host The ATProto host
- * @param accessToken The access token
- * @returns User information including did and handle
+ * Handle OAuth callback and restore session
+ * The official library automatically processes the authorization response
+ * @returns Session data if OAuth flow completed successfully
  */
-export async function getUserInfoFromToken(
-  host: string,
-  accessToken: string
-): Promise<{
-  sub: string; // DID
-  handle: string;
-  email?: string;
-  [key: string]: any;
-}> {
-  const url = `https://${host}/oauth/userinfo`;
+export async function handleOAuthCallback(): Promise<OAuthSession | undefined> {
+  if (typeof window === 'undefined') {
+    throw new Error('OAuth callback can only be handled in browser');
+  }
 
   try {
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-      },
-      signal: AbortSignal.timeout(10000),
-    });
-
-    if (!response.ok) {
-      throw new Error(
-        `Failed to get user info: ${response.status} ${response.statusText}`
-      );
+    const client = oauthClient;
+    if (!client) {
+      throw new Error('OAuth client not initialized');
     }
 
-    return await response.json();
+    // The init() method automatically processes login callbacks
+    const result = await client.init();
+    if (result?.session) {
+      return mapSession(result.session);
+    }
+    return undefined;
   } catch (error) {
-    if (error instanceof TypeError) {
-      throw new Error(`Network error getting user info: ${error.message}`);
+    console.error('OAuth callback error:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get current OAuth session if one exists
+ * @returns Session info or null
+ */
+export function getOAuthSession(): OAuthSession | null {
+  if (!oauthClient) return null;
+
+  try {
+    // In a real app, you'd need to restore from storage
+    // For now, we handle this in completeOAuthLogin
+    return null;
+  } catch (error) {
+    console.error('Error getting OAuth session:', error);
+    return null;
+  }
+}
+
+/**
+ * Initialize OAuth and restore existing session
+ * Call this on app startup to check for existing OAuth sessions
+ */
+export async function restoreOAuthSession(clientId: string): Promise<OAuthSession | undefined> {
+  try {
+    const client = await getOAuthClient({ clientId });
+    const result = await client.initRestore();
+    if (result?.session) {
+      return mapSession(result.session);
     }
+    return undefined;
+  } catch (error) {
+    console.error('Error restoring OAuth session:', error);
+    return undefined;
+  }
+}
+
+/**
+ * Revoke an OAuth session
+ * @param sub The DID of the session to revoke
+ */
+export async function logoutOAuthSession(sub: string): Promise<void> {
+  if (!oauthClient) return;
+
+  try {
+    await oauthClient.revoke(sub);
+  } catch (error) {
+    console.error('Error revoking OAuth session:', error);
     throw error;
   }
 }

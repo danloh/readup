@@ -3,13 +3,14 @@
 import { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 // import posthog from 'posthog-js';
 import { AuthToken, createSession, refreshSession, resolveDid, User } from '@/services/bsky/auth';
-import { startOAuthFlow, getAuthorizationCode } from '@/services/bsky/oauth';
+import { startOAuthFlow, logoutOAuthSession, type OAuthSession } from '@/services/bsky/oauth';
+import { getOAuthClientId } from '@/services/bsky/oauth-config';
 
 interface AuthContextType {
   user: User | null;
   login: (handle: string, passwd: string, host: string) => Promise<boolean>;
-  loginWithOAuth: (code: string, codeVerifier: string, host: string, clientId: string) => Promise<boolean>;
-  startOAuthLogin: (clientId: string, host?: string) => Promise<void>;
+  startOAuthLogin: (host?: string) => Promise<void>;
+  completeOAuthLogin: (session: OAuthSession, host: string) => Promise<boolean>;
   logout: () => void;
   refresh: () => void;
 }
@@ -77,65 +78,64 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const startOAuthLogin = async (clientId: string, host: string = 'bsky.social') => {
-    const redirectUri = `${window.location.origin}/auth/callback`;
-    await startOAuthFlow({ clientId, redirectUri, host });
+  const startOAuthLogin = async (host: string = 'bsky.social') => {
+    try {
+      const clientId = getOAuthClientId();
+      if (!clientId) {
+        throw new Error(
+          'OAuth client ID not configured. ' +
+          'Set NEXT_PUBLIC_OAUTH_CLIENT_ID environment variable.'
+        );
+      }
+
+      // Store host for the callback to use
+      sessionStorage.setItem('oauth_host', host);
+
+      // Start OAuth flow - this redirects to Bluesky
+      await startOAuthFlow({ clientId, host });
+    } catch (error) {
+      sessionStorage.removeItem('oauth_host');
+      console.error('OAuth login error:', error);
+      throw error;
+    }
   };
 
-  const loginWithOAuth = async (
-    code: string, 
-    codeVerifier: string, 
-    host: string, 
-    clientId: string
-  ) => {
+  const completeOAuthLogin = async (session: OAuthSession, host: string) => {
     try {
-      const redirectUri = `${window.location.origin}/auth/callback`;
-      
-      // Call backend API to exchange code for tokens
-      const response = await fetch('/api/auth/oauth/callback', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          code,
-          codeVerifier,
-          redirectUri,
-          host,
-          clientId,
-        }),
-      });
+      // Resolve the DID to get the PDS service endpoint
+      const service = await resolveDid(session.sub);
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Failed to exchange authorization code');
-      }
-
-      const data = await response.json();
-      if (!data.success) {
-        throw new Error(data.error || 'OAuth authentication failed');
-      }
-
-      // Create user object from OAuth response
       const newUser: User = {
         host,
-        did: data.data.did,
-        handle: data.data.handle,
-        email: data.data.email || '',
-        accessJwt: data.data.accessToken,
-        refreshJwt: data.data.refreshToken || '',
-        service: data.data.service,
+        did: session.sub,
+        handle: session.handle,
+        email: '',
+        accessJwt: session.accessToken,
+        refreshJwt: '',
+        service,
       };
 
       setUser(newUser);
       localStorage.setItem('user', JSON.stringify(newUser));
       return true;
     } catch (error) {
-      console.error('OAuth login error:', error);
+      console.error('OAuth login completion error:', error);
       return false;
     }
   };
 
   const logout = () => {
     console.log('Logging out');
+    try {
+      // Logout from OAuth if user has an OAuth session
+      if (user?.did) {
+        logoutOAuthSession(user.did).catch(() => {
+          // Silently fail if OAuth logout doesn't work
+        });
+      }
+    } catch (e) {
+      console.log('Error during OAuth logout:', e);
+    }
     localStorage.removeItem('user');
     setUser(null);
   };
@@ -152,7 +152,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, loginWithOAuth, startOAuthLogin, logout, refresh }}>
+    <AuthContext.Provider value={{ user, login, startOAuthLogin, completeOAuthLogin, logout, refresh }}>
       {children}
     </AuthContext.Provider>
   );

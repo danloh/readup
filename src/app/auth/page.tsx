@@ -50,9 +50,13 @@ export default function AuthPage({handleClose}: Props) {
   const handleOAuthLogin = useCallback(async () => {
     setIsLoading(true);
     try {
-      const clientId = (process.env['NEXT_PUBLIC_OAUTH_CLIENT_ID'] || 'your-client-id');
-      await startOAuthLogin(clientId, host);
+      // Store host in sessionStorage for the callback page to use
+      sessionStorage.setItem('oauth_host', host);
+      
+      await startOAuthLogin(host);
+      // The library redirects to Bluesky, so this only returns on error
     } catch (e) {
+      sessionStorage.removeItem('oauth_host');
       eventDispatcher.dispatch('toast', {
         message: `Error: ${e}`,
         timeout: 2000,
@@ -67,7 +71,7 @@ export default function AuthPage({handleClose}: Props) {
       <h1 className="title text-center text-2xl my-4">{_('Join with atproto')}</h1>
       <div className="card mx-auto p-4 w-full max-w-md">
         {/* Auth Mode Tabs */}
-        <div className="tabs tabs-bordered mb-6">
+        <div className="tabs tabs-bordered mb-6 hidden">
           <button
             className={`tab ${authMode === 'password' ? 'tab-active' : ''}`}
             onClick={() => setAuthMode('password')}

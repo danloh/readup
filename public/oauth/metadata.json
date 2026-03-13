@@ -1,0 +1,12 @@
+{
+  "client_id": "https://readup.cc/oauth/metadata.json",
+  "client_name": "Readup",
+  "client_uri": "https://readup.cc",
+  "redirect_uris": [
+    "https://readup.cc/auth/callback"
+  ],
+  "logo_uri": "https://readup.cc/favicon.ico",
+  "tos_uri": "https://readup.cc/terms",
+  "policy_uri": "https://readup.cc/privacy",
+  "scope": "atproto transition:generic"
+}
