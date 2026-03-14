@@ -466,6 +466,7 @@ const RSVPControl: React.FC<RSVPControlProps> = ({ bookKey, gridInsets }) => {
           <RSVPOverlay
             gridInsets={gridInsets}
             controller={controllerRef.current}
+            title={bookData?.book?.title || ''}
             chapters={chapters}
             currentChapterHref={currentChapterHref}
             onClose={handleClose}

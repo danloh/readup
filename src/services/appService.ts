@@ -45,7 +45,7 @@ import { createProgressHandler, ProgressHandler } from '@/utils/transfer';
 import { TxtToEpubConverter } from '@/utils/txt';
 import { svg2png } from '@/utils/svg';
 import { ArticleType, FeedType } from '@/app/feed/components/dataAgent';
-import { BOOK_FILE_NOT_FOUND_ERROR } from './errors';
+import { BookFileNotFoundError } from './errors';
 import { 
   deleteRecord,
   downloadBookFile,
@@ -790,10 +790,10 @@ export abstract class BaseAppService implements AppService {
         if (bookFile) {
           file = await this.fs.openFile(`${bookDir}/${bookFile.path}`, 'Books');
         } else {
-          throw new Error(BOOK_FILE_NOT_FOUND_ERROR);
+          throw new BookFileNotFoundError();
         }
       } else {
-        throw new Error(BOOK_FILE_NOT_FOUND_ERROR);
+        throw new BookFileNotFoundError();
       }
     }
     return { book, file };

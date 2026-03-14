@@ -4,11 +4,13 @@ import clsx from 'clsx';
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { IoPricetag } from 'react-icons/io5';
+
 import { Book } from '@/types/book';
 import { useTranslation } from '@/hooks/useTranslation';
 import { formatDate, formatLanguage } from '@/utils/book';
 import { eventDispatcher } from '@/utils/event';
 import { navigateToReader } from '@/utils/nav';
+import { getImportErrorMessage, ImportError } from '@/services/errors';
 import { getFileExtFromMimeType } from '@/libs/document';
 import { CachedImage } from '@/components/CachedImage';
 import { OPDSLink, OPDSPublication, REL, SYMBOL } from '@/types/opds';
@@ -96,10 +98,19 @@ export function PublicationView({
       eventDispatcher.dispatch('toast', { type: 'success', message: _('Download completed') });
     } catch (error) {
       console.error('Download failed:', error);
-      eventDispatcher.dispatch('toast', {
-        type: 'error',
-        message: _('Download failed') + `:\n${href}`,
-      });
+      if (error instanceof ImportError) {
+        const friendlyMsg = _(getImportErrorMessage(error.message));
+        eventDispatcher.dispatch('toast', {
+          type: 'error',
+          message: _('Import failed') + `:\n${friendlyMsg}`,
+          timeout: 5000,
+        });
+      } else {
+        eventDispatcher.dispatch('toast', {
+          type: 'error',
+          message: _('Download failed') + `:\n${href}`,
+        });
+      }
     } finally {
       setDownloading(false);
       setProgress(null);

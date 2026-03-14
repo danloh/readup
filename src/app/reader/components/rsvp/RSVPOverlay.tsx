@@ -10,9 +10,12 @@ import {
   IoPlaySkipForward,
   IoRemove,
   IoAdd,
+  IoChevronDown,
 } from 'react-icons/io5';
+import { IoMdColorPalette } from 'react-icons/io';
 import { TbLetterA, TbLetterASmall } from 'react-icons/tb';
 import { MdOutlineMotionPhotosPause } from 'react-icons/md';
+import { HiMenuAlt2 } from "react-icons/hi";
 
 import { Insets } from '@/types/misc';
 import { RsvpState, RsvpWord, RSVPController, isCJK } from '@/services/rsvp';
@@ -20,6 +23,10 @@ import { useThemeStore } from '@/store/themeStore';
 import { TOCItem } from '@/libs/document';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Overlay } from '@/components/Overlay';
+
+const STORAGE_KEY_CONTEXT = 'readup_rsvp_context';
+const STORAGE_KEY_ORP_COLOR = 'readup_rsvp_orp_color';
+const ORP_COLOR_OPTIONS = ['', '#EF4444', '#3B82F6', '#22C55E', '#F97316', '#A855F7'];
 
 interface FlatChapter {
   label: string;
@@ -30,6 +37,7 @@ interface FlatChapter {
 interface RSVPOverlayProps {
   gridInsets: Insets;
   controller: RSVPController;
+  title: string;
   chapters: TOCItem[];
   currentChapterHref: string | null;
   onClose: () => void;
@@ -40,6 +48,7 @@ interface RSVPOverlayProps {
 const RSVPOverlay: React.FC<RSVPOverlayProps> = ({
   gridInsets,
   controller,
+  title,
   chapters,
   currentChapterHref,
   onClose,
@@ -52,6 +61,26 @@ const RSVPOverlay: React.FC<RSVPOverlayProps> = ({
   const [currentWord, setCurrentWord] = useState<RsvpWord | null>(controller.currentWord);
   const [countdown, setCountdown] = useState<number | null>(controller.currentCountdown);
   const [showChapterDropdown, setShowChapterDropdown] = useState(false);
+  const [contextCollapsed, setContextCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem(STORAGE_KEY_CONTEXT) === '1';
+    } catch {
+      return false;
+    }
+  });
+  // Context window: only rebuild the rendered word list when the current word
+  // falls outside the window or nears its edge, keeping the DOM stable.
+  const [contextWindow, setContextWindow] = useState(() => {
+    if (!state || state.words.length === 0) return { start: 0, end: 0 };
+    return {
+      start: Math.max(0, state.currentIndex - 50),
+      end: Math.min(state.words.length, state.currentIndex + 151),
+    };
+  });
+
+  const contextWordRef = useRef<HTMLSpanElement>(null);
+  const contextPanelRef = useRef<HTMLDivElement>(null);
+
   const touchStartX = useRef(0);
   const touchStartY = useRef(0);
   const touchStartTime = useRef(0);
@@ -79,6 +108,27 @@ const RSVPOverlay: React.FC<RSVPOverlayProps> = ({
       const newState = (e as CustomEvent<RsvpState>).detail;
       setState(newState);
       setCurrentWord(controller.currentWord);
+
+      // Update context window only when current word falls outside or nears edge
+      const idx = newState.currentIndex;
+      const total = newState.words.length;
+      setContextWindow((prev) => {
+        if (total === 0) return { start: 0, end: 0 };
+        // Outside window — reset
+        if (idx < prev.start || idx >= prev.end) {
+          return {
+            start: Math.max(0, idx - 50),
+            end: Math.min(total, idx + 151),
+          };
+        }
+        // Near end of window — extend forward
+        const windowSize = prev.end - prev.start;
+        if (idx - prev.start > windowSize * 0.8) {
+          return { start: prev.start, end: Math.min(total, prev.end + 100) };
+        }
+        // No change — return same reference to avoid re-render
+        return prev;
+      });
     };
 
     const handleCountdownChange = (e: Event) => {
@@ -177,24 +227,41 @@ const RSVPOverlay: React.FC<RSVPOverlayProps> = ({
     }
   }, [state]);
 
-  // Context text helpers - show 100 words before and after
-  const getContextBefore = useCallback((): string => {
-    if (!state || state.words.length === 0) return '';
-    const startIndex = Math.max(0, state.currentIndex - 100);
-    return state.words
-      .slice(startIndex, state.currentIndex)
-      .map((w) => w.text)
-      .join(' ');
-  }, [state]);
+  // Stable word list that only changes when contextWindow changes
+  const contextWords = useMemo(
+    () => state.words.slice(contextWindow.start, contextWindow.end),
+    [state.words, contextWindow],
+  );
 
-  const getContextAfter = useCallback((): string => {
-    if (!state || state.words.length === 0) return '';
-    const endIndex = Math.min(state.words.length, state.currentIndex + 101);
-    return state.words
-      .slice(state.currentIndex + 1, endIndex)
-      .map((w) => w.text)
-      .join(' ');
-  }, [state]);
+  // Auto-scroll: keep highlighted word away from top/bottom edges
+  useEffect(() => {
+    const panel = contextPanelRef.current;
+    const word = contextWordRef.current;
+    if (contextCollapsed || !panel || !word) return;
+
+    const panelRect = panel.getBoundingClientRect();
+    const wordRect = word.getBoundingClientRect();
+    const margin = panelRect.height * 0.15;
+    const topLine = panelRect.top + margin;
+
+    if (wordRect.top < topLine) {
+      panel.scrollTop -= topLine - wordRect.top;
+    } else if (wordRect.bottom > panelRect.bottom - margin) {
+      panel.scrollTop += wordRect.top - topLine;
+    }
+  }, [state.currentIndex, contextCollapsed]);
+
+  const toggleContext = useCallback(() => {
+    setContextCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem(STORAGE_KEY_CONTEXT, next ? '1' : '0');
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
+  }, []);
 
   // Chapter helpers
   const getCurrentChapterLabel = useCallback((): string => {
@@ -204,7 +271,8 @@ const RSVPOverlay: React.FC<RSVPOverlayProps> = ({
       const normalizedHref = c.href.split('#')[0]?.replace(/^\//, '') || '';
       return normalizedHref === normalizedCurrent;
     });
-    return chapter?.label || _('Select Chapter');
+    const chapterLabel = chapter?.label;
+    return chapterLabel ? `${title} § ${chapterLabel}` : _('Select Chapter');
   }, [_, currentChapterHref, flatChapters]);
 
   const isChapterActive = useCallback(
@@ -294,6 +362,15 @@ const RSVPOverlay: React.FC<RSVPOverlayProps> = ({
   const fgColor = themeCode.fg;
   const accentColor = themeCode.primary;
 
+  const [orpColor, setOrpColor] = useState(() => {
+    return localStorage.getItem(STORAGE_KEY_ORP_COLOR) || accentColor;
+  });
+
+  const updateOrpColor = useCallback((color: string) => {
+    setOrpColor(color || accentColor);
+    localStorage.setItem(STORAGE_KEY_ORP_COLOR, color || accentColor);
+  }, []);
+
   return (
     <div
       data-testid='rsvp-overlay'
@@ -370,35 +447,50 @@ const RSVPOverlay: React.FC<RSVPOverlayProps> = ({
         </div>
       </div>
 
-      {/* Context panel (shown when paused) */}
-      {!state.playing && countdown === null && (
-        <div className='mx-3 max-h-[25vh] overflow-y-auto rounded-lg border border-gray-500/20 bg-gray-500/10 p-3 md:mx-4 md:max-h-[30vh] md:rounded-xl md:p-4'>
-          <div className='mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide opacity-60 md:mb-3'>
-            <svg
-              width='14'
-              height='14'
-              viewBox='0 0 24 24'
-              fill='none'
-              stroke='currentColor'
-              strokeWidth='2'
-              className='md:h-4 md:w-4'
-            >
-              <path d='M4 6h16M4 12h16M4 18h10' />
-            </svg>
-            <span>{_('Context')}</span>
+      {/* Context panel (always visible, collapsible) */}
+      <div className='mx-3 overflow-hidden rounded-lg border border-gray-500/20 bg-gray-500/10 md:mx-4 md:rounded-xl'>
+        <button
+          className='flex w-full items-center gap-2 px-3 py-2 text-xs font-semibold uppercase tracking-wide opacity-60 transition-opacity hover:opacity-80 md:px-4 md:py-3'
+          onClick={toggleContext}
+          aria-expanded={!contextCollapsed}
+          aria-label={contextCollapsed ? _('Show context') : _('Hide context')}
+        >
+          <HiMenuAlt2 size={16} />
+          <span className='flex-1 text-left'>{_('Context')}</span>
+          <IoChevronDown
+            className={clsx(
+              'h-3.5 w-3.5 transition-transform duration-200',
+              !contextCollapsed && 'rotate-180',
+            )}
+          />
+        </button>
+        {!contextCollapsed && (
+          <div
+            ref={contextPanelRef}
+            className='max-h-[20vh] overflow-y-auto px-3 pb-3 md:px-4 md:pb-4'
+          >
+            <div className='text-left text-base leading-relaxed md:text-lg'>
+              {contextWords.map((w, i) => {
+                const wordIndex = contextWindow.start + i;
+                const isCurrent = wordIndex === state.currentIndex;
+                return (
+                  <span
+                    key={wordIndex}
+                    ref={isCurrent ? contextWordRef : undefined}
+                    className={isCurrent ? undefined : 'opacity-70'}
+                    style={isCurrent ? { color: orpColor || accentColor } : undefined}
+                  >
+                    {w.text}{' '}
+                  </span>
+                );
+              })}
+            </div>
           </div>
-          <div className='text-left text-base leading-relaxed md:text-lg'>
-            <span className='opacity-70'>{getContextBefore()} </span>
-            <span className='font-semibold' style={{ color: accentColor }}>
-              {currentWord?.text || ''}
-            </span>
-            <span className='opacity-70'> {getContextAfter()}</span>
-          </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Main content area */}
-      <div className='flex flex-1 flex-col items-center justify-center p-4 md:p-8'>
+      <div className='flex flex-1 flex-col items-center justify-center p-4 md:p-6'>
         <div className='flex h-full w-full flex-col items-center justify-center'>
           <div className='flex h-full w-full flex-col items-center'>
             {/* Top guide line */}
@@ -440,7 +532,7 @@ const RSVPOverlay: React.FC<RSVPOverlayProps> = ({
                         'relative z-10 font-bold',
                         isCJK(wordBefore) ? 'mx-[0.2em]' : ''
                       )}
-                      style={{ color: accentColor }}
+                      style={{ color: orpColor || accentColor }}
                     >
                       {orpChar}
                     </span>
@@ -552,7 +644,7 @@ const RSVPOverlay: React.FC<RSVPOverlayProps> = ({
           </div>
 
           {/* Secondary controls row on mobile, split on desktop */}
-          <div className='flex items-center justify-between gap-2 flex-wrap'>
+          <div className='flex items-center justify-center gap-2 flex-wrap'>
             {/* Font Scale controls  */}
             <div className='flex items-center justify-start gap-1'>
               <button
@@ -579,9 +671,29 @@ const RSVPOverlay: React.FC<RSVPOverlayProps> = ({
               </button>
             </div>
 
+            {/* orp color */}
+            <div className='flex items-center'>
+              <label className='flex cursor-pointer items-center gap-1 text-xs opacity-80'>
+                <span className='text-xs'>
+                  <IoMdColorPalette size={18}  color={orpColor || accentColor} />
+                </span>
+                <select
+                  className='cursor-pointer rounded p-1 text-xs font-medium hover:bg-gray-500/30'
+                  value={orpColor}
+                  onChange={(e) => updateOrpColor(e.target.value || accentColor)}
+                >
+                  {ORP_COLOR_OPTIONS.map((opt) => (
+                    <option key={opt} value={opt} style={{ color: opt || accentColor }}>
+                      {opt || 'default'}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
             {/* Punctuation pause */}
             <div className='flex items-center'>
-              <label className='flex cursor-pointer items-center gap-1 text-xs font-medium opacity-80'>
+              <label className='flex cursor-pointer items-center gap-1 text-xs opacity-80'>
                 <span className='text-xs'><MdOutlineMotionPhotosPause size={18} /></span>
                 <select
                   className='cursor-pointer rounded p-1 text-xs font-medium hover:bg-gray-500/30'

@@ -21,6 +21,7 @@ import { parseOpenWithFiles } from '@/helpers/openWith';
 import { isTauriAppPlatform } from '@/services/environment';
 import { SUPPORTED_BOOK_EXTS } from '@/services/constants';
 import { transferManager } from '@/services/transferManager';
+import { getImportErrorMessage } from '@/services/errors';
 import { useEnv } from '@/context/EnvContext';
 import { useAuth } from '@/context/AuthContext';
 import { useLibraryStore } from '@/store/libraryStore';
@@ -52,6 +53,7 @@ import {
 } from './libraryUtils';
 import TransferQueuePanel from './TransferQueuePanel';
 import GroupHeader from './GroupHeader';
+
 
 const LibraryPageWithSearchParams = () => {
   const searchParams = useSearchParams();
@@ -370,14 +372,7 @@ const LibraryPageContent = (
     setLoading(true);
     const failedImports: Array<{ filename: string; errorMessage: string }> = [];
     const successfulImports: string[] = [];
-    const errorMap: [string, string][] = [
-      ['No chapters detected', _('No chapters detected')],
-      ['Failed to parse EPUB', _('Failed to parse the EPUB file')],
-      ['Unsupported format', _('This book format is not supported')],
-      ['Failed to open file', _('Failed to open the book file')],
-      ['Invalid or empty book file', _('The book file is empty')],
-      ['Unsupported or corrupted book file', _('The book file is corrupted')],
-    ];
+    
     const { library } = useLibraryStore.getState();
 
     const processFile = async (selectedFile: SelectedFile): Promise<Book | null> => {
@@ -407,10 +402,9 @@ const LibraryPageContent = (
       } catch (error) {
         const filename = typeof file === 'string' ? file : file.name;
         const baseFilename = getFilename(filename);
-        const errorMessage =
-          error instanceof Error
-            ? errorMap.find(([str]) => error.message.includes(str))?.[1] || error.message
-            : '';
+        const errorMessage = error instanceof Error 
+          ? _(getImportErrorMessage(error.message)) 
+          : '';
         failedImports.push({ filename: baseFilename, errorMessage });
         console.error('Failed to import book:', filename, error);
         return null;
