@@ -15,12 +15,12 @@
  * @returns The client ID URL or null if not configured
  */
 export function getOAuthClientId(): string {
-  const clientId = process.env['NEXT_PUBLIC_OAUTH_CLIENT_ID'];
+  const clientId = `https://readup.cc/oauth/metadata.json`;
   
   if (!clientId) {
     console.warn(
       'OAuth client ID not configured. ' +
-      'Set NEXT_PUBLIC_OAUTH_CLIENT_ID environment variable.'
+      'Set CLIENT_ID environment variable.'
     );
     return '';
   }
@@ -47,7 +47,7 @@ export function getAppBaseUrl(): string {
   }
   
   // Server-side
-  return process.env['NEXT_PUBLIC_APP_URL'] || 'http://localhost:3000';
+  return 'http://localhost:3000';
 }
 
 /**

@@ -84,7 +84,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (!clientId) {
         throw new Error(
           'OAuth client ID not configured. ' +
-          'Set NEXT_PUBLIC_OAUTH_CLIENT_ID environment variable.'
+          'Set CLIENT_ID environment variable.'
         );
       }
 

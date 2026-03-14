@@ -3,19 +3,19 @@
  * Required by ATProto OAuth servers to authorize your application
  * 
  * The client_id in your .env.local should point to this endpoint:
- * NEXT_PUBLIC_OAUTH_CLIENT_ID=http://localhost:3000/oauth/metadata.json
+ * http://localhost:3000/oauth/metadata.json
  * 
  * For production:
- * NEXT_PUBLIC_OAUTH_CLIENT_ID=https://readup.cc/oauth/metadata.json
+ * https://readup.cc/oauth/metadata.json
  */
 
 export async function GET() {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const baseUrl = 'http://localhost:3000';
 
   const metadata = {
     // Required fields
     client_id: `${baseUrl}/oauth/metadata.json`,
-    client_name: process.env.NEXT_PUBLIC_APP_NAME || 'Readup',
+    client_name: 'Readup',
     client_uri: baseUrl,
     redirect_uris: [
       `${baseUrl}/auth/callback`,
