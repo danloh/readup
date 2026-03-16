@@ -1,11 +1,16 @@
 import { describe, it, expect } from 'vitest';
-import { renderNoteTemplate, validateNoteTemplate, NoteTemplateData } from '../../utils/note';
+import {
+  renderNoteTemplate,
+  validateNoteTemplate,
+  formatBlockQuote,
+  NoteTemplateData,
+} from '../../utils/note';
 
 describe('renderNoteTemplate', () => {
   const sampleData: NoteTemplateData = {
     title: 'The Great Gatsby',
     author: 'F. Scott Fitzgerald',
-    exportDate: 1769309955011,
+    exportDate: '2024-01-15',
     chapters: [
       {
         title: 'Chapter 1',
@@ -93,7 +98,7 @@ describe('renderNoteTemplate', () => {
       const emptyData: NoteTemplateData = {
         title: 'Empty Book',
         author: 'Nobody',
-        exportDate: 1769309955011,
+        exportDate: '2024-01-15',
         chapters: [],
       };
       const template = '{% for chapter in chapters %}{{ chapter.title }}{% endfor %}';
@@ -325,6 +330,23 @@ describe('renderNoteTemplate', () => {
     });
   });
 
+  describe('Blockquote filter', () => {
+    it('should prefix every line with > in templates', () => {
+      const data: NoteTemplateData = {
+        ...sampleData,
+        chapters: [
+          {
+            title: 'Ch1',
+            annotations: [{ text: 'Line 1\nLine 2\nLine 3' }],
+          },
+        ],
+      };
+      const template = '{{ chapters[0].annotations[0].text | blockquote }}';
+      const result = renderNoteTemplate(template, data);
+      expect(result).toBe('> Line 1\n> Line 2\n> Line 3');
+    });
+  });
+
   describe('Newline to BR filter', () => {
     it('should convert newlines to br tags', () => {
       const dataWithNewlines: NoteTemplateData = {
@@ -407,7 +429,7 @@ describe('renderNoteTemplate', () => {
       const emptyData: NoteTemplateData = {
         title: 'Empty Book',
         author: 'Unknown',
-        exportDate: 1769309955011,
+        exportDate: '2024-01-15',
         chapters: [],
       };
       const template = `## {{ title }}
@@ -568,5 +590,26 @@ describe('validateNoteTemplate', () => {
     const template = 'Just plain text without any template syntax';
     const result = validateNoteTemplate(template);
     expect(result.isValid).toBe(true);
+  });
+});
+
+describe('formatBlockQuote', () => {
+  it('should prefix every line with > for multi-line text', () => {
+    const text = 'Nothing must happen to you\nNo, what am I saying\nEverything must happen to you';
+    expect(formatBlockQuote(text)).toBe(
+      '> Nothing must happen to you\n> No, what am I saying\n> Everything must happen to you',
+    );
+  });
+
+  it('should handle single-line text', () => {
+    expect(formatBlockQuote('Hello')).toBe('> Hello');
+  });
+
+  it('should handle empty string', () => {
+    expect(formatBlockQuote('')).toBe('> ');
+  });
+
+  it('should preserve empty lines within the quote', () => {
+    expect(formatBlockQuote('First\n\nThird')).toBe('> First\n> \n> Third');
   });
 });

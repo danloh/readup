@@ -16,8 +16,8 @@ const renderGenerations = new WeakMap()
 
 // Set up panning and selection event handlers once per iframe document
 const setupPanningEvents = (doc) => {
-    if (doc._readestEventsInitialized) return
-    doc._readestEventsInitialized = true
+    if (doc._readupEventsInitialized) return
+    doc._readupEventsInitialized = true
 
     const container = doc.querySelector('.textLayer')
     if (!container) return
