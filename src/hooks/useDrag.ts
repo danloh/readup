@@ -1,7 +1,10 @@
 import { useCallback, useRef } from 'react';
 
+export type DragKey = 'ArrowLeft' | 'ArrowRight' | 'ArrowUp' | 'ArrowDown';
+
 export const useDrag = (
   onDragMove: (data: { clientX: number; clientY: number; deltaX: number; deltaY: number }) => void,
+  onDragKeyDown: (data: { key: DragKey; step: number }) => void,
   onDragEnd?: (data: {
     velocity: number;
     deltaT: number;
@@ -10,6 +13,7 @@ export const useDrag = (
     deltaX: number;
     deltaY: number;
   }) => void,
+  cursor: string = 'col-resize',
 ) => {
   const isDragging = useRef(false);
   const startX = useRef(0);
@@ -30,6 +34,10 @@ export const useDrag = (
         startX.current = e.clientX;
       }
       startTime.current = performance.now();
+
+      document.body.style.pointerEvents = 'none';
+      document.body.style.userSelect = 'none';
+      document.documentElement.style.cursor = cursor;
 
       const handleMove = (event: MouseEvent | TouchEvent) => {
         if (isDragging.current) {
@@ -58,6 +66,11 @@ export const useDrag = (
 
       const handleEnd = (event: MouseEvent | TouchEvent) => {
         isDragging.current = false;
+
+        document.body.style.pointerEvents = '';
+        document.body.style.userSelect = '';
+        document.documentElement.style.cursor = '';
+
         let deltaX = 0;
         let deltaY = 0;
         let clientX = 0;
@@ -93,8 +106,27 @@ export const useDrag = (
       window.addEventListener('touchmove', handleMove, { passive: true });
       window.addEventListener('touchend', handleEnd);
     },
-    [onDragMove, onDragEnd],
+    [onDragMove, onDragEnd, cursor],
   );
 
-  return { handleDragStart };
+  const handleDragKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      const step = 0.02;
+      switch (e.key) {
+        case 'ArrowUp':
+        case 'ArrowDown':
+        case 'ArrowLeft':
+        case 'ArrowRight':
+          onDragKeyDown({ key: e.key, step });
+          break;
+        default:
+          return;
+      }
+      e.preventDefault();
+      e.stopPropagation();
+    },
+    [onDragKeyDown],
+  );
+
+  return { handleDragStart, handleDragKeyDown };
 };

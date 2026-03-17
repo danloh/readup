@@ -149,7 +149,9 @@ const Dialog: React.FC<DialogProps> = ({
     }
   };
 
-  const { handleDragStart } = useDrag(handleDragMove, handleDragEnd);
+  const handleDragKeyDown = () => {};
+
+  const { handleDragStart } = useDrag(handleDragMove, handleDragKeyDown, handleDragEnd);
 
   return (
     <dialog

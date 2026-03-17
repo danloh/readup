@@ -187,8 +187,10 @@ const getColorStyles = (
     }
     table {
       overflow: auto;
-      table-layout: fixed;
       display: table !important;
+    }
+    table:has(> colgroup) {
+      table-layout: fixed;
     }
     /* code */
     body.theme-dark code {
@@ -904,17 +906,6 @@ export const applyTableStyle = (document: Document) => {
 
       if (rowWidth > totalTableWidth) {
         totalTableWidth = rowWidth;
-      }
-    }
-
-    const computedTableStyle = window.getComputedStyle(table);
-    const computedWidth = computedTableStyle.width;
-    if (computedWidth && computedWidth !== 'auto' && computedWidth !== '0px') {
-      const widthValue = parseFloat(computedWidth);
-      const widthUnit = computedWidth.replace(widthValue.toString(), '').trim();
-      if (widthUnit !== '%') {
-        // Workaround for hardcoded table layout
-        table.style.width = `calc(min(${computedWidth}, var(--available-width)))`;
       }
     }
 

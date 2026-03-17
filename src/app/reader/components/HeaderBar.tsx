@@ -30,6 +30,7 @@ interface HeaderBarProps {
   isTopLeft: boolean;
   isHoveredAnim: boolean;
   gridInsets: Insets;
+  screenInsets: Insets;
   onCloseBook: (bookKey: string) => void;
   onGoToLibrary: () => void;
   onDropdownOpenChange?: (isOpen: boolean) => void;
@@ -41,6 +42,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
   isTopLeft,
   isHoveredAnim,
   gridInsets,
+  screenInsets,
   onCloseBook,
   onGoToLibrary,
   onDropdownOpenChange,
@@ -51,6 +53,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
   const { isTrafficLightVisible } = useTrafficLight();
   const { trafficLightInFullscreen, setTrafficLightVisibility } = useTrafficLightStore();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [headerWidth, setHeaderWidth] = useState(0);
   const { bookKeys, getView, getViewSettings, hoveredBookKey, setHoveredBookKey } = 
     useReaderStore();
   const { systemUIVisible, statusBarHeight } = useThemeStore();
@@ -98,6 +101,16 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appService, hoveredBookKey]);
 
+  useEffect(() => {
+    const header = headerRef.current;
+    if (!header) return;
+    const observer = new ResizeObserver(([entry]) => {
+      if (entry) setHeaderWidth(entry.contentRect.width);
+    });
+    observer.observe(header);
+    return () => observer.disconnect();
+  }, []);
+
   // Check if mouse is outside header area to avoid false positive event of MouseLeave when clicking inside header on Windows
   const isMouseOutsideHeader = useCallback((clientX: number, clientY: number) => {
     if (!headerRef.current) return true;
@@ -108,15 +121,20 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
     );
   }, []);
 
+  const isHeaderCompact = headerWidth > 0 && headerWidth < 350;
+  const insets = window.innerWidth < 640 ? screenInsets : gridInsets;
   const isHeaderVisible = hoveredBookKey === bookKey || isDropdownOpen;
   const trafficLightInHeader =
     appService?.hasTrafficLight && !trafficLightInFullscreen && !isSideBarVisible && isTopLeft;
 
   return (
     <div
-      className={clsx('bg-base-100 absolute top-0 w-full')}
+      className={clsx(
+        'bg-base-100 left-0 top-0 w-full',
+        window.innerWidth < 640 ? 'fixed z-20' : 'absolute',
+      )}
       style={{
-        paddingTop: appService?.hasSafeAreaInset ? `${gridInsets.top}px` : '0px',
+        paddingTop: appService?.hasSafeAreaInset ? `${insets.top}px` : '0px',
       }}
     >
       <Head><title>{bookTitle}</title></Head>
@@ -134,7 +152,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
           isHeaderVisible ? 'visible' : 'hidden',
         )}
         style={{
-          height: systemUIVisible ? `${Math.max(gridInsets.top, statusBarHeight)}px` : '0px',
+          height: systemUIVisible ? `${Math.max(insets.top, statusBarHeight)}px` : '0px',
         }}
       />
       <div
@@ -153,8 +171,8 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
         )}
         style={{
           marginTop: systemUIVisible
-            ? `${Math.max(gridInsets.top, statusBarHeight)}px`
-            : `${gridInsets.top}px`,
+            ? `${Math.max(insets.top, statusBarHeight)}px`
+            : `${insets.top}px`,
         }}
         onFocus={() => !appService?.isMobile && setHoveredBookKey(bookKey)}
         onMouseLeave={(e) => {
@@ -163,7 +181,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
           }
         }}
       >
-        <div className='header-tools-start bg-base-100 sidebar-bookmark-toggler z-20 flex h-full items-center gap-x-4 pe-2 max-[350px]:gap-x-2'>
+        <div className='header-tools-start bg-base-100 z-20 flex h-full items-center gap-x-2 pe-2'>
           {!isSideBarVisible && (
             <div className='flex items-center justify-start gap-x-2'>
               <button
@@ -208,6 +226,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
           className={clsx(
             'header-title z-15 bg-base-100 pointer-events-none hidden flex-1 items-center justify-center sm:flex',
             !windowButtonVisible && 'absolute inset-0',
+            isHeaderCompact && '!hidden',
           )}
         >
           <h2
@@ -221,7 +240,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
           </h2>
         </div>
 
-        <div className='header-tools-end bg-base-100 z-20 ms-auto flex h-full items-center gap-x-4 ps-2 max-[350px]:gap-x-2'>
+        <div className='header-tools-end bg-base-100 z-20 ms-auto flex h-full items-center gap-x-2 ps-2'>
           <SettingsToggler bookKey={bookKey} />
           <NotebookToggler bookKey={bookKey} />
           <Dropdown
@@ -234,7 +253,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
           </Dropdown>
 
           <WindowButtons
-            className='window-buttons flex h-full items-center'
+            className='window-buttons flex items-center'
             headerRef={headerRef}
             showMinimize={bookKeys.length == 1 && windowButtonVisible}
             showMaximize={bookKeys.length == 1 && windowButtonVisible}

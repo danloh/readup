@@ -86,7 +86,9 @@ const SectionInfo: React.FC<SectionInfoProps> = ({
           className={clsx(
             'text-center',
             isVertical ? '' : 'line-clamp-1',
-            !isVertical && hoveredBookKey == bookKey && 'hidden',
+            !isVertical &&
+              (hoveredBookKey == bookKey || (hoveredBookKey && appService?.isMobile)) &&
+              'hidden',
           )}
         >
           {`${bookTitle ? `${bookTitle} § ` : ''}${section || ''}`}

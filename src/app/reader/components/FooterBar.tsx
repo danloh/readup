@@ -215,7 +215,7 @@ const FooterBar: React.FC<FooterBarProps> = ({
         role='contentinfo'
         aria-label={_('Footer Bar')}
         className={clsx(
-          'footer-bar shadow-xs absolute bottom-0 z-30 flex w-full flex-col h-[42px]',
+          'footer-bar shadow-xs absolute bottom-0 left-0 z-30 flex w-full flex-col h-[42px]',
           'bg-base-100 transition-[opacity,transform] duration-300',
           window.innerWidth < 640 ? 'fixed' : 'absolute',
           appService?.hasRoundedWindow && 'rounded-window-bottom-right',
@@ -238,7 +238,11 @@ const FooterBar: React.FC<FooterBarProps> = ({
               ? 'pointer-events-auto translate-y-0 py-2 ease-out'
               : 'pointer-events-none invisible translate-y-full overflow-hidden p-0 ease-in',
           )}
-          style={{ bottom: `${gridInsets.bottom * 0.33 + 42}px` }}
+          style={{ 
+            bottom: `${gridInsets.bottom * 0.33 + 42}px`, 
+            scrollbarWidth: 'none', 
+            msOverflowStyle: 'none'
+          }}
         >
           <div className='flex w-full items-center justify-center gap-x-2'>
             <Button

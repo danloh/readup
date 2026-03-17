@@ -11,7 +11,7 @@ const useSidebar = (initialWidth: string, isPinned: boolean) => {
     sideBarWidth,
     isSideBarVisible,
     isSideBarPinned,
-    
+    getSideBarWidth,
     setSideBarWidth,
     setSideBarVisible,
     setSideBarPin,
@@ -43,6 +43,7 @@ const useSidebar = (initialWidth: string, isPinned: boolean) => {
     sideBarWidth,
     isSideBarPinned,
     isSideBarVisible,
+    getSideBarWidth,
     handleSideBarResize,
     handleSideBarTogglePin,
     setSideBarVisible,
