@@ -205,9 +205,13 @@ export const nativeFileSystem: FileSystem = {
         // NOTE: RemoteFile currently performs about 2× faster than NativeFile
         // due to an unresolved performance issue in Tauri (see tauri-apps/tauri#9190).
         // Once the bug is resolved, we should switch back to using NativeFile.
-        const prefix = await this.getPrefix(base);
-        const absolutePath = prefix ? await join(prefix, path) : path;
-        return await new RemoteFile(this.getURL(absolutePath), fname).open();
+        try {
+          const prefix = await this.getPrefix(base);
+          const absolutePath = prefix ? await join(prefix, path) : path;
+          return await new RemoteFile(this.getURL(absolutePath), fname).open();
+        } catch {
+          return await new NativeFile(fp, fname, baseDir ? baseDir : null).open();
+        }
       }
     }
   },
@@ -396,6 +400,14 @@ export class NativeAppService extends BaseAppService {
   override canReadExternalDir = DIST_CHANNEL !== 'appstore' && DIST_CHANNEL !== 'playstore';
   override distChannel = DIST_CHANNEL;
   private execDir?: string = undefined;
+  private customRootDir?: string = undefined;
+
+  constructor(customRootDir?: string) {
+    super();
+    if (customRootDir) {
+      this.customRootDir = customRootDir;
+    }
+  }
 
   override async init() {
     const execDir = await invoke<string>('get_executable_dir');
@@ -412,9 +424,9 @@ export class NativeAppService extends BaseAppService {
       });
     }
     const settings = await this.loadSettings();
-    if (settings.customRootDir) {
+    if (this.customRootDir || settings.customRootDir) {
       this.fs.resolvePath = getPathResolver({
-        customRootDir: settings.customRootDir,
+        customRootDir: this.customRootDir || settings.customRootDir,
         isPortable: this.isPortableApp,
         execDir,
       });

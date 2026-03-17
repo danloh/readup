@@ -19,7 +19,8 @@ import {
   BookFormat, 
   ViewSettings, 
   FIXED_LAYOUT_FORMATS, 
-  Review
+  Review,
+  BookNote
 } from '@/types/book';
 import {
   getDir,
@@ -32,6 +33,7 @@ import {
   formatAuthors,
   getPrimaryLanguage,
   mergeArrays,
+  getMetadataHash,
 } from '@/utils/book';
 import { md5, partialMD5 } from '@/utils/md5';
 import { getBaseFilename, getFilename } from '@/utils/path';
@@ -252,6 +254,73 @@ export abstract class BaseAppService implements AppService {
     await this.safeSaveJSON(SETTINGS_FILENAME, 'Settings', settings);
   }
 
+  /**
+   * Merge duplicate book entries that share the same metaHash and format as `book`.
+   * Finds all other matching books in the array, selects the base config with the
+   * largest reading progress page number, merges booknotes from all configs
+   * (deduplicating by id, latest updatedAt wins), soft-deletes duplicates
+   * (sets deletedAt), and cleans up their directories.
+   *
+   * @returns The merged config as a JSON string, or undefined if no duplicates were found.
+   */
+  async mergeBooks(
+    books: Book[],
+    book: Book,
+  ): Promise<string | undefined> {
+    if (!book.metaHash) return undefined;
+
+    const duplicates = books.filter((b) => 
+      b.metaHash === book.metaHash && b.format === book.format && !b.deletedAt && b !== book,
+    );
+    if (duplicates.length === 0) return undefined;
+
+    const allCandidates = [book, ...duplicates];
+    const configs: Partial<BookConfig>[] = [];
+    for (const candidate of allCandidates) {
+      const configPath = getConfigFilename(candidate);
+      if (await this.fs.exists(configPath, 'Books')) {
+        try {
+          const str = (await this.fs.readFile(configPath, 'Books', 'text')) as string;
+          configs.push(JSON.parse(str));
+        } catch {
+          /* ignore corrupt configs */
+        }
+      }
+    }
+
+    let mergedConfigData: string | undefined;
+    if (configs.length > 0) {
+      const base = configs.reduce((best, cfg) => {
+        const bestPage = best.progress?.[0] ?? 0;
+        const cfgPage = cfg.progress?.[0] ?? 0;
+        return cfgPage > bestPage ? cfg : best;
+      });
+
+      const noteMap = new Map<string, BookNote>();
+      for (const cfg of configs) {
+        for (const note of cfg.booknotes ?? []) {
+          const existing = noteMap.get(note.id);
+          if (!existing || (note.updatedAt || 0) > (existing.updatedAt || 0)) {
+            noteMap.set(note.id, note);
+          }
+        }
+      }
+      base.booknotes = [...noteMap.values()];
+
+      mergedConfigData = JSON.stringify(base);
+    }
+
+    for (const dup of duplicates) {
+      dup.deletedAt = Date.now();
+      const dupDir = getDir(dup);
+      if (await this.fs.exists(dupDir, 'Books')) {
+        await this.fs.removeDir(dupDir, 'Books', true);
+      }
+    }
+
+    return mergedConfigData;
+  }
+
   async importBook(
     // file might be:
     // 1.1 absolute path for local file on Desktop
@@ -306,7 +375,10 @@ export abstract class BaseAppService implements AppService {
       }
 
       const hash = await partialMD5(fileobj);
-      const existingBook = books.filter((b) => b.hash === hash)[0];
+      const metaHash = getMetadataHash(loadedBook.metadata);
+      let existingBook = books.filter((b) => b.hash === hash)[0];
+      let metaHashMatch = false;
+      let oldBookDir: string | undefined;
       if (existingBook) {
         if (!transient) {
           existingBook.deletedAt = null;
@@ -315,11 +387,32 @@ export abstract class BaseAppService implements AppService {
         existingBook.updatedAt = Date.now();
       }
 
+      // Aggregate all books with same metaHash and format, deduplicating into one entry
+      let bestConfigData: string | undefined;
+      if (!transient && metaHash) {
+        if (!existingBook) {
+          const firstMatch = books.find(
+            (b) => b.metaHash === metaHash && b.format === format && !b.deletedAt,
+          );
+          if (firstMatch) {
+            oldBookDir = getDir(firstMatch);
+            existingBook = firstMatch;
+            metaHashMatch = true;
+            existingBook.createdAt = Date.now();
+            existingBook.updatedAt = Date.now();
+          }
+        }
+        if (existingBook) {
+          bestConfigData = await this.mergeBooks(books, existingBook);
+        }
+      }
+
       const primaryLanguage = getPrimaryLanguage(loadedBook.metadata.language);
       const fileSize = fileobj.size;
       const book: Book = {
         hash,
         format,
+        metaHash,
         title: formatTitle(loadedBook.metadata.title),
         sourceTitle: formatTitle(loadedBook.metadata.title),
         primaryLanguage,
@@ -342,8 +435,23 @@ export abstract class BaseAppService implements AppService {
         }
       }
       // update book metadata when reimporting the same book
-      if (existingBook) {
+      if (existingBook && metaHashMatch) {
+        // MetaHash match (different file, same book): override metadata and hash
+        existingBook.hash = hash;
         existingBook.format = book.format;
+        existingBook.metaHash = metaHash;
+        existingBook.title = book.title;
+        existingBook.sourceTitle = book.sourceTitle;
+        existingBook.author = book.author;
+        existingBook.fileSize = fileSize;
+        existingBook.metadata = book.metadata;
+        existingBook.primaryLanguage = book.primaryLanguage;
+        existingBook.uploadedAt = null;
+        existingBook.downloadedAt = Date.now();
+      } else if (existingBook) {
+        // Same file hash: preserve user edits
+        existingBook.format = book.format;
+        existingBook.metaHash = metaHash;
         existingBook.title = existingBook.title.trim() ? existingBook.title.trim() : book.title;
         existingBook.sourceTitle = existingBook.sourceTitle ?? book.sourceTitle;
         existingBook.author = existingBook.author ?? book.author;
@@ -393,6 +501,36 @@ export abstract class BaseAppService implements AppService {
       if (!existingBook) {
         await this.saveBookConfig(book, INIT_BOOK_CONFIG);
         books.splice(0, 0, book);
+      } else if (metaHashMatch && oldBookDir && oldBookDir !== getDir(book)) {
+        // Migrate config from old directory to new directory, updating bookHash and metaHash
+        // Use aggregated best config when available from deduplication
+        if (bestConfigData) {
+          const config: Partial<BookConfig> = JSON.parse(bestConfigData);
+          config.bookHash = hash;
+          config.metaHash = metaHash;
+          await this.fs.writeFile(getConfigFilename(book), 'Books', JSON.stringify(config));
+        } else {
+          const oldConfigPath = `${oldBookDir}/config.json`;
+          if (await this.fs.exists(oldConfigPath, 'Books')) {
+            const configData = (await this.fs.readFile(oldConfigPath, 'Books', 'text')) as string;
+            const config: Partial<BookConfig> = JSON.parse(configData);
+            config.bookHash = hash;
+            config.metaHash = metaHash;
+            await this.fs.writeFile(getConfigFilename(book), 'Books', JSON.stringify(config));
+          } else {
+            await this.saveBookConfig(book, INIT_BOOK_CONFIG);
+          }
+        }
+        // Clean up old directory
+        if (await this.fs.exists(oldBookDir, 'Books')) {
+          await this.fs.removeDir(oldBookDir, 'Books', true);
+        }
+      } else if (bestConfigData) {
+        // Exact hash match with duplicates removed — adopt the best config
+        const config: Partial<BookConfig> = JSON.parse(bestConfigData);
+        config.bookHash = hash;
+        config.metaHash = metaHash;
+        await this.fs.writeFile(getConfigFilename(book), 'Books', JSON.stringify(config));
       }
 
       // update file links with url or path or content uri

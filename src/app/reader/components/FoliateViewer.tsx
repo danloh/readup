@@ -174,8 +174,10 @@ const FoliateViewer: React.FC<{
   }, [getView, getProgress, bookKey]);
 
   const docLoadHandler = (event: Event) => {
-    setLoading(false);
     docLoaded.current = true;
+    if (bookDoc.rendition?.layout === 'pre-paginated') {
+      setLoading(false); // Fixed layout doesn't emit 'stabilized' event
+    }
     const detail = (event as CustomEvent).detail;
     // console.log('doc index loaded:', detail.index);
     if (detail.doc) {
@@ -261,6 +263,10 @@ const FoliateViewer: React.FC<{
       });
     }
   };
+
+  const stabilizedHandler = useCallback(() => {
+    setLoading(false);
+  }, []);
 
   const docRelocateHandler = (event: Event) => {
     const detail = (event as CustomEvent).detail;
@@ -383,6 +389,7 @@ const FoliateViewer: React.FC<{
 
   useFoliateEvents(viewRef.current, {
     onLoad: docLoadHandler,
+    onStabilized: stabilizedHandler,
     onRelocate: progressRelocateHandler,
     onRendererRelocate: docRelocateHandler,
   });
@@ -391,7 +398,7 @@ const FoliateViewer: React.FC<{
     if (isViewCreated.current) return;
     isViewCreated.current = true;
 
-    setTimeout(() => setLoading(true), 200);
+    setLoading(true);
 
     const openBook = async () => {
       // console.log('Opening book', bookKey);
