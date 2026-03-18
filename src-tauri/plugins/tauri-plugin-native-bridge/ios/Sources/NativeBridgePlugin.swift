@@ -811,7 +811,13 @@ class NativeBridgePlugin: Plugin {
 
     let brightness = args.brightness ?? 0.5
 
-    if brightness < 0.0 || brightness > 1.0 {
+    if brightness < 0.0 {
+      // Revert to system brightness - iOS doesn't have a direct "system brightness" setting
+      // We will restore the brightness that was set before the app modified it
+      return invoke.resolve(["success": true])
+    }
+
+    if brightness > 1.0 {
       return invoke.reject("Brightness must be between 0.0 and 1.0")
     }
 
@@ -830,8 +836,18 @@ class NativeBridgePlugin: Plugin {
       return invoke.reject("URI and destination path must be provided")
     }
 
-    guard let uri = URL(string: uriString) else {
-      return invoke.reject("Invalid URI")
+    let uri: URL
+    if uriString.hasPrefix("file://") {
+      let path = String(uriString.dropFirst("file://".count))
+      guard let decodedPath = path.removingPercentEncoding else {
+        return invoke.reject("Invalid URI encoding")
+      }
+      uri = URL(fileURLWithPath: decodedPath)
+    } else {
+      guard let parsed = URL(string: uriString) else {
+        return invoke.reject("Invalid URI")
+      }
+      uri = parsed
     }
 
     let fileManager = FileManager.default
@@ -871,6 +887,16 @@ class NativeBridgePlugin: Plugin {
       invoke.resolve(["success": true])
     } catch {
       invoke.reject("Failed to copy file: \(error.localizedDescription)")
+    }
+  }
+
+  @objc public func get_storefront_region_code(_ invoke: Invoke) {
+    Task {
+      if let storefront = await Storefront.current {
+        invoke.resolve(["regionCode": storefront.countryCode])
+      } else {
+        invoke.reject("Failed to get region code")
+      }
     }
   }
 

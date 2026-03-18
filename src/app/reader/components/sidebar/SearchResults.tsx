@@ -1,13 +1,16 @@
-import React from 'react';
+import React, { useMemo } from 'react';
+import clsx from 'clsx';
+
+import { findNearestCfi } from '@/utils/cfi';
 import { BookSearchMatch, BookSearchResult, SearchExcerpt } from '@/types/book';
 import { useReaderStore } from '@/store/readerStore';
 import useScrollToItem from '../../hooks/useScrollToItem';
-import clsx from 'clsx';
 
 interface SearchResultItemProps {
   bookKey: string;
   cfi: string;
   excerpt: SearchExcerpt;
+  isNearest?: boolean;
   onSelectResult: (cfi: string) => void;
 }
 
@@ -15,11 +18,12 @@ const SearchResultItem: React.FC<SearchResultItemProps> = ({
   bookKey,
   cfi,
   excerpt,
+  isNearest,
   onSelectResult,
 }) => {
   const { getProgress } = useReaderStore();
   const progress = getProgress(bookKey)!;
-  const { isCurrent, viewRef } = useScrollToItem(cfi, progress);
+  const { isCurrent, viewRef } = useScrollToItem(cfi, progress, isNearest);
 
   return (
     <li
@@ -47,6 +51,7 @@ const SearchResultItem: React.FC<SearchResultItemProps> = ({
     </li>
   );
 };
+
 interface SearchResultsProps {
   bookKey: string;
   results: BookSearchResult[] | BookSearchMatch[];
@@ -54,6 +59,21 @@ interface SearchResultsProps {
 }
 
 const SearchResults: React.FC<SearchResultsProps> = ({ bookKey, results, onSelectResult }) => {
+  const { getProgress } = useReaderStore();
+  const progress = getProgress(bookKey);
+
+  const nearestCfi = useMemo(() => {
+    const allCfis: string[] = [];
+    for (const result of results) {
+      if ('subitems' in result) {
+        for (const item of result.subitems) allCfis.push(item.cfi);
+      } else {
+        allCfis.push(result.cfi);
+      }
+    }
+    return findNearestCfi(allCfis, progress?.location);
+  }, [progress?.location, results]);
+  
   return (
     <div className='search-results overflow-y-auto p-2 font-sans text-sm font-light'>
       <ul className='px-2'>
@@ -69,6 +89,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({ bookKey, results, onSelec
                       bookKey={bookKey}
                       cfi={item.cfi}
                       excerpt={item.excerpt}
+                      isNearest={item.cfi === nearestCfi}
                       onSelectResult={onSelectResult}
                     />
                   ))}
@@ -82,6 +103,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({ bookKey, results, onSelec
                 bookKey={bookKey}
                 cfi={result.cfi}
                 excerpt={result.excerpt}
+                isNearest={result.cfi === nearestCfi}
                 onSelectResult={onSelectResult}
               />
             );

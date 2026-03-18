@@ -1,8 +1,11 @@
-import React from 'react';
+import { useMemo } from 'react';
 import * as CFI from 'foliate-js/epubcfi.js';
+
 import { useBookDataStore } from '@/store/bookDataStore';
 import { useSidebarStore } from '@/store/sidebarStore';
+import { useReaderStore } from '@/store/readerStore';
 import { findTocItemBS } from '@/utils/toc';
+import { findNearestCfi } from '@/utils/cfi';
 import { TOCItem } from '@/libs/document';
 import { BooknoteGroup, BookNoteType } from '@/types/book';
 import BooknoteItem from './BooknoteItem';
@@ -13,8 +16,10 @@ const BooknoteView: React.FC<{
   toc: TOCItem[];
 }> = ({ type, bookKey, toc }) => {
   const { getConfig } = useBookDataStore();
+  const { getProgress } = useReaderStore();
   const { clearSearch, setActiveBooknoteType, setBooknoteResults } = useSidebarStore();
   const config = getConfig(bookKey)!;
+  const progress = getProgress(bookKey);
 
   const { booknotes: allNotes = [] } = config;
   const booknotes = allNotes.filter((note) => note.type === type && !note.deletedAt);
@@ -41,6 +46,12 @@ const BooknoteView: React.FC<{
     return a.id - b.id;
   });
 
+  const nearestCfi = useMemo(() => {
+    const allSorted = sortedGroups.flatMap((g) => g.booknotes.map((n) => n.cfi));
+    return findNearestCfi(allSorted, progress?.location);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [progress?.location, sortedGroups.length]);
+
   const handleBrowseBookNotes = () => {
     if (booknotes.length === 0) return;
 
@@ -62,6 +73,7 @@ const BooknoteView: React.FC<{
                   key={`${index}-${item.cfi}`}
                   bookKey={bookKey}
                   item={item}
+                  isNearest={item.cfi === nearestCfi}
                   onClick={handleBrowseBookNotes}
                 />
               ))}
