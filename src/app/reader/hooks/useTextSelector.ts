@@ -4,12 +4,15 @@ import { useReaderStore } from '@/store/readerStore';
 import { useBookDataStore } from '@/store/bookDataStore';
 import { getOSPlatform } from '@/utils/misc';
 import { eventDispatcher } from '@/utils/event';
-import { isPointerInsideSelection, TextSelection } from '@/utils/sel';
+import { isPointerInsideSelection, Point, TextSelection } from '@/utils/sel';
+import { BookNote } from '@/types/book';
 import { useInstantAnnotation } from './useInstantAnnotation';
 
 export const useTextSelector = (
   bookKey: string,
   setSelection: React.Dispatch<React.SetStateAction<TextSelection | null>>,
+  setEditingAnnotation: React.Dispatch<React.SetStateAction<BookNote | null>>,
+  setExternalDragPoint: React.Dispatch<React.SetStateAction<Point | null>>,
   getAnnotationText: (range: Range) => Promise<string>,
   handleDismissPopup: () => void,
 ) => {
@@ -35,7 +38,13 @@ export const useTextSelector = (
     handleInstantAnnotationPointerMove,
     handleInstantAnnotationPointerCancel,
     handleInstantAnnotationPointerUp,
-  } = useInstantAnnotation({ bookKey, getAnnotationText, setSelection });
+  } = useInstantAnnotation({
+    bookKey,
+    getAnnotationText,
+    setSelection,
+    setEditingAnnotation,
+    setExternalDragPoint,
+  });
 
   const isValidSelection = (sel: Selection) => {
     return sel && sel.toString().trim().length > 0 && sel.rangeCount > 0;
@@ -128,6 +137,9 @@ export const useTextSelector = (
       const handled = await handleInstantAnnotationPointerUp(doc, index, ev);
       if (handled) {
         isTextSelected.current = true;
+        setTimeout(() => {
+          isTextSelected.current = false;
+        }, 200);
         return;
       } else {
         // If instant annotation was not created, we let the event propagate
@@ -254,6 +266,7 @@ export const useTextSelector = (
 
   return {
     isTextSelected,
+    isInstantAnnotating,
     handleScroll,
     handleTouchStart,
     handleTouchMove,

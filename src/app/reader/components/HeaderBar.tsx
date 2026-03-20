@@ -204,8 +204,8 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
                   ? _('Disable Quick Action')
                   : _('Enable Quick Action on Selection')
               }
-              className='exclude-title-bar-mousedown dropdown-bottom dropdown-center'
-              menuClassName='!relative'
+              className='exclude-title-bar-mousedown dropdown-bottom'
+              // menuClassName='!relative'
               buttonClassName={clsx(
                 'btn btn-ghost h-8 min-h-8 w-8 p-0',
                 viewSettings?.annotationQuickAction && 'bg-base-300/50',

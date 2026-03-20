@@ -34,6 +34,7 @@ import { isTauriAppPlatform } from '@/services/environment';
 import { lockScreenOrientation } from '@/utils/bridge';
 import { manageSyntaxHighlighting } from '@/utils/highlightjs';
 import { getViewInsets } from '@/utils/insets';
+import { getIndexFromCfi } from '@/utils/cfi';
 import Spinner from '@/components/Spinner';
 import { handleA11yNavigation } from '@/utils/a11y';
 import { transformContent } from '../transformers/transformService';
@@ -223,9 +224,15 @@ const FoliateViewer: React.FC<{
       }
 
       setTimeout(() => {
+        const sectionIndex = detail.index;
         const booknotes = config.booknotes || [];
         booknotes
-          .filter((item) => !item.deletedAt && item.type === 'annotation' && item.style)
+          .filter((item) =>
+            !item.deletedAt &&
+            item.type === 'annotation' &&
+            item.style &&
+            getIndexFromCfi(item.cfi) === sectionIndex,
+          )
           .forEach((annotation) => viewRef.current?.addAnnotation(annotation));
       }, 100);
 

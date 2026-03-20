@@ -18,7 +18,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useResponsiveSize } from '@/hooks/useResponsiveSize';
 import useShortcuts from '@/hooks/useShortcuts';
 import { 
-  getPopupPosition, getPosition, getTextFromRange, Position, TextSelection 
+  getPopupPosition, getPosition, getTextFromRange, Point, Position, TextSelection 
 } from '@/utils/sel';
 import { eventDispatcher } from '@/utils/event';
 import { findTocItemBS } from '@/utils/toc';
@@ -75,6 +75,7 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
   const [showAnnotationNotes, setShowAnnotationNotes] = useState(false);
   const [annotationNotes, setAnnotationNotes] = useState<BookNote[]>([]);
   const [editingAnnotation, setEditingAnnotation] = useState<BookNote | null>(null);
+  const [externalDragPoint, setExternalDragPoint] = useState<Point | null>(null);
   const [showExcerptDialog, setShowExcerptDialog] = useState(false);
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [exportData, setExportData] = useState<{
@@ -204,6 +205,7 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
 
   const {
     isTextSelected,
+    isInstantAnnotating,
     handleScroll,
     handleTouchStart,
     handleTouchMove,
@@ -216,7 +218,14 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
     handleShowPopup,
     handleUpToPopup,
     handleContextmenu,
-  } = useTextSelector(bookKey, setSelection, getAnnotationText, handleDismissPopup);
+  } = useTextSelector(
+    bookKey,
+    setSelection,
+    setEditingAnnotation,
+    setExternalDragPoint,
+    getAnnotationText,
+    handleDismissPopup,
+  );
 
   const handleDismissPopupAndSelection = () => {
     handleDismissPopup();
@@ -232,7 +241,9 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
       // Available on iOS, on Android not fired
       // To make the popup not follow the selection while dragging
       setShowAnnotPopup(false);
-      setEditingAnnotation(null);
+      if (!isInstantAnnotating.current) {
+        setEditingAnnotation(null);
+      }
       handleTouchMove(ev);
     };
 
@@ -994,6 +1005,7 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
           annotation={editingAnnotation}
           selection={selection}
           handleColor={selectedColor}
+          externalDragPoint={externalDragPoint}
           getAnnotationText={getAnnotationText}
           setSelection={setSelection}
           onStartEdit={handleStartEditAnnotation}
