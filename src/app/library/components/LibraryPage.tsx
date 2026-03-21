@@ -53,6 +53,7 @@ import {
 } from './libraryUtils';
 import TransferQueuePanel from './TransferQueuePanel';
 import GroupHeader from './GroupHeader';
+import { BackupWindow } from './BackupWindow';
 
 
 const LibraryPageWithSearchParams = () => {
@@ -713,6 +714,7 @@ const LibraryPageContent = (
           <TransferQueuePanel />
         </ModalPortal>
       )}
+      <BackupWindow />
     </div>
   );
 };

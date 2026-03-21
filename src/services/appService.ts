@@ -120,8 +120,7 @@ export abstract class BaseAppService implements AppService {
   abstract saveFile(
     filename: string,
     content: string | ArrayBuffer,
-    filepath: string,
-    mimeType?: string,
+    options?: { filePath?: string; mimeType?: string },
   ): Promise<boolean>;
   abstract ask(message: string): Promise<boolean>;
 
@@ -1017,13 +1016,13 @@ export abstract class BaseAppService implements AppService {
     const { file } = await this.loadBookContent(book);
     const content = await file.arrayBuffer();
     const filename = `${makeSafeFilename(book.title)}.${book.format.toLowerCase()}`;
-    let filepath = await this.resolveFilePath(getLocalBookFilename(book), 'Books');
-    const fileType = file.type || 'application/octet-stream';
-    if (getFilename(filepath) !== filename) {
-      this.copyFile(filepath, filename, 'Temp');
-      filepath = await this.resolveFilePath(filename, 'Temp');
+    let filePath = await this.resolveFilePath(getLocalBookFilename(book), 'Books');
+    const mimeType = file.type || 'application/octet-stream';
+    if (getFilename(filePath) !== filename) {
+      this.copyFile(filePath, filename, 'Temp');
+      filePath = await this.resolveFilePath(filename, 'Temp');
     }
-    return await this.saveFile(filename, content, filepath, fileType);
+    return await this.saveFile(filename, content, { filePath, mimeType });
   }
 
   private imageToArrayBuffer(imageUrl?: string, imageFile?: string): Promise<ArrayBuffer> {

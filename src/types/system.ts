@@ -106,7 +106,11 @@ export interface AppService {
   selectDirectory(mode: SelectDirectoryMode): Promise<string>;
   selectFiles(name: string, extensions: string[]): Promise<string[]>;
   readDirectory(path: string, base: BaseDir): Promise<FileItem[]>;
-  saveFile(filename: string, content: string | ArrayBuffer, mimeType?: string): Promise<boolean>;
+  saveFile(
+    filename: string,
+    content: string | ArrayBuffer,
+    options?: { filePath?: string; mimeType?: string },
+  ): Promise<boolean>;
 
   getDefaultViewSettings(): ViewSettings;
   loadSettings(): Promise<SystemSettings>;

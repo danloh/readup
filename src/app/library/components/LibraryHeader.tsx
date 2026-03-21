@@ -1,7 +1,7 @@
 import clsx from 'clsx';
 import React, { useCallback, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { FaSearch } from 'react-icons/fa';
+import { FaRegWindowRestore, FaSearch } from 'react-icons/fa';
 import { PiDotsThreeCircle } from 'react-icons/pi';
 import { LiaFileImportSolid } from 'react-icons/lia';
 import { IoMdCloseCircle } from 'react-icons/io';
@@ -14,6 +14,7 @@ import { useLibraryStore } from '@/store/libraryStore';
 import { debounce } from '@/utils/debounce';
 import Dropdown from '@/components/Dropdown';
 import ViewMenu from './ViewMenu';
+import { setBackupDialogVisible } from './BackupWindow';
 
 interface LibraryHeaderProps {
   onImportBooksFromFiles: () => void;
@@ -58,10 +59,10 @@ const LibraryHeader: React.FC<LibraryHeaderProps> = (
 
   return (
     <div className='library-head bg-base-200 z-10 flex h-[48px] w-full items-center p-2'>
-      <div className='flex w-full items-center justify-between space-x-6'>
+      <div className='flex w-full items-center justify-between space-x-4'>
         <div className='exclude-title-bar-mousedown relative flex w-full items-center'>
           <div className='relative flex h-9 w-full items-center'>
-            <span className='text-base-content/50 absolute ps-3'>
+            <span className='text-base-content/50 absolute ps-2'>
               <FaSearch className='h-4 w-4' />
             </span>
             <input
@@ -77,7 +78,7 @@ const LibraryHeader: React.FC<LibraryHeaderProps> = (
               onChange={handleSearchChange}
               spellCheck='false'
               className={clsx(
-                'search-input input h-9 w-full rounded-full pr-[30%] ps-10 sm:h-7',
+                'search-input input h-9 w-full rounded-full pr-[30%] ps-8 sm:h-7',
                 'bg-base-300/45 border-0',
                 'font-sans text-sm font-light',
                 'placeholder:text-base-content/50 truncate',
@@ -109,7 +110,7 @@ const LibraryHeader: React.FC<LibraryHeaderProps> = (
               onClick={onImportBooksFromFiles}
               aria-label={_('Import Books')}
             >
-              <LiaFileImportSolid className='m-0.5 h-5 w-5' />
+              <LiaFileImportSolid className='h-5 w-5' />
             </button>
           </div>
           {onImportBooksFromDirectory && (
@@ -120,7 +121,7 @@ const LibraryHeader: React.FC<LibraryHeaderProps> = (
                 onClick={onImportBooksFromDirectory}
                 aria-label={_('Import Directory')}
               >
-                <IoFileTray className='m-0.5 h-5 w-5' />
+                <IoFileTray className='h-5 w-5' />
               </button>
             </div>
           )}
@@ -144,7 +145,17 @@ const LibraryHeader: React.FC<LibraryHeaderProps> = (
               onClick={() => setIsTransferQueueOpen(true)}
               aria-label={_('Import Books')}
             >
-              <AiOutlineCloudSync className='m-0.5 h-5 w-5' />
+              <AiOutlineCloudSync className='h-5 w-5' />
+            </button>
+          </div>
+          <div className='tooltip tooltip-bottom hidden' data-tip={_('Backup & Restore')}>
+            <button
+              type='button'
+              className='btn btn-ghost h-8 min-h-8 w-8 p-0'
+              onClick={() => setBackupDialogVisible(true)}
+              aria-label={_('Backup & Restore')}
+            >
+              <FaRegWindowRestore className='h-4 w-4' />
             </button>
           </div>
           <Dropdown
