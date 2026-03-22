@@ -145,11 +145,9 @@ export const useTTSControl = ({ bookKey, onRequestHidePanel }: UseTTSControlProp
         view.renderer.scrollToAnchor?.(range);
       } else {
         const rect = range.getBoundingClientRect();
-        const { start, size, viewSize, sideProp } = view.renderer;
-        const positionStart = rect[sideProp === 'height' ? 'y' : 'x'] + viewSettings.marginTopPx;
-        const positionEnd = rect[sideProp === 'height' ? 'height' : 'width'] + positionStart;
-        const offsetStart = view.book.dir === 'rtl' ? viewSize - positionStart : positionStart;
-        const offsetEnd = view.book.dir === 'rtl' ? viewSize - positionEnd : positionEnd;
+        const { start, end, sideProp } = view.renderer;
+        const rangeTop = rect[sideProp === 'height' ? 'y' : 'x'];
+        const rangeBottom = rangeTop + rect[sideProp === 'height' ? 'height' : 'width'];
 
         const showHeader = viewSettings.showHeader;
         const showFooter = viewSettings.showFooter;
@@ -157,11 +155,11 @@ export const useTTSControl = ({ bookKey, onRequestHidePanel }: UseTTSControlProp
         const headerScrollOverlap = showHeader && showBarsOnScroll ? 44 : 0;
         const footerScrollOverlap = showFooter && showBarsOnScroll ? 44 : 0;
         const scrollingOverlap = viewSettings.scrollingOverlap;
-        const endInNextView = offsetEnd > start + size - footerScrollOverlap - scrollingOverlap;
-        const startInPrevView = offsetStart < start + headerScrollOverlap + scrollingOverlap;
-        if (endInNextView || startInPrevView) {
-          const scrollTo = offsetStart - headerScrollOverlap - scrollingOverlap;
-          view.renderer.scrollToAnchor?.(scrollTo / viewSize);
+        const outOfView =
+          rangeBottom > end - footerScrollOverlap - scrollingOverlap ||
+          rangeTop < start + headerScrollOverlap + scrollingOverlap;
+        if (outOfView) {
+          view.renderer.scrollToAnchor?.(range);
         }
       }
     };

@@ -80,7 +80,7 @@ const ProgressInfoView: React.FC<PageInfoProps> = ({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pageInfo?.current, pageInfo?.total]);
 
-  const { sectionPage: page = 0, sectionPages: pages = 0 } = view?.renderer || {};
+  const { page = 0, pages = 0 } = view?.renderer || {};
   const pagesLeft = Math.min(
     Math.max(pages - page, 1),
     pageInfo ? pageInfo.total - pageInfo.current : pages,
