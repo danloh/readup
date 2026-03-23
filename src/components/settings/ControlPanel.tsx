@@ -27,8 +27,6 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
   const viewSettings = getViewSettings(bookKey) || settings.globalViewSettings;
 
   const [isScrolledMode, setScrolledMode] = useState(viewSettings.scrolled);
-  const [isContinuousScroll, setIsContinuousScroll] = 
-    useState(viewSettings.continuousScroll);
   const [scrollingOverlap, setScrollingOverlap] = 
     useState(viewSettings.scrollingOverlap);
   const [hideScrollbar, setHideScrollbar] = useState(viewSettings.hideScrollbar || false);
@@ -58,7 +56,6 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
   const handleReset = () => {
     resetToDefaults({
       scrolled: setScrolledMode,
-      continuousScroll: setIsContinuousScroll,
       scrollingOverlap: setScrollingOverlap,
       hideScrollbar: setHideScrollbar,
       volumeKeysToFlip: setVolumeKeysToFlip,
@@ -89,11 +86,6 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
     getView(bookKey)?.renderer.setStyles?.(getStyles(viewSettings!));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isScrolledMode]);
-
-  useEffect(() => {
-    saveViewSettings(envConfig, bookKey, 'continuousScroll', isContinuousScroll, false, false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isContinuousScroll]);
 
   useEffect(() => {
     if (scrollingOverlap === viewSettings.scrollingOverlap) return;
@@ -311,19 +303,6 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
           disabled={bookData?.isFixedLayout}
           checked={isScrolledMode}
           onChange={() => setScrolledMode(!isScrolledMode)}
-        />
-      </div>
-      <div 
-        className='flex items-center justify-between' 
-        data-setting-id='settings.control.continuousScroll'
-      >
-        <b className=''>{_('Continuous Scroll')}</b>
-        <input
-          type='checkbox'
-          className='toggle toggle-success h-5'
-          disabled={bookData?.isFixedLayout}
-          checked={isContinuousScroll}
-          onChange={() => setIsContinuousScroll(!isContinuousScroll)}
         />
       </div>
       <div 

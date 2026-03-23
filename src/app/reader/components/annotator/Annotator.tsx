@@ -331,7 +331,11 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
       )
       .map((annotation) => {
         // console.log('Adding annotation to overlay', annotation);
-        view?.addAnnotation(annotation);
+        try {
+          view?.addAnnotation(annotation);
+        } catch (err) {
+          console.warn('Failed to add annotation', { annotation, error: err });
+        }
       });
   };
 

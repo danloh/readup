@@ -17,6 +17,7 @@ export const findParentPath = (toc: TOCItem[], href: string): TOCItem[] => {
 };
 
 export const findTocItemBS = (toc: TOCItem[], cfi: string): TOCItem | null => {
+  if (!cfi) return null;
   let left = 0;
   let right = toc.length - 1;
   let result: TOCItem | null = null;

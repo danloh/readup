@@ -81,10 +81,9 @@ const ProgressInfoView: React.FC<PageInfoProps> = ({
   }, [pageInfo?.current, pageInfo?.total]);
 
   const { page = 0, pages = 0 } = view?.renderer || {};
-  const pagesLeft = Math.min(
-    Math.max(pages - page, 1),
-    pageInfo ? pageInfo.total - pageInfo.current : pages,
-  );
+  const pagesLeft = bookData?.isFixedLayout
+    ? 1
+    : Math.min(Math.max(pages - page, 1), pageInfo ? pageInfo.total - pageInfo.current : pages);
   const calcTime = Math.round((pagesLeft * SIZE_PER_LOC) / SIZE_PER_TIME_UNIT);
   const showLeft = pages > 0 || bookData?.isFixedLayout;
   const timeLeft = showLeft ? _('{{time}}m', { time: calcTime }) : '';

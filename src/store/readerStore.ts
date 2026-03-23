@@ -158,6 +158,8 @@ export const useReaderStore = create<ReaderStore>((set, get) => ({
         bookDoc = doc.book;
       }
       const config = await appService.loadBookConfig(book, settings);
+      // Filter out invalid booknotes
+      config.booknotes = config.booknotes?.filter((booknote) => booknote.cfi) ?? [];
       updateToc(bookDoc, config.viewSettings?.sortedTOC ?? false);
       if (!bookDoc.metadata.title) {
         bookDoc.metadata.title = getBaseFilename(file.name);
