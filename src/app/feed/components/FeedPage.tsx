@@ -133,12 +133,8 @@ export default function FeedPage() {
     setCurrentPlayingAudio(article);
   };
 
-  const handlePlayNext = (article: ArticleType) => {
-    setCurrentPlayingAudio(article);
-  };
-
   const handleShowPlaylist = () => {
-    setShowPlaylist(prev => !prev);
+    setShowPlaylist(true);
     setShowManager(false);
   };
 
@@ -147,9 +143,9 @@ export default function FeedPage() {
       {currentPlayingAudio && currentPlayingAudio.audio_url && (
         <AudioPlayer 
           currentPod={currentPlayingAudio}
-          onPlaylistClick={handleShowPlaylist}
+          showPlaylist={handleShowPlaylist}
           playlist={playlistItems}
-          onPlayNext={handlePlayNext}
+          setNext={handlePlayAudio}
         />
       )}
       <div className='flex flex-row overflow-y-auto flex-1'>

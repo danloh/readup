@@ -194,7 +194,7 @@ function ArticleList(props: ListProps) {
           )}
         </div>
       )}
-      <div className='p-2'>
+      <div className='p-2 space-y-2'>
         {sortedArticles.map((article: ArticleType, idx: number) => {
           return (
             <ArticleItem
@@ -241,12 +241,12 @@ const ArticleItem = memo(function ArticleItm(props: ItemProps) {
   };
 
   return (
-    <div className='flex flex-col items-start justify-center m-1'>
+    <div className='flex flex-col items-start justify-center m-1 border rounded p-2'>
       <div 
         className='flex flex-row items-center justify-start' 
         onClick={() => setExpanded(prev => !prev)}
       >
-        <h2 className='flex-1 text-xl text-info cursor-pointer'>{article.title}</h2>
+        <h2 className='flex-1 text-lg text-info cursor-pointer'>{article.title}</h2>
       </div>
       <div className='flex flex-row items-center justify-center'>
         <img src={getFavicon(article.link!)} className='h-4 w-4 m-1' alt='>' loading='lazy' />

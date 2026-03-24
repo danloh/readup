@@ -76,9 +76,9 @@ export function Playlist(props: Props) {
             >
               <div className='flex flex-row items-start justify-between gap-2'>
                 <div className='flex-1 min-w-0'>
-                  <h3 className='text-sm font-semibold truncate text-info'>
+                  <h2 className='font-semibold truncate text-info'>
                     {article.title}
-                  </h3>
+                  </h2>
                   <p className='text-xs text-base-content/60 truncate hidden'>
                     {article.audio_url}
                   </p>
