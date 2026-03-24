@@ -1,5 +1,6 @@
 import React, { JSX, useState } from 'react';
 import { IoIosSettings, IoIosStar } from 'react-icons/io';
+import { TbPlaylist } from 'react-icons/tb';
 import { FeedType, getFavicon } from './dataAgent';
 
 type Props = {
@@ -7,10 +8,11 @@ type Props = {
   onShowManager: () => void;
   onClickFeed: (link: string) => Promise<void>;
   onClickStar: () => Promise<void>;
+  onShowPlaylist?: () => void;
 };
 
 export function ChannelList(props: Props) {
-  const { channelList, onShowManager, onClickFeed, onClickStar } = props;
+  const { channelList, onShowManager, onClickFeed, onClickStar, onShowPlaylist } = props;
 
   const [highlighted, setHighlighted] = useState<FeedType>();
   
@@ -65,6 +67,20 @@ export function ChannelList(props: Props) {
           <span className='m-1'>Starred</span>
         </div>
       </div>
+      {onShowPlaylist && (
+        <div 
+          className='flex flex-row items-center justify-between cursor-pointer'
+          onClick={() => {
+            onShowPlaylist();
+            setHighlighted(undefined);
+          }}
+        >
+          <div className='flex flex-row items-center justify-start hover:text-info'>
+            <TbPlaylist size={18} className='m-1 text-primary' />
+            <span className='m-1'>Playlist</span>
+          </div>
+        </div>
+      )}
       {renderFeedList()}
     </div>
   );

@@ -6,6 +6,8 @@ import { mergeArrays } from '@/utils/book';
 import { ChannelList } from './ChannelList';
 import { Channel } from './Channel';
 import { FeedManager } from './FeedManager';
+import { Playlist } from './Playlist';
+import AudioPlayer from './AudioPlayer';
 import * as dataAgent from './dataAgent';
 import { ArticleType, FeedType } from './dataAgent';
 
@@ -18,6 +20,9 @@ export default function FeedPage() {
   const [isStarChannel, setIsStarChannel] = useState(false);
   const [showManager, setShowManager] = useState(false);
   const [showFeedSide, setShowFeedSide] = useState(true);
+  const [showPlaylist, setShowPlaylist] = useState(false);
+  const [currentPlayingAudio, setCurrentPlayingAudio] = useState<ArticleType | null>(null);
+  const [playlistItems, setPlaylistItems] = useState<ArticleType[]>([]);
   const isInitiating = useRef(false);
 
   useEffect(() => {
@@ -26,12 +31,26 @@ export default function FeedPage() {
     const initFeeds = async () => {
       const appService = await envConfig.getAppService();
       setChannelList(await appService.loadFeeds());
-      // setFeedLoaded(true);
+      // Load playlist on init
+      await loadPlaylistItems();
     };
 
     initFeeds();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const loadPlaylistItems = async () => {
+    try {
+      const appService = await envConfig.getAppService();
+      const localArticles = await appService.loadArticles();
+      const audioArticles = localArticles.filter(
+        (a) => a.status === 'star' && a.audio_url?.trim()
+      );
+      setPlaylistItems(audioArticles);
+    } catch (error) {
+      console.error('Failed to load playlist:', error);
+    }
+  };
 
   const loadFeed = async (link: string) => {
     const res = await dataAgent.fetchFeed(link);
@@ -55,6 +74,7 @@ export default function FeedPage() {
     if (clickedChannel) {
       setCurrentChannel(clickedChannel);
       setShowManager(false);
+      setShowPlaylist(false);
       await loadFeed(clickedChannel.link);
     } 
     setLoading(false);
@@ -67,6 +87,7 @@ export default function FeedPage() {
     setCurrentEntries(null);
     setIsStarChannel(true);
     setShowManager(false);
+    setShowPlaylist(false);
     // load and filter star articles
     const appService = await envConfig.getAppService();
     const localArticles = await appService.loadArticles();
@@ -108,37 +129,68 @@ export default function FeedPage() {
     await appService.saveFeeds(feeds);
   };
 
+  const handlePlayAudio = (article: ArticleType) => {
+    setCurrentPlayingAudio(article);
+  };
+
+  const handlePlayNext = (article: ArticleType) => {
+    setCurrentPlayingAudio(article);
+  };
+
+  const handleShowPlaylist = () => {
+    setShowPlaylist(prev => !prev);
+    setShowManager(false);
+  };
+
   return (
-    <div className='feed-view flex flex-row overflow-y-auto h-full border-t-2 border-base-300'>
-      {showFeedSide ? (
-        <div className='w-52 p-1 bg-base-300 overflow-y-auto'>
-          <ChannelList 
-            key={`list-${channelList.length}`}
-            channelList={channelList} 
-            onShowManager={() => setShowManager(prev => !prev)} 
-            onClickFeed={onClickFeed}
-            onClickStar={onClickStar} 
-          />
+    <div className='feed-view flex flex-col overflow-y-auto h-full border-t-2 border-base-300'>
+      {currentPlayingAudio && currentPlayingAudio.audio_url && (
+        <AudioPlayer 
+          currentPod={currentPlayingAudio}
+          onPlaylistClick={handleShowPlaylist}
+          playlist={playlistItems}
+          onPlayNext={handlePlayNext}
+        />
+      )}
+      <div className='flex flex-row overflow-y-auto flex-1'>
+        {showFeedSide ? (
+          <div className='w-52 p-1 bg-base-300 overflow-y-auto'>
+            <ChannelList 
+              key={`list-${channelList.length}`}
+              channelList={channelList} 
+              onShowManager={() => setShowManager(prev => !prev)} 
+              onClickFeed={onClickFeed}
+              onClickStar={onClickStar}
+              onShowPlaylist={handleShowPlaylist}
+            />
+          </div>
+        ) : null}
+        <div className='flex-1 overflow-y-auto'>
+          {showPlaylist ? (
+            <Playlist 
+              onSelectArticle={handlePlayAudio}
+              currentPlaying={currentPlayingAudio}
+              showSide={() => setShowFeedSide(prev => !prev)}
+            />
+          ) : showManager ? (
+            <FeedManager 
+              channelList={channelList} 
+              handleAddFeed={handleAddFeed}
+              handleDelete={handleDeleteFeed}
+              onImportFeeds={handleImportFeeds}
+              showSide={() => setShowFeedSide(prev => !prev)}
+            />
+          ) : (
+            <Channel 
+              channel={currentChannel} 
+              isStarChannel={isStarChannel} 
+              entries={currentEntries}
+              loading={loading}
+              showSide={() => setShowFeedSide(prev => !prev)}
+              onPlayAudio={handlePlayAudio}
+            />
+          )}
         </div>
-      ) : null}
-      <div className='flex-1 overflow-y-auto'>
-        {showManager ? (
-          <FeedManager 
-            channelList={channelList} 
-            handleAddFeed={handleAddFeed}
-            handleDelete={handleDeleteFeed}
-            onImportFeeds={handleImportFeeds}
-            showSide={() => setShowFeedSide(prev => !prev)}
-          />
-        ) : (
-          <Channel 
-            channel={currentChannel} 
-            isStarChannel={isStarChannel} 
-            entries={currentEntries}
-            loading={loading}
-            showSide={() => setShowFeedSide(prev => !prev)}
-          />
-        )}
       </div>
     </div>
   );

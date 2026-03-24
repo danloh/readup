@@ -1,5 +1,5 @@
 import React, { memo, useCallback, useEffect, useState } from 'react';
-import { IoMdLink, IoMdStar, IoMdStarOutline } from 'react-icons/io';
+import { IoMdLink, IoMdStar, IoMdStarOutline, IoMdPlay } from 'react-icons/io';
 import { FcReadingEbook } from "react-icons/fc";
 import { CiMenuFries } from "react-icons/ci";
 
@@ -19,10 +19,11 @@ type Props = {
   entries: ArticleType[] | null;
   loading: boolean;
   showSide?: () => void;
+  onPlayAudio?: (article: ArticleType) => void;
 };
 
 export function Channel(props: Props) {
-  const { channel, isStarChannel, entries, loading, showSide } = props;
+  const { channel, isStarChannel, entries, loading, showSide, onPlayAudio } = props;
 
   if (loading) {
     return (
@@ -41,7 +42,7 @@ export function Channel(props: Props) {
         <b className='text-info' >{entries.length}</b>
         <b className='font-bold'>{channel?.title || (isStarChannel ? 'Starred' : '')}</b>
       </div>
-      <ArticleList articles={entries} isInStar={isStarChannel} />
+      <ArticleList articles={entries} isInStar={isStarChannel} onPlayAudio={onPlayAudio} />
     </div>
   );
 }
@@ -49,10 +50,11 @@ export function Channel(props: Props) {
 type ListProps = {
   articles: ArticleType[];
   isInStar?: boolean;
+  onPlayAudio?: (article: ArticleType) => void;
 };
 
 function ArticleList(props: ListProps) {
-  const { articles, isInStar } = props;
+  const { articles, isInStar, onPlayAudio } = props;
   const { envConfig } = useEnv();
   const _ = useTranslation();
   const router = useRouter();
@@ -199,6 +201,7 @@ function ArticleList(props: ListProps) {
               key={`${article.link}-${idx}`}
               entry={article}
               isInStar={isInStar}
+              onPlayAudio={onPlayAudio}
             />
           )}
         )}
@@ -210,10 +213,11 @@ function ArticleList(props: ListProps) {
 type ItemProps = {
   entry: ArticleType;
   isInStar?: boolean;
+  onPlayAudio?: (article: ArticleType) => void;
 };
 
 const ArticleItem = memo(function ArticleItm(props: ItemProps) {
-  const { entry: article, isInStar } = props;
+  const { entry: article, isInStar, onPlayAudio } = props;
   const { envConfig } = useEnv();
   const [isStar, setIsStar] = useState(isInStar);
   const [expanded, setExpanded] = useState(false);
@@ -257,6 +261,15 @@ const ArticleItem = memo(function ArticleItm(props: ItemProps) {
         >
           <IoMdLink size={20} />
         </a>
+        {article.audio_url && (
+          <span 
+            className='m-1 cursor-pointer' 
+            onClick={() => onPlayAudio?.(article)}
+            title='Play audio'
+          >
+            <IoMdPlay size={18} />
+          </span>
+        )}
         <span 
           className='m-1 cursor-pointer' 
           onClick={async () => {
