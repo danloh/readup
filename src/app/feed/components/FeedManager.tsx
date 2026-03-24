@@ -2,7 +2,6 @@ import React, { useEffect, useState, useRef } from 'react';
 import clsx from 'clsx';
 import { LiaFileExportSolid, LiaFileImportSolid } from 'react-icons/lia';
 import { FaHeadphones, FaMinus, FaPlus, FaRss, FaTrashAlt } from 'react-icons/fa';
-import { CiMenuFries } from 'react-icons/ci';
 
 import { useTranslation } from '@/hooks/useTranslation';
 import { eventDispatcher } from '@/utils/event';
@@ -144,7 +143,7 @@ export function FeedManager(props: Props) {
     <div className='flex flex-col items-start justify-center p-2'>
       <div className='flex flex-row gap-2 items-center justify-start w-full mt-2'>
         <button className='btn btn-xs btn-ghost' onClick={showSide}>
-          <CiMenuFries />
+          ☰
         </button>
         <button
           className='btn btn-sm'

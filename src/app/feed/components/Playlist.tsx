@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { IoMdPlay, IoMdLink } from 'react-icons/io';
+import { MdDelete } from 'react-icons/md';
 import { useEnv } from '@/context/EnvContext';
 import { fmtDatetime, getFavicon, ArticleType } from './dataAgent';
 
@@ -35,6 +36,28 @@ export function Playlist(props: Props) {
     loadPlaylist();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const removeFromPlaylist = async (article: ArticleType) => {
+    try {
+      const appService = await envConfig.getAppService();
+      const allArticles = await appService.loadArticles();
+      
+      // Update article status to remove from star
+      const updatedArticle = { ...article, status: '' };
+      
+      // Replace the article in the array
+      const newArticles = allArticles.map((a) =>
+        a.link === article.link ? updatedArticle : a
+      );
+      
+      await appService.saveArticles(newArticles);
+      
+      // Update local state to remove from playlist
+      setPlaylistItems((prev) => prev.filter((a) => a.link !== article.link));
+    } catch (error) {
+      console.error('Failed to remove from playlist:', error);
+    }
+  };
 
   if (loading) {
     return (
@@ -117,6 +140,13 @@ export function Playlist(props: Props) {
                   <IoMdLink size={12} />
                   Read article
                 </a>
+                <button
+                  onClick={() => removeFromPlaylist(article)}
+                  className='btn btn-xs btn-ghost btn-error'
+                  title='Remove from playlist'
+                >
+                  <MdDelete size={12} className='fill-warning' />
+                </button>
               </div>
             </div>
           );

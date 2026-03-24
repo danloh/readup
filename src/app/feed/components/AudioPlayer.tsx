@@ -1,33 +1,48 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { TbPlaylist } from 'react-icons/tb';
 import { ArticleType } from './dataAgent';
 
 type Props = {
   currentPod: ArticleType;
-  className?: string;
   showPlaylist: () => void;
-  playlist?: ArticleType[];
-  setNext?: (article: ArticleType) => void;
+  playlist: ArticleType[];
+  setNext: (article: ArticleType) => void;
+  className?: string;
 };
 
 export default function AudioPlayer(props: Props) {
-  const { currentPod, className = '', showPlaylist, playlist = [], setNext } = props;
+  const { currentPod, showPlaylist, playlist, setNext, className = '' } = props;
   const [pod, setPod] = useState(currentPod);
+
+  useEffect(() => {
+    setPod(currentPod);
+  }, [currentPod]);
+
+  const playNextTrack = () => {
+    console.log('Playing next track');
+    if (playlist && playlist.length > 0) {
+      const currentIndex = playlist.findIndex(a => a.link === pod.link);
+      if (currentIndex !== -1 && currentIndex < playlist.length - 1) {
+        const nextArticle = playlist[currentIndex + 1];
+        if (nextArticle) {
+          setPod(nextArticle);
+          setNext(nextArticle);
+        }
+      }
+    }
+  };
 
   const handleEnded = () => {
     // setIsPlaying(false);
     console.log('Auto-play Next');
     // Auto-play next track if available
-    if (playlist && playlist.length > 0) {
-      const currentIndex = playlist.findIndex(a => a.link === currentPod.link);
-      if (currentIndex !== -1 && currentIndex < playlist.length - 1) {
-        const nextArticle = playlist[currentIndex + 1];
-        if (nextArticle) {
-          setPod(nextArticle);
-          setNext?.(nextArticle);
-        }
-      }
-    }
+    playNextTrack();
+  };
+
+  const handleError = () => {
+    console.error('Audio playback error');
+    // Skip to next track on error
+    playNextTrack();
   };
 
   if (!currentPod) {
@@ -48,6 +63,7 @@ export default function AudioPlayer(props: Props) {
           className="h-5 w-full bg-base-200" 
           src={pod.audio_url} 
           onEnded={handleEnded}
+          onError={handleError}
         />
         <button onClick={showPlaylist} className='btn btn-xs btn-ghost ml-auto'>
           <TbPlaylist size={16} />

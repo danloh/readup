@@ -1,7 +1,7 @@
 import React, { memo, useCallback, useEffect, useState } from 'react';
-import { IoMdLink, IoMdStar, IoMdStarOutline, IoMdPlay } from 'react-icons/io';
+import { IoMdLink, IoMdStar, IoMdStarOutline } from 'react-icons/io';
+import { IoPlayOutline } from "react-icons/io5";
 import { FcReadingEbook } from "react-icons/fc";
-import { CiMenuFries } from "react-icons/ci";
 
 import { useEnv } from '@/context/EnvContext';
 import { useRouter } from 'next/navigation';
@@ -37,7 +37,7 @@ export function Channel(props: Props) {
     <div className='flex flex-col items-between justify-center'>
       <div className='flex flex-row items-center justify-start gap-2 p-2 bg-base-300'>
         <button className='btn btn-xs btn-ghost' onClick={showSide}>
-          <CiMenuFries />
+          ☰
         </button>
         <b className='text-info' >{entries.length}</b>
         <b className='font-bold'>{channel?.title || (isStarChannel ? 'Starred' : '')}</b>
@@ -241,7 +241,7 @@ const ArticleItem = memo(function ArticleItm(props: ItemProps) {
   };
 
   return (
-    <div className='flex flex-col items-start justify-center m-1 border rounded p-2'>
+    <div className='flex flex-col items-start justify-center m-1 border border-base-300 rounded p-2'>
       <div 
         className='flex flex-row items-center justify-start' 
         onClick={() => setExpanded(prev => !prev)}
@@ -267,7 +267,7 @@ const ArticleItem = memo(function ArticleItm(props: ItemProps) {
             onClick={() => onPlayAudio?.(article)}
             title='Play audio'
           >
-            <IoMdPlay size={18} />
+            <IoPlayOutline size={20} />
           </span>
         )}
         <span 
