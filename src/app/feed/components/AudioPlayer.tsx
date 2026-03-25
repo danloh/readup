@@ -22,7 +22,7 @@ export default function AudioPlayer(props: Props) {
     console.log('Playing next track');
     if (playlist && playlist.length > 0) {
       const currentIndex = playlist.findIndex(a => a.link === pod.link);
-      if (currentIndex !== -1 && currentIndex < playlist.length - 1) {
+      if (currentIndex < playlist.length - 1) {
         const nextArticle = playlist[currentIndex + 1];
         if (nextArticle) {
           setPod(nextArticle);

@@ -91,7 +91,8 @@ export default function FeedPage() {
     // load and filter star articles
     const appService = await envConfig.getAppService();
     const localArticles = await appService.loadArticles();
-    const starArticles = localArticles.filter(a => a.status === 'star');
+    // filter out audio articles which are listed in Playlist
+    const starArticles = localArticles.filter(a => a.status === 'star' && !a.audio_url?.trim());
     setCurrentEntries(starArticles); 
     setLoading(false);
   };
@@ -129,8 +130,12 @@ export default function FeedPage() {
     await appService.saveFeeds(feeds);
   };
 
-  const handlePlayAudio = (article: ArticleType) => {
+  const handlePlayAudio = (article: ArticleType, articles?: ArticleType[]) => {
     setCurrentPlayingAudio(article);
+    // to reset playlist to audio player in case of playlist updated 
+    if (articles && articles.length > 0) {
+      setPlaylistItems(articles);
+    }
   };
 
   const handleShowPlaylist = () => {

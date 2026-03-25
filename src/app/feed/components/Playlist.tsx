@@ -5,7 +5,7 @@ import { useEnv } from '@/context/EnvContext';
 import { fmtDatetime, getFavicon, ArticleType } from './dataAgent';
 
 type Props = {
-  onSelectArticle: (article: ArticleType) => void;
+  onSelectArticle: (article: ArticleType, articles?: ArticleType[]) => void;
   currentPlaying?: ArticleType | null;
   showSide?: () => void;
 };
@@ -110,7 +110,7 @@ export function Playlist(props: Props) {
                   </p>
                 </div>
                 <button
-                  onClick={() => onSelectArticle(article)}
+                  onClick={() => onSelectArticle(article, playlistItems)}
                   className={`btn btn-xs gap-1 ${
                     isActive ? 'btn-primary' : 'btn-outline'
                   }`}
