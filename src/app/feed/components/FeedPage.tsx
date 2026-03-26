@@ -56,7 +56,8 @@ export default function FeedPage() {
     const res = await dataAgent.fetchFeed(link);
     const articles = res.articles; 
     if (!isWebAppPlatform()) {
-      // Tauri fetch, with full articles
+      // on Web, fetchFeed with no article content which will fetch later on ArticleView;
+      // On Tauri, fetchFeed with full articles, so save loacally as cache.
       if (articles && articles.length > 0) {
         const appService = await envConfig.getAppService();
         const oldArticles = await appService.loadArticles();

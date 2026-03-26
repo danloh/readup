@@ -306,19 +306,19 @@ function ArticleView({ entry, onClick } : { entry: ArticleType; onClick: () => v
         return;
       }
 
-      // get from cache first 
-      const appService = await envConfig.getAppService();
-      const localArticles = await appService.loadArticles();
-      let res;
-      const article = localArticles.find(a => a.link === link);
-      if (article && article.content?.trim()) {
-        res = article
-      } else if (isWebAppPlatform()) {
-        res = await dataAgent.fetchArticle(link);
-        // save to loacl as cache
-        const newArticle = res as ArticleType;
-        const newArticles = mergeArrays(localArticles, [newArticle], 'link');
-        await appService.saveArticles(newArticles);
+      let res = entry;
+      if (isWebAppPlatform()) {
+        try {
+          res = await dataAgent.fetchArticle(link);
+          // On Web, fetch full article here, save to loacl as cache
+          const appService = await envConfig.getAppService();
+          const localArticles = await appService.loadArticles();
+          const newArticles = mergeArrays(localArticles, [res], 'link');
+          await appService.saveArticles(newArticles);
+        } catch(e) {
+          console.error('Error on Fetch article on web: ', e);
+          res = entry;
+        }
       }
 
       const content = (res?.content || entry?.description || '').replace(
