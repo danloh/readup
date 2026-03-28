@@ -10,6 +10,7 @@ import { tauriHandleClose, tauriHandleToggleFullScreen, tauriQuitApp } from '@/u
 import { eventDispatcher } from '@/utils/event';
 import { MAX_ZOOM_LEVEL, MIN_ZOOM_LEVEL, ZOOM_STEP } from '@/services/constants';
 import { useCommandPalette } from '@/components/command-palette';
+import { setShortcutsDialogVisible } from '@/components/KeyboardShortcutsHelp';
 import { viewPagination } from './usePagination';
 import useShortcuts from '@/hooks/useShortcuts';
 import useBooksManager from './useBooksManager';
@@ -334,6 +335,7 @@ const useBookShortcuts = ({ sideBarBookKey, bookKeys }: UseBookShortcutsProps) =
       onZoomOut: zoomOut,
       onResetZoom: resetZoom,
       onOpenCommandPalette: openCommandPalette,
+      onOpenShortcutsHelp: () => setShortcutsDialogVisible(true),
     },
     [sideBarBookKey, bookKeys],
   );

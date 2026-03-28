@@ -22,6 +22,7 @@ import { isTauriAppPlatform } from '@/services/environment';
 import { getSysFontsList, setSystemUIVisibility } from '@/utils/bridge';
 import { AuthWindow } from '@/components/AuthWindow';
 import { UpdaterWindow } from '@/components/UpdaterWindow';
+import { KeyboardShortcutsHelp } from '@/components/KeyboardShortcutsHelp';
 import { Toast } from '@/components/Toast';
 import { getLocale } from '@/utils/misc';
 import { initDayjs } from '@/utils/time';
@@ -125,6 +126,7 @@ const Reader: React.FC<{ ids?: string }> = ({ ids }) => {
         <AuthWindow />
         <UpdaterWindow />
         <ProofreadRulesManager />
+        <KeyboardShortcutsHelp />
         <Toast />
       </Suspense>
     </div>
