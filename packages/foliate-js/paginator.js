@@ -273,6 +273,7 @@ class View {
     #padding = { before: 1, after: 1 }
     #alignColumns = 0
     #contentPages = 0
+    #bgImageSize = null
     fontReady = Promise.resolve()
     constructor({ container, onExpand }) {
         this.container = container
@@ -339,6 +340,21 @@ class View {
                 const { vertical, rtl } = getDirection(doc)
                 this.docBackground = getBackground(doc)
                 doc.body.style.background = 'none'
+                // Preload background image to get natural dimensions;
+                // in scrolled mode the view expands to fit the image.
+                const bgUrl = this.docBackground
+                    ?.match(/url\(["']?([^"')]+)["']?\)/)?.[1]
+                if (bgUrl) {
+                    const img = new Image()
+                    img.onload = () => {
+                        this.#bgImageSize = {
+                            width: img.naturalWidth,
+                            height: img.naturalHeight,
+                        }
+                        if (!this.#column) this.expand()
+                    }
+                    img.src = bgUrl
+                }
                 this.#iframe.style.display = 'none'
 
                 this.#vertical = vertical
@@ -567,7 +583,19 @@ class View {
                     + parseFloat(getComputedStyle(documentElement).paddingLeft || 0)
                     + parseFloat(getComputedStyle(documentElement).paddingRight || 0)
                 : documentElement.getBoundingClientRect()[side]
-            const expandedSize = contentSize
+            let expandedSize = contentSize
+            // If the section has a background image, ensure the view is
+            // at least as large as the image scaled to fit the cross axis
+            if (this.#bgImageSize) {
+                const crossSize = this.#element.getBoundingClientRect()[otherSide]
+                if (crossSize > 0) {
+                    const { width: imgW, height: imgH } = this.#bgImageSize
+                    const scaledSize = this.#vertical
+                        ? imgW * crossSize / imgH
+                        : imgH * crossSize / imgW
+                    expandedSize = Math.max(expandedSize, scaledSize)
+                }
+            }
             this.#element.style.padding = '0'
             this.#iframe.style[side] = `${expandedSize}px`
             this.#element.style[side] = `${expandedSize}px`
@@ -754,7 +782,8 @@ class View {
 export class Paginator extends HTMLElement {
     static observedAttributes = [
         'flow', 'gap', 'margin-top', 'margin-bottom', 'margin-left', 'margin-right',
-        'max-inline-size', 'max-block-size', 'max-column-count', 'no-preload',
+        'max-inline-size', 'max-block-size', 'max-column-count',
+        'no-preload', 'no-continuous-scroll',
     ]
     #root = this.attachShadow({ mode: 'open' })
     #observer = new ResizeObserver(() => this.render())
@@ -932,7 +961,7 @@ export class Paginator extends HTMLElement {
             // Don't dispatch scroll events during animation to prevent jank
             if (!this.#isAnimating) this.dispatchEvent(new Event('scroll'))
             // In scrolled mode, preload next section when near bottom edge
-            if (this.scrolled && !this.noPreload && !this.#filling && !this.#stabilizing) {
+            if (this.scrolled && !this.noPreload && !this.noContinuousScroll && !this.#filling && !this.#stabilizing) {
                 const threshold = this.size // ~1 viewport height
                 if (this.#renderedViewSize - this.#renderedEnd < threshold) {
                     const sorted = this.#sortedViews
@@ -959,7 +988,7 @@ export class Paginator extends HTMLElement {
                 // Load previous section when user scrolls near the top.
                 // Done in debounced handler (not instant) to avoid cascade
                 // from rapid DOM insertions breaking scroll anchoring.
-                if (!this.noPreload && !this.#filling && this.#renderedStart < this.size) {
+                if (!this.noPreload && !this.noContinuousScroll && !this.#filling && this.#renderedStart < this.size) {
                     const sorted = this.#sortedViews
                     const firstIndex = sorted[0]?.[0]
                     if (firstIndex != null) {
@@ -1071,6 +1100,14 @@ export class Paginator extends HTMLElement {
                 this.#top.style.setProperty('--_' + name, value)
                 this.render()
                 break
+            case 'no-continuous-scroll':
+                if (this.noContinuousScroll) {
+                    for (const [i] of this.#views) {
+                        if (i !== this.#primaryIndex) this.#destroyView(i)
+                    }
+                    this.#updateViewPadding()
+                }
+                break
         }
     }
     open(book) {
@@ -1153,6 +1190,19 @@ export class Paginator extends HTMLElement {
                 return parsed.join(' ')
             }
             return background
+        }
+
+        if (this.scrolled) {
+            // In scrolled mode, set background directly on each view element
+            // so it scrolls with the content. The static #background provides
+            // the fallback color for margins and gaps between views.
+            this.#background.innerHTML = ''
+            this.#background.style.display = ''
+            this.#background.style.background = fallbackBg
+            for (const [, view] of this.#sortedViews) {
+                view.element.style.background = resolveBackground(view.docBackground)
+            }
+            return
         }
 
         const cc = this.columnCount
@@ -1324,6 +1374,9 @@ export class Paginator extends HTMLElement {
     }
     get noPreload() {
         return this.hasAttribute('no-preload')
+    }
+    get noContinuousScroll() {
+        return this.scrolled && this.hasAttribute('no-continuous-scroll')
     }
     get scrollProp() {
         const { scrolled } = this
@@ -1703,7 +1756,7 @@ export class Paginator extends HTMLElement {
     // Does NOT re-scroll to avoid fighting with the user's current
     // scroll position.
     async #preloadNext() {
-        if (this.noPreload) return
+        if (this.noPreload || this.noContinuousScroll) return
         this.#filling = true
         try {
             // Load next 2 sections forward
@@ -1805,7 +1858,7 @@ export class Paginator extends HTMLElement {
         // - Scrolled mode with anchor in top half — so the user can
         //   scroll backward into the previous section immediately
         const primaryView = this.#primaryView
-        if (!this.noPreload && primaryView) {
+        if (!this.noPreload && !this.noContinuousScroll && primaryView) {
             const needsPrev = (primaryView.contentPages > 0 && primaryView.contentPages < this.columnCount)
             if (needsPrev || this.scrolled) {
                 const sorted = this.#sortedViews
@@ -1876,7 +1929,7 @@ export class Paginator extends HTMLElement {
     // When reanchor is false (background pre-loading), skip re-scrolling
     // to avoid fighting with the user's current scroll position.
     async #fillVisibleArea({ reanchor = true } = {}) {
-        if (this.noPreload || this.#filling) return
+        if (this.noPreload || this.noContinuousScroll || this.#filling) return
         this.#filling = true
         try {
             const { size } = this
@@ -1979,7 +2032,8 @@ export class Paginator extends HTMLElement {
             this.#trimDistantViews()
             // Handle short section alignment
             const primaryView = this.#primaryView
-            if (!this.noPreload && primaryView && primaryView.contentPages > 0
+            if (!this.noPreload && !this.noContinuousScroll && primaryView
+                && primaryView.contentPages > 0
                 && primaryView.contentPages < this.columnCount) {
                 const sorted = this.#sortedViews
                 const firstIndex = sorted[0]?.[0]
@@ -1988,6 +2042,12 @@ export class Paginator extends HTMLElement {
                     if (prevIdx != null) {
                         await this.#loadAdjacentSection(prevIdx)
                     }
+                }
+            }
+            // In noContinuousScroll mode, destroy all non-primary views
+            if (this.noContinuousScroll) {
+                for (const [i] of this.#views) {
+                    if (i !== index) this.#destroyView(i)
                 }
             }
             this.#updateViewPadding()
@@ -2004,8 +2064,10 @@ export class Paginator extends HTMLElement {
             // clearing everything — avoids reloading sections that
             // are still useful as adjacent views
             const keep = new Set([index])
-            for (const [i] of this.#views) {
-                if (Math.abs(i - index) <= 2) keep.add(i)
+            if (!this.noContinuousScroll) {
+                for (const [i] of this.#views) {
+                    if (Math.abs(i - index) <= 2) keep.add(i)
+                }
             }
             this.#clearViewsExcept(keep)
             const oldIndex = this.#primaryIndex

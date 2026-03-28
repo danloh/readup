@@ -95,6 +95,7 @@ export interface BookLayout {
   compactMarginPx?: number; // deprecated
   gapPercent: number;
   scrolled: boolean;
+  noContinuousScroll: boolean;
   disableClick: boolean;
   fullscreenClickArea: boolean;
   swapClickArea: boolean;

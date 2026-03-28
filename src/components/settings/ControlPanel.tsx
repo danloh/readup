@@ -27,6 +27,7 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
   const viewSettings = getViewSettings(bookKey) || settings.globalViewSettings;
 
   const [isScrolledMode, setScrolledMode] = useState(viewSettings.scrolled);
+  const [noContinuousScroll, setNoContinuousScroll] = useState(viewSettings.noContinuousScroll);
   const [scrollingOverlap, setScrollingOverlap] = 
     useState(viewSettings.scrollingOverlap);
   const [hideScrollbar, setHideScrollbar] = useState(viewSettings.hideScrollbar || false);
@@ -56,6 +57,7 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
   const handleReset = () => {
     resetToDefaults({
       scrolled: setScrolledMode,
+      noContinuousScroll: setNoContinuousScroll,
       scrollingOverlap: setScrollingOverlap,
       hideScrollbar: setHideScrollbar,
       volumeKeysToFlip: setVolumeKeysToFlip,
@@ -86,6 +88,17 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
     getView(bookKey)?.renderer.setStyles?.(getStyles(viewSettings!));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isScrolledMode]);
+
+  useEffect(() => {
+    if (noContinuousScroll === viewSettings.noContinuousScroll) return;
+    saveViewSettings(envConfig, bookKey, 'noContinuousScroll', noContinuousScroll);
+    if (noContinuousScroll) {
+      getView(bookKey)?.renderer.setAttribute('no-continuous-scroll', '');
+    } else {
+      getView(bookKey)?.renderer.removeAttribute('no-continuous-scroll');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [noContinuousScroll]);
 
   useEffect(() => {
     if (scrollingOverlap === viewSettings.scrollingOverlap) return;
@@ -303,6 +316,19 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
           disabled={bookData?.isFixedLayout}
           checked={isScrolledMode}
           onChange={() => setScrolledMode(!isScrolledMode)}
+        />
+      </div>
+      <div
+        className='flex items-center justify-between' 
+        data-setting-id='settings.control.scroll.noContinuousScroll'
+      >
+        <b className=''>{_('Single Section Scroll')}</b>
+        <input
+          type='checkbox'
+          className='toggle toggle-success h-5'
+          checked={noContinuousScroll}
+          disabled={!viewSettings.scrolled}
+          onChange={() => setNoContinuousScroll(!noContinuousScroll)}
         />
       </div>
       <div 
