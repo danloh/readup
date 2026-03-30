@@ -273,7 +273,7 @@ const createAuthorGroups = (books: Book[]): (Book | BooksGroup)[] => {
 };
 
 /**
- * Group books by status: such as tod/doing/done.
+ * Group books by status: such as todo/doing/done,....
  * Books without status appear as individual items.
  */
 const createStatusGroups = (books: Book[]): (Book | BooksGroup)[] => {

@@ -26,7 +26,7 @@ export interface Book {
   groupId?: string;
   groupName?: string;
   tags?: string[];
-  status?: string;
+  status?: string; // Todo/Doing/Done...
   progress?: [number, number]; // Add progress field: [current, total], 1-based page number
 
   createdAt: number;
