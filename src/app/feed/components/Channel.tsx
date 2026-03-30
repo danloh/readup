@@ -1,4 +1,5 @@
 import React, { memo, useCallback, useEffect, useState } from 'react';
+import { CiHashtag } from "react-icons/ci";
 import { IoMdLink, IoMdStar, IoMdStarOutline } from 'react-icons/io';
 import { IoPlayOutline } from "react-icons/io5";
 import { FcReadingEbook } from "react-icons/fc";
@@ -10,6 +11,8 @@ import { eventDispatcher } from '@/utils/event';
 import { isWebAppPlatform } from '@/services/environment';
 import { useTranslation } from '@/hooks/useTranslation';
 import { FeedEpubService } from '../epub/feedEpubService';
+import { TagManager } from './TagManager';
+import { TagFilter } from './TagFilter';
 import * as dataAgent from './dataAgent';
 import { ArticleType, dateCompare, FeedType, fmtDatetime, getFavicon } from './dataAgent';
 
@@ -61,6 +64,8 @@ function ArticleList(props: ListProps) {
   const [exporting, setExporting] = useState(false);
   const [showFreshEpubConfirm, setShowFreshEpubConfirm] = useState(false);
   const [freshTitle, setFreshTitle] = useState('');
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [articleToEdit, setArticleToEdit] = useState<ArticleType | null>(null);
 
   const sortedArticles = articles.length >= 2 
     ? articles.sort((n1, n2) => {
@@ -69,6 +74,14 @@ function ArticleList(props: ListProps) {
           : 0;
       })
     : articles;
+
+  // Filter articles by selected tags
+  const filteredArticles = selectedTags.length === 0
+    ? sortedArticles
+    : sortedArticles.filter((article) => {
+        if (!article.tags || article.tags.length === 0) return false;
+        return selectedTags.some(tag => article.tags?.includes(tag));
+      });
 
   const handleExportToEpub = useCallback(async (createFresh: boolean = false) => {
     if (createFresh && freshTitle.trim()) {
@@ -79,7 +92,10 @@ function ArticleList(props: ListProps) {
       });
       return;
     }
-    if (sortedArticles.length === 0) {
+    
+    const articlesToExport = selectedTags.length > 0 ? filteredArticles : sortedArticles;
+    
+    if (articlesToExport.length === 0) {
       eventDispatcher.dispatch('toast', {
         type: 'warn',
         timeout: 2000,
@@ -93,10 +109,10 @@ function ArticleList(props: ListProps) {
       const appService = await envConfig.getAppService();
       const library = await appService.loadLibraryBooks();
 
-      console.log('Starting EPUB export with', sortedArticles.length, 'articles', { createFresh });
+      console.log('Starting EPUB export with', articlesToExport.length, 'articles', { createFresh });
 
       const { book, migrationWarnings } = await FeedEpubService.createOrUpdateEpub(
-        sortedArticles,
+        articlesToExport,
         appService,
         library,
         createFresh,
@@ -137,75 +153,109 @@ function ArticleList(props: ListProps) {
       setExporting(false);
       setShowFreshEpubConfirm(false);
     }
-  }, [freshTitle]);
+  }, [freshTitle, filteredArticles, sortedArticles, selectedTags.length]);
 
   return (
     <div className='flex flex-col'>
       {isInStar && sortedArticles.length > 0 && (
-        <div className='p-2 bg-base-200 border-b'>
-          <div className='flex gap-2 items-start justify-center'>
-            <div className='flex-1 flex gap-2 items-start justify-start'>
-              <button
-                onClick={() => setShowFreshEpubConfirm(prev => !prev)}
-                disabled={exporting}
-                className='btn btn-sm btn-primary gap-2'
-              >
-                <FcReadingEbook size={18} />
-                {exporting ? 'Creating EPUB...' : `Export to EPUB (${sortedArticles.length})`}
-              </button>
-            </div>
-          </div>
-          {showFreshEpubConfirm && (
-            <div className='mt-3 p-2 bg-base-100 rounded border'>
-              <p className='text-xs text-base-content/60 mb-2'>
-                Converts starred articles into an EPUB book. Create or Update: annotations will persist across updates; Create Fresh: create EPUB from scratch.
-              </p>
-              <div className='flex gap-2'>
+        <>
+          {/* Tag Filter */}
+          <TagFilter
+            articles={sortedArticles}
+            selectedTags={selectedTags}
+            onTagsChange={setSelectedTags}
+          />
+          
+          {/* Export button */}
+          <div className='p-2 bg-base-200 border-b'>
+            <div className='flex gap-2 items-start justify-center'>
+              <div className='flex-1 flex gap-2 items-start justify-start'>
                 <button
-                  onClick={() => handleExportToEpub(false)}
+                  onClick={() => setShowFreshEpubConfirm(prev => !prev)}
                   disabled={exporting}
-                  className='btn btn-xs btn-warning'
+                  className='btn btn-sm btn-primary gap-2'
                 >
-                  Create or Update
-                </button>
-                <input
-                  type='text'
-                  value={freshTitle}
-                  onChange={(e) => setFreshTitle(e.target.value.trim())}
-                  placeholder={_('New EPUB Name')}
-                  className='input input-xs input-bordered'
-                />
-                <button
-                  onClick={() => handleExportToEpub(true)}
-                  disabled={exporting}
-                  className='btn btn-xs btn-success'
-                >
-                  Create Fresh
-                </button>
-                <button
-                  onClick={() => setShowFreshEpubConfirm(false)}
-                  disabled={exporting}
-                  className='btn btn-xs btn-ghost'
-                >
-                  Cancel
+                  <FcReadingEbook size={18} />
+                  {exporting ? 'Creating EPUB...' : `Export to EPUB (${filteredArticles.length})`}
                 </button>
               </div>
             </div>
-          )}
-        </div>
+            {showFreshEpubConfirm && (
+              <div className='mt-3 p-2 bg-base-100 rounded border'>
+                <p className='text-xs text-base-content/60 mb-2'>
+                  Converts {selectedTags.length > 0 ? 'filtered ' : ''}starred articles into an EPUB book. Create or Update: annotations will persist across updates; Create Fresh: create EPUB from scratch.
+                </p>
+                <div className='flex gap-2'>
+                  <button
+                    onClick={() => handleExportToEpub(false)}
+                    disabled={exporting}
+                    className='btn btn-xs btn-warning'
+                  >
+                    Create or Update
+                  </button>
+                  <input
+                    type='text'
+                    value={freshTitle}
+                    onChange={(e) => setFreshTitle(e.target.value.trim())}
+                    placeholder='New EPUB Name'
+                    className='input input-xs input-bordered'
+                  />
+                  <button
+                    onClick={() => handleExportToEpub(true)}
+                    disabled={exporting}
+                    className='btn btn-xs btn-success'
+                  >
+                    Create Fresh
+                  </button>
+                  <button
+                    onClick={() => setShowFreshEpubConfirm(false)}
+                    disabled={exporting}
+                    className='btn btn-xs btn-ghost'
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </>
       )}
       <div className='p-2 space-y-2'>
-        {sortedArticles.map((article: ArticleType, idx: number) => {
+        {filteredArticles.map((article: ArticleType, idx: number) => {
           return (
             <ArticleItem
               key={`${article.link}-${idx}`}
               entry={article}
               isInStar={isInStar}
               onPlayAudio={onPlayAudio}
+              onEditTags={(article) => setArticleToEdit(article)}
             />
           )}
         )}
       </div>
+      
+      {/* Tag Manager Modal */}
+      {articleToEdit && (
+        <TagManager
+          article={articleToEdit}
+          allTags={Array.from(new Set(sortedArticles.flatMap(a => a.tags || [])))}
+          onSave={async (tags) => {
+            const appService = await envConfig.getAppService();
+            const oldArticles = await appService.loadArticles();
+            
+            const updatedArticle = { ...articleToEdit, tags };
+            const newArticles = mergeArrays(oldArticles, [updatedArticle], 'link');
+            await appService.saveArticles(newArticles);
+            
+            // Update the local article object
+            const articleIdx = articles.findIndex(a => a.link === articleToEdit.link);
+            if (articleIdx >= 0 && articles[articleIdx]) {
+              articles[articleIdx]!.tags = tags;
+            }
+          }}
+          onClose={() => setArticleToEdit(null)}
+        />
+      )}
     </div>
   );
 }
@@ -214,10 +264,11 @@ type ItemProps = {
   entry: ArticleType;
   isInStar?: boolean;
   onPlayAudio?: (article: ArticleType) => void;
+  onEditTags?: (article: ArticleType) => void;
 };
 
 const ArticleItem = memo(function ArticleItm(props: ItemProps) {
-  const { entry: article, isInStar, onPlayAudio } = props;
+  const { entry: article, isInStar, onPlayAudio, onEditTags } = props;
   const { envConfig } = useEnv();
   const [isStar, setIsStar] = useState(isInStar);
   const [expanded, setExpanded] = useState(false);
@@ -248,7 +299,17 @@ const ArticleItem = memo(function ArticleItm(props: ItemProps) {
       >
         <h2 className='flex-1 text-lg text-info cursor-pointer'>{article.title}</h2>
       </div>
-      <div className='flex flex-row items-center justify-center'>
+      {/* Tags display */}
+      {article.tags && article.tags.length > 0 && (
+        <div className='flex flex-wrap gap-1 mb-2'>
+          {article.tags.map((tag) => (
+            <span key={tag} className='badge badge-sm badge-outline'>
+              {tag}
+            </span>
+          ))}
+        </div>
+      )}
+      <div className='flex flex-row items-center justify-start'>
         <img src={getFavicon(article.link!)} className='h-4 w-4 m-1' alt='>' loading='lazy' />
         <span className='m-1 text-sm'>
           {fmtDatetime(article.published || '')}
@@ -282,6 +343,15 @@ const ArticleItem = memo(function ArticleItm(props: ItemProps) {
             : (<IoMdStarOutline size={20} className={`${isStar ? 'text-success' : ''}`} />)
           }
         </span>
+        {isInStar && (
+          <span 
+            className='m-1 cursor-pointer' 
+            onClick={() => onEditTags?.(article)}
+            title='Edit tags'
+          >
+            <CiHashtag size={18} />
+          </span>
+        )}
       </div>
       {expanded 
         ? <ArticleView entry={article} onClick={() => setExpanded(prev => !prev)} />

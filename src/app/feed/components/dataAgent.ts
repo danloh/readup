@@ -48,14 +48,7 @@ export interface ArticleType {
   audio_url: string;
   id?: string;
   status?: string; // star-ed, 
-}
-
-export interface PodType {
-  title: string;
-  url: string;
-  published?: Date;
-  article_url: string;
-  feed_link: string;
+  tags?: string[];
 }
 
 export const fetchFeed = async (url: string): Promise<FeedType> => {
