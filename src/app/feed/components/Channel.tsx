@@ -43,7 +43,7 @@ export function Channel(props: Props) {
           ☰
         </button>
         <b className='text-info' >{entries.length}</b>
-        <b className='font-bold'>{channel?.title || (isStarChannel ? 'Starred' : '')}</b>
+        <b className='font-bold'>{channel?.title || (isStarChannel ? '⭐' : '')}</b>
       </div>
       <ArticleList articles={entries} isInStar={isStarChannel} onPlayAudio={onPlayAudio} />
     </div>
@@ -176,14 +176,17 @@ function ArticleList(props: ListProps) {
                   className='btn btn-sm btn-primary gap-2'
                 >
                   <FcReadingEbook size={18} />
-                  {exporting ? 'Creating EPUB...' : `Export to EPUB (${filteredArticles.length})`}
+                  {exporting 
+                    ? _('Creating EPUB') 
+                    : _(`Export to EPUB {{count}}`, {count: filteredArticles.length})
+                  }
                 </button>
               </div>
             </div>
             {showFreshEpubConfirm && (
               <div className='mt-3 p-2 bg-base-100 rounded border'>
                 <p className='text-xs text-base-content/60 mb-2'>
-                  Converts {selectedTags.length > 0 ? 'filtered ' : ''}starred articles into an EPUB book. Create or Update: annotations will persist across updates; Create Fresh: create EPUB from scratch.
+                  {_('Converts articles into an EPUB book. Create or Update: annotations will persist across updates; Create Fresh: create EPUB from scratch.')}
                 </p>
                 <div className='flex gap-2'>
                   <button
@@ -191,13 +194,13 @@ function ArticleList(props: ListProps) {
                     disabled={exporting}
                     className='btn btn-xs btn-warning'
                   >
-                    Create or Update
+                    {_('Create or Update')}
                   </button>
                   <input
                     type='text'
                     value={freshTitle}
                     onChange={(e) => setFreshTitle(e.target.value.trim())}
-                    placeholder='New EPUB Name'
+                    placeholder={_('New EPUB Name')}
                     className='input input-xs input-bordered'
                   />
                   <button
@@ -205,14 +208,14 @@ function ArticleList(props: ListProps) {
                     disabled={exporting}
                     className='btn btn-xs btn-success'
                   >
-                    Create Fresh
+                    {_('Create Fresh')}
                   </button>
                   <button
                     onClick={() => setShowFreshEpubConfirm(false)}
                     disabled={exporting}
                     className='btn btn-xs btn-ghost'
                   >
-                    Cancel
+                    {_('Cancel')}
                   </button>
                 </div>
               </div>

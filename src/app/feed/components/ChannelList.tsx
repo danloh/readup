@@ -1,6 +1,7 @@
 import React, { JSX, useState } from 'react';
 import { IoIosSettings, IoIosStar } from 'react-icons/io';
 import { TbPlaylist } from 'react-icons/tb';
+import { useTranslation } from '@/hooks/useTranslation';
 import { FeedType, getFavicon } from './dataAgent';
 
 type Props = {
@@ -13,7 +14,7 @@ type Props = {
 
 export function ChannelList(props: Props) {
   const { channelList, onShowManager, onClickFeed, onClickStar, onShowPlaylist } = props;
-
+  const _ = useTranslation();
   const [highlighted, setHighlighted] = useState<FeedType>();
   
   const renderFeedList = (): JSX.Element => {
@@ -52,7 +53,7 @@ export function ChannelList(props: Props) {
       >
         <div className='flex flex-row items-center justify-start'>
           <IoIosSettings size={18} className='m-1' />
-          <span className='m-1'>Manage Feed</span>
+          <span className='m-1'>{_('Manage Feed')}</span>
         </div>
       </div>
       <div 
@@ -64,7 +65,7 @@ export function ChannelList(props: Props) {
       >
         <div className='flex flex-row items-center justify-start hover:text-warning'>
           <IoIosStar size={18} className='m-1 fill-yellow-500 text-yellow-500' />
-          <span className='m-1'>Starred</span>
+          <span className='m-1'>{_('Starred')}</span>
         </div>
       </div>
       {onShowPlaylist && (
@@ -77,7 +78,7 @@ export function ChannelList(props: Props) {
         >
           <div className='flex flex-row items-center justify-start hover:text-info'>
             <TbPlaylist size={18} className='m-1 text-primary' />
-            <span className='m-1'>Playlist</span>
+            <span className='m-1'>{_('Playlist')}</span>
           </div>
         </div>
       )}

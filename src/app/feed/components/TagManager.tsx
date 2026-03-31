@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { IoClose, IoAdd } from 'react-icons/io5';
+import { useTranslation } from '@/hooks/useTranslation';
 import { ArticleType } from './dataAgent';
 
 type Props = {
@@ -11,6 +12,7 @@ type Props = {
 
 export function TagManager(props: Props) {
   const { article, allTags, onSave, onClose } = props;
+  const _ = useTranslation();
   const [tags, setTags] = useState<string[]>(article.tags || []);
   const [newTag, setNewTag] = useState('');
   const [saving, setSaving] = useState(false);
@@ -47,7 +49,7 @@ export function TagManager(props: Props) {
     <div className='fixed inset-0 bg-black/50 flex items-center justify-center z-50'>
       <div className='bg-base-100 rounded-lg p-4 max-w-md w-full max-h-95 mx-4 overflow-auto'>
         <div className='flex items-center justify-between mb-4'>
-          <h3 className='text-lg font-bold'>Edit Tags</h3>
+          <h3 className='text-lg font-bold'>{_('Edit Tags')}</h3>
           <button
             onClick={onClose}
             disabled={saving}
@@ -58,17 +60,17 @@ export function TagManager(props: Props) {
         </div>
 
         <div className='mb-4'>
-          <p className='text-sm text-base-content/60 mb-2'>Article: {article.title}</p>
+          <p className='text-sm text-base-content/60 mb-2'>{article.title}</p>
         </div>
 
         {/* Existing tags */}
         <div className='mb-4'>
           <label className='label'>
-            <span className='label-text'>Current Tags</span>
+            <span className='label-text'>{_('Current Tags')}</span>
           </label>
           <div className='flex flex-wrap gap-2 mb-2 min-h-8'>
             {tags.length === 0 ? (
-              <span className='text-sm text-base-content/50'>No tags yet</span>
+              <span className='text-sm text-base-content/50'>{_('No tags yet')}</span>
             ) : (
               tags.map((tag) => (
                 <div
@@ -92,7 +94,7 @@ export function TagManager(props: Props) {
         {/* Add new tag */}
         <div className='mb-4'>
           <label className='label'>
-            <span className='label-text'>Add Tag</span>
+            <span className='label-text'>{_('Add Tag')}</span>
           </label>
           <div className='flex gap-2'>
             <input
@@ -104,7 +106,7 @@ export function TagManager(props: Props) {
                   handleAddNewTag();
                 }
               }}
-              placeholder='Type tag name...'
+              placeholder={_('Type tag name...')}
               className='input input-bordered input-sm flex-1'
               disabled={saving}
             />
@@ -122,7 +124,7 @@ export function TagManager(props: Props) {
         {allTags.length > 0 && (
           <div className='mb-4'>
             <label className='label'>
-              <span className='label-text'>Suggested Tags</span>
+              <span className='label-text'>{_('Suggested Tags')}</span>
             </label>
             <div className='flex flex-wrap gap-2'>
               {allTags.filter(t => !tags.includes(t)).map((tag) => (
@@ -146,14 +148,14 @@ export function TagManager(props: Props) {
             disabled={saving}
             className='btn btn-ghost btn-sm'
           >
-            Cancel
+            {_('Cancel')}
           </button>
           <button
             onClick={handleSave}
             disabled={saving}
             className='btn btn-primary btn-sm'
           >
-            {saving ? 'Saving...' : 'Save'}
+            {saving ? _('Saving') : _('Save')}
           </button>
         </div>
       </div>

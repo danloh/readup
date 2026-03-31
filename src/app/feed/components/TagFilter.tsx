@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { IoClose } from 'react-icons/io5';
+import { useTranslation } from '@/hooks/useTranslation';
 import { ArticleType } from './dataAgent';
 
 type Props = {
@@ -10,6 +11,7 @@ type Props = {
 
 export function TagFilter(props: Props) {
   const { articles, selectedTags, onTagsChange } = props;
+  const _ = useTranslation();
 
   // Get all unique tags from articles
   const availableTags = useMemo(() => {
@@ -44,7 +46,10 @@ export function TagFilter(props: Props) {
     <div className='p-2 bg-base-200 border-b'>
       <div className='flex items-center gap-2 flex-wrap'>
         <span className='text-sm font-semibold'>
-          {selectedTags.length > 0 ? `Tags(${selectedTags.length} selected):` : 'Tags:'}
+          {selectedTags.length > 0 
+            ? _(`Tags({{count}} selected)):`, { count: selectedTags.length }) 
+            : _('Tags:')
+          }
         </span>
         {availableTags.map((tag) => {
           const isSelected = selectedTags.includes(tag);
@@ -71,7 +76,7 @@ export function TagFilter(props: Props) {
             className='btn btn-xs btn-ghost gap-1'
           >
             <IoClose size={16} />
-            Clear
+            {_('Clear')}
           </button>
         )}
       </div>
