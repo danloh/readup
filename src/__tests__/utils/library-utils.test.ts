@@ -368,6 +368,77 @@ describe('createWithinGroupSorter', () => {
     });
   });
 
+  describe('series grouping with sort direction', () => {
+    it('should always sort by seriesIndex ascending even when sortAscending is false', () => {
+      const books = [
+        createMockBook({
+          hash: '1',
+          title: 'Book 3',
+          metadata: { seriesIndex: 3 },
+        }),
+        createMockBook({
+          hash: '2',
+          title: 'Book 1',
+          metadata: { seriesIndex: 1 },
+        }),
+        createMockBook({
+          hash: '3',
+          title: 'Book 2',
+          metadata: { seriesIndex: 2 },
+        }),
+      ];
+
+      const sorter = createWithinGroupSorter(
+        LibraryGroupByType.Series,
+        LibrarySortByType.Title,
+        'en',
+        false, // descending
+      );
+      const sorted = [...books].sort(sorter);
+
+      // Series index should always be ascending (1, 2, 3) regardless of sort direction
+      expect(sorted[0]!.metadata?.seriesIndex).toBe(1);
+      expect(sorted[1]!.metadata?.seriesIndex).toBe(2);
+      expect(sorted[2]!.metadata?.seriesIndex).toBe(3);
+    });
+
+    it('should apply sort direction to fallback sort for books without seriesIndex', () => {
+      const books = [
+        createMockBook({ hash: '1', title: 'Apple', metadata: {} }),
+        createMockBook({ hash: '2', title: 'Zebra', metadata: {} }),
+      ];
+
+      const sorterDesc = createWithinGroupSorter(
+        LibraryGroupByType.Series,
+        LibrarySortByType.Title,
+        'en',
+        false, // descending
+      );
+      const sortedDesc = [...books].sort(sorterDesc);
+
+      expect(sortedDesc[0]!.title).toBe('Zebra');
+      expect(sortedDesc[1]!.title).toBe('Apple');
+    });
+
+    it('should place books with seriesIndex before those without regardless of sort direction', () => {
+      const books = [
+        createMockBook({ hash: '1', title: 'Apple', metadata: {} }),
+        createMockBook({ hash: '2', title: 'Book 1', metadata: { seriesIndex: 1 } }),
+      ];
+
+      const sorter = createWithinGroupSorter(
+        LibraryGroupByType.Series,
+        LibrarySortByType.Title,
+        'en',
+        false, // descending
+      );
+      const sorted = [...books].sort(sorter);
+
+      expect(sorted[0]!.hash).toBe('2'); // Has index, comes first
+      expect(sorted[1]!.hash).toBe('1'); // No index
+    });
+  });
+
   describe('author grouping', () => {
     it('should sort by global sort criteria (title)', () => {
       const books = [
