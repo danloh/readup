@@ -8,6 +8,7 @@ import { useBookDataStore } from '@/store/bookDataStore';
 import { getStyles } from '@/styles/style';
 import { tauriHandleClose, tauriHandleToggleFullScreen, tauriQuitApp } from '@/utils/window';
 import { eventDispatcher } from '@/utils/event';
+import { getParagraphActionForKey } from '@/utils/paragraphPresentation';
 import { MAX_ZOOM_LEVEL, MIN_ZOOM_LEVEL, ZOOM_STEP } from '@/services/constants';
 import { useCommandPalette } from '@/components/command-palette';
 import { setShortcutsDialogVisible } from '@/components/KeyboardShortcutsHelp';
@@ -65,7 +66,10 @@ const useBookShortcuts = ({ sideBarBookKey, bookKeys }: UseBookShortcutsProps) =
     const viewSettings = getViewSettings(sideBarBookKey ?? '');
     // If paragraph mode is enabled, navigate to previous paragraph instead
     if (viewSettings?.paragraphMode?.enabled && sideBarBookKey) {
-      eventDispatcher.dispatch('paragraph-prev', { bookKey: sideBarBookKey });
+      const action = getParagraphActionForKey('ArrowLeft', viewSettings);
+      eventDispatcher.dispatch(action === 'next' ? 'paragraph-next' : 'paragraph-prev', {
+        bookKey: sideBarBookKey,
+      });
       return;
     }
     if (moveReadingRuler('left')) return;
@@ -76,7 +80,10 @@ const useBookShortcuts = ({ sideBarBookKey, bookKeys }: UseBookShortcutsProps) =
     const viewSettings = getViewSettings(sideBarBookKey ?? '');
     // If paragraph mode is enabled, navigate to next paragraph instead
     if (viewSettings?.paragraphMode?.enabled && sideBarBookKey) {
-      eventDispatcher.dispatch('paragraph-next', { bookKey: sideBarBookKey });
+      const action = getParagraphActionForKey('ArrowRight', viewSettings);
+      eventDispatcher.dispatch(action === 'prev' ? 'paragraph-prev' : 'paragraph-next', {
+        bookKey: sideBarBookKey,
+      });
       return;
     }
     if (moveReadingRuler('right')) return;
@@ -88,7 +95,10 @@ const useBookShortcuts = ({ sideBarBookKey, bookKeys }: UseBookShortcutsProps) =
     const viewSettings = getViewSettings(sideBarBookKey ?? '');
     // If paragraph mode is enabled, navigate to previous paragraph instead
     if (viewSettings?.paragraphMode?.enabled && sideBarBookKey) {
-      eventDispatcher.dispatch('paragraph-prev', { bookKey: sideBarBookKey });
+      const action = getParagraphActionForKey('ArrowUp', viewSettings);
+      eventDispatcher.dispatch(action === 'next' ? 'paragraph-next' : 'paragraph-prev', {
+        bookKey: sideBarBookKey,
+      });
       return;
     }
     if (moveReadingRuler('up')) return;
@@ -101,7 +111,10 @@ const useBookShortcuts = ({ sideBarBookKey, bookKeys }: UseBookShortcutsProps) =
     const viewSettings = getViewSettings(sideBarBookKey ?? '');
     // If paragraph mode is enabled, navigate to next paragraph instead
     if (viewSettings?.paragraphMode?.enabled && sideBarBookKey) {
-      eventDispatcher.dispatch('paragraph-next', { bookKey: sideBarBookKey });
+      const action = getParagraphActionForKey('ArrowDown', viewSettings);
+      eventDispatcher.dispatch(action === 'prev' ? 'paragraph-prev' : 'paragraph-next', {
+        bookKey: sideBarBookKey,
+      });
       return;
     }
     if (moveReadingRuler('down')) return;
