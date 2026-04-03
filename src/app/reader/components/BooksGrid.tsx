@@ -198,6 +198,7 @@ const BooksGrid: React.FC<BooksGridProps> = ({ bookKeys, onCloseBook, onGoToLibr
                 color={viewSettings.readingRulerColor}
                 bookFormat={book.format}
                 viewSettings={viewSettings}
+                gridInsets={gridInsets}
               />
             )}
             {showFooter && (

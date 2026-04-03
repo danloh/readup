@@ -6,8 +6,9 @@ import { useReaderStore } from '@/store/readerStore';
 import { useBookDataStore } from '@/store/bookDataStore';
 import { useDeviceControlStore } from '@/store/deviceStore';
 import { eventDispatcher } from '@/utils/event';
-import { isTauriAppPlatform } from '@/services/environment';
 import { tauriGetWindowLogicalPosition } from '@/utils/window';
+import { isTauriAppPlatform } from '@/services/environment';
+import { getReadingRulerMoveDirection } from '../utils/readingRuler';
 
 export type ScrollSource = 'touch' | 'mouse';
 
@@ -118,6 +119,13 @@ export const usePagination = (
     const bookData = getBookData(bookKey);
     if (!viewState?.inited || !bookData) return;
 
+    const dispatchReadingRulerMove = (side: PaginationSide) => {
+      return eventDispatcher.dispatchSync('reading-ruler-move', {
+        bookKey,
+        direction: getReadingRulerMoveDirection(side, viewRef.current?.book.dir),
+      });
+    };
+
     if (msg instanceof MessageEvent) {
       if (msg.data && msg.data.bookKey === bookKey) {
         const viewSettings = getViewSettings(bookKey)!;
@@ -153,29 +161,32 @@ export const usePagination = (
               ) {
                 // toggle visibility of the header bar and the footer bar
                 setHoveredBookKey(hoveredBookKey ? null : bookKey);
-              } else {
-                if (hoveredBookKey) {
-                  setHoveredBookKey(null);
-                  return;
-                }
-                if (!viewSettings.disableClick! && screenX >= viewCenterX) {
-                  if (viewSettings.fullscreenClickArea) {
-                    viewPagination(viewRef.current, viewSettings, 'down');
-                  } else if (viewSettings.swapClickArea) {
-                    viewPagination(viewRef.current, viewSettings, 'left');
-                  } else {
-                    viewPagination(viewRef.current, viewSettings, 'right');
-                  }
-                } else if (!viewSettings.disableClick! && screenX < viewCenterX) {
-                  if (viewSettings.fullscreenClickArea) {
-                    viewPagination(viewRef.current, viewSettings, 'down');
-                  } else if (viewSettings.swapClickArea) {
-                    viewPagination(viewRef.current, viewSettings, 'right');
-                  } else {
-                    viewPagination(viewRef.current, viewSettings, 'left');
-                  }
-                }
+                return;
               }
+
+              if (hoveredBookKey) {
+                setHoveredBookKey(null);
+                return;
+              }
+
+              const side: PaginationSide =
+                screenX >= viewCenterX
+                  ? viewSettings.fullscreenClickArea
+                    ? 'down'
+                    : viewSettings.swapClickArea
+                      ? 'left'
+                      : 'right'
+                  : viewSettings.fullscreenClickArea
+                    ? 'down'
+                    : viewSettings.swapClickArea
+                      ? 'right'
+                      : 'left';
+
+              if (viewSettings.readingRulerEnabled && dispatchReadingRulerMove(side)) {
+                return;
+              }
+
+              viewPagination(viewRef.current, viewSettings, side);
             }
           }
         } else if (
@@ -208,8 +219,14 @@ export const usePagination = (
         const { keyName } = msg.detail;
         setHoveredBookKey('');
         if (keyName === 'VolumeUp') {
+          if (viewSettings.readingRulerEnabled && dispatchReadingRulerMove('up')) {
+            return;
+          }
           viewPagination(viewRef.current, viewSettings, 'up');
         } else if (keyName === 'VolumeDown') {
+          if (viewSettings.readingRulerEnabled && dispatchReadingRulerMove('down')) {
+            return;
+          }
           viewPagination(viewRef.current, viewSettings, 'down');
         }
       } else if (
