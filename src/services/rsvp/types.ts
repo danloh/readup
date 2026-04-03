@@ -16,7 +16,6 @@ export interface RsvpState {
   scale: number;
   punctuationPauseMs: number;
   progress: number;
-  resumedFromIndex: number | null;
 }
 
 export interface RsvpPosition {

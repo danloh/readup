@@ -21,7 +21,6 @@ const POSITION_KEY_PREFIX = 'readup_rsvp_pos_';
 
 export class RSVPController extends EventTarget {
   private view: FoliateView;
-  private bookKey: string;
   private bookId: string; // Book hash without session suffix, for persistent storage
   private currentCfi: string | null = null;
 
@@ -34,7 +33,6 @@ export class RSVPController extends EventTarget {
     scale: DEFAULT_FONT_SCALE,
     punctuationPauseMs: DEFAULT_PUNCTUATION_PAUSE_MS,
     progress: 0,
-    resumedFromIndex: null,
   };
 
   private playbackTimer: ReturnType<typeof setTimeout> | null = null;
@@ -45,7 +43,6 @@ export class RSVPController extends EventTarget {
   constructor(view: FoliateView, bookKey: string) {
     super();
     this.view = view;
-    this.bookKey = bookKey;
     // Extract book ID (hash) from bookKey format: "{hash}-{sessionId}"
     // Use only the hash for persistent position storage across sessions
     this.bookId = bookKey.split('-')[0] || bookKey;
@@ -68,7 +65,11 @@ export class RSVPController extends EventTarget {
   }
 
   get currentState(): RsvpState {
-    return { ...this.state };
+    return {
+      ...this.state,
+      progress:
+        this.state.words.length > 0 ? (this.state.currentIndex / this.state.words.length) * 100 : 0,
+    };
   }
 
   get currentWord(): RsvpWord | null {
@@ -95,7 +96,7 @@ export class RSVPController extends EventTarget {
   }
 
   private loadPunctuationPauseFromStorage(): number | null {
-    const stored = localStorage.getItem(`${PUNCTUATION_PAUSE_KEY_PREFIX}${this.bookKey}`);
+    const stored = localStorage.getItem(`${PUNCTUATION_PAUSE_KEY_PREFIX}${this.bookId}`);
     if (stored) {
       const parsed = parseInt(stored, 10);
       if (!isNaN(parsed) && PUNCTUATION_PAUSE_OPTIONS.includes(parsed)) {
@@ -106,7 +107,15 @@ export class RSVPController extends EventTarget {
   }
 
   private savePunctuationPauseToStorage(pauseMs: number): void {
-    localStorage.setItem(`${PUNCTUATION_PAUSE_KEY_PREFIX}${this.bookKey}`, pauseMs.toString());
+    localStorage.setItem(`${PUNCTUATION_PAUSE_KEY_PREFIX}${this.bookId}`, pauseMs.toString());
+  }
+
+  getWpmOptions(): number[] {
+    const options: number[] = [];
+    for (let wpm = MIN_WPM; wpm <= MAX_WPM; wpm += WPM_STEP) {
+      options.push(wpm);
+    }
+    return options;
   }
 
   setWpm(wpm: number): void {
@@ -117,7 +126,7 @@ export class RSVPController extends EventTarget {
   }
 
   private loadWpmFromStorage(): number | null {
-    const stored = localStorage.getItem(`${WPM_KEY_PREFIX}${this.bookKey}`);
+    const stored = localStorage.getItem(`${WPM_KEY_PREFIX}${this.bookId}`);
     if (stored) {
       const parsed = parseInt(stored, 10);
       if (!isNaN(parsed) && parsed >= MIN_WPM && parsed <= MAX_WPM) {
@@ -128,11 +137,11 @@ export class RSVPController extends EventTarget {
   }
 
   private saveWpmToStorage(wpm: number): void {
-    localStorage.setItem(`${WPM_KEY_PREFIX}${this.bookKey}`, wpm.toString());
+    localStorage.setItem(`${WPM_KEY_PREFIX}${this.bookId}`, wpm.toString());
   }
 
   private loadScaleFromStorage(): number | null {
-    const stored = localStorage.getItem(`${SCALE_KEY_PREFIX}${this.bookKey}`);
+    const stored = localStorage.getItem(`${SCALE_KEY_PREFIX}${this.bookId}`);
     if (stored) {
       const parsed = parseInt(stored, 10);
       if (!isNaN(parsed) && parsed >= MIN_SCALE && parsed <= MAX_SCALE) {
@@ -143,7 +152,7 @@ export class RSVPController extends EventTarget {
   }
 
   private saveScaleToStorage(scale: number): void {
-    localStorage.setItem(`${SCALE_KEY_PREFIX}${this.bookKey}`, scale.toString());
+    localStorage.setItem(`${SCALE_KEY_PREFIX}${this.bookId}`, scale.toString());
   }
 
   setCurrentCfi(cfi: string | null): void {
@@ -151,7 +160,6 @@ export class RSVPController extends EventTarget {
   }
 
   private loadPositionFromStorage(): RsvpPosition | null {
-    // Use bookId (without session suffix) for persistent position across sessions
     const stored = localStorage.getItem(`${POSITION_KEY_PREFIX}${this.bookId}`);
     if (stored) {
       try {
@@ -169,20 +177,17 @@ export class RSVPController extends EventTarget {
     const currentWord = this.state.words[this.state.currentIndex];
     if (!currentWord) return;
 
-    // Use the word's CFI if available, otherwise fall back to section CFI
     const cfi = currentWord.cfi || this.currentCfi;
     if (!cfi) return;
 
     const position: RsvpPosition = {
-      cfi: cfi,
+      cfi,
       wordText: currentWord.text,
     };
-    // Use bookId (without session suffix) for persistent position across sessions
     localStorage.setItem(`${POSITION_KEY_PREFIX}${this.bookId}`, JSON.stringify(position));
   }
 
   private clearPositionFromStorage(): void {
-    // Use bookId (without session suffix) for persistent position across sessions
     localStorage.removeItem(`${POSITION_KEY_PREFIX}${this.bookId}`);
   }
 
@@ -204,28 +209,18 @@ export class RSVPController extends EventTarget {
   private findWordIndexByCfi(words: RsvpWord[], targetCfi: string): number {
     // First try exact CFI match
     for (let i = 0; i < words.length; i++) {
-      const word = words[i];
-      if (word?.cfi === targetCfi) {
-        return i;
-      }
+      if (words[i]?.cfi === targetCfi) return i;
     }
 
-    // Check if target is in same section as any word
+    // Find the first word at or after the target position using CFI compare
     const targetSpineIndex = this.getSpineIndex(targetCfi);
     if (targetSpineIndex < 0) return -1;
 
-    // Find the first word at or after the target position using CFI compare
     for (let i = 0; i < words.length; i++) {
       const word = words[i];
       if (!word?.cfi) continue;
-
-      // Must be in the same section
       if (this.getSpineIndex(word.cfi) !== targetSpineIndex) continue;
-
-      // Use compareCFI to find first word at or after target
-      if (compareCFI(word.cfi, targetCfi) >= 0) {
-        return i;
-      }
+      if (compareCFI(word.cfi, targetCfi) >= 0) return i;
     }
 
     return -1;
@@ -242,53 +237,37 @@ export class RSVPController extends EventTarget {
     }
 
     let startIndex = 0;
-    let resumedFromIndex: number | null = null;
 
     if (this.pendingStartWordIndex !== null && this.pendingStartWordIndex < words.length) {
       startIndex = this.pendingStartWordIndex;
       this.pendingStartWordIndex = null;
     } else {
       const savedPosition = this.loadPositionFromStorage();
-      if (savedPosition) {
-        // Try CFI-based position recovery first
-        if (savedPosition.cfi) {
-          const cfiIndex = this.findWordIndexByCfi(words, savedPosition.cfi);
-          if (cfiIndex >= 0) {
-            startIndex = cfiIndex;
-            resumedFromIndex = cfiIndex;
-          } else {
-            // CFI not found, try text match as fallback
-            const textMatchIndex = words.findIndex((w) => w.text === savedPosition.wordText);
-            if (textMatchIndex >= 0) {
-              startIndex = textMatchIndex;
-              resumedFromIndex = textMatchIndex;
-            }
-          }
+      if (savedPosition?.cfi) {
+        const cfiIndex = this.findWordIndexByCfi(words, savedPosition.cfi);
+        if (cfiIndex >= 0) {
+          startIndex = cfiIndex;
         } else {
-          // Legacy position without CFI - try text match
-          const textMatchIndex = words.findIndex((w) => w.text === savedPosition.wordText);
-          if (textMatchIndex >= 0) {
-            startIndex = textMatchIndex;
-            resumedFromIndex = textMatchIndex;
+          const textIndex = words.findIndex((w) => w.text === savedPosition.wordText);
+          if (textIndex >= 0) {
+            startIndex = textIndex;
           }
         }
       }
     }
 
+    const clampedStart = 
+      words.length > 0 ? Math.min(words.length - 1, Math.max(0, startIndex)) : 0;
     this.state = {
       ...this.state,
       active: true,
-      playing: false,
+      playing: true,
       words,
-      currentIndex: startIndex,
-      progress: (startIndex / words.length) * 100,
-      resumedFromIndex,
+      currentIndex: clampedStart,
     };
     this.emitStateChange();
 
     this.startCountdown(() => {
-      this.state.playing = true;
-      this.emitStateChange();
       this.scheduleNextWord();
     });
   }
@@ -302,9 +281,9 @@ export class RSVPController extends EventTarget {
 
   resume(): void {
     if (!this.state.active) return;
+    this.state.playing = true;
+    this.emitStateChange();
     this.startCountdown(() => {
-      this.state.playing = true;
-      this.emitStateChange();
       this.scheduleNextWord();
     });
   }
@@ -371,17 +350,12 @@ export class RSVPController extends EventTarget {
       playing: false,
       words: [],
       currentIndex: 0,
-      progress: 0,
-      resumedFromIndex: null,
     };
     this.emitStateChange();
   }
 
   requestStart(selectionText?: string): void {
     const savedPosition = this.loadPositionFromStorage();
-    // Show Resume option if we have a saved position with a valid CFI
-    // We don't require it to be in the same section - user may want to resume
-    // from where they left off even if they've navigated elsewhere
     const hasSavedPosition = !!savedPosition?.cfi;
     const hasSelection = !!selectionText && selectionText.trim().length > 0;
 
@@ -403,7 +377,6 @@ export class RSVPController extends EventTarget {
   startFromSavedPosition(): void {
     const savedPosition = this.loadPositionFromStorage();
     if (!savedPosition?.cfi) {
-      // No saved position, start from beginning
       this.start();
       return;
     }
@@ -413,9 +386,7 @@ export class RSVPController extends EventTarget {
       // Need to navigate to the saved section first
       // Emit event for React component to handle navigation
       this.dispatchEvent(
-        new CustomEvent('rsvp-navigate-to-resume', {
-          detail: { cfi: savedPosition.cfi },
-        }),
+        new CustomEvent('rsvp-navigate-to-resume', { detail: { cfi: savedPosition.cfi } }),
       );
       return;
     }
@@ -551,31 +522,33 @@ export class RSVPController extends EventTarget {
   }
 
   skipForward(count: number = 10): void {
-    const newIndex = Math.min(this.state.words.length - 1, this.state.currentIndex + count);
-    this.state.currentIndex = newIndex;
-    this.state.progress = (newIndex / this.state.words.length) * 100;
+    this.state.currentIndex = Math.min(
+      this.state.words.length - 1,
+      this.state.currentIndex + count,
+    );
     this.emitStateChange();
   }
 
   skipBackward(count: number = 10): void {
-    const newIndex = Math.max(0, this.state.currentIndex - count);
-    this.state.currentIndex = newIndex;
-    this.state.progress = (newIndex / this.state.words.length) * 100;
+    this.state.currentIndex = Math.max(0, this.state.currentIndex - count);
     this.emitStateChange();
   }
 
   seekToPosition(percentage: number): void {
     if (this.state.words.length === 0) return;
     const newIndex = Math.floor((percentage / 100) * this.state.words.length);
-    const clampedIndex = Math.max(0, Math.min(this.state.words.length - 1, newIndex));
-    this.state.currentIndex = clampedIndex;
-    this.state.progress = (clampedIndex / this.state.words.length) * 100;
+    this.state.currentIndex = Math.max(0, Math.min(this.state.words.length - 1, newIndex));
+    this.emitStateChange();
+  }
+
+  seekToIndex(index: number): void {
+    if (this.state.words.length === 0) return;
+    this.state.currentIndex = Math.max(0, Math.min(this.state.words.length - 1, index));
     this.emitStateChange();
   }
 
   loadNextPageContent(retryCount = 0): void {
-    this.clearPositionFromStorage();
-
+    this.clearTimer();
     const words = this.extractWordsWithRanges();
     if (words.length === 0) {
       if (retryCount < 3) {
@@ -587,21 +560,18 @@ export class RSVPController extends EventTarget {
     }
 
     const wasPlaying = this.state.playing;
-
     this.state = {
       ...this.state,
+      playing: false,
       words,
       currentIndex: 0,
-      progress: 0,
-      resumedFromIndex: null,
-      playing: false,
     };
     this.emitStateChange();
 
     if (wasPlaying) {
+      this.state.playing = true;
+      this.emitStateChange();
       this.startCountdown(() => {
-        this.state.playing = true;
-        this.emitStateChange();
         this.scheduleNextWord();
       });
     }
@@ -634,7 +604,6 @@ export class RSVPController extends EventTarget {
     }
 
     this.state.currentIndex = newIndex;
-    this.state.progress = (newIndex / this.state.words.length) * 100;
     this.emitStateChange();
 
     this.scheduleNextWord();
@@ -654,17 +623,14 @@ export class RSVPController extends EventTarget {
     const contents = renderer.getContents?.();
     if (!contents || contents.length === 0) return [];
 
-    const allWords: RsvpWord[] = [];
+    // Only process the primary spine section (one section at a time)
+    const primary = contents.find((c) => c.index === renderer.primaryIndex) ?? contents[0];
+    if (!primary) return [];
 
-    for (const content of contents) {
-      const { doc, index: docIndex } = content as { doc: Document; index: number };
-      if (!doc?.body) continue;
+    const { doc, index: docIndex } = primary as { doc: Document; index: number };
+    if (!doc?.body) return [];
 
-      const words = this.extractWordsFromElement(doc.body, doc, docIndex);
-      allWords.push(...words);
-    }
-
-    return allWords;
+    return this.extractWordsFromElement(doc.body, doc, docIndex);
   }
 
   private extractWordsFromElement(
@@ -750,8 +716,7 @@ export class RSVPController extends EventTarget {
 
     if (hasCJK) {
       // For CJK characters, center the ORP since each character is more balanced
-      const len = word.length;
-      return Math.floor(len / 2);
+      return Math.floor(word.length / 2);
     }
 
     const cleanWord = word.replace(/[^\w]/g, '');
