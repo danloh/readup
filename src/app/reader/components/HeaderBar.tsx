@@ -141,6 +141,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
       <Head><title>{bookTitle}</title></Head>
       <div
         role='none'
+        tabIndex={-1}
         className={clsx('absolute top-0 z-10 h-10 w-full', pointerInDoc && 'pointer-events-none')}
         onClick={() => setHoveredBookKey(bookKey)}
         onMouseEnter={() => !appService?.isMobile && setHoveredBookKey(bookKey)}

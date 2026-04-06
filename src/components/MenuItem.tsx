@@ -101,7 +101,7 @@ const MenuItem: React.FC<MenuItemProps> = ({
           <details open={detailsOpen} onToggle={(e) => setIsDetailsOpen(e.currentTarget.open)}>
             <summary 
               role='button'
-              tabIndex={-1}
+              tabIndex={0}
               aria-expanded={isDetailsOpen}
               className='hover:bg-base-300 p-0 pr-3'
             >

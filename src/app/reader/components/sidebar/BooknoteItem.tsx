@@ -2,9 +2,10 @@ import clsx from 'clsx';
 import dayjs from 'dayjs';
 import React, { useRef, useState } from 'react';
 import { marked } from 'marked';
+import { MdDelete, MdEdit } from 'react-icons/md';
+
 import { useEnv } from '@/context/EnvContext';
 import { BookNote, HighlightColor } from '@/types/book';
-import { NOTE_PREFIX } from '@/types/view';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useReaderStore } from '@/store/readerStore';
 import { useNotebookStore } from '@/store/notebookStore';
@@ -15,7 +16,7 @@ import { eventDispatcher } from '@/utils/event';
 import TextButton from '@/components/TextButton';
 import TextEditor, { TextEditorRef } from '@/components/TextEditor';
 import useScrollToItem from '../../hooks/useScrollToItem';
-import { MdDelete, MdEdit } from 'react-icons/md';
+import { removeBookNoteOverlays } from '../../utils/annotatorUtil';
 
 interface BooknoteItemProps {
   bookKey: string;
@@ -65,9 +66,7 @@ const BooknoteItem: React.FC<BooknoteItemProps> = ({ bookKey, item, isNearest, o
       if (item.id === note.id) {
         item.deletedAt = Date.now();
         const views = getViewsById(bookKey.split('-')[0]!);
-        views.forEach((view) =>
-          view?.addAnnotation({ ...item, value: `${NOTE_PREFIX}${item.cfi}` }, true),
-        );
+        views.forEach((view) => removeBookNoteOverlays(view, item));
       }
     });
     const updatedConfig = updateBooknotes(bookKey, booknotes);
