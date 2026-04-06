@@ -2,6 +2,11 @@ import { md5 } from 'js-md5';
 import { fetch as tauriFetch } from '@tauri-apps/plugin-http';
 import { getAPIBaseUrl, isTauriAppPlatform, isWebAppPlatform } from '@/services/environment';
 import { READUP_OPDS_USER_AGENT } from '@/services/constants';
+import {
+  OPDSCustomHeaders,
+  normalizeOPDSCustomHeaders,
+  serializeOPDSCustomHeaders,
+} from './customHeaders';
 
 const OPDS_PROXY_URL = `${getAPIBaseUrl()}/opds/proxy`;
 
@@ -58,7 +63,11 @@ const getProxyBaseUrl = (url: string): string => {
  * Generate proxied URL for OPDS requests
  */
 export const getProxiedURL = (
-  url: string, auth: string = '', stream = false, useProxy = true
+  url: string, 
+  auth: string = '', 
+  stream = false, 
+  useProxy = true, 
+  customHeaders: OPDSCustomHeaders = {},
 ): string => {
   if (url.startsWith('http') || useProxy) {
     const { url: cleanUrl } = extractCredentialsFromURL(url);
@@ -67,6 +76,10 @@ export const getProxiedURL = (
     params.append('stream', `${stream}`);
     if (auth) {
       params.append('auth', auth);
+    }
+    const serializedHeaders = serializeOPDSCustomHeaders(customHeaders);
+    if (serializedHeaders) {
+      params.append('headers', serializedHeaders);
     }
     const baseUrl = getProxyBaseUrl(url);
     console.log('>> base url', baseUrl);
@@ -194,6 +207,7 @@ export const probeAuth = async (
   username?: string,
   password?: string,
   useProxy = false,
+  customHeaders: OPDSCustomHeaders = {},
 ): Promise<string | null> => {
   const {
     url: cleanUrl,
@@ -203,6 +217,7 @@ export const probeAuth = async (
 
   const finalUsername = username || urlUsername;
   const finalPassword = password || urlPassword;
+  const normalizedCustomHeaders = normalizeOPDSCustomHeaders(customHeaders);
 
   // No credentials provided, can't generate auth header
   if (!finalUsername || !finalPassword) {
@@ -210,11 +225,14 @@ export const probeAuth = async (
   }
 
   console.log('> clean url', cleanUrl);
-  const fetchURL = useProxy ? getProxiedURL(cleanUrl) : cleanUrl;
+  const fetchURL = useProxy
+    ? getProxiedURL(cleanUrl, '', false, true, normalizedCustomHeaders)
+    : cleanUrl;
   console.log('> fetch url', fetchURL);
   const headers: Record<string, string> = {
     'User-Agent': READUP_OPDS_USER_AGENT,
     Accept: 'application/atom+xml, application/xml, text/xml, */*',
+    ...(!useProxy ? normalizedCustomHeaders : {}),
   };
 
   // Probe with HEAD request
@@ -280,6 +298,7 @@ export const fetchWithAuth = async (
   password?: string,
   useProxy = false,
   options: RequestInit = {},
+  customHeaders: OPDSCustomHeaders = {},
 ): Promise<Response> => {
   const {
     url: cleanUrl,
@@ -289,13 +308,17 @@ export const fetchWithAuth = async (
 
   const finalUsername = username || urlUsername;
   const finalPassword = password || urlPassword;
+  const normalizedCustomHeaders = normalizeOPDSCustomHeaders(customHeaders);
 
   console.log('>> clean url', cleanUrl);
-  const fetchURL = useProxy ? getProxiedURL(cleanUrl) : cleanUrl;
+  const fetchURL = useProxy
+    ? getProxiedURL(cleanUrl, '', false, true, normalizedCustomHeaders)
+    : cleanUrl;
   console.log('>> fetch url', fetchURL);
   const headers: Record<string, string> = {
     'User-Agent': READUP_OPDS_USER_AGENT,
     Accept: 'application/atom+xml, application/xml, text/xml, */*',
+    ...(!useProxy ? normalizedCustomHeaders : {}),
     ...(options.headers as Record<string, string>),
   };
 
@@ -327,7 +350,9 @@ export const fetchWithAuth = async (
       }
 
       if (authHeader) {
-        const finalUrl = useProxy ? `${fetchURL}&auth=${encodeURIComponent(authHeader)}` : fetchURL;
+        const finalUrl = useProxy
+          ? getProxiedURL(cleanUrl, authHeader, false, true, normalizedCustomHeaders)
+          : fetchURL;
         res = await fetch(finalUrl, {
           ...options,
           method: options.method || 'GET',
