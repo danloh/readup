@@ -12,9 +12,11 @@ export interface RsvpState {
   playing: boolean;
   words: RsvpWord[];
   currentIndex: number;
+  currentPartIndex: number;
   wpm: number;
   scale: number;
   punctuationPauseMs: number;
+  splitHyphens: boolean;
   progress: number;
 }
 
