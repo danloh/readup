@@ -6,6 +6,7 @@ import { md5Fingerprint } from '@/utils/md5';
 
 interface LibraryState {
   library: Book[]; // might contain deleted books
+  libraryLoaded: boolean;
   checkOpenWithBooks: boolean;
   checkLastOpenBooks: boolean;
   currentBookshelf: (Book | BooksGroup)[];
@@ -28,6 +29,7 @@ interface LibraryState {
 
 export const useLibraryStore = create<LibraryState>((set, get) => ({
   library: [],
+  libraryLoaded: false,
   currentBookshelf: [],
   checkOpenWithBooks: isTauriAppPlatform(),
   checkLastOpenBooks: isTauriAppPlatform(),

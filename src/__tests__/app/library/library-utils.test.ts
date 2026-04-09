@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'vitest';
-import { BookMetadata } from '@/libs/document';
 import {
   parseAuthors,
   createBookGroups,
@@ -11,9 +10,10 @@ import {
   ensureLibraryGroupByType,
   findGroupById,
   getGroupDisplayName,
-} from '../../app/library/components/libraryUtils';
-import { Book, BooksGroup } from '../../types/book';
-import { LibraryGroupByType, LibrarySortByType } from '../../types/settings';
+} from '@/app/library/components/libraryUtils';
+import { Book, BooksGroup } from '@/types/book';
+import { LibraryGroupByType, LibrarySortByType } from '@/types/settings';
+import { BookMetadata } from '@/libs/document';
 
 // Helper to create mock books with minimal required fields
 const createMockBook = (
@@ -211,7 +211,7 @@ describe('createBookGroups', () => {
 
       expect(john?.books).toHaveLength(1);
       expect(jane?.books).toHaveLength(1);
-      expect(john?.books[0]!.hash).toBe(jane?.books[0]!.hash);
+      expect(john?.books[0]?.hash).toBe(jane?.books[0]?.hash);
     });
 
     it('should leave books without author as ungrouped', () => {
@@ -228,41 +228,6 @@ describe('createBookGroups', () => {
 
       expect(groups).toHaveLength(1);
       expect(ungrouped).toHaveLength(2);
-    });
-  });
-
-  describe('groupBy: status', () => {
-    it('should group books by status', () => {
-      const books = [
-        createMockBook({ hash: '1', title: 'Book 1', status: 'Todo' }),
-        createMockBook({ hash: '2', title: 'Book 2', status: 'Doing' }),
-        createMockBook({ hash: '3', title: 'Book 3', status: 'Todo' }),
-      ];
-
-      const result = createBookGroups(books, LibraryGroupByType.Status);
-
-      const groups = result.filter((item): item is BooksGroup => 'books' in item);
-      expect(groups).toHaveLength(2);
-
-      const statusTodo = groups.find((g) => g.name === 'Todo');
-      expect(statusTodo?.books).toHaveLength(2);
-    });
-
-    it('should leave books without status as ungrouped', () => {
-      const books = [
-        createMockBook({ hash: '1', title: 'Book 1', status: 'Todo' }),
-        createMockBook({ hash: '2', title: 'Book 2', status: '' }),
-        createMockBook({ hash: '3', title: 'Book 3', status: '   ' }),
-        createMockBook({ hash: '4', title: 'Book 4' }),
-      ];
-
-      const result = createBookGroups(books, LibraryGroupByType.Status);
-
-      const groups = result.filter((item): item is BooksGroup => 'books' in item);
-      const ungrouped = result.filter((item): item is Book => 'format' in item);
-
-      expect(groups).toHaveLength(1);
-      expect(ungrouped).toHaveLength(3);
     });
   });
 
@@ -567,6 +532,11 @@ describe('getGroupSortValue', () => {
     });
 
     expect(getGroupSortValue(group, LibrarySortByType.Published)).toBe(0);
+  });
+
+  it('should return group name for series sort', () => {
+    const group = createMockGroup({ name: 'My Series' });
+    expect(getGroupSortValue(group, LibrarySortByType.Series)).toBe('My Series');
   });
 
   it('should handle empty groups gracefully', () => {

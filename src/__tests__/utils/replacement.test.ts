@@ -75,10 +75,10 @@ vi.mock('@/store/bookDataStore', () => {
   return { useBookDataStore: fn };
 });
 
+import { proofreadTransformer } from '@/app/reader/transformers/proofread';
+import { TransformContext } from '@/app/reader/transformers/types';
 import { ViewSettings, ProofreadRule } from '@/types/book';
 import { validateReplacementRulePattern } from '@/store/proofreadStore';
-import { TransformContext } from '@/app/reader/transformers/types';
-import { proofreadTransformer } from '@/app/reader/transformers/proofread';
 
 describe('proofreadTransformer', () => {
   afterEach(() => {
@@ -1103,8 +1103,7 @@ describe('proofreadTransformer', () => {
           enabled: true,
           isRegex: false,
           caseSensitive: true,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          order: undefined as any,
+          order: 0,
           wholeWord: true,
         },
       ];
