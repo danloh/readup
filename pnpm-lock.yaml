@@ -212,12 +212,6 @@ importers:
       nunjucks:
         specifier: ^3.2.4
         version: 3.2.4(chokidar@3.6.0)
-      overlayscrollbars:
-        specifier: 2.13.0
-        version: 2.13.0
-      overlayscrollbars-react:
-        specifier: ^0.5.6
-        version: 0.5.6(overlayscrollbars@2.13.0)(react@19.2.4)
       posthog-js:
         specifier: ^1.246.0
         version: 1.257.0
@@ -6041,15 +6035,6 @@ packages:
   optionator@0.9.4:
     resolution: {integrity: sha512-6IpQ7mKUxRcZNLIObR0hz7lxsapSSIYNZJwXPGeF0mTVqGKFIXj1DQcMoT22S3ROcLyY/rz0PWaWZ9ayWmad9g==}
     engines: {node: '>= 0.8.0'}
-
-  overlayscrollbars-react@0.5.6:
-    resolution: {integrity: sha512-E5To04bL5brn9GVCZ36SnfGanxa2I2MDkWoa4Cjo5wol7l+diAgi4DBc983V7l2nOk/OLJ6Feg4kySspQEGDBw==}
-    peerDependencies:
-      overlayscrollbars: ^2.0.0
-      react: '>=16.8.0'
-
-  overlayscrollbars@2.13.0:
-    resolution: {integrity: sha512-uQGpLESrbFDLTWucWAKX9ceIANj7detMwH/2yJ315Llt72ZcWN3P6ckMotoqVv2Mk29R/pnhDtgYjy4K+kwAyQ==}
 
   own-keys@1.0.1:
     resolution: {integrity: sha512-qFOyK5PjiWZd+QQIh+1jhdb9LpxTF0qs7Pm8o5QHYZ0M3vKqSqzsZaEB6oWlxZ+q2sJBMI/Ktgd2N5ZwQoRHfg==}
@@ -14163,13 +14148,6 @@ snapshots:
       prelude-ls: 1.2.1
       type-check: 0.4.0
       word-wrap: 1.2.5
-
-  overlayscrollbars-react@0.5.6(overlayscrollbars@2.13.0)(react@19.2.4):
-    dependencies:
-      overlayscrollbars: 2.13.0
-      react: 19.2.4
-
-  overlayscrollbars@2.13.0: {}
 
   own-keys@1.0.1:
     dependencies:

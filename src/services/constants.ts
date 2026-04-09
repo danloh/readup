@@ -170,6 +170,7 @@ export const DEFAULT_BOOK_STYLE: BookStyle = {
   zoomMode: 'fit-page',
   spreadMode: 'auto',
   keepCoverSpread: true,
+  applyThemeToPDF: false,
 };
 
 export const DEFAULT_MOBILE_VIEW_SETTINGS: Partial<ViewSettings> = {

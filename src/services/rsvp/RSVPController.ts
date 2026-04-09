@@ -769,7 +769,13 @@ export class RSVPController extends EventTarget {
     };
 
     walk(element);
-    return words;
+    
+    // Insert a blank ISI frame between consecutive identical words.
+    return words.flatMap((word, i) =>
+      i + 1 < words.length && word.text === words[i + 1]!.text
+        ? [word, { text: ' ', orpIndex: 0, pauseMultiplier: 0.5 }]
+        : [word],
+    );
   }
 
   private calculateORP(word: string): number {

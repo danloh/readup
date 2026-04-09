@@ -135,6 +135,7 @@ export interface BookStyle {
   zoomMode: 'fit-page' | 'fit-width' | 'original-size' | 'custom';
   spreadMode: 'auto' | 'none';
   keepCoverSpread: boolean;
+  applyThemeToPDF: boolean;
 }
 
 export interface BookFont {

@@ -55,6 +55,7 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
   const [invertImgColor, setInvertImgColor] = useState(
     viewSettings!.invertImgColor,
   );
+  const [applyThemeToPDF, setApplyThemeToPDF] = useState(viewSettings!.applyThemeToPDF!);
 
   const zoomIn = () => setZoomLevel((prev) => Math.min(prev + ZOOM_STEP, MAX_ZOOM_LEVEL));
   const zoomOut = () => setZoomLevel((prev) => Math.max(prev - ZOOM_STEP, MIN_ZOOM_LEVEL));
@@ -118,6 +119,12 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
     saveViewSettings(envConfig, bookKey, 'invertImgColor', invertImgColor, true, true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [invertImgColor]);
+
+  useEffect(() => {
+    if (applyThemeToPDF === viewSettings.applyThemeToPDF) return;
+    saveViewSettings(envConfig, bookKey, 'applyThemeToPDF', applyThemeToPDF, true, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [applyThemeToPDF]);
 
   useEffect(() => {
     if (zoomMode === viewSettings.zoomMode) return;
@@ -296,6 +303,13 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
         Icon={invertImgColor ? BiCheckboxChecked : BiCheckbox}
         onClick={() => setInvertImgColor(!invertImgColor)}
       />
+      {bookData.book?.format === 'PDF' && (
+        <MenuItem
+          label={_('Apply Theme Colors to PDF')}
+          Icon={applyThemeToPDF ? BiCheckboxChecked : BiCheckbox}
+          onClick={() => setApplyThemeToPDF(!applyThemeToPDF)}
+        />
+      )}
       <hr aria-hidden='true' className='border-base-200 my-1' />
       <MenuItem
         label={

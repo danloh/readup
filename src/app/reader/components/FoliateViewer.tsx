@@ -84,6 +84,7 @@ const FoliateViewer: React.FC<{
   const { appService } = useEnv();
   const { themeCode, isDarkMode } = useThemeStore();
   const { applyEinkMode } = useEinkMode();
+  const bookData = getBookData(bookKey);
   const viewSettings = getViewSettings(bookKey);
   const viewState = getViewState(bookKey);
 
@@ -203,11 +204,13 @@ const FoliateViewer: React.FC<{
       if (bookDoc.rendition?.layout === 'pre-paginated') {
         applyFixedlayoutStyles(detail.doc, viewSettings);
         const themeCode = getThemeCode();
-        if (themeCode && renderer) {
-          renderer.pageColors = {
-            background: themeCode.bg,
-            foreground: themeCode.fg,
-          };
+        if (bookData.book?.format === 'PDF' && themeCode && renderer) {
+          renderer.pageColors = viewSettings.applyThemeToPDF
+            ? {
+                background: themeCode.bg,
+                foreground: themeCode.fg,
+              }
+            : undefined;
         }
       }
 
@@ -561,6 +564,7 @@ const FoliateViewer: React.FC<{
 
   useEffect(() => {
     if (viewRef.current && viewRef.current.renderer) {
+      const renderer = viewRef.current.renderer;
       const viewSettings = getViewSettings(bookKey)!;
       viewRef.current.renderer.setStyles?.(getStyles(viewSettings));
       const docs = viewRef.current.renderer.getContents();
@@ -573,13 +577,13 @@ const FoliateViewer: React.FC<{
         applyScrollbarStyle(document, viewSettings.hideScrollbar || false);
       });
 
-      if (bookDoc.rendition?.layout === 'pre-paginated') {
-        if (themeCode && viewRef.current?.renderer) {
-          viewRef.current.renderer.pageColors = {
-            background: themeCode.bg,
-            foreground: themeCode.fg,
-          };
-        }
+      if (bookData?.book?.format === 'PDF' && themeCode && renderer) {
+        renderer.pageColors = viewSettings.applyThemeToPDF
+          ? {
+              background: themeCode.bg,
+              foreground: themeCode.fg,
+            }
+          : undefined;
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -589,6 +593,7 @@ const FoliateViewer: React.FC<{
     viewSettings?.scrolled,
     viewSettings?.overrideColor,
     viewSettings?.invertImgColor,
+    viewSettings?.applyThemeToPDF,
     viewSettings?.hideScrollbar,
   ]);
 
