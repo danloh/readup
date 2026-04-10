@@ -4,7 +4,9 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useReaderStore } from '@/store/readerStore';
 import { useBookDataStore } from '@/store/bookDataStore';
+import { useSettingsStore } from '@/store/settingsStore';
 import { useThemeStore } from '@/store/themeStore';
+import { useEnv } from '@/context/EnvContext';
 import { RSVPController, RsvpStartChoice, RsvpStopPosition } from '@/services/rsvp';
 import { eventDispatcher } from '@/utils/event';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -104,8 +106,10 @@ const expandRangeToSentence = (range: Range, doc: Document): Range => {
 
 const RSVPControl: React.FC<RSVPControlProps> = ({ bookKey, gridInsets }) => {
   const _ = useTranslation();
+  const { envConfig } = useEnv();
+  const { settings } = useSettingsStore();
   const { getView, getProgress } = useReaderStore();
-  const { getBookData } = useBookDataStore();
+  const { getBookData, getConfig, setConfig, saveConfig } = useBookDataStore();
   const { themeCode } = useThemeStore();
 
   const [isActive, setIsActive] = useState(false);
@@ -199,6 +203,13 @@ const RSVPControl: React.FC<RSVPControlProps> = ({ bookKey, gridInsets }) => {
 
       const controller = controllerRef.current;
 
+      // Seed localStorage from cloud-synced BookConfig when this device has no local position.
+      // This restores RSVP progress saved on another device after a sync.
+      const configPos = getConfig(bookKey)?.rsvpPosition;
+      if (configPos) {
+        controller.seedPosition(configPos);
+      }
+
       // Set current CFI for position tracking
       if (progress?.location) {
         controller.setCurrentCfi(progress.location);
@@ -227,7 +238,7 @@ const RSVPControl: React.FC<RSVPControlProps> = ({ bookKey, gridInsets }) => {
         controller.removeEventListener('rsvp-start-choice', handleStartChoice);
       }, 100);
     },
-    [_, bookKey, getBookData, getProgress, getView, removeRsvpHighlight],
+    [_, bookKey, getBookData, getConfig, getProgress, getView, removeRsvpHighlight],
   );
 
   const handleStartDialogSelect = useCallback(
@@ -375,9 +386,29 @@ const RSVPControl: React.FC<RSVPControlProps> = ({ bookKey, gridInsets }) => {
       controller.stop();
     }
 
+    // Persist RSVP position to BookConfig so it syncs to the cloud
+    const rsvpPosition = controller?.getStoredPosition();
+    if (rsvpPosition) {
+      const config = getConfig(bookKey);
+      if (config) {
+        setConfig(bookKey, { rsvpPosition });
+        saveConfig(envConfig, bookKey, { ...config, rsvpPosition }, settings);
+      }
+    }
+
     setIsActive(false);
     setShowStartDialog(false);
-  }, [bookKey, getView, removeRsvpHighlight, themeCode.primary]);
+  }, [
+    bookKey,
+    envConfig,
+    getConfig,
+    getView,
+    removeRsvpHighlight,
+    saveConfig,
+    setConfig,
+    settings,
+    themeCode.primary,
+  ]);
 
   const handleChapterSelect = useCallback(
     (href: string) => {

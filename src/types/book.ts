@@ -322,6 +322,7 @@ export interface BookConfig {
   booknotes?: BookNote[];
   searchConfig?: Partial<BookSearchConfig>;
   viewSettings?: Partial<ViewSettings>;
+  rsvpPosition?: { cfi: string; wordText: string };
   updatedAt: number;
 }
 
