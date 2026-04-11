@@ -199,13 +199,13 @@ export abstract class BaseAppService implements AppService {
       ...DEFAULT_BOOK_LAYOUT,
       ...DEFAULT_BOOK_STYLE,
       ...DEFAULT_BOOK_FONT,
-      ...(this.isMobile ? DEFAULT_MOBILE_VIEW_SETTINGS : {}),
-      ...(isCJKEnv() ? DEFAULT_CJK_VIEW_SETTINGS : {}),
-      ...(this.isEink ? DEFAULT_EINK_VIEW_SETTINGS : {}),
       ...DEFAULT_VIEW_CONFIG,
       ...DEFAULT_TTS_CONFIG,
       ...DEFAULT_SCREEN_CONFIG,
       ...DEFAULT_ANNOTATOR_CONFIG,
+      ...(this.isMobile ? DEFAULT_MOBILE_VIEW_SETTINGS : {}),
+      ...(this.isEink ? DEFAULT_EINK_VIEW_SETTINGS : {}),
+      ...(isCJKEnv() ? DEFAULT_CJK_VIEW_SETTINGS : {}),
       ...{ ...DEFAULT_TRANSLATOR_CONFIG, translateTargetLang: getTargetLang() },
     };
   }

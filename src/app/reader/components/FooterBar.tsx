@@ -237,13 +237,13 @@ const FooterBar: React.FC<FooterBarProps> = ({
         {/*  footer progress bar */}
         <div
           className={clsx(
-            'footerbar-progress bg-base-200 absolute bottom-16 flex w-full items-center px-4 transition-all',
+            'footerbar-progress bg-base-200 absolute flex w-full items-center px-4 transition-all',
             actionTab === 'progress'
-              ? 'pointer-events-auto translate-y-0 py-2 ease-out'
+              ? 'pointer-events-auto translate-y-0 py-1 ease-out'
               : 'pointer-events-none invisible translate-y-full overflow-hidden p-0 ease-in',
           )}
           style={{ 
-            bottom: `${gridInsets.bottom * 0.33 + 42}px`, 
+            bottom: `${gridInsets.bottom * 0.33 + 40}px`, 
             scrollbarWidth: 'none', 
             msOverflowStyle: 'none'
           }}
