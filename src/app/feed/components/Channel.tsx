@@ -10,7 +10,7 @@ import { mergeArrays } from '@/utils/book';
 import { eventDispatcher } from '@/utils/event';
 import { isWebAppPlatform } from '@/services/environment';
 import { useTranslation } from '@/hooks/useTranslation';
-import { FeedEpubService } from '../epub/feedEpubService';
+import { FeedEpubService, STARRED_ARTICLES_EPUB_NAME } from '../epub/feedEpubService';
 import { TagManager } from './TagManager';
 import { TagFilter } from './TagFilter';
 import * as dataAgent from './dataAgent';
@@ -62,8 +62,8 @@ function ArticleList(props: ListProps) {
   const _ = useTranslation();
   const router = useRouter();
   const [exporting, setExporting] = useState(false);
-  const [showFreshEpubConfirm, setShowFreshEpubConfirm] = useState(false);
-  const [freshTitle, setFreshTitle] = useState('');
+  const [showExportUI, setShowExportUI] = useState(false);
+  const [epubName, setEpubName] = useState(STARRED_ARTICLES_EPUB_NAME);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [articleToEdit, setArticleToEdit] = useState<ArticleType | null>(null);
 
@@ -83,16 +83,7 @@ function ArticleList(props: ListProps) {
         return selectedTags.some(tag => article.tags?.includes(tag));
       });
 
-  const handleExportToEpub = useCallback(async (createFresh: boolean = false) => {
-    if (createFresh && freshTitle.trim()) {
-      eventDispatcher.dispatch('toast', {
-        type: 'info',
-        timeout: 2000,
-        message: _('Need to name the fresh EPUB'),
-      });
-      return;
-    }
-    
+  const handleExportToEpub = useCallback(async () => {
     const articlesToExport = selectedTags.length > 0 ? filteredArticles : sortedArticles;
     
     if (articlesToExport.length === 0) {
@@ -104,19 +95,27 @@ function ArticleList(props: ListProps) {
       return;
     }
 
+    if (!epubName.trim()) {
+      eventDispatcher.dispatch('toast', {
+        type: 'warn',
+        timeout: 2000,
+        message: _('Please enter an EPUB name'),
+      });
+      return;
+    }
+
     setExporting(true);
     try {
       const appService = await envConfig.getAppService();
       const library = await appService.loadLibraryBooks();
 
-      console.log('Starting EPUB export with', articlesToExport.length, 'articles', { createFresh });
+      console.log('Starting EPUB export with', articlesToExport.length, 'articles', { epubName });
 
       const { book, migrationWarnings } = await FeedEpubService.createOrUpdateEpub(
         articlesToExport,
         appService,
         library,
-        createFresh,
-        freshTitle
+        epubName.trim()
       );
 
       console.log('EPUB export completed. Book:', book);
@@ -126,18 +125,18 @@ function ArticleList(props: ListProps) {
         const warningMsg = migrationWarnings.join('\n');
         eventDispatcher.dispatch('toast', {
           type: 'warn',
-          timeout: 2000,
-          message: _('EPUB updated. Annotation status: {{msg}}', { msg: warningMsg }),
+          timeout: 3000,
+          message: `${_('EPUB')}: ${warningMsg}`,
         });
       } else {
         eventDispatcher.dispatch('toast', {
           type: 'info',
           timeout: 2000,
-          message: _('EPUB created successfully')
+          message: _('EPUB created/updated successfully')
         });
       }
 
-      // Navigate to reader with the starred EPUB
+      // Navigate to reader with the EPUB
       setTimeout(() => {
         console.log('Navigating to reader with book hash:', book.hash);
         router.push(`/reader/${book.hash}`);
@@ -147,13 +146,13 @@ function ArticleList(props: ListProps) {
       eventDispatcher.dispatch('toast', {
         type: 'warn',
         timeout: 2000,
-        message: _('Failed to export')
+        message: _('Failed to export: {{error}}', { error: (error as Error).message })
       });
     } finally {
       setExporting(false);
-      setShowFreshEpubConfirm(false);
+      // setShowExportUI(false);
     }
-  }, [freshTitle, filteredArticles, sortedArticles, selectedTags.length]);
+  }, [epubName, filteredArticles, sortedArticles, selectedTags.length, envConfig, router, _]);
 
   return (
     <div className='flex flex-col'>
@@ -166,58 +165,51 @@ function ArticleList(props: ListProps) {
             onTagsChange={setSelectedTags}
           />
           
-          {/* Export button */}
+          {/* Export EPUB section */}
           <div className='p-2 bg-base-200 border-b'>
-            <div className='flex gap-2 items-start justify-center'>
-              <div className='flex-1 flex gap-2 items-start justify-start'>
+            <div className='flex gap-2 items-center'>
+              <button
+                onClick={() => setShowExportUI(prev => !prev)}
+                disabled={exporting}
+                className='btn btn-sm btn-primary gap-2'
+              >
+                <FcReadingEbook size={18} />
+                {exporting 
+                  ? _('Creating EPUB') 
+                  : _(`Export To EPUB (${filteredArticles.length})`)
+                }
+              </button>
+              {showExportUI && (
                 <button
-                  onClick={() => setShowFreshEpubConfirm(prev => !prev)}
+                  onClick={() => setShowExportUI(false)}
                   disabled={exporting}
-                  className='btn btn-sm btn-primary gap-2'
+                  className='btn btn-sm btn-ghost'
                 >
-                  <FcReadingEbook size={18} />
-                  {exporting 
-                    ? _('Creating EPUB') 
-                    : _(`Export to EPUB {{count}}`, {count: filteredArticles.length})
-                  }
+                  {_('Hide')}
                 </button>
-              </div>
+              )}
             </div>
-            {showFreshEpubConfirm && (
+            {showExportUI && (
               <div className='mt-3 p-2 bg-base-100 rounded border'>
-                <p className='text-xs text-base-content/60 mb-2'>
-                  {_('Converts articles into an EPUB book. Create or Update: annotations will persist across updates; Create Fresh: create EPUB from scratch.')}
-                </p>
-                <div className='flex gap-2'>
-                  <button
-                    onClick={() => handleExportToEpub(false)}
-                    disabled={exporting}
-                    className='btn btn-xs btn-warning'
-                  >
-                    {_('Create or Update')}
-                  </button>
+                <div className='flex gap-2 items-center'>
                   <input
                     type='text'
-                    value={freshTitle}
-                    onChange={(e) => setFreshTitle(e.target.value.trim())}
-                    placeholder={_('New EPUB Name')}
-                    className='input input-xs input-bordered'
+                    value={epubName}
+                    onChange={(e) => setEpubName(e.target.value)}
+                    placeholder={_('EPUB name')}
+                    className='input input-xs input-bordered flex-1'
                   />
                   <button
-                    onClick={() => handleExportToEpub(true)}
-                    disabled={exporting}
+                    onClick={handleExportToEpub}
+                    disabled={exporting || !epubName.trim()}
                     className='btn btn-xs btn-success'
                   >
-                    {_('Create Fresh')}
-                  </button>
-                  <button
-                    onClick={() => setShowFreshEpubConfirm(false)}
-                    disabled={exporting}
-                    className='btn btn-xs btn-ghost'
-                  >
-                    {_('Cancel')}
+                    {_('Export')}
                   </button>
                 </div>
+                <p className='text-xs text-base-content/60 mt-2'>
+                  {_('Export to EPUB: if named EPUB exists, append articles (CFI stable); otherwise create fresh.')}
+                </p>
               </div>
             )}
           </div>

@@ -49,14 +49,14 @@ export class FeedEpubService {
     articles: ArticleType[],
     appService: AppService,
     books: Book[],
-    createFresh: boolean = false,
-    freshTitle: string = ''
+    epubName: string = STARRED_ARTICLES_EPUB_NAME
   ): Promise<{
     book: Book;
     created: boolean;
     migrationWarnings: string[];
   }> {
-    const existingBook = books.find(b => b.title === STARRED_ARTICLES_EPUB_NAME);
+    // Look for existing book with this name
+    const existingBook = books.find(b => b.title === epubName);
     // Try to load previous manifest from the saved manifest file next to the book.
     let oldManifest: EpubManifest | null = null;
     if (existingBook) {
@@ -72,14 +72,14 @@ export class FeedEpubService {
       }
     }
 
-    console.log('Existing book lookup:', { found: !!existingBook, data: existingBook, createFresh });
+    console.log('Existing book lookup:', { found: !!existingBook, epubName, data: existingBook });
 
     let epubBlob: Blob | null = null;
     let manifest: EpubManifest | null = null;
     let migrationWarnings: string[] = [];
 
-    // Decide strategy: prefer append-only (keep CFI stable) unless user forced fresh
-    if (!createFresh && existingBook && oldManifest) {
+    // Decide strategy: prefer append-only (keep CFI stable) if book exists
+    if (existingBook && oldManifest) {
       const changeInfo = detectArticleChanges(oldManifest, articles);
       console.log('Changed:', { changeInfo });
 
@@ -117,7 +117,7 @@ export class FeedEpubService {
     }
 
     // If we didn't build an EPUB via append-only, create a fresh EPUB
-    if (createFresh || !existingBook) {
+    if (!epubBlob || !manifest) {
       console.log('Creating fresh EPUB...');
       const result = await createArticlesEpub(articles);
       epubBlob = result.epubBlob;
@@ -130,11 +130,11 @@ export class FeedEpubService {
 
     const epubFile = new File(
       [epubBlob],
-      freshTitle ? `${freshTitle}.epub` : `${STARRED_ARTICLES_EPUB_NAME}.epub`,
+      `${epubName}.epub`,
       { type: 'application/epub+zip' }
     );
 
-    console.log('File created:', { name: epubFile.name, size: epubFile.size, fresh: createFresh });
+    console.log('File created:', { name: epubFile.name, size: epubFile.size });
     console.log('Will Migrating annotations to new book hash after importing successfully...');
 
     // Import the updated EPUB file
@@ -159,7 +159,7 @@ export class FeedEpubService {
     });
 
     // Handle annotation migration: update hash in config if needed
-    if (!createFresh && existingBook && oldManifest && book.hash !== existingBook.hash) {
+    if (existingBook && oldManifest && book.hash !== existingBook.hash) {
       const sysSettings = await appService.loadSettings();
       const oldConfig = await appService.loadBookConfig(existingBook, sysSettings);
       const oldNotes = oldConfig.booknotes;
@@ -187,7 +187,7 @@ export class FeedEpubService {
     }
 
     // Remove old book if it exists and is different
-    if (!createFresh && existingBook && book.hash !== existingBook.hash) {
+    if (existingBook && book.hash !== existingBook.hash) {
       // Save version history (keep last 2)
       if (oldManifest) {
         this.saveVersionHistory(existingBook, oldManifest);
