@@ -437,8 +437,12 @@ class View {
             // fix glyph clipping in WebKit
             '-webkit-line-box-contain': 'block glyphs replaced',
         })
-        const availableWidth = Math.trunc(width - marginLeft / 2 - marginRight / 2 - gap)
-        const availableHeight = Math.trunc(height - marginTop - marginBottom)
+        const availableWidth = vertical
+            ? Math.trunc(width - marginLeft / 2 - marginRight / 2 - gap)
+            : Math.trunc(width / this.#columnCount)
+        const availableHeight = vertical
+            ? Math.trunc(height / this.#columnCount)
+            : Math.trunc(height - marginTop - marginBottom)
         setStyles(doc.documentElement, {
             'padding': vertical
                 ? `${marginTop * 1.5}px ${marginRight}px ${marginBottom * 1.5}px ${marginLeft}px`
@@ -864,9 +868,6 @@ export class Paginator extends HTMLElement {
             perspective: 1000px;
             -webkit-perspective: 1000px;
             transition: opacity 50ms ease-in;
-        }
-        :host([dir="rtl"]) #container {
-            flex-direction: row-reverse;
         }
         #container.vertical {
             flex-direction: column;

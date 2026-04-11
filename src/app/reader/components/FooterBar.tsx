@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { RiArrowLeftSLine, RiArrowRightSLine, RiChatVoiceFill } from 'react-icons/ri';
 import { RiArrowGoBackLine, RiArrowGoForwardLine, RiSpeakAiLine } from 'react-icons/ri';
@@ -14,7 +14,6 @@ import { useDeviceControlStore } from '@/store/deviceStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useResponsiveSize } from '@/hooks/useResponsiveSize';
 import { eventDispatcher } from '@/utils/event';
-import { viewPagination } from '../hooks/usePagination';
 import { PageInfo } from '@/types/book';
 import { Insets } from '@/types/misc';
 import Button from '@/components/Button';
@@ -22,6 +21,7 @@ import Slider from '@/components/Slider';
 import BookmarkToggler from './BookmarkToggler';
 import TranslationToggler from './TranslationToggler';
 import TTSControl from './tts/TTSControl';
+import { debounce } from '@/utils/debounce';
 
 interface FooterBarProps {
   bookKey: string;
@@ -61,39 +61,39 @@ const FooterBar: React.FC<FooterBarProps> = ({
   const docs = view?.renderer.getContents() ?? [];
   const pointerInDoc = docs.some(({ doc }) => doc?.body?.style.cursor === 'pointer');
 
-  const handleProgressChange = (value: number) => {
-    view?.goToFraction(value / 100.0);
-  };
+  const handleProgressChange = useMemo(
+    () =>
+      debounce((value: number) => {
+        view?.goToFraction(value / 100.0);
+      }, 100),
+    [view],
+  );
 
-  const handleGoPrevPage = () => {
-    viewPagination(view, viewSettings, 'left', 'page');
-  };
+  const handleGoPrevPage = useCallback(() => {
+    view?.renderer.prev();
+  }, [view]);
 
-  const handleGoNextPage = () => {
-    viewPagination(view, viewSettings, 'right', 'page');
-  };
+  const handleGoNextPage = useCallback(() => {
+    view?.renderer.next();
+  }, [view]);
 
-  const handleGoPrevSection = () => {
-    if (view?.renderer.prevSection) {
-      view?.renderer.prevSection();
-    }
-  };
+  const handleGoPrevSection = useCallback(() => {
+    view?.renderer.prevSection?.();
+  }, [view]);
 
-  const handleGoNextSection = () => {
-    if (view?.renderer.nextSection) {
-      view?.renderer.nextSection();
-    }
-  };
+  const handleGoNextSection = useCallback(() => {
+    view?.renderer.nextSection?.();
+  }, [view]);
 
-  const handleGoBack = () => {
+  const handleGoBack = useCallback(() => {
     view?.history.back();
-  };
+  }, [view]);
 
-  const handleGoForward = () => {
+  const handleGoForward = useCallback(() => {
     view?.history.forward();
-  };
+  }, [view]);
 
-  const handleSpeakText = async () => {
+  const handleSpeakText = useCallback(async () => {
     if (!view || !progress || !viewState) return;
     if (viewState.ttsEnabled) {
       eventDispatcher.dispatch('tts-stop', { bookKey });
@@ -101,7 +101,8 @@ const FooterBar: React.FC<FooterBarProps> = ({
       eventDispatcher.dispatch('tts-speak', { bookKey });
       eventDispatcher.dispatch('tts-popup');
     }
-  };
+  }, [view, progress, viewState, bookKey]);
+
   const handleRePopup = async () => {
     eventDispatcher.dispatch('tts-popup');
   };
@@ -153,11 +154,13 @@ const FooterBar: React.FC<FooterBarProps> = ({
       if (event instanceof CustomEvent) {
         if (event.detail.keyName === 'Back') {
           setHoveredBookKey('');
+          (document.activeElement as HTMLElement)?.blur();
           return true;
         }
       } else {
         if (event.key === 'Escape') {
           setHoveredBookKey('');
+          (document.activeElement as HTMLElement)?.blur();
         }
         event.stopPropagation();
       }
@@ -260,29 +263,29 @@ const FooterBar: React.FC<FooterBarProps> = ({
             />
             <Button
               icon={viewSettings?.rtl ? <RiArrowRightDoubleLine /> : <RiArrowLeftDoubleLine />}
-              onClick={viewSettings?.rtl ? handleGoNextSection : handleGoPrevSection}
-              tooltip={viewSettings?.rtl ? _('Next Section') : _('Previous Section')}
+              onClick={handleGoPrevSection}
+              tooltip={_('Previous Section')}
             />
             <Button
               icon={viewSettings?.rtl ? <RiArrowRightSLine /> : <RiArrowLeftSLine />}
-              onClick={viewSettings?.rtl ? handleGoNextPage : handleGoPrevPage}
-              tooltip={viewSettings?.rtl ? _('Next Page') : _('Previous Page')}
+              onClick={handleGoPrevPage}
+              tooltip={_('Previous Page')}
             />
             <Button
               icon={viewSettings?.rtl ? <RiArrowLeftSLine /> : <RiArrowRightSLine />}
-              onClick={viewSettings?.rtl ? handleGoPrevPage : handleGoNextPage}
-              tooltip={viewSettings?.rtl ? _('Previous Page') : _('Next Page')}
+              onClick={handleGoNextPage}
+              tooltip={_('Next Page')}
             />
             <Button
               icon={viewSettings?.rtl ? <RiArrowLeftDoubleLine /> : <RiArrowRightDoubleLine />}
-              onClick={viewSettings?.rtl ? handleGoPrevSection : handleGoNextSection}
-              tooltip={viewSettings?.rtl ? _('Previous Section') : _('Next Section')}
+              onClick={handleGoNextSection}
+              tooltip={_('Next Section')}
             />
             <Slider
               heightPx={sliderHeight}
               bubbleLabel={`${Math.round(progressFraction * 100)}%`}
               initialValue={progressValid ? progressFraction * 100 : 0}
-              onChange={(e) => handleProgressChange(e)}
+              onChange={(num) => handleProgressChange(num)}
             />
           </div>
         </div>

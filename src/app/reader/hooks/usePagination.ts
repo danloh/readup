@@ -57,7 +57,7 @@ export const viewPagination = (
 ) => {
   if (!view || !viewSettings) return;
   const renderer = view.renderer;
-  if (view.book.dir === 'rtl') {
+  if (viewSettings.rtl) {
     side = swapLeftRight(side);
   }
   if (renderer.scrolled) {
@@ -238,10 +238,12 @@ export const usePagination = (
         const leftThreshold = width * 0.5;
         const rightThreshold = width * 0.5;
         const viewSettings = getViewSettings(bookKey);
-        if (clientX < leftThreshold) {
-          viewPagination(viewRef.current, viewSettings, 'left');
-        } else if (clientX > rightThreshold) {
-          viewPagination(viewRef.current, viewSettings, 'right');
+        if (!viewSettings?.disableClick) {
+          if (clientX < leftThreshold) {
+            viewPagination(viewRef.current, viewSettings, 'left');
+          } else if (clientX > rightThreshold) {
+            viewPagination(viewRef.current, viewSettings, 'right');
+          }
         }
       }
     }
