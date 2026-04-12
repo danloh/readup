@@ -185,7 +185,7 @@ function ArticleList(props: ListProps) {
                   disabled={exporting}
                   className='btn btn-sm btn-ghost'
                 >
-                  {_('Hide')}
+                  {_('Cancel')}
                 </button>
               )}
             </div>

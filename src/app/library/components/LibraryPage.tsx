@@ -32,6 +32,7 @@ import { useOpenWithBooks } from '@/hooks/useOpenWithBooks';
 import useShortcuts from '@/hooks/useShortcuts';
 import { useTransferQueue } from '@/hooks/useTransferQueue';
 import { useAppRouter } from '@/hooks/useAppRouter';
+import { useKeyDownActions } from '@/hooks/useKeyDownActions';
 import { selectDirectory } from '@/utils/bridge';
 import { requestStoragePermission } from '@/utils/permission';
 import DropIndicator from '@/components/DropIndicator';
@@ -50,7 +51,6 @@ import {
 import TransferQueuePanel from './TransferQueuePanel';
 import GroupHeader from './GroupHeader';
 import { BackupWindow } from './BackupWindow';
-
 
 const LibraryPageWithSearchParams = () => {
   const searchParams = useSearchParams();
@@ -115,32 +115,6 @@ const LibraryPageContent = (
     }
   }, []);
 
-  // Unified navigation function that handles scroll position and direction
-  const handleLibraryNavigation = useCallback(
-    (targetGroup: string) => {
-      const currentGroup = searchParams?.get('group') || '';
-
-      // Save current scroll position BEFORE navigation
-      saveScrollPosition(currentGroup);
-
-      // Detect and set navigation direction
-      const direction = currentGroup && !targetGroup ? 'back' : 'forward';
-      document.documentElement.setAttribute('data-nav-direction', direction);
-
-      // Build query params
-      const params = new URLSearchParams(searchParams?.toString());
-      if (targetGroup) {
-        params.set('group', targetGroup);
-      } else {
-        params.delete('group');
-      }
-
-      navigateToLibrary(router, `${params.toString()}`);
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [searchParams, router],
-  );
-
   useTheme({ systemUIVisible: true, appThemeColor: 'base-200' });
   useUICSS();
 
@@ -161,6 +135,73 @@ const LibraryPageContent = (
   useEffect(() => {
     sessionStorage.setItem('lastLibraryParams', searchParams?.toString() || '');
   }, [searchParams]);
+
+  // Strip the empty `group=` param that `handleLibraryNavigation` sets as a
+  // workaround for a Next.js 16.2 static-export regression (see the NOTE
+  // above `handleLibraryNavigation` for full context). This effect runs
+  // after the router.replace() has committed, so React has already
+  // re-rendered with the new (empty) group state; we're only rewriting the
+  // URL cosmetically via window.history.replaceState — Next.js' patched
+  // replaceState will pick up the new canonical URL without triggering
+  // another navigation.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (searchParams?.get('group') !== '') return;
+    const url = new URL(window.location.href);
+    url.searchParams.delete('group');
+    const cleanHref = `${url.pathname}${url.search}${url.hash}`;
+    window.history.replaceState(null, '', cleanHref);
+  }, [searchParams]);
+
+  // Unified navigation function that handles scroll position and direction.
+  // Workaround for a Next.js 16.2 static-export regression: navigating to a
+  // same-pathname URL with an empty search string causes `router.replace()`
+  // to silently no-op (e.g. `/library?group=foo` -> `/library`), which broke
+  // the breadcrumb "All" button. By always calling `params.set('group',
+  // targetGroup)` — including when `targetGroup` is an empty string — the
+  // resulting URL becomes `/library?group=` instead of `/library`, which
+  // Next.js does commit. The trailing empty `group=` is stripped via a
+  // cleanup effect below (purely cosmetic URL rewrite). See
+  // /issues/3782.
+  const handleLibraryNavigation = useCallback(
+    (targetGroup: string) => {
+      const currentGroup = searchParams?.get('group') || '';
+
+      // Save current scroll position BEFORE navigation
+      saveScrollPosition(currentGroup);
+
+      // Detect and set navigation direction
+      const direction = currentGroup && !targetGroup ? 'back' : 'forward';
+      document.documentElement.setAttribute('data-nav-direction', direction);
+
+      // Build query params — always `set` so the search string is non-empty
+      // even when targetGroup is '' (the Next.js 16.2 workaround).
+      const params = new URLSearchParams(searchParams?.toString());
+      params.set('group', targetGroup);
+
+      navigateToLibrary(router, `${params.toString()}`);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [searchParams, router],
+  );
+
+  const handleBackUpOneGroupLevel = () => {
+    if (!currentGroupPath) return;
+    const segments = currentGroupPath.split('/');
+    const parentPath = segments.length > 1 ? segments.slice(0, -1).join('/') : undefined;
+    const parentGroupId = parentPath ? getGroupId(parentPath) || '' : '';
+    
+    handleLibraryNavigation(parentGroupId);
+  };
+
+  const handleBackUpOneGroupLevelRef = useRef(handleBackUpOneGroupLevel);
+  handleBackUpOneGroupLevelRef.current = handleBackUpOneGroupLevel;
+  const triggerBackUpOneGroupLevel = useCallback(() => handleBackUpOneGroupLevelRef.current(), []);
+
+  useKeyDownActions({
+    onCancel: triggerBackUpOneGroupLevel,
+    enabled: !!appService?.isAndroidApp && !!currentGroupPath,
+  });
 
   useEffect(() => {
     const groupId = searchParams?.get('group') || '';
@@ -222,27 +263,27 @@ const LibraryPageContent = (
     };
   }, [handleImportBookFiles]);
 
-  const handleRefreshLibrary = useCallback(async () => {
-    const appService = await envConfig.getAppService();
-    const settings = await appService.loadSettings();
-    const library = await appService.loadLibraryBooks();
-    setSettings(settings);
-    setLibrary(library);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [envConfig, appService]);
-
   useEffect(() => {
     if (appService?.hasWindow) {
       const currentWebview = getCurrentWebview();
       const unlisten = currentWebview.listen('close-reader-window', async () => {
-        handleRefreshLibrary();
+        // Reader windows are independent Tauri webviews with their own
+        // libraryStore instance — progress / readingStatus / move-to-front
+        // updates from the reader window do NOT propagate to this main
+        // window's store. Reload from disk so the library reflects the
+        // changes the reader just persisted.
+        const appService = await envConfig.getAppService();
+        const settings = await appService.loadSettings();
+        const library = await appService.loadLibraryBooks();
+        setSettings(settings);
+        setLibrary(library);
       });
       return () => {
         unlisten.then((fn) => fn());
       };
     }
     return;
-  }, [appService, handleRefreshLibrary]);
+  }, [appService, envConfig]);
 
   // support 'Open with ..' function
   const processOpenWithFiles = React.useCallback(
