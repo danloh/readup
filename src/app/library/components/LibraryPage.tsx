@@ -398,7 +398,7 @@ const LibraryPageContent = (
       isInitiating.current = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]);
+  }, []);
 
   const importBooks = async (files: SelectedFile[], groupId?: string) => {
     setLoading(true);

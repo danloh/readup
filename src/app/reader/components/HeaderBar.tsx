@@ -78,8 +78,6 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
     saveViewSettings(envConfig, bookKey, 'annotationQuickAction', action, false, true);
   };
 
-  const windowButtonVisible = appService?.hasWindowBar && !isTrafficLightVisible;
-
   const handleToggleDropdown = (isOpen: boolean) => {
     setIsDropdownOpen(isOpen);
     onDropdownOpenChange?.(isOpen);
@@ -126,6 +124,8 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
   const isHeaderVisible = hoveredBookKey === bookKey || isDropdownOpen;
   const trafficLightInHeader =
     appService?.hasTrafficLight && !trafficLightInFullscreen && !isSideBarVisible && isTopLeft;
+  const windowButtonVisible =
+    appService?.hasWindowBar && !isTrafficLightVisible && !trafficLightInHeader;
 
   return (
     <div

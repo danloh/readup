@@ -48,11 +48,9 @@ export const NavTab: React.FC<{activeTab: string}> = ({ activeTab }) => {
   const { systemUIVisible, statusBarHeight } = useThemeStore();
   const { isFontLayoutSettingsDialogOpen } = useSettingsStore();
   const { isTrafficLightVisible } = useTrafficLight();
-
-  const headerRef = useRef<HTMLDivElement>(null);
-
   const windowButtonVisible = appService?.hasWindowBar && !isTrafficLightVisible;
 
+  const headerRef = useRef<HTMLDivElement>(null);
   const tabs = ['library', 'feed', 'catalog', 'streak'];
 
   if (!insets) return null;

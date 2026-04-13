@@ -70,6 +70,7 @@ const BookCover: React.FC<BookCoverProps> = memo<BookCoverProps>((props: BookCov
             width={0}
             height={0}
             sizes='100vw'
+            loading='lazy'
             className={clsx(
               'cover-image fit-cover h-auto max-h-full w-auto max-w-full object-fit shadow-md',
               imageClassName,
