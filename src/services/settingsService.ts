@@ -1,6 +1,8 @@
 import { FileSystem } from '@/types/system';
 import { SystemSettings } from '@/types/settings';
 import { ViewSettings } from '@/types/book';
+import { getTargetLang, isCJKEnv } from '@/utils/misc';
+import { DEFAULT_AI_SETTINGS } from './ai/constants';
 import {
   DEFAULT_BOOK_LAYOUT,
   DEFAULT_BOOK_STYLE,
@@ -22,8 +24,6 @@ import {
   DEFAULT_EINK_VIEW_SETTINGS,
   //DEFAULT_VIEW_SETTINGS_CONFIG,
 } from './constants';
-import { DEFAULT_AI_SETTINGS } from './ai/constants';
-import { getTargetLang, isCJKEnv } from '@/utils/misc';
 import { safeLoadJSON, safeSaveJSON } from './persistence';
 
 export interface Context {
@@ -54,7 +54,7 @@ export function getDefaultViewSettings(ctx: Context): ViewSettings {
 export async function loadSettings(ctx: Context): Promise<SystemSettings> {
   const defaultSettings: SystemSettings = {
     ...DEFAULT_SYSTEM_SETTINGS,
-    //...(ctx.isMobile ? DEFAULT_MOBILE_SYSTEM_SETTINGS : {}),
+    // ...(ctx.isMobile ? DEFAULT_MOBILE_SYSTEM_SETTINGS : {}),
     version: SYSTEM_SETTINGS_VERSION,
     localBooksDir: await ctx.fs.getPrefix('Books'),
     globalReadSettings: {

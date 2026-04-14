@@ -49,13 +49,13 @@ export abstract class BaseAppService implements AppService {
   hasHaptics = false;
   hasUpdater = false;
   hasOrientationLock = false;
-  hasScreenBrightness = false;
-  hasIAP = false;
+  hasScreenBrightness = false; // TODO
+  hasIAP = false;  // TODO
   canCustomizeRootDir = false;
   canReadExternalDir = false;
   distChannel = 'readup' as DistChannel;
-  storefrontRegionCode: string | null = null;
-  isOnlineCatalogsAccessible = true;
+  storefrontRegionCode: string | null = null; // TODO
+  isOnlineCatalogsAccessible = false; // TODO
 
   protected abstract fs: FileSystem;
   protected abstract resolvePath(fp: string, base: BaseDir): ResolvedPath;
@@ -91,12 +91,12 @@ export abstract class BaseAppService implements AppService {
     return await this.fs.writeFile(path, base, content);
   }
 
-  async createDir(path: string, base: BaseDir, recursive: boolean = true): Promise<void> {
-    return await this.fs.createDir(path, base, recursive);
-  }
-
   async deleteFile(path: string, base: BaseDir): Promise<void> {
     return await this.fs.removeFile(path, base);
+  }
+
+  async createDir(path: string, base: BaseDir, recursive: boolean = true): Promise<void> {
+    return await this.fs.createDir(path, base, recursive);
   }
 
   async deleteDir(path: string, base: BaseDir, recursive: boolean = true): Promise<void> {
@@ -190,6 +190,7 @@ export abstract class BaseAppService implements AppService {
     );
   }
 
+  // TODO
   async refreshBookMetadata(book: Book): Promise<boolean> {
     return BookSvc.refreshBookMetadata(this.fs, book);
   }
@@ -226,7 +227,6 @@ export abstract class BaseAppService implements AppService {
     return LibrarySvc.saveLibraryBooks(this.fs, books);
   }
 
-
   // cloud
   async uploadBook(book: Book, syncConfig = false, onProgress?: ProgressHandler): Promise<void> {
     return CloudSvc.uploadBook(this.fs, book, syncConfig, onProgress);
@@ -241,7 +241,7 @@ export abstract class BaseAppService implements AppService {
     did: string,
     books: Book[],
   ): Promise<Book | null> {
-    return CloudSvc.loadPdsBook(this.fs, this.generateCoverImageUrl, hash, did, books);
+    return CloudSvc.loadPdsBook(this.fs, this.generateCoverImageUrl.bind(this), hash, did, books);
   }
 
   async downloadBook(

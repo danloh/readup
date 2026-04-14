@@ -1,3 +1,4 @@
+import { fetch as tauriFetch } from '@tauri-apps/plugin-http';
 import { SystemSettings } from '@/types/settings';
 import { FileSystem, AppPlatform, BaseDir, DeleteAction } from '@/types/system';
 import {
@@ -24,7 +25,6 @@ import {
 import { partialMD5, md5 } from '@/utils/md5';
 import { getBaseFilename, getFilename } from '@/utils/path';
 import { BookDoc, DocumentLoader, EXTS } from '@/libs/document';
-import { DEFAULT_BOOK_SEARCH_CONFIG, DEFAULT_FIXED_LAYOUT_VIEW_SETTINGS } from './constants';
 import { isContentURI, isValidURL, makeSafeFilename } from '@/utils/misc';
 import { deserializeConfig, serializeConfig } from '@/utils/serializer';
 import { ClosableFile } from '@/utils/file';
@@ -32,7 +32,7 @@ import { TxtToEpubConverter } from '@/utils/txt';
 import { svg2png } from '@/utils/svg';
 import { normalizeMetadataIsbn } from '@/utils/isbn';
 import { BookFileNotFoundError } from './errors';
-import { fetch as tauriFetch } from '@tauri-apps/plugin-http';
+import { DEFAULT_BOOK_SEARCH_CONFIG, DEFAULT_FIXED_LAYOUT_VIEW_SETTINGS } from './constants';
 import { deleteRecord } from './bsky/atfile';
 
 export function buildBookLookupIndex(books: Book[]): BookLookupIndex {
@@ -312,6 +312,7 @@ export async function importBook(
     }
 
     const primaryLanguage = getPrimaryLanguage(loadedBook.metadata.language);
+    const fileSize = fileobj.size;
     const book: Book = {
       hash,
       format,
@@ -320,6 +321,7 @@ export async function importBook(
       sourceTitle: formatTitle(loadedBook.metadata.title),
       primaryLanguage,
       author: formatAuthors(loadedBook.metadata.author, primaryLanguage),
+      fileSize,
       metadata: loadedBook.metadata,
       createdAt: existingBook ? existingBook.createdAt : Date.now(),
       uploadedAt: existingBook ? existingBook.uploadedAt : null,
@@ -346,6 +348,7 @@ export async function importBook(
       existingBook.sourceTitle = book.sourceTitle;
       existingBook.author = book.author;
       existingBook.primaryLanguage = book.primaryLanguage;
+      existingBook.fileSize = fileSize;
       existingBook.metadata = book.metadata;
       existingBook.uploadedAt = null;
       existingBook.downloadedAt = Date.now();
@@ -357,6 +360,7 @@ export async function importBook(
       existingBook.sourceTitle = existingBook.sourceTitle ?? book.sourceTitle;
       existingBook.author = existingBook.author ?? book.author;
       existingBook.primaryLanguage = existingBook.primaryLanguage ?? book.primaryLanguage;
+      existingBook.fileSize = fileSize;
       existingBook.metadata = book.metadata;
       existingBook.downloadedAt = Date.now();
     }
@@ -389,7 +393,9 @@ export async function importBook(
         try {
           console.log('Converting SVG cover to PNG...');
           cover = await svg2png(cover);
-        } catch {}
+        } catch(e) {
+          console.warn('Converting SVG: ', e);
+        }
       }
       if (cover) {
         await fs.writeFile(getCoverFilename(book), 'Books', await cover.arrayBuffer());
