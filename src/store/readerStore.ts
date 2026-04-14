@@ -7,6 +7,7 @@ import {
   ViewSettings,
   TimeInfo,
   FIXED_LAYOUT_FORMATS,
+  BookConfig,
 } from '@/types/book';
 import { Insets } from '@/types/misc';
 import { EnvConfigType } from '@/services/environment';
@@ -143,8 +144,8 @@ export const useReaderStore = create<ReaderStore>((set, get) => ({
     try {
       const appService = await envConfig.getAppService();
       const { settings } = useSettingsStore.getState();
-      const { library } = useLibraryStore.getState();
-      const book = library.find((b) => b.hash === id);
+      const { getBookByHash } = useLibraryStore.getState();
+      const book = getBookByHash(id);
       if (!book) {
         throw new Error('Book not found');
       }
@@ -287,70 +288,68 @@ export const useReaderStore = create<ReaderStore>((set, get) => ({
     pageinfo: PageInfo,
     timeinfo: TimeInfo,
     range: Range,
-  ) =>
-    set((state) => {
-      const id = key.split('-')[0]!;
-      const bookData = useBookDataStore.getState().booksData[id];
-      const viewState = state.viewStates[key];
-      if (!viewState || !bookData) return state;
+  ) => set((state) => {
+    const id = key.split('-')[0]!;
+    const bookData = useBookDataStore.getState().booksData[id];
+    const viewState = state.viewStates[key];
+    if (!viewState || !bookData) return state;
 
-      const pageInfo = bookData.isFixedLayout ? section : pageinfo;
-      const progress: [number, number] = [pageInfo.current + 1, pageInfo.total];
+    const pageInfo = bookData.isFixedLayout ? section : pageinfo;
+    const progress: [number, number] = [pageInfo.current + 1, pageInfo.total];
+    const progressPercentage = Math.round((progress[0] / progress[1]) * 100);
 
-      // Update library book progress
-      const { library, setLibrary } = useLibraryStore.getState();
-      const bookIndex = library.findIndex((b) => b.hash === id);
-      if (bookIndex !== -1) {
-        const updatedLibrary = [...library];
-        const existingBook = updatedLibrary[bookIndex]!;
-        updatedLibrary[bookIndex] = {
-          ...existingBook,
-          progress,
-          updatedAt: Date.now(),
-        };
-        setLibrary(updatedLibrary);
+    // Lightweight library update — O(1) lookup, no array copy, no refreshGroups
+    const { getBookByHash, updateBookProgress } = useLibraryStore.getState();
+    const existingBook = getBookByHash(id);
+    if (existingBook) {
+      let newReadingStatus = existingBook.status;
+      if (existingBook.status === 'todo') {
+        newReadingStatus = undefined;
       }
+      if (progressPercentage >= 100 && existingBook.status !== 'done') {
+        newReadingStatus = 'done';
+      }
+      updateBookProgress(id, progress, newReadingStatus);
+    }
 
-      const oldConfig = bookData.config;
-      const newConfig = {
-        ...bookData.config,
-        updatedAt: Date.now(),
-        progress,
-        location,
-      };
+    const oldConfig = bookData.config;
+    const newConfig = {
+      ...bookData.config,
+      progress,
+      location,
+    } as BookConfig;
 
-      useBookDataStore.setState((state) => ({
-        booksData: {
-          ...state.booksData,
-          [id]: {
-            ...bookData,
-            config: viewState.isPrimary ? newConfig : oldConfig,
-          },
+    useBookDataStore.setState((state) => ({
+      booksData: {
+        ...state.booksData,
+        [id]: {
+          ...bookData,
+          config: viewState.isPrimary ? newConfig : oldConfig,
         },
-      }));
+      },
+    }));
 
-      return {
-        viewStates: {
-          ...state.viewStates,
-          [key]: {
-            ...viewState,
-            progress: {
-              ...viewState.progress,
-              location,
-              sectionHref: tocItem?.href,
-              sectionLabel: tocItem?.label,
-              // sectionId: tocItem?.id,
-              section,
-              pageinfo,
-              timeinfo,
-              index: section.current,
-              range,
-              page: pageInfo.current + 1, // 1-based page number
-            } as BookProgress,
-          },
+    return {
+      viewStates: {
+        ...state.viewStates,
+        [key]: {
+          ...viewState,
+          progress: {
+            ...viewState.progress,
+            location,
+            sectionHref: tocItem?.href,
+            sectionLabel: tocItem?.label,
+            section,
+            pageinfo,
+            timeinfo,
+            index: section.current,
+            range,
+            page: pageInfo.current + 1,
+          } as BookProgress,
         },
-      };
-    }),
+      },
+    };
+  }),
   setBookmarkRibbonVisibility: (key: string, visible: boolean) =>
     set((state) => ({
       viewStates: {

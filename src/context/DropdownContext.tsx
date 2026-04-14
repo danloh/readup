@@ -1,5 +1,5 @@
 // DropdownContext.tsx
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, ReactNode, useMemo } from 'react';
 
 interface DropdownContextValue {
   openDropdownId: string | null;
@@ -25,10 +25,13 @@ export const DropdownProvider: React.FC<{ children: ReactNode }> = ({ children }
     setOpenDropdownId(null);
   }, []);
 
+  const value = useMemo(
+    () => ({ openDropdownId, openDropdown, closeDropdown, closeAll }),
+    [openDropdownId, openDropdown, closeDropdown, closeAll],
+  );
+
   return (
-    <DropdownContext.Provider value={{ openDropdownId, openDropdown, closeDropdown, closeAll }}>
-      {children}
-    </DropdownContext.Provider>
+    <DropdownContext.Provider value={value}>{children}</DropdownContext.Provider>
   );
 };
 

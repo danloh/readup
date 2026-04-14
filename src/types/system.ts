@@ -4,7 +4,7 @@ import { ArticleType, FeedType } from '@/app/feed/components/dataAgent';
 import { UsageRecord } from '@/services/usageService';
 import { DownloadDataResult } from '@/services/bsky/atfile';
 import { SystemSettings } from './settings';
-import { Book, BookConfig, BookContent, Review, ViewSettings } from './book';
+import { Book, BookConfig, BookContent, ImportBookOpts, Review, ViewSettings } from './book';
 
 export type AppPlatform = 'web' | 'tauri';
 export type OsPlatform = 'android' | 'ios' | 'macos' | 'windows' | 'linux' | 'unknown';
@@ -115,14 +115,7 @@ export interface AppService {
   getDefaultViewSettings(): ViewSettings;
   loadSettings(): Promise<SystemSettings>;
   saveSettings(settings: SystemSettings): Promise<void>;
-  importBook(
-    file: string | File,
-    books: Book[],
-    saveBook?: boolean,
-    saveCover?: boolean,
-    overwrite?: boolean,
-    transient?: boolean,
-  ): Promise<Book | null>;
+  importBook(file: string | File, books: Book[], options?: ImportBookOpts): Promise<Book | null>;
   loadPdsBook(
     hash: string,
     did: string,
@@ -138,7 +131,7 @@ export interface AppService {
     onProgress?: ProgressHandler,
   ): Promise<void>;
   isBookAvailable(book: Book): Promise<boolean>;
-  getBookFileSize(book: Book): Promise<number | undefined>;
+  getBookFileSize(book: Book): Promise<number | null>;
   loadBookConfig(book: Book, settings: SystemSettings): Promise<BookConfig>;
   fetchBookDetails(book: Book): Promise<BookMetadata>;
   saveBookConfig(book: Book, config: BookConfig, settings?: SystemSettings): Promise<void>;

@@ -141,10 +141,7 @@ export class FeedEpubService {
     const book = await appService.importBook(
       epubFile,
       books,
-      true, // saveBook
-      true, // saveCover
-      true, // overwrite - sometimes, the hash is same, if diff hash, will never overwrite
-      false // not transient
+      {overwrite: true}
     );
 
     if (!book) {

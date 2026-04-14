@@ -31,7 +31,7 @@ vi.mock('@/libs/storage', () => ({
   batchGetDownloadUrls: vi.fn(),
 }));
 
-import { BaseAppService } from '@/services/appService';
+import { BaseAppService } from '@/services/appService0';
 
 // Concrete test subclass of BaseAppService with mocked fs
 class TestAppService extends BaseAppService {

@@ -51,6 +51,7 @@ import {
 import TransferQueuePanel from './TransferQueuePanel';
 import GroupHeader from './GroupHeader';
 import { BackupWindow } from './BackupWindow';
+import { buildBookLookupIndex } from '@/services/bookService';
 
 const LibraryPageWithSearchParams = () => {
   const searchParams = useSearchParams();
@@ -294,7 +295,7 @@ const LibraryPageContent = (
         console.log('Open with book:', file);
         try {
           const temp = appService.isMobile ? false : !settings.autoImportBooksOnOpen;
-          const book = await appService.importBook(file, libraryBooks, true, true, false, temp);
+          const book = await appService.importBook(file, libraryBooks, {transient: temp});
           if (book) {
             bookIds.push(book.hash);
           }
@@ -406,12 +407,17 @@ const LibraryPageContent = (
     const successfulImports: string[] = [];
     
     const { library } = useLibraryStore.getState();
+    // Build the lookup index ONCE per import batch so each book lookup is
+    // O(1) instead of O(n) over the existing library. importBook also keeps
+    // the index updated as new books are appended, so subsequent files in
+    // the same batch see the additions.
+    const lookupIndex = buildBookLookupIndex(library);
 
     const processFile = async (selectedFile: SelectedFile): Promise<Book | null> => {
       const file = selectedFile.file || selectedFile.path;
       if (!file) return null;
       try {
-        const book = await appService?.importBook(file, library);
+        const book = await appService?.importBook(file, library, { lookupIndex });
         console.log('>> Imported book:', book);
         if (!book) return null;
         const { path, basePath } = selectedFile;
@@ -447,7 +453,18 @@ const LibraryPageContent = (
     for (let i = 0; i < files.length; i += concurrency) {
       const batch = files.slice(i, i + concurrency);
       const importedBooks = (await Promise.all(batch.map(processFile))).filter((book) => !!book);
-      await updateBooks(envConfig, importedBooks);
+      // Update store state per batch (so the UI can render imported books
+      // incrementally) but defer disk persistence until the entire batch is
+      // done — saving library.json once per batch of 4 books was the dominant
+      // cost for large imports.
+      await updateBooks(envConfig, importedBooks, { skipSave: true });
+    }
+
+    // Persist the full library once after every file in the batch is done.
+    if (successfulImports.length > 0) {
+      const finalLibrary = useLibraryStore.getState().library;
+      const finalAppService = await envConfig.getAppService();
+      await finalAppService.saveLibraryBooks(finalLibrary);
     }
 
     if (failedImports.length > 0) {

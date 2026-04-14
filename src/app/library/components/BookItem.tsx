@@ -34,7 +34,7 @@ const BookItem: React.FC<BookItemProps> = ({
     >
       <div
         className={clsx(
-          'bookitem-main relative flex aspect-[28/41] items-center justify-center cursor-pointer rounded',
+          'bookitem-main relative flex aspect-[28/41] items-center justify-center cursor-pointer rounded overflow-hidden',
           mode === 'grid' && 'items-end',
           mode === 'list' && 'min-w-20 items-center',
         )}

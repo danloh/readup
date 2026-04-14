@@ -68,3 +68,4 @@ src-tauri/target
 # dev
 devlog.md
 OAUTH_SETUP.md
+src/services/appService0.ts
