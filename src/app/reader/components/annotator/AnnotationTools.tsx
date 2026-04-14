@@ -40,7 +40,8 @@ export const annotationToolButtons = createAnnotationToolButtons([
     type: 'copy', 
     label: _('Copy'), 
     tooltip: _('Copy text after selection'), 
-    Icon: FiCopy 
+    Icon: FiCopy,
+    quickAction: true, 
   },
   {
     type: 'highlight',
