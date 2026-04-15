@@ -45,7 +45,7 @@ jobs:
           submodules: 'true'
 
       - name: setup pnpm
-        uses: pnpm/action-setup@v5
+        uses: pnpm/action-setup@v6
 
       - name: setup node
         uses: actions/setup-node@v6
@@ -65,7 +65,7 @@ jobs:
       - name: install Dependencies
         working-directory: .
         run: |
-          pnpm install && pnpm setup-vendors
+          pnpm install && pnpm setup-pdfjs
 
       - name: run format check
         run: |
