@@ -2,7 +2,7 @@ import { FileSystem, BaseDir, AppPlatform, ResolvedPath, FileItem } from '@/type
 import { getOSPlatform, isValidURL } from '@/utils/misc';
 import { RemoteFile } from '@/utils/file';
 import { isPWA } from './environment';
-import { BaseAppService } from './appService0';
+import { BaseAppService } from './appService';
 import { LOCAL_BOOKS_SUBDIR, DATA_SUBDIR } from './constants';
 
 const basePrefix = async () => '';

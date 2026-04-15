@@ -34,7 +34,7 @@ import { getOSPlatform, isContentURI, isFileURI, isValidURL } from '@/utils/misc
 import { getDirPath, getFilename } from '@/utils/path';
 import { copyURIToPath } from '@/utils/bridge';
 import { NativeFile, RemoteFile } from '@/utils/file';
-import { BaseAppService } from './appService0';
+import { BaseAppService } from './appService';
 import { LOCAL_BOOKS_SUBDIR, SETTINGS_FILENAME, DATA_SUBDIR, } from './constants';
 
 declare global {

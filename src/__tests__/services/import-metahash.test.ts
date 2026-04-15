@@ -31,7 +31,7 @@ vi.mock('@/libs/storage', () => ({
   batchGetDownloadUrls: vi.fn(),
 }));
 
-import { BaseAppService } from '@/services/appService0';
+import { BaseAppService } from '@/services/appService';
 
 // Concrete test subclass of BaseAppService with mocked fs
 class TestAppService extends BaseAppService {
@@ -240,7 +240,7 @@ describe('importBook metaHash deduplication', () => {
     fs.openFile.mockResolvedValue(new File(['content'], 'test.epub'));
 
     // Transient import requires string file path
-    const result = await service.importBook('/path/to/test.epub', books, true, true, false, true);
+    const result = await service.importBook('/path/to/test.epub', books, {transient: true});
 
     // Should create a new entry, not override existing
     expect(result).not.toBe(existingBook);
