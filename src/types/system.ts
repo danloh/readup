@@ -132,7 +132,7 @@ export interface AppService {
     onProgress?: ProgressHandler,
   ): Promise<void>;
   isBookAvailable(book: Book): Promise<boolean>;
-  getBookFileSize(book: Book): Promise<number | null>;
+  getBookFileSize(book: Book): Promise<number | undefined>;
   loadBookConfig(book: Book, settings: SystemSettings): Promise<BookConfig>;
   fetchBookDetails(book: Book): Promise<BookMetadata>;
   saveBookConfig(book: Book, config: BookConfig, settings?: SystemSettings): Promise<void>;

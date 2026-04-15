@@ -46,7 +46,7 @@ vi.mock('@/services/bookService', () => ({
   exportBook: vi.fn().mockResolvedValue(false),
   refreshBookMetadata: vi.fn().mockResolvedValue(false),
   isBookAvailable: vi.fn().mockResolvedValue(false),
-  getBookFileSize: vi.fn().mockResolvedValue(null),
+  getBookFileSize: vi.fn().mockResolvedValue(undefined),
   loadBookContent: vi.fn().mockResolvedValue({}),
   loadBookConfig: vi.fn().mockResolvedValue({}),
   fetchBookDetails: vi.fn().mockResolvedValue({}),

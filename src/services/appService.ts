@@ -200,7 +200,7 @@ export abstract class BaseAppService implements AppService {
     return BookSvc.isBookAvailable(this.fs, book);
   }
 
-  async getBookFileSize(book: Book): Promise<number | null> {
+  async getBookFileSize(book: Book): Promise<number | undefined> {
     return BookSvc.getBookFileSize(this.fs, book);
   }
 

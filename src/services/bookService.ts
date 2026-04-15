@@ -488,7 +488,7 @@ export async function isBookAvailable(fs: FileSystem, book: Book): Promise<boole
   return false;
 }
 
-export async function getBookFileSize(fs: FileSystem, book: Book): Promise<number | null> {
+export async function getBookFileSize(fs: FileSystem, book: Book): Promise<number | undefined> {
   const fp = getLocalBookFilename(book);
   if (await fs.exists(fp, 'Books')) {
     const file = await fs.openFile(fp, 'Books');
@@ -499,7 +499,7 @@ export async function getBookFileSize(fs: FileSystem, book: Book): Promise<numbe
     }
     return size;
   }
-  return null;
+  return undefined;
 }
 
 export async function loadBookContent(fs: FileSystem, book: Book): Promise<BookContent> {
