@@ -10,6 +10,7 @@ import { useSidebarStore } from '@/store/sidebarStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useParallelViewStore } from '@/store/parallelViewStore';
 import { eventDispatcher } from '@/utils/event';
+import { saveViewSettings } from '@/helpers/settings';
 import MenuItem from '@/components/MenuItem';
 import Menu from '@/components/Menu';
 import useBooksManager from '../../hooks/useBooksManager';
@@ -23,7 +24,7 @@ interface BookMenuProps {
 const BookMenu: React.FC<BookMenuProps> = ({ menuClassName, setIsDropdownOpen }) => {
   const _ = useTranslation();
   const { envConfig } = useEnv();
-  const { bookKeys, recreateViewer, getViewSettings, setViewSettings } = useReaderStore();
+  const { bookKeys, recreateViewer, getViewSettings } = useReaderStore();
   const { getVisibleLibrary } = useLibraryStore();
   const { openParallelView } = useBooksManager();
   const { sideBarBookKey } = useSidebarStore();
@@ -51,10 +52,9 @@ const BookMenu: React.FC<BookMenuProps> = ({ menuClassName, setIsDropdownOpen })
     setIsSortedTOC((prev) => !prev);
     setIsDropdownOpen?.(false);
     if (sideBarBookKey) {
-      const viewSettings = getViewSettings(sideBarBookKey)!;
-      viewSettings.sortedTOC = !isSortedTOC;
-      setViewSettings(sideBarBookKey, viewSettings);
-      recreateViewer(envConfig, sideBarBookKey);
+      saveViewSettings(envConfig, sideBarBookKey, 'sortedTOC', !isSortedTOC, true, false).then(
+        () => { recreateViewer(envConfig, sideBarBookKey); },
+      );
     }
   };
 

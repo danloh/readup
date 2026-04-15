@@ -36,7 +36,9 @@ export const usePullToRefresh = (
     const damping = getPlatformDamping();
     const appr = createApprFunction(damping.MAX, damping.k);
     let isLoading = false;
-
+    // Disable native bounce on the scroll container so the JS-based
+    // pull-to-refresh resistance is visible (especially on iOS WKWebView).
+    el.style.overscrollBehavior = 'none';
     el.addEventListener('touchstart', handleTouchStart, { passive: true });
 
     function handleTouchStart(startEvent: TouchEvent) {

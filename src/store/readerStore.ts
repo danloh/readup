@@ -13,7 +13,7 @@ import { Insets } from '@/types/misc';
 import { EnvConfigType } from '@/services/environment';
 import { FoliateView } from '@/types/view';
 import { DocumentLoader, TOCItem } from '@/libs/document';
-import { BOOK_NAV_VERSION, computeBookNav, hydrateBookNav, updateToc } from '@/utils/toc';
+import { BOOK_NAV_VERSION, computeBookNav, hydrateBookNav, updateToc } from '@/services/nav';
 import { uniqueId } from '@/utils/misc';
 import { getBaseFilename } from '@/utils/path';
 import { formatTitle, getMetadataHash, getPrimaryLanguage } from '@/utils/book';

@@ -11,7 +11,7 @@ import {
   FIXED_LAYOUT_FORMATS,
   ImportBookOpts,
 } from '@/types/book';
-import type { BookNav } from '@/utils/toc';
+import type { BookNav } from '@/services/nav';
 import {
   getDir,
   getLocalBookFilename,

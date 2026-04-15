@@ -1,10 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Virtuoso, VirtuosoHandle, Components } from 'react-virtuoso';
+import { Virtuoso, VirtuosoHandle } from 'react-virtuoso';
+import { useOverlayScrollbars } from 'overlayscrollbars-react';
+import 'overlayscrollbars/overlayscrollbars.css';
 
 import { TOCItem } from '@/libs/document';
 import { useReaderStore } from '@/store/readerStore';
 import { useSidebarStore } from '@/store/sidebarStore';
-import { findParentPath } from '@/utils/toc';
+import { findParentPath } from '@/services/nav';
 import { eventDispatcher } from '@/utils/event';
 import { useTextTranslation } from '../../hooks/useTextTranslation';
 import { FlatTOCItem, StaticListRow } from './TOCItem';
@@ -32,13 +34,6 @@ const computeExpandedSet = (toc: TOCItem[], href: string | undefined): Set<strin
   return new Set([...topLevel, ...parents]);
 };
 
-const TOCScroller = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  (props, ref) => <div {...props} ref={ref} className='toc-scroller' />,
-);
-TOCScroller.displayName = 'TOCScroller';
-
-const VIRTUOSO_COMPONENTS: Components = { Scroller: TOCScroller };
-
 const TOCView: React.FC<{bookKey: string; toc: TOCItem[];}> = ({ bookKey, toc }) => {
   const { getView, getProgress, getViewSettings } = useReaderStore();
   const { sideBarBookKey, isSideBarVisible } = useSidebarStore();
@@ -56,6 +51,33 @@ const TOCView: React.FC<{bookKey: string; toc: TOCItem[];}> = ({ bookKey, toc })
   const scrollCooldownRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingScrollRef = useRef(false);
   const visibleCenterRef = useRef(0);
+
+  // OverlayScrollbars + Virtuoso integration
+  const osRootRef = useRef<HTMLDivElement>(null);
+  const [scroller, setScroller] = useState<HTMLElement | null>(null);
+  const [initialize, osInstance] = useOverlayScrollbars({
+    defer: true,
+    options: { scrollbars: { autoHide: 'scroll' } },
+    events: {
+      initialized(instance) {
+        const { viewport } = instance.elements();
+        viewport.style.overflowX = 'var(--os-viewport-overflow-x)';
+        viewport.style.overflowY = 'var(--os-viewport-overflow-y)';
+      },
+    },
+  });
+
+  useEffect(() => {
+    const root = osRootRef.current;
+    if (scroller && root) {
+      initialize({ target: root, elements: { viewport: scroller } });
+    }
+    return () => osInstance()?.destroy();
+  }, [scroller, initialize, osInstance]);
+
+  const handleScrollerRef = useCallback((el: HTMLElement | Window | null) => {
+    setScroller(el instanceof HTMLElement ? el : null);
+  }, []);
 
   useTextTranslation(bookKey, containerRef.current, false, 'translation-target-toc');
 
@@ -147,32 +169,34 @@ const TOCView: React.FC<{bookKey: string; toc: TOCItem[];}> = ({ bookKey, toc })
 
   return (
     <div ref={containerRef} className='toc-list rounded' role='tree'>
-      <Virtuoso
-        ref={virtuosoRef}
-        components={VIRTUOSO_COMPONENTS}
-        rangeChanged={({ startIndex, endIndex }) => {
-          visibleCenterRef.current = Math.floor((startIndex + endIndex) / 2);
-        }}
-        onScroll={() => {
-          userScrolledRef.current = true;
-          if (scrollCooldownRef.current) clearTimeout(scrollCooldownRef.current);
-          scrollCooldownRef.current = setTimeout(() => {
-            userScrolledRef.current = false;
-          }, 10000);
-        }}
-        style={{ height: containerHeight }}
-        totalCount={flatItems.length}
-        itemContent={(index) => (
-          <StaticListRow
-            bookKey={bookKey}
-            flatItem={flatItems[index]!}
-            activeHref={activeHref}
-            onToggleExpand={handleToggleExpand}
-            onItemClick={handleItemClick}
-          />
-        )}
-        overscan={500}
-      />
+      <div ref={osRootRef} data-overlayscrollbars-initialize='' style={{ height: containerHeight }}>
+        <Virtuoso
+          ref={virtuosoRef}
+          scrollerRef={handleScrollerRef}
+          rangeChanged={({ startIndex, endIndex }) => {
+            visibleCenterRef.current = Math.floor((startIndex + endIndex) / 2);
+          }}
+          onScroll={() => {
+            userScrolledRef.current = true;
+            if (scrollCooldownRef.current) clearTimeout(scrollCooldownRef.current);
+            scrollCooldownRef.current = setTimeout(() => {
+              userScrolledRef.current = false;
+            }, 10000);
+          }}
+          style={{ height: containerHeight }}
+          totalCount={flatItems.length}
+          itemContent={(index) => (
+            <StaticListRow
+              bookKey={bookKey}
+              flatItem={flatItems[index]!}
+              activeHref={activeHref}
+              onToggleExpand={handleToggleExpand}
+              onItemClick={handleItemClick}
+            />
+          )}
+          overscan={500}
+        />
+      </div>
     </div>
   );
 };

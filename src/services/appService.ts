@@ -15,7 +15,7 @@ import { Book, BookConfig, BookContent, ImportBookOpts, Review, ViewSettings } f
 import { ArticleType, FeedType } from '@/app/feed/components/dataAgent';
 import { getOSPlatform } from '@/utils/misc';
 import { ProgressHandler } from '@/utils/transfer';
-import type { BookNav } from '@/utils/toc';
+import type { BookNav } from '@/services/nav';
 
 import { UsageRecord } from './usageService';
 import { loadJSONFile, safeSaveJSON } from './persistence';

@@ -4,7 +4,7 @@ import * as CFI from 'foliate-js/epubcfi.js';
 import { useBookDataStore } from '@/store/bookDataStore';
 import { useSidebarStore } from '@/store/sidebarStore';
 import { useReaderStore } from '@/store/readerStore';
-import { findTocItemBS } from '@/utils/toc';
+import { findTocItemBS } from '@/services/nav';
 import { findNearestCfi } from '@/utils/cfi';
 import { TOCItem } from '@/libs/document';
 import { BooknoteGroup, BookNoteType } from '@/types/book';

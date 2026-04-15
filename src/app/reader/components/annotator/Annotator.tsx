@@ -21,7 +21,7 @@ import {
   getPopupPosition, getPosition, getTextFromRange, Point, Position, TextSelection 
 } from '@/utils/sel';
 import { eventDispatcher } from '@/utils/event';
-import { findTocItemBS } from '@/utils/toc';
+import { findTocItemBS } from '@/services/nav';
 import { throttle } from '@/utils/throttle';
 import { getWordCount } from '@/utils/word';
 import { getIndexFromCfi, isCfiInLocation } from '@/utils/cfi';

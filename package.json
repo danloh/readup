@@ -123,6 +123,8 @@
     "react-responsive": "10.0.1",
     "react-virtuoso": "^4.17.0",
     "react-window": "^1.8.11",
+    "overlayscrollbars": "2.15.1",
+    "overlayscrollbars-react": "^0.5.6",
     "remark-gfm": "^4.0.1",
     "semver": "^7.7.3",
     "streamdown": "^1.6.10",

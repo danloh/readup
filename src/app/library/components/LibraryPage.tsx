@@ -5,6 +5,10 @@ import { getCurrentWebview } from '@tauri-apps/api/webview';
 import { ReadonlyURLSearchParams, useSearchParams } from 'next/navigation';
 import { MdChevronRight } from 'react-icons/md';
 import { LiaInfoCircleSolid } from 'react-icons/lia';
+import { 
+  OverlayScrollbarsComponent, OverlayScrollbarsComponentRef 
+} from 'overlayscrollbars-react';
+import 'overlayscrollbars/overlayscrollbars.css';
 
 import { Book } from '@/types/book';
 import { AppService } from '@/types/system';
@@ -97,22 +101,28 @@ const LibraryPageContent = (
   } | null>(null);
 
   const viewSettings = settings.globalViewSettings;
-  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const scrollRef = useRef<OverlayScrollbarsComponentRef>(null);
   const containerRef: React.RefObject<HTMLDivElement | null> = useRef(null);
   const pageRef = useRef<HTMLDivElement>(null);
 
   const getScrollKey = (group: string) => `library-scroll-${group || 'all'}`;
 
   const saveScrollPosition = (group: string) => {
-    if (scrollRef.current) {
-      sessionStorage.setItem(getScrollKey(group), scrollRef.current.scrollTop.toString());
+    const viewport = scrollRef.current?.osInstance()?.elements().viewport;
+    if (viewport) {
+      const scrollTop = viewport.scrollTop;
+      sessionStorage.setItem(getScrollKey(group), scrollTop.toString());
     }
   };
 
   const restoreScrollPosition = useCallback((group: string) => {
     const savedPosition = sessionStorage.getItem(getScrollKey(group));
-    if (savedPosition && scrollRef.current) {
-      scrollRef.current.scrollTop = parseInt(savedPosition, 10);
+    if (savedPosition) {
+      const scrollTop = parseInt(savedPosition, 10);
+      const viewport = scrollRef.current?.osInstance()?.elements().viewport;
+      if (viewport) {
+        viewport.scrollTop = scrollTop;
+      }
     }
   }, []);
 
@@ -656,10 +666,20 @@ const LibraryPageContent = (
       )}
       {showBookshelf &&
         (libraryBooks.some((book) => !book.deletedAt) ? (
-          <div
-            ref={scrollRef}
+          <OverlayScrollbarsComponent
+            defer
             aria-label={_('Bookshelf')}
-            className='library-scroller flex-grow'
+            ref={scrollRef}
+            className='flex-grow'
+            options={{ scrollbars: { autoHide: 'scroll' } }}
+            events={{
+              initialized: (instance) => {
+                const { content } = instance.elements();
+                if (content) {
+                  containerRef.current = content as HTMLDivElement;
+                }
+              },
+            }}
           >
             <div
               ref={containerRef}
@@ -678,7 +698,7 @@ const LibraryPageContent = (
                 handleLibraryNavigation={handleLibraryNavigation}
               />
             </div>
-          </div>
+          </OverlayScrollbarsComponent>
         ) : (
           <div className='hero drop-zone h-screen items-center justify-center'>
             <div className='hero-content text-neutral-content text-center'>

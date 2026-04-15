@@ -1,6 +1,6 @@
 import { BookMetadata } from '@/libs/document';
 import { ProgressHandler } from '@/utils/transfer';
-import type { BookNav } from '@/utils/toc';
+import type { BookNav } from '@/services/nav';
 import { ArticleType, FeedType } from '@/app/feed/components/dataAgent';
 import { UsageRecord } from '@/services/usageService';
 import { DownloadDataResult } from '@/services/bsky/atfile';
