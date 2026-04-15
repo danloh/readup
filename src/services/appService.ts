@@ -15,6 +15,7 @@ import { Book, BookConfig, BookContent, ImportBookOpts, Review, ViewSettings } f
 import { ArticleType, FeedType } from '@/app/feed/components/dataAgent';
 import { getOSPlatform } from '@/utils/misc';
 import { ProgressHandler } from '@/utils/transfer';
+import type { BookNav } from '@/utils/toc';
 
 import { UsageRecord } from './usageService';
 import { loadJSONFile, safeSaveJSON } from './persistence';
@@ -209,6 +210,14 @@ export abstract class BaseAppService implements AppService {
 
   async loadBookConfig(book: Book, settings: SystemSettings): Promise<BookConfig> {
     return BookSvc.loadBookConfig(this.fs, book, settings);
+  }
+
+  async loadBookNav(book: Book) {
+    return BookSvc.loadBookNav(this.fs, book);
+  }
+
+  async saveBookNav(book: Book, nav: BookNav) {
+    return BookSvc.saveBookNav(this.fs, book, nav);
   }
 
   async fetchBookDetails(book: Book) {

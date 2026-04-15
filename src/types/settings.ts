@@ -74,6 +74,8 @@ export interface SystemSettings {
   opdsProxy: Record<string, string>;
 
   aiSettings: AISettings;
+  // Global read settings that apply to the reader page
   globalReadSettings: ReadSettings;
+  // Global view settings that apply to all books, and can be overridden by book-specific view settings
   globalViewSettings: ViewSettings;
 }

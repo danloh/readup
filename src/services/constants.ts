@@ -13,6 +13,7 @@ import {
   TTSConfig,
   ViewConfig,
   ViewSettings,
+  ViewSettingsConfig,
 } from '@/types/book';
 import { 
   LibraryGroupByType, 
@@ -160,13 +161,17 @@ export const DEFAULT_BOOK_STYLE: BookStyle = {
   hyphenation: true,
   invertImgColor: false,
   theme: 'auto',
-  overrideFont: false,
-  overrideLayout: false,
-  overrideColor: false,
+  
   codeHighlighting: true,
   codeLanguage: 'auto-detect',
   userStylesheet: '',
   userUIStylesheet: '',
+
+  overrideFont: false,
+  overrideLayout: false,
+  overrideColor: false,
+  useBookLayout: false,
+
   zoomMode: 'fit-page',
   spreadMode: 'auto',
   keepCoverSpread: true,
@@ -199,6 +204,10 @@ export const DEFAULT_EINK_VIEW_SETTINGS: Partial<ViewSettings> = {
   volumeKeysToFlip: true,
 };
 
+export const DEFAULT_PARAGRAPH_MODE_CONFIG: ParagraphModeConfig = {
+  enabled: false,
+};
+
 export const DEFAULT_VIEW_CONFIG: ViewConfig = {
   sideBarTab: 'toc',
   sortedTOC: false,
@@ -215,6 +224,8 @@ export const DEFAULT_VIEW_CONFIG: ViewConfig = {
   isEink: false,
   isColorEink: false,
 
+  paragraphMode: DEFAULT_PARAGRAPH_MODE_CONFIG,
+
   readingRulerEnabled: false,
   readingRulerLines: 2,
   readingRulerPosition: 33,
@@ -222,8 +233,8 @@ export const DEFAULT_VIEW_CONFIG: ViewConfig = {
   readingRulerColor: 'green',
 };
 
-export const DEFAULT_PARAGRAPH_MODE_CONFIG: ParagraphModeConfig = {
-  enabled: false,
+export const DEFAULT_VIEW_SETTINGS_CONFIG: ViewSettingsConfig = {
+  isGlobal: true,
 };
 
 export const DEFAULT_TTS_CONFIG: TTSConfig = {

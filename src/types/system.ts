@@ -1,5 +1,6 @@
 import { BookMetadata } from '@/libs/document';
 import { ProgressHandler } from '@/utils/transfer';
+import type { BookNav } from '@/utils/toc';
 import { ArticleType, FeedType } from '@/app/feed/components/dataAgent';
 import { UsageRecord } from '@/services/usageService';
 import { DownloadDataResult } from '@/services/bsky/atfile';
@@ -135,6 +136,8 @@ export interface AppService {
   loadBookConfig(book: Book, settings: SystemSettings): Promise<BookConfig>;
   fetchBookDetails(book: Book): Promise<BookMetadata>;
   saveBookConfig(book: Book, config: BookConfig, settings?: SystemSettings): Promise<void>;
+  loadBookNav(book: Book): Promise<BookNav | null>;
+  saveBookNav(book: Book, nav: BookNav): Promise<void>;
   loadBookContent(book: Book): Promise<BookContent>;
   loadLibraryBooks(): Promise<Book[]>;
   saveLibraryBooks(books: Book[]): Promise<void>;

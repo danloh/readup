@@ -13,7 +13,7 @@ import { Insets } from '@/types/misc';
 import { EnvConfigType } from '@/services/environment';
 import { FoliateView } from '@/types/view';
 import { DocumentLoader, TOCItem } from '@/libs/document';
-import { updateToc } from '@/utils/toc';
+import { BOOK_NAV_VERSION, computeBookNav, hydrateBookNav, updateToc } from '@/utils/toc';
 import { uniqueId } from '@/utils/misc';
 import { getBaseFilename } from '@/utils/path';
 import { formatTitle, getMetadataHash, getPrimaryLanguage } from '@/utils/book';
@@ -161,6 +161,21 @@ export const useReaderStore = create<ReaderStore>((set, get) => ({
       const config = await appService.loadBookConfig(book, settings);
       // Filter out invalid booknotes
       config.booknotes = config.booknotes?.filter((booknote) => booknote.cfi) ?? [];
+      // Load cached book navigation (TOC + section fragments) or compute and persist.
+      if (book.format === 'EPUB' && bookDoc.rendition?.layout !== 'pre-paginated') {
+        const cachedNav = await appService.loadBookNav(book);
+        if (cachedNav?.version === BOOK_NAV_VERSION) {
+          hydrateBookNav(bookDoc, cachedNav);
+        } else {
+          const freshNav = await computeBookNav(bookDoc);
+          hydrateBookNav(bookDoc, freshNav);
+          try {
+            await appService.saveBookNav(book, freshNav);
+          } catch (e) {
+            console.warn('Failed to persist book nav cache:', e);
+          }
+        }
+      }
       updateToc(bookDoc, config.viewSettings?.sortedTOC ?? false);
       if (!bookDoc.metadata.title) {
         bookDoc.metadata.title = getBaseFilename(file.name);

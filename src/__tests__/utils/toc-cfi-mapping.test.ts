@@ -1,9 +1,15 @@
 import { describe, it, expect, beforeAll, vi } from 'vitest';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
-import { DocumentLoader } from '@/libs/document';
+import { DocumentLoader, CFI } from '@/libs/document';
 import type { BookDoc, TOCItem } from '@/libs/document';
 import { updateToc, findTocItemBS } from '@/utils/toc';
+
+// Simulates an annotation deep inside a section, past the chapter heading.
+// Section CFIs look like `epubcfi(/6/2)` and TOC item CFIs point at the heading
+// (e.g. `epubcfi(/6/2!/4/2[ch01])`), so a real annotation lives after that —
+// e.g. inside a <p> sibling, reached via `CFI.joinIndir`.
+const ANNOTATION_PATH = '/4/4/1:0';
 
 // Polyfill CSS.escape for jsdom
 if (typeof globalThis['CSS'] === 'undefined') {
@@ -28,7 +34,7 @@ if (!customElements.get('foliate-paginator')) {
 vi.mock('foliate-js/paginator.js', () => ({}));
 
 /**
- * Regression test for /issues/3688
+ * Regression test for https://github.com/readest/readest/issues/3688
  *
  * When TOC entries use fragment-suffixed hrefs (e.g. ch01.xhtml#ch01),
  * all annotations were incorrectly grouped under the last chapter.
@@ -82,8 +88,8 @@ describe('TOC-to-CFI mapping with fragment hrefs (#3688)', () => {
     const firstSection = linearSections[0]!;
     const lastSection = linearSections[linearSections.length - 1]!;
 
-    const firstTocItem = findTocItemBS(toc, firstSection.cfi);
-    const lastTocItem = findTocItemBS(toc, lastSection.cfi);
+    const firstTocItem = findTocItemBS(toc, CFI.joinIndir(firstSection.cfi, ANNOTATION_PATH));
+    const lastTocItem = findTocItemBS(toc, CFI.joinIndir(lastSection.cfi, ANNOTATION_PATH));
 
     expect(firstTocItem).not.toBeNull();
     expect(lastTocItem).not.toBeNull();
@@ -99,7 +105,7 @@ describe('TOC-to-CFI mapping with fragment hrefs (#3688)', () => {
     const linearSections = sections.filter((s) => s.linear !== 'no' && s.cfi);
 
     const midSection = linearSections[1]!;
-    const midTocItem = findTocItemBS(toc, midSection.cfi);
+    const midTocItem = findTocItemBS(toc, CFI.joinIndir(midSection.cfi, ANNOTATION_PATH));
 
     expect(midTocItem).not.toBeNull();
     expect(midTocItem!.label).toBe('Chapter Two');

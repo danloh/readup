@@ -61,7 +61,6 @@ describe('settingsStore', () => {
       settings: {} as SystemSettings,
       settingsDialogBookKey: '',
       isFontLayoutSettingsDialogOpen: false,
-      isFontLayoutSettingsGlobal: true,
       activeSettingsItemId: null,
     });
     vi.clearAllMocks();
@@ -109,19 +108,6 @@ describe('settingsStore', () => {
       useSettingsStore.getState().setFontLayoutSettingsDialogOpen(true);
       useSettingsStore.getState().setFontLayoutSettingsDialogOpen(false);
       expect(useSettingsStore.getState().isFontLayoutSettingsDialogOpen).toBe(false);
-    });
-  });
-
-  describe('setSettingsGlobal', () => {
-    test('sets global mode to true', () => {
-      useSettingsStore.getState().setFontLayoutSettingsGlobal(false);
-      useSettingsStore.getState().setFontLayoutSettingsGlobal(true);
-      expect(useSettingsStore.getState().isFontLayoutSettingsGlobal).toBe(true);
-    });
-
-    test('sets global mode to false', () => {
-      useSettingsStore.getState().setFontLayoutSettingsGlobal(false);
-      expect(useSettingsStore.getState().isFontLayoutSettingsGlobal).toBe(false);
     });
   });
 

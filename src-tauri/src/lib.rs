@@ -32,6 +32,8 @@ use tauri::TitleBarStyle;
 #[cfg(desktop)]
 use tauri::{Listener, Url};
 
+#[cfg(target_os = "windows")]
+use tauri::webview::ScrollBarStyle;
 #[cfg(target_os = "android")]
 use tauri_plugin_native_bridge::register_select_directory_callback;
 #[cfg(target_os = "android")]
@@ -377,7 +379,9 @@ pub fn run() {
 
             #[cfg(target_os = "windows")]
             {
-                builder = builder.transparent(false);
+                builder = builder
+                    .transparent(false)
+                    .scroll_bar_style(ScrollBarStyle::FluentOverlay);
             }
             #[cfg(target_os = "linux")]
             {

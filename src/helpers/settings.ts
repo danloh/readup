@@ -14,8 +14,7 @@ export const saveViewSettings = async <K extends keyof ViewSettings>(
   skipGlobal = false,
   applyStyles = true,
 ) => {
-  const { settings, isFontLayoutSettingsGlobal, setSettings, saveSettings } = 
-    useSettingsStore.getState();
+  const { settings, setSettings, saveSettings } = useSettingsStore.getState();
   const { bookKeys, getView, getViewState, getViewSettings, setViewSettings } =
     useReaderStore.getState();
   const { getConfig, saveConfig } = useBookDataStore.getState();
@@ -37,7 +36,8 @@ export const saveViewSettings = async <K extends keyof ViewSettings>(
     }
   };
 
-  if (isFontLayoutSettingsGlobal && !skipGlobal) {
+  const isSettingsGlobal = getViewSettings(bookKey)?.isGlobal ?? true;
+  if (isSettingsGlobal && !skipGlobal) {
     settings.globalViewSettings[key] = value;
     setSettings(settings);
     

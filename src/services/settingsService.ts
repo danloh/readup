@@ -22,7 +22,7 @@ import {
   //DEFAULT_MOBILE_SYSTEM_SETTINGS,
   DEFAULT_ANNOTATOR_CONFIG,
   DEFAULT_EINK_VIEW_SETTINGS,
-  //DEFAULT_VIEW_SETTINGS_CONFIG,
+  DEFAULT_VIEW_SETTINGS_CONFIG,
 } from './constants';
 import { safeLoadJSON, safeSaveJSON } from './persistence';
 
@@ -43,7 +43,7 @@ export function getDefaultViewSettings(ctx: Context): ViewSettings {
     ...DEFAULT_TTS_CONFIG,
     ...DEFAULT_SCREEN_CONFIG,
     ...DEFAULT_ANNOTATOR_CONFIG,
-    //...DEFAULT_VIEW_SETTINGS_CONFIG,
+    ...DEFAULT_VIEW_SETTINGS_CONFIG,
     ...(ctx.isMobile ? DEFAULT_MOBILE_VIEW_SETTINGS : {}),
     ...(ctx.isEink ? DEFAULT_EINK_VIEW_SETTINGS : {}),
     ...(isCJKEnv() ? DEFAULT_CJK_VIEW_SETTINGS : {}),
