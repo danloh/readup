@@ -30,17 +30,14 @@ jobs:
       - name: setup node
         uses: actions/setup-node@v6
         with:
-          node-version: 24
+          node-version: 22
           cache: pnpm
 
       - name: Install dependencies
         run: pnpm install && pnpm setup-pdfjs
 
-      - name: build the web App
-        run: pnpm build-web 
-
       - name: Deploy to Vercel
-        run: npx vercel@latest deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --prebuilt
+        run: npx vercel@latest deploy --prod --token=${{ secrets.VERCEL_TOKEN }}
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
