@@ -1,5 +1,4 @@
-name: Build and Deploy to Vercel
-
+name: Deploy to vercel
 on:
   workflow_dispatch:
 
@@ -8,36 +7,17 @@ permissions:
   deployments: write
   pull-requests: write
 
-env:
-  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-
 jobs:
   build_and_deploy:
-    name: Build and Deploy
     runs-on: ubuntu-latest
-    environment: production
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
+      - uses: actions/checkout@v6
         with:
-          submodules: true
-
-      - name: setup pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: setup node
-        uses: actions/setup-node@v6
+          submodules: 'true'
+      - uses: amondnet/vercel-action@v25
         with:
-          node-version: 22
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install && pnpm setup-pdfjs
-
-      - name: Deploy to Vercel
-        run: npx vercel@latest deploy --prod --token=${{ secrets.VERCEL_TOKEN }}
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          vercel-args: '--prod'
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID}}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID}}
