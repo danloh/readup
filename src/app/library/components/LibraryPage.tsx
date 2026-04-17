@@ -378,7 +378,7 @@ const LibraryPageContent = (
       return false;
     };
 
-    const loadingTimeout = setTimeout(() => setLoading(true), 300);
+    const loadingTimeout = setTimeout(() => setLoading(true), 500);
     const initLibrary = async () => {
       const appService = await envConfig.getAppService();
       const settings = await appService.loadSettings();
@@ -409,7 +409,8 @@ const LibraryPageContent = (
       isInitiating.current = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    // searchParams is used to tigger parsing OPEN_WITH_FILES
+  }, [searchParams]);
 
   const importBooks = async (files: SelectedFile[], groupId?: string) => {
     setLoading(true);

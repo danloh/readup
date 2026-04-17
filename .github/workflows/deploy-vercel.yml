@@ -40,7 +40,7 @@ jobs:
         run: pnpm build-web 
 
       - name: Deploy to Vercel
-        uses: amondnet/vercel-action@v42
+        uses: amondnet/vercel-action@v42.2.0
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           github-token: ${{ secrets.GITHUB_TOKEN }}

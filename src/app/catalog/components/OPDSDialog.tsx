@@ -1,7 +1,7 @@
 import { clsx } from 'clsx';
 import { useTranslation } from '@/hooks/useTranslation';
 import Dialog from '@/components/Dialog';
-import { CatalogManager } from './CatelogManager';
+import { CatalogManager } from './CatalogManager';
 
 interface CatalogDialogProps {
   onClose: () => void;
