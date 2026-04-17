@@ -171,7 +171,7 @@ function ArticleList(props: ListProps) {
               <button
                 onClick={() => setShowExportUI(prev => !prev)}
                 disabled={exporting}
-                className='btn btn-sm btn-primary gap-2'
+                className='btn btn-xs btn-primary gap-2'
               >
                 <FcReadingEbook size={18} />
                 {exporting 
@@ -183,26 +183,26 @@ function ArticleList(props: ListProps) {
                 <button
                   onClick={() => setShowExportUI(false)}
                   disabled={exporting}
-                  className='btn btn-sm btn-ghost'
+                  className='btn btn-xs btn-ghost'
                 >
                   {_('Cancel')}
                 </button>
               )}
             </div>
             {showExportUI && (
-              <div className='mt-3 p-2 bg-base-100 rounded border'>
+              <div className='mt-3 p-2 bg-base-100 rounded'>
                 <div className='flex gap-2 items-center'>
                   <input
                     type='text'
                     value={epubName}
                     onChange={(e) => setEpubName(e.target.value)}
                     placeholder={_('EPUB name')}
-                    className='input input-xs input-bordered flex-1'
+                    className='input input-sm input-bordered'
                   />
                   <button
                     onClick={handleExportToEpub}
                     disabled={exporting || !epubName.trim()}
-                    className='btn btn-xs btn-success'
+                    className='btn btn-sm btn-success'
                   >
                     {_('Export')}
                   </button>
