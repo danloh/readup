@@ -119,7 +119,7 @@ export class FeedEpubService {
     // If we didn't build an EPUB via append-only, create a fresh EPUB
     if (!epubBlob || !manifest) {
       console.log('Creating fresh EPUB...');
-      const result = await createArticlesEpub(articles);
+      const result = await createArticlesEpub(articles, epubName);
       epubBlob = result.epubBlob;
       manifest = result.manifest;
     }

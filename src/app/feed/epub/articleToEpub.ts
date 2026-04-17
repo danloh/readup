@@ -104,7 +104,8 @@ export async function loadEpubFromBlob(epubBlob: Blob): Promise<JSZip> {
  * Returns both the EPUB blob and the manifest for storage
  */
 export async function createArticlesEpub(
-  articles: ArticleType[]
+  articles: ArticleType[],
+  epubTitle?: string
 ): Promise<{
   epubBlob: Blob;
   manifest: EpubManifest;
@@ -184,7 +185,7 @@ export async function createArticlesEpub(
   docIds.forEach(docId => { spineContent += `<itemref idref="${docId}"/>\n`; });
 
   // 6. Create content.opf (package document)
-  const title = STARRED_ARTICLES_EPUB_NAME;
+  const title = epubTitle || STARRED_ARTICLES_EPUB_NAME;
   const contentOpf = `<?xml version="1.0" encoding="UTF-8"?>
     <package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="uuid">
       <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">

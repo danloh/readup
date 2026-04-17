@@ -39,9 +39,13 @@ jobs:
       - name: build the web App
         run: pnpm build-web 
 
+      - name: Install latest Vercel CLI
+        run: npm i -g vercel@latest
+
       - name: Deploy to Vercel
         uses: amondnet/vercel-action@v25
         with:
+          vercel-cli: vercel@latest
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           vercel-args: "--prod"
