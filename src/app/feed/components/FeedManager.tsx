@@ -142,7 +142,7 @@ export function FeedManager(props: Props) {
   return (
     <div className='flex flex-col items-start justify-center p-2'>
       <div className='flex flex-row gap-2 items-center justify-start w-full mt-2'>
-        <button className='btn btn-xs btn-ghost' onClick={showSide}>
+        <button className='btn btn-sm btn-ghost' onClick={showSide}>
           ☰
         </button>
         <button
@@ -151,47 +151,50 @@ export function FeedManager(props: Props) {
         >
           {showAdd ? (<FaMinus size={18} />) : (<FaPlus size={18} />)}
         </button>
-        <div className='w-full'>
-          <input
-            type='text'
-            className='input input-xs w-full'
-            placeholder='Search Feed'
-            value={searchText}
-            onChange={(e) => {
-              setSearchText(e.target.value);
-              handleSearch(e.target.value);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                handleSearch(searchText);
-              }
-            }}
-          />
-        </div>
-        <div className='flex items-center justify-end gap-2'>
-          <button
-            className='btn btn-xs p-1'
-            onClick={handleImportOPML}
-            disabled={loading}
-            title='Import feeds from OPML'
-          >
-            <LiaFileImportSolid size={18} />
-          </button>
-          <input
-            ref={fileInputRef}
-            type='file'
-            accept='.opml,.xml'
-            onChange={handleFileChange}
-            style={{ display: 'none' }}
-          />
-          <button
-            className='btn btn-xs p-1'
-            onClick={handleExportOPML}
-            title='Export feeds as OPML'
-          >
-            <LiaFileExportSolid size={18} />
-          </button>
+        
+        <div className='flex items-center justify-between gap-2 w-full'>
+          <div className='flex items-center justify-end gap-2'>
+            <button
+              className='btn btn-sm p-1'
+              onClick={handleImportOPML}
+              disabled={loading}
+              title='Import feeds from OPML'
+            >
+              <LiaFileImportSolid size={18} />
+            </button>
+            <input
+              ref={fileInputRef}
+              type='file'
+              accept='.opml,.xml'
+              onChange={handleFileChange}
+              style={{ display: 'none' }}
+            />
+            <button
+              className='btn btn-sm p-1'
+              onClick={handleExportOPML}
+              title='Export feeds as OPML'
+            >
+              <LiaFileExportSolid size={18} />
+            </button>
+          </div>
+          <div className=''>
+            <input
+              type='text'
+              className='input input-xs w-full'
+              placeholder='Search Feed'
+              value={searchText}
+              onChange={(e) => {
+                setSearchText(e.target.value);
+                handleSearch(e.target.value);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleSearch(searchText);
+                }
+              }}
+            />
+          </div>
         </div>
       </div>
       {showAdd && (
