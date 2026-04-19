@@ -241,6 +241,9 @@ const FootnotePopup: React.FC<FootnotePopupProps> = ({ bookKey, bookDoc }) => {
     if (footnoteClasses.some((cls) => anchor.classList.contains(cls))) {
       detail['follow'] = true;
     }
+    if (/^.{0,2}\d+$/.test(anchor.textContent || '')) {
+      detail['check'] = true;
+    }
     historyRef.current = { items: [detail], index: 0 };
     setCanGoBack(false);
     canGoBackRef.current = false;
