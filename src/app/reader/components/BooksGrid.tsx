@@ -120,10 +120,6 @@ const BooksGrid: React.FC<BooksGridProps> = ({ bookKeys, onCloseBook, onGoToLibr
               onGoToLibrary={onGoToLibrary}
               onDropdownOpenChange={(isOpen) => setDropdownOpenBook(isOpen ? bookKey : '')}
             />
-            <PageNavigationButtons
-              bookKey={bookKey}
-              isDropdownOpen={dropdownOpenBook === bookKey}
-            />
             <FoliateViewer 
               key={viewerKey}
               bookKey={bookKey}
@@ -209,6 +205,10 @@ const BooksGrid: React.FC<BooksGridProps> = ({ bookKeys, onCloseBook, onGoToLibr
                 gridInsets={gridInsets}
               />
             )}
+            <PageNavigationButtons
+              bookKey={bookKey}
+              isDropdownOpen={dropdownOpenBook === bookKey}
+            />
             <Annotator bookKey={bookKey} />
             <SearchResultsNav bookKey={bookKey} gridInsets={gridInsets} />
             <BooknotesNav bookKey={bookKey} gridInsets={gridInsets} toc={bookDoc.toc || []} />
