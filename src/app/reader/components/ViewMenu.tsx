@@ -303,7 +303,7 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
         Icon={invertImgColor ? BiCheckboxChecked : BiCheckbox}
         onClick={() => setInvertImgColor(!invertImgColor)}
       />
-      {bookData.book?.format === 'PDF' && (
+      {bookData.book?.format === 'PDF' && appService?.supportsCanvasContext2DFilter && (
         <MenuItem
           label={_('Apply Theme Colors to PDF')}
           Icon={applyThemeToPDF ? BiCheckboxChecked : BiCheckbox}

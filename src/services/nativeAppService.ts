@@ -401,6 +401,8 @@ export class NativeAppService extends BaseAppService {
   override distChannel = DIST_CHANNEL;
   private execDir?: string = undefined;
   private customRootDir?: string = undefined;
+  override supportsCanvasContext2DFilter =
+    OS_TYPE !== 'ios' && OS_TYPE !== 'macos' && OS_TYPE !== 'linux';
 
   constructor(customRootDir?: string) {
     super();

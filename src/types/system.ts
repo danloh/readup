@@ -88,6 +88,7 @@ export interface AppService {
   isEink: boolean;
   canCustomizeRootDir: boolean;
   canReadExternalDir: boolean;
+  supportsCanvasContext2DFilter: boolean;
   distChannel: DistChannel;
 
   init(): Promise<void>;
