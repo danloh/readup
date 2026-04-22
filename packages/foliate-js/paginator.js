@@ -498,14 +498,19 @@ class View {
                 'box-sizing': 'border-box',
             })
             if (pageFullscreen) {
+                setStylesImportant(doc.documentElement, {
+                    position: 'relative',
+                })
                 setStylesImportant(el, {
-                    position: 'fixed',
+                    position: 'absolute',
                     inset: '0',
+                    width: '100%',
+                    height: '100%',
+                    margin: '0',
                 })
                 let ancestor = el.parentElement
                 while (ancestor && ancestor !== doc.body) {
                     setStylesImportant(ancestor, {
-                        position: 'relative',
                         width: '100%',
                         height: '100%',
                         margin: '0',
@@ -1189,15 +1194,26 @@ export class Paginator extends HTMLElement {
             return background
         }
 
+        // Reset any inline backgrounds left over from a previous mode so the
+        // host's texture isn't occluded after toggling.
+        this.#background.style.background = ''
+        for (const [, view] of this.#sortedViews) {
+            view.element.style.background = ''
+        }
+
         if (this.scrolled) {
             // In scrolled mode, set background directly on each view element
             // so it scrolls with the content. The static #background provides
             // the fallback color for margins and gaps between views.
+            const hasTexture = !!bgTextureId && bgTextureId !== 'none'
             this.#background.innerHTML = ''
             this.#background.style.display = ''
-            this.#background.style.background = fallbackBg
+            this.#background.style.background = hasTexture ? '' : fallbackBg
             for (const [, view] of this.#sortedViews) {
-                view.element.style.background = resolveBackground(view.docBackground)
+                const resolved = resolveBackground(view.docBackground)
+                const isTransparent = !resolved
+                    || /^\s*(transparent|rgba\(0,\s*0,\s*0,\s*0\))/.test(resolved)
+                view.element.style.background = hasTexture && isTransparent ? '' : resolved
             }
             return
         }
