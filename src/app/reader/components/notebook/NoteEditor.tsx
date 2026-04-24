@@ -12,7 +12,7 @@ import { getAtpAgent } from '@/services/bsky/auth';
 import { postText } from '@/services/bsky/xpost';
 
 interface NoteEditorProps {
-  onSave: (selection: TextSelection, note: string) => void;
+  onSave: (selection: TextSelection, note: string, url?: string) => void;
   onEdit: (annotation: BookNote) => void;
   book: Book | null;
 }
@@ -72,28 +72,32 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ onSave, onEdit, book }) => {
   const handleSaveNote = async () => {
     const currentValue = editorRef.current?.getValue();
     if (currentValue) {
+      let crosspostUrl: string | undefined = undefined;
+
       // Post to Bluesky if enabled
       if (crossPostToBluesky) {
         try {
           const annotationText = getAnnotationText();
           const bookTitle = book?.title ? `\n\n ---${book?.title}` : '';
           const blueskyText = annotationText 
-            ? `${currentValue}\n\n---\n\n${annotationText} ${bookTitle}`
-            : `${currentValue} ${bookTitle}`;
+            ? `${annotationText}\n\n${currentValue} --- ${bookTitle}`
+            : `${currentValue} --- ${bookTitle}`;
           
           const agent = await getAtpAgent();
           // FIXME: how to handle the length limit? 
-          await postText(agent, blueskyText);
-          console.log('✅ Note cross-posted to Bluesky');
+          const response = await postText(agent, blueskyText);
+          crosspostUrl = response.data?.uri;
+          console.log('✅ Note cross-posted to Bluesky:', crosspostUrl);
         } catch (error) {
           console.error('❌ Failed to cross-post to Bluesky:', error);
         }
       }
 
       if (notebookNewAnnotation) {
-        onSave(notebookNewAnnotation, currentValue);
+        onSave(notebookNewAnnotation, currentValue, crosspostUrl);
       } else if (notebookEditAnnotation) {
         notebookEditAnnotation.note = currentValue;
+        notebookEditAnnotation.crosspostUrl = crosspostUrl;
         onEdit(notebookEditAnnotation);
       }
     }

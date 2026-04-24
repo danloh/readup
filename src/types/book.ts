@@ -97,6 +97,7 @@ export interface BookNote {
   style?: HighlightStyle;
   color?: HighlightColor;
   note: string;
+  crosspostUrl?: string; // the url if cross-posted on atmosphere
 
   createdAt: number;
   updatedAt: number;
