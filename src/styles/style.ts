@@ -234,243 +234,6 @@ const getColorStyles = (
   return colorStyles;
 };
 
-// to del
-const getLayoutStyles = (
-  overrideLayout: boolean,
-  marginTop: number,
-  marginRight: number,
-  marginBottom: number,
-  marginLeft: number,
-  paragraphMargin: number,
-  lineSpacing: number,
-  wordSpacing: number,
-  letterSpacing: number,
-  textIndent: number,
-  justify: boolean,
-  hyphenate: boolean,
-  zoomLevel: number,
-  writingMode: string,
-  vertical: boolean,
-) => {
-  const layoutStyle = `
-  @namespace epub "http://www.idpf.org/2007/ops";
-  html {
-    --default-text-align: ${justify ? 'justify' : 'start'};
-    --margin-top: ${marginTop}px;
-    --margin-right: ${marginRight}px;
-    --margin-bottom: ${marginBottom}px;
-    --margin-left: ${marginLeft}px;
-    hanging-punctuation: allow-end last;
-    orphans: 2;
-    widows: 2;
-  }
-  [align="left"] { text-align: left; }
-  [align="right"] { text-align: right; }
-  [align="center"] { text-align: center; }
-  [align="justify"] { text-align: justify; }
-  :is(hgroup, header) p {
-      text-align: unset;
-      hyphens: unset;
-  }
-  html, body {
-    ${writingMode === 'auto' ? '' : `writing-mode: ${writingMode} !important;`}
-    text-align: var(--default-text-align);
-    max-height: unset;
-    -webkit-touch-callout: none;
-    -webkit-user-select: text;
-  }
-  body {
-    overflow: unset;
-    zoom: ${zoomLevel};
-    padding: unset;
-    margin: unset;
-  }
-  svg:where(:not([width])), img:where(:not([width])) {
-    width: auto;
-  }
-  svg:where(:not([height])), img:where(:not([height])) {
-    height: auto;
-  }
-  figure > div:has(img) {
-    height: auto !important;
-  }
-  /* enlarge the clickable area of links */
-  a {
-    position: relative !important;
-  }
-  a::before {
-    content: '';
-    position: absolute;
-    inset: -10px;
-  }
-  p, blockquote, dd, div:not(:has(*:not(b, a, em, i, strong, u, span))) {
-    line-height: ${lineSpacing} ${overrideLayout ? '!important' : ''};
-    word-spacing: ${wordSpacing}px ${overrideLayout ? '!important' : ''};
-    letter-spacing: ${letterSpacing}px ${overrideLayout ? '!important' : ''};
-    text-indent: ${textIndent}em ${overrideLayout ? '!important' : ''};
-    -webkit-hyphens: ${hyphenate ? 'auto' : 'manual'};
-    hyphens: ${hyphenate ? 'auto' : 'manual'};
-    -webkit-hyphenate-limit-before: 3;
-    -webkit-hyphenate-limit-after: 2;
-    -webkit-hyphenate-limit-lines: 2;
-    hanging-punctuation: allow-end last;
-    widows: 2;
-  }
-  li {
-    line-height: ${lineSpacing} ${overrideLayout ? '!important' : ''};
-    -webkit-hyphens: ${hyphenate ? 'auto' : 'manual'};
-    hyphens: ${hyphenate ? 'auto' : 'manual'};
-  }
-  p.aligned-center, blockquote.aligned-center,
-  dd.aligned-center, div.aligned-center {
-    text-align: center ${overrideLayout ? '!important' : ''};
-  }
-  p.aligned-left, blockquote.aligned-left,
-  dd.aligned-left, div.aligned-left {
-    ${justify && overrideLayout ? 'text-align: justify !important;' : ''}
-  }
-  p.aligned-right, blockquote.aligned-right,
-  dd.aligned-right, div.aligned-right {
-    text-align: right ${overrideLayout ? '!important' : ''};
-  }
-  p.aligned-justify, blockquote.aligned-justify,
-  dd.aligned-justify, div.aligned-justify {
-    ${!justify && overrideLayout ? 'text-align: initial !important;' : ''};
-  }
-  p:has(> img:only-child), p:has(> span:only-child > img:only-child),
-  p:has(> img:not(.has-text-siblings)),
-  p:has(> a:first-child + img:last-child) {
-    text-indent: initial !important;
-  }
-  blockquote[align="center"], div[align="center"],
-  p[align="center"], dd[align="center"],
-  p.aligned-center, blockquote.aligned-center,
-  dd.aligned-center, div.aligned-center,
-  li p, ol p, ul p, td p {
-    text-indent: initial !important;
-  }
-  p {
-    ${vertical ? `margin-left: ${paragraphMargin}em ${overrideLayout ? '!important' : ''};` : ''}
-    ${vertical ? `margin-right: ${paragraphMargin}em ${overrideLayout ? '!important' : ''};` : ''}
-    ${vertical ? `margin-top: unset ${overrideLayout ? '!important' : ''};` : ''}
-    ${vertical ? `margin-bottom: unset ${overrideLayout ? '!important' : ''};` : ''}
-    ${!vertical ? `margin-top: ${paragraphMargin}em ${overrideLayout ? '!important' : ''};` : ''}
-    ${!vertical ? `margin-bottom: ${paragraphMargin}em ${overrideLayout ? '!important' : ''};` : ''}
-    ${!vertical ? `margin-left: unset ${overrideLayout ? '!important' : ''};` : ''}
-    ${!vertical ? `margin-right: unset ${overrideLayout ? '!important' : ''};` : ''}
-  }
-  div {
-    ${vertical && overrideLayout ? `margin-left: ${paragraphMargin}em !important;` : ''}
-    ${vertical && overrideLayout ? `margin-right: ${paragraphMargin}em !important;` : ''}
-    ${!vertical && overrideLayout ? `margin-top: ${paragraphMargin}em !important;` : ''}
-    ${!vertical && overrideLayout ? `margin-bottom: ${paragraphMargin}em !important;` : ''}
-  }
-
-  :lang(zh), :lang(ja), :lang(ko) {
-    widows: 1;
-    orphans: 1;
-  }
-
-  pre {
-    white-space: pre-wrap !important;
-  }
-
-  .epubtype-footnote,
-  aside[epub|type~="endnote"],
-  aside[epub|type~="footnote"],
-  aside[epub|type~="note"],
-  aside[epub|type~="rearnote"] {
-    display: none;
-  }
-
-  /* Now begins really dirty hacks to fix some badly designed epubs */
-  body {
-    line-height: unset;
-  }
-
-  img.pi {
-    ${vertical ? 'transform: rotate(90deg);' : ''}
-    ${vertical ? 'transform-origin: center;' : ''}
-    ${vertical ? 'height: 2em;' : ''}
-    ${vertical ? `width: ${lineSpacing}em;` : ''}
-    ${vertical ? `vertical-align: unset;` : ''}
-  }
-
-  .duokan-footnote-content,
-  .duokan-footnote-item {
-    display: none;
-  }
-
-  div:has(> img, > svg) {
-    max-width: 100% !important;
-  }
-
-  body.paginated-mode td:has(img), body.paginated-mode td :has(img) {
-    max-height: calc(var(--available-height) * 0.8 * 1px);
-  }
-
-  /* some epubs set insane inline-block for p */
-  p {
-    display: block;
-  }
-
-  /* inline images without dimension */
-  .ie6 img {
-    width: unset;
-    height: unset;
-  }
-  sup img {
-    height: 1em;
-  }
-  img.has-text-siblings {
-    ${vertical ? 'width: 1em;' : 'height: 1em;'}
-    vertical-align: baseline;
-  }
-  :is(div) > img.has-text-siblings[style*="object-fit"] {
-    display: block;
-    height: auto;
-    vertical-align: unset;
-  }
-  .duokan-footnote img:not([class]) {
-    width: 0.8em;
-    height: 0.8em;
-  }
-
-  div:has(img.singlepage) {
-    position: relative;
-    width: auto;
-    height: auto;
-  }
-
-  /* page break */
-  body.paginated-mode div[style*="page-break-after: always"],
-  body.paginated-mode div[style*="page-break-after:always"],
-  body.paginated-mode p[style*="page-break-after: always"],
-  body.paginated-mode p[style*="page-break-after:always"] {
-    margin-bottom: calc(var(--available-height) * 1px);
-  }
-
-  /* workaround for some badly designed epubs */
-  div.left *, p.left * { text-align: left; }
-  div.right *, p.right * { text-align: right; }
-  div.center *, p.center * { text-align: center; }
-  div.justify *, p.justify * { text-align: justify; }
-
-  .br {
-    display: flow-root;
-  }
-
-  .h5_mainbody {
-    overflow: unset !important;
-  }
-
-  .nonindent, .noindent {
-    text-indent: unset !important;
-  }
-`;
-  return layoutStyle;
-};
-
 const getPageLayoutStyles = (
   marginTop: number,
   marginRight: number,
@@ -779,6 +542,34 @@ const getTranslationStyles = (showSource: boolean) => `
   }
 `;
 
+const getWarichuStyles = () => `
+  /* Warichu (割注/夹注) — double-line inline annotation */
+  .warichu-pending {
+    display: inline;
+    font-size: 0.5em;
+    line-height: 1.1;
+  }
+  .warichu-chunk {
+    display: inline-block;
+    line-height: 1.1;
+    font-size: 0.5em;
+    text-indent: 0;
+    vertical-align: middle !important;
+    width: 1lh !important;
+    text-align: center !important;
+  }
+  .warichu-chunk .warichu-line {
+    display: inline;
+  }
+  .warichu-open,
+  .warichu-close {
+    display: inline;
+    font-size: 0.5em;
+    vertical-align: middle;
+    line-height: 1.1;
+  }
+`;
+
 export interface ThemeCode {
   bg: string;
   fg: string;
@@ -822,55 +613,6 @@ export const getThemeCode = () => {
     palette: defaultPalette,
     isDarkMode,
   } as ThemeCode;
-};
-
-// to del
-export const getStyles0 = (viewSettings: ViewSettings, themeCode?: ThemeCode) => {
-  if (!themeCode) {
-    themeCode = getThemeCode();
-  }
-  const layoutStyles = getLayoutStyles(
-    viewSettings.overrideLayout!,
-    viewSettings.marginTopPx,
-    viewSettings.marginRightPx,
-    viewSettings.marginBottomPx,
-    viewSettings.marginLeftPx,
-    viewSettings.paragraphMargin!,
-    viewSettings.lineHeight!,
-    viewSettings.wordSpacing!,
-    viewSettings.letterSpacing!,
-    viewSettings.textIndent!,
-    viewSettings.fullJustification!,
-    viewSettings.hyphenation!,
-    1.0,
-    viewSettings.writingMode!,
-    viewSettings.vertical!,
-  );
-  // scale the font size on-the-fly so that we can sync the same font size on different devices
-  const isMobile = ['ios', 'android'].includes(getOSPlatform());
-  const fontScale = isMobile ? 1.25 : 1;
-  // Only for backward compatibility, new viewSettings.zoomLevel will always be 100 for EPUBs
-  const zoomScale = (viewSettings.zoomLevel || 100) / 100.0;
-  const fontStyles = getFontStyles(
-    viewSettings.serifFont!,
-    viewSettings.sansSerifFont!,
-    viewSettings.monospaceFont!,
-    viewSettings.defaultFont!,
-    viewSettings.defaultCJKFont!,
-    viewSettings.defaultFontSize! * fontScale * zoomScale,
-    viewSettings.minimumFontSize!,
-    viewSettings.fontWeight!,
-    viewSettings.overrideFont!,
-  );
-  const colorStyles = getColorStyles(
-    viewSettings.overrideColor!,
-    viewSettings.invertImgColor!,
-    themeCode,
-    viewSettings.isEink,
-  );
-  const translationStyles = getTranslationStyles(viewSettings.showTranslateSource!);
-  const userStylesheet = viewSettings.userStylesheet!;
-  return `${layoutStyles}\n${fontStyles}\n${colorStyles}\n${translationStyles}\n${userStylesheet}`;
 };
 
 export const getStyles = (viewSettings: ViewSettings, themeCode?: ThemeCode) => {
@@ -922,8 +664,9 @@ export const getStyles = (viewSettings: ViewSettings, themeCode?: ThemeCode) => 
     viewSettings.isEink,
   );
   const translationStyles = getTranslationStyles(viewSettings.showTranslateSource!);
+  const warichuStyles = getWarichuStyles();
   const userStylesheet = viewSettings.userStylesheet!;
-  return `${pageLayoutStyles}\n${paragraphLayoutStyles}\n${fontStyles}\n${colorStyles}\n${translationStyles}\n${userStylesheet}`;
+  return `${pageLayoutStyles}\n${paragraphLayoutStyles}\n${fontStyles}\n${colorStyles}\n${translationStyles}\n${warichuStyles}\n${userStylesheet}`;
 };
 
 export const applyTranslationStyle = (viewSettings: ViewSettings) => {

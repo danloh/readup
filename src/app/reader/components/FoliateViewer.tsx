@@ -36,6 +36,7 @@ import { lockScreenOrientation } from '@/utils/bridge';
 import { manageSyntaxHighlighting } from '@/utils/highlightjs';
 import { getViewInsets } from '@/utils/insets';
 import { getIndexFromCfi } from '@/utils/cfi';
+import { layoutWarichu, relayoutWarichu } from '@/utils/warichu';
 import Spinner from '@/components/Spinner';
 import { handleA11yNavigation } from '@/utils/a11y';
 import { transformContent } from '../transformers/transformService';
@@ -155,6 +156,7 @@ const FoliateViewer: React.FC<{
                 'language',
                 'sanitizer',
                 'proofread',
+                'warichu',
               ],
             };
             return Promise.resolve(transformContent(ctx));
@@ -299,6 +301,19 @@ const FoliateViewer: React.FC<{
 
   const stabilizedHandler = useCallback(() => {
     setLoading(false);
+    // Layout/relayout warichu after paginator has set column-width via columnize()
+    const contents = viewRef.current?.renderer?.getContents?.() || [];
+    for (const { doc } of contents) {
+      if (doc) {
+        const hasPending = doc.querySelectorAll('.warichu-pending').length > 0;
+        const hasExisting = doc.querySelectorAll('.warichu-head').length > 0;
+        if (hasPending) {
+          layoutWarichu(doc);
+        } else if (hasExisting) {
+          relayoutWarichu(doc);
+        }
+      }
+    }
   }, []);
 
   const docRelocateHandler = (event: Event) => {

@@ -7,6 +7,7 @@ import { whitespaceTransformer } from './whitespace';
 import { sanitizerTransformer } from './sanitizer';
 import { styleTransformer } from './style';
 import { proofreadTransformer } from './proofread';
+import { warichuTransformer } from './warichu';
 
 export const availableTransformers: Transformer[] = [
   punctuationTransformer,
@@ -16,6 +17,7 @@ export const availableTransformers: Transformer[] = [
   sanitizerTransformer,
   styleTransformer,
   proofreadTransformer,
+  warichuTransformer,
   // Add more transformers here
 ];
 
