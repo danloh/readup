@@ -152,7 +152,7 @@ const Notebook: React.FC = ({}) => {
     setNotebookEditAnnotation(null);
   };
 
-  const handleSaveNote = (selection: TextSelection, note: string, url: string) => {
+  const handleSaveNote = (selection: TextSelection, note: string, url?: string) => {
     if (!sideBarBookKey) return;
     const view = getView(sideBarBookKey);
     const config = getConfig(sideBarBookKey)!;
