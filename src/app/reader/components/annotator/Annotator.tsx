@@ -28,6 +28,9 @@ import { getIndexFromCfi, isCfiInLocation } from '@/utils/cfi';
 import { useFoliateEvents } from '../../hooks/useFoliateEvents';
 import { useTextSelector } from '../../hooks/useTextSelector';
 import { getHighlightColorHex } from '../../utils/annotatorUtil';
+import { 
+  cancelDeferredAction, createDeferredActionState, flushDeferredAction, runOrDeferAction 
+} from '../../utils/deferredAction';
 import { TransformContext } from '../../transformers/types';
 import { transformContent } from '../../transformers/transformService';
 import { annotationToolButtons } from './AnnotationTools';
@@ -91,6 +94,10 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
   );
 
   const androidTouchEndRef = useRef(false);
+  // Holds a quick action that fired while the user is still touching the screen
+  // (Android long-press selects text via selectionchange before touchend). The
+  // pending action runs on touchend so popups don't open under an active touch.
+  const deferredQuickActionRef = useRef(createDeferredActionState());
 
   const showingPopup =
     showAnnotPopup ||
@@ -251,11 +258,13 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
       const ev = event.detail as NativeTouchEventType;
       if (ev.type === 'touchstart') {
         androidTouchEndRef.current = false;
+        cancelDeferredAction(deferredQuickActionRef.current);
         handleTouchStart();
       } else if (ev.type === 'touchend') {
         androidTouchEndRef.current = true;
         handleTouchEnd();
         handlePointerUp(doc, index);
+        flushDeferredAction(deferredQuickActionRef.current);
       }
     };
 
@@ -485,33 +494,42 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
   }, []);
 
   const handleQuickAction = () => {
-    if (appService?.isAndroidApp && !androidTouchEndRef.current) return;
     const action = viewSettings.annotationQuickAction;
-    switch (action) {
-      case 'copy':
-        handleCopy(false);
-        handleDismissPopupAndSelection();
-        break;
-      case 'highlight':
-        // highlight is already applied in instant annotating
-        handleDismissPopupAndSelection();
-        break;
-      case 'search':
-        handleSearch();
-        break;
-      case 'dictionary':
-        handleDictionary();
-        break;
-      case 'wikipedia':
-        handleWikipedia();
-        break;
-      case 'translate':
-        handleTranslation();
-        break;
-      case 'tts':
-        handleSpeakText(true);
-        break;
-    }
+    const runAction = () => {
+      switch (action) {
+        case 'copy':
+          handleCopy(false);
+          handleDismissPopupAndSelection();
+          break;
+        case 'highlight':
+          // highlight is already applied in instant annotating
+          handleDismissPopupAndSelection();
+          break;
+        case 'search':
+          handleSearch();
+          break;
+        case 'dictionary':
+          handleDictionary();
+          break;
+        case 'wikipedia':
+          handleWikipedia();
+          break;
+        case 'translate':
+          handleTranslation();
+          break;
+        case 'tts':
+          handleSpeakText(true);
+          break;
+      }
+    };
+    // On Android, a long-press fires selectionchange (and this handler) while
+    // the finger is still down. Defer until touchend so popups aren't dismissed
+    // by the in-progress touch (closes #3935).
+    runOrDeferAction(
+      deferredQuickActionRef.current,
+      !!appService?.isAndroidApp && !androidTouchEndRef.current,
+      runAction,
+    );
   };
 
   useEffect(() => {
