@@ -156,8 +156,8 @@ jobs:
       - name: install dependencies
         run: pnpm install
 
-      - name: copy pdfjs-dist to public directory
-        run: pnpm setup-pdfjs 
+      - name: copy vendors to public directory
+        run: pnpm setup-vendors 
 
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable

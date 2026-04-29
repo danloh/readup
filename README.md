@@ -53,8 +53,8 @@ git submodule update --init --recursive
 ```bash
 # might need to rerun this when code is updated
 pnpm install
-# copy pdfjs-dist to Next.js public directory
-pnpm setup-pdfjs
+# copy vendors: pdfjs/jieba to Next.js public directory
+pnpm setup-vendors
 ```
 
 ### 3. Verify Dependencies Installation

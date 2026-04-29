@@ -7,15 +7,17 @@ import { useBookDataStore } from '@/store/bookDataStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useThemeStore } from '@/store/themeStore';
 import { useEnv } from '@/context/EnvContext';
-import { buildRsvpExitConfigUpdate, RSVPController, RsvpStartChoice, RsvpStopPosition } from '@/services/rsvp';
+import { 
+  buildRsvpExitConfigUpdate, RSVPController, RsvpStartChoice, RsvpStopPosition 
+} from '@/services/rsvp';
+import { TOCItem } from '@/libs/document';
+import { initJieba } from '@/utils/jieba';
 import { eventDispatcher } from '@/utils/event';
 import { useTranslation } from '@/hooks/useTranslation';
 import { BookNote, PageInfo } from '@/types/book';
 import { Insets } from '@/types/misc';
 import RSVPOverlay from './RSVPOverlay';
 import RSVPStartDialog from './RSVPStartDialog';
-import { TOCItem } from '@/libs/document';
-
 
 interface RSVPControlProps {
   bookKey: string;
@@ -201,14 +203,27 @@ const RSVPControl: React.FC<RSVPControlProps> = ({ bookKey, gridInsets }) => {
         return;
       }
 
+      const primaryLanguage = bookData.book.primaryLanguage;
+
       // Create controller if not exists
       if (!controllerRef.current) {
-        controllerRef.current = new RSVPController(view, bookKey);
+        controllerRef.current = new RSVPController(view, bookKey, primaryLanguage);
         rsvpSectionRef.current = view.renderer.primaryIndex;
         rsvpChapterHrefRef.current = progress?.sectionHref ?? null;
+      } else {
+        controllerRef.current.setPrimaryLanguage(primaryLanguage);
       }
 
       const controller = controllerRef.current;
+
+      // For Chinese books, preload jieba-wasm so that the synchronous word
+      // extractor can use it. Done before requestStart() so the loader has
+      // the dialog's interaction time to fetch ~3.8MB of WASM.
+      if (primaryLanguage?.toLowerCase().startsWith('zh')) {
+        initJieba().catch((e) => {
+          console.warn('Failed to initialize jieba-wasm; falling back to Intl.Segmenter:', e);
+        });
+      }
 
       // Seed localStorage from cloud-synced BookConfig when this device has no local position.
       // This restores RSVP progress saved on another device after a sync.

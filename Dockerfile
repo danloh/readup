@@ -29,7 +29,7 @@ WORKDIR /app
 
 RUN pnpm install
 
-RUN pnpm setup-pdfjs
+RUN pnpm setup-vendors
 
 WORKDIR /
 

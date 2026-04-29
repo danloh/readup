@@ -65,7 +65,7 @@ jobs:
       - name: install Dependencies
         working-directory: .
         run: |
-          pnpm install && pnpm setup-pdfjs
+          pnpm install && pnpm setup-vendors
 
       - name: run format check
         run: |

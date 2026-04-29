@@ -1,5 +1,5 @@
 {
   "buildCommand": "pnpm build-web",
-  "installCommand": "pnpm install && pnpm setup-pdfjs",
+  "installCommand": "pnpm install && pnpm setup-vendors",
   "framework": "nextjs"
 }
