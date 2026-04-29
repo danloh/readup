@@ -18,6 +18,9 @@ import { uniqueId } from '@/utils/misc';
 import { getBaseFilename } from '@/utils/path';
 import { formatTitle, getMetadataHash, getPrimaryLanguage } from '@/utils/book';
 import { SUPPORTED_LANGNAMES } from '@/services/constants';
+import { 
+  isPseStreamFileName, openPseStreamBook, parsePseStreamFileName 
+} from '@/services/opds/pseStream';
 import { useSettingsStore } from './settingsStore';
 import { BookData, useBookDataStore } from './bookDataStore';
 import { useLibraryStore } from './libraryStore';
@@ -144,19 +147,30 @@ export const useReaderStore = create<ReaderStore>((set, get) => ({
     try {
       const appService = await envConfig.getAppService();
       const { settings } = useSettingsStore.getState();
-      const { getBookByHash } = useLibraryStore.getState();
+      const { getBookByHash, library } = useLibraryStore.getState();
       const book = getBookByHash(id);
       if (!book) {
+        console.error(
+          `Book ${id} not found in library (size=${library.length}); likely the in-memory entry was dropped by a library reload.`,
+        );
         throw new Error('Book not found');
       }
+      const isPseStream = !!book.url && isPseStreamFileName(book.url);
       let bookDoc = bookData?.bookDoc;
-      let file = bookData?.file;
-      if (!bookDoc || !file || reload) {
-        const content = (await appService.loadBookContent(book)) as BookContent;
-        file = content.file;
+      let file: File | null = bookData?.file ?? null;
+      if (!bookDoc || (!isPseStream && !file) || reload) {
         console.log('Loading book', key);
-        const doc = await new DocumentLoader(file).open();
-        bookDoc = doc.book;
+        if (isPseStream) {
+          const data = parsePseStreamFileName(book.url!);
+          const doc = await openPseStreamBook(data);
+          bookDoc = doc.book;
+          file = null;
+        } else {
+          const content = (await appService.loadBookContent(book)) as BookContent;
+          file = content.file;
+          const doc = await new DocumentLoader(file).open();
+          bookDoc = doc.book;
+        }
       }
       const config = await appService.loadBookConfig(book, settings);
       // Filter out invalid booknotes
@@ -177,7 +191,7 @@ export const useReaderStore = create<ReaderStore>((set, get) => ({
         }
       }
       updateToc(bookDoc, config.viewSettings?.sortedTOC ?? false);
-      if (!bookDoc.metadata.title) {
+      if (!bookDoc.metadata.title && file) {
         bookDoc.metadata.title = getBaseFilename(file.name);
       }
       book.sourceTitle = formatTitle(bookDoc.metadata.title);

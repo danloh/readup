@@ -23,6 +23,8 @@ import { useTransferQueue } from '@/hooks/useTransferQueue';
 import { READUP_OPDS_USER_AGENT } from '@/services/constants';
 import { transferManager } from '@/services/transferManager';
 import { ImportError } from '@/services/errors';
+import { buildPseStreamFileName } from '@/services/opds/pseStream';
+import { navigateToReader } from '@/utils/nav';
 import { 
   getFileExtFromPath, isSearchLink, MIME, parseMediaType, resolveURL 
 } from '../utils/opdsUtils';
@@ -77,6 +79,8 @@ export default function BrowserPage() {
   const [showCatalogManager, setShowCatalogManager] = useState(false);
 
   const searchParams = useSearchParams();
+  const catalogUrl = searchParams?.get('url') || '';
+  const catalogId = searchParams?.get('id') || '';
   const usernameRef = useRef<string | null | undefined>(undefined);
   const passwordRef = useRef<string | null | undefined>(undefined);
   const customHeadersRef = useRef<Record<string, string>>({});
@@ -130,11 +134,12 @@ export default function BrowserPage() {
           formData[param.name] = param.value || '';
         }
       });
-      const map = new Map<string | null, Map<string | null, string>>();
+
+      const map = new Map<string | undefined, Map<string, string>>();
 
       for (const param of search.params || []) {
         const value = formData[param.name] || '';
-        const ns = param.ns ?? null;
+        const ns = param.ns ?? undefined;
 
         if (map.has(ns)) {
           map.get(ns)!.set(param.name, value);
@@ -219,7 +224,7 @@ export default function BrowserPage() {
               addToHistory(url, newState, 'feed', null);
             }
           } else if (localName === 'entry') {
-            const publication = getPublication(doc.documentElement);
+            const publication = getPublication(doc.documentElement) as OPDSPublication;
             const newState = {
               publication,
               baseURL: responseURL,
@@ -234,7 +239,7 @@ export default function BrowserPage() {
               addToHistory(url, newState, 'publication', null);
             }
           } else if (localName === 'OpenSearchDescription') {
-            const search = getOpenSearch(doc);
+            const search = getOpenSearch(doc) as OPDSSearch;
             const newState = {
               search,
               baseURL: responseURL,
@@ -305,14 +310,13 @@ export default function BrowserPage() {
   );
 
   useEffect(() => {
-    const url = searchParams?.get('url') || 'https://m.gutenberg.org/ebooks.opds/';
+    const url = catalogUrl || 'https://m.gutenberg.org/ebooks.opds/';
     // let localStorage as bridge to store the opdsProxy
     // we may need to use the proxy later to load/download sth
     const opdsProxies = settings.opdsProxy || {};
     localStorage.setItem('opdsProxy', JSON.stringify(opdsProxies));
     console.log("fresh? ", url, libraryLoaded, opdsProxies);
     if (url && !isNavigatingHistoryRef.current) {
-      const catalogId = searchParams?.get('id') || '';
       const catalog = settings.opdsCatalogs?.find((cat) => cat.id === catalogId);
       const { username, password } = catalog || {};
       if (username || password) {
@@ -332,7 +336,7 @@ export default function BrowserPage() {
       setViewMode('error');
       setError(new Error('No OPDS URL provided'));
     }
-  }, [searchParams, settings, libraryLoaded]);
+  }, [catalogUrl, catalogId, settings, libraryLoaded]);
 
   const handleNavigate = useCallback(
     (url: string, isSearch = false) => {
@@ -380,8 +384,8 @@ export default function BrowserPage() {
                 required: true,
               },
             ],
-            search: (map: Map<string | null, Map<string | null, string>>) => {
-              const defaultParams = map.get(null);
+            search: (map: Map<string | undefined, Map<string, string>>) => {
+              const defaultParams = map.get(undefined);
               const searchTerms = defaultParams?.get('searchTerms') || '';
               const decodedURL = decodeURIComponent(searchURL);
               return decodedURL.replace('{searchTerms}', encodeURIComponent(searchTerms));
@@ -489,9 +493,31 @@ export default function BrowserPage() {
         console.error('Download error:', e);
         throw e;
       }
-      return;
     },
     [user, state.baseURL, appService, libraryLoaded],
+  );
+
+  const handleStream = useCallback(
+    async (href: string, count: number, title: string, author: string) => {
+      if (!appService || !libraryLoaded) return;
+      try {
+        const url = resolveURL(href, state.baseURL);
+        const psePath = buildPseStreamFileName({ url, catalogId, count, title, author });
+        const { library, setLibrary } = useLibraryStore.getState();
+        const book = await appService.importBook(psePath, library, { transient: true });
+        if (book) {
+          setLibrary(library);
+          navigateToReader(router, [book.hash]);
+        }
+      } catch (e) {
+        console.error('Stream error:', e);
+        eventDispatcher.dispatch('toast', {
+          type: 'error',
+          message: _('Failed to start stream') + `:\n${e instanceof Error ? e.message : e}`,
+        });
+      }
+    },
+    [state.baseURL, catalogId, appService, libraryLoaded, router, _],
   );
 
   const handleGenerateCachedImageUrl = useCallback(
@@ -667,6 +693,7 @@ export default function BrowserPage() {
             publication={publication}
             baseURL={state.baseURL}
             onDownload={handleDownload}
+            onStream={handleStream}
             resolveURL={resolveURL}
             onGenerateCachedImageUrl={handleGenerateCachedImageUrl}
           />

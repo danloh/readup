@@ -1,9 +1,11 @@
 'use client';
 
 import clsx from 'clsx';
-import { useState } from 'react';
-import { IoAdd, IoTrash, IoOpenOutline, IoBook, IoEyeOff, IoEye, IoPencil } from 'react-icons/io5';
+import { useCallback, useEffect, useState } from 'react';
+import { IoAdd, IoTrash, IoOpenOutline, IoBook, IoEyeOff, IoEye, IoPencil, IoCloudDownloadOutline } from 'react-icons/io5';
 import { useRouter } from 'next/navigation';
+import dayjs from 'dayjs';
+
 import { useEnv } from '@/context/EnvContext';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useSettingsStore } from '@/store/settingsStore';
@@ -12,12 +14,17 @@ import { saveSysSettings } from '@/helpers/settings';
 import { OPDSCatalog } from '@/types/opds';
 import { isLanAddress } from '@/utils/network';
 import ModalPortal from '@/components/ModalPortal';
+import { eventDispatcher } from '@/utils/event';
+import { 
+  deleteSubscriptionState, loadSubscriptionState, OPDSSubscriptionState 
+} from '@/services/opds';
 import { validateOPDSURL } from '../utils/opdsUtils';
 import {
   formatOPDSCustomHeadersInput,
   hasOPDSCustomHeaders,
   parseOPDSCustomHeadersInput,
 } from '../utils/customHeaders';
+import { FailedDownloadsDialog } from './FailedDownloadsDialog';
 
 const POPULAR_CATALOGS: OPDSCatalog[] = [
   {
@@ -52,6 +59,7 @@ const EMPTY_NEW_CATALOG = {
   proxy: '',
   customHeadersInput: '',
   proxyConsent: false,
+  autoDownload: false,
 };
 
 async function validateOPDSCatalog(
@@ -83,6 +91,33 @@ export function CatalogManager({ closeDialog }: CMProps) {
   const [proxyConsentError, setProxyConsentError] = useState('');
   const [isValidating, setIsValidating] = useState(false);
   const popularCatalogs = appService?.distChannel !== 'appstore' ? POPULAR_CATALOGS : [];
+
+  const [subscriptionStates, setSubscriptionStates] = useState<
+    Record<string, OPDSSubscriptionState>
+  >({});
+  const [failedDialogCatalogId, setFailedDialogCatalogId] = useState<string | null>(null);
+
+  const reloadSubscriptionStates = useCallback(async () => {
+    if (!appService) return;
+    const eligible = catalogs.filter((c) => c.autoDownload);
+    const entries = await Promise.all(
+      eligible.map(async (c) => [c.id, await loadSubscriptionState(appService, c.id)] as const),
+    );
+    setSubscriptionStates(Object.fromEntries(entries));
+  }, [appService, catalogs]);
+
+  useEffect(() => {
+    reloadSubscriptionStates();
+  }, [reloadSubscriptionStates]);
+
+  useEffect(() => {
+    const handler = () => {
+      reloadSubscriptionStates();
+    };
+    eventDispatcher.on('opds-sync-complete', handler);
+    return () => eventDispatcher.off('opds-sync-complete', handler);
+  }, [reloadSubscriptionStates]);
+  
   const hasSensitiveWebOPDSInput =
     newCatalog.username.trim().length > 0 ||
     newCatalog.password.trim().length > 0 ||
@@ -169,6 +204,7 @@ export function CatalogManager({ closeDialog }: CMProps) {
       customHeaders: hasOPDSCustomHeaders(parsedHeaders.headers)
         ? parsedHeaders.headers
         : undefined,
+      autoDownload: newCatalog.autoDownload || undefined,
     };
 
     if (editingCatalogId) {
@@ -196,6 +232,7 @@ export function CatalogManager({ closeDialog }: CMProps) {
       customHeadersInput: formatOPDSCustomHeadersInput(catalog.customHeaders),
       proxy: catalog.proxy || '',
       proxyConsent: false,
+      autoDownload: catalog.autoDownload || false,
     });
     setEditingCatalogId(catalog.id);
     setShowAddDialog(true);
@@ -211,6 +248,21 @@ export function CatalogManager({ closeDialog }: CMProps) {
 
   const handleRemoveCatalog = (id: string) => {
     saveCatalogs(catalogs.filter((c) => c.id !== id));
+    if (appService) {
+      // Don't await — leftover state files are harmless and we don't want to
+      // block UI removal if the filesystem call fails.
+      void deleteSubscriptionState(appService, id);
+    }
+  };
+
+  const handleToggleAutoDownload = (id: string) => {
+    const wasEnabled = catalogs.find((c) => c.id === id)?.autoDownload;
+    saveCatalogs(catalogs.map((c) => (c.id === id ? { ...c, autoDownload: !c.autoDownload } : c)));
+    // When the user just enabled auto-download, sync now instead of waiting
+    // for the next app launch / pull-to-refresh.
+    if (!wasEnabled) {
+      eventDispatcher.dispatch('check-opds-subscriptions');
+    }
   };
 
   const handleOpenCatalog = (catalog: OPDSCatalog) => {
@@ -271,9 +323,9 @@ export function CatalogManager({ closeDialog }: CMProps) {
                   <div className='flex items-center justify-between'>
                     <div className='min-w-0 flex-1'>
                       <div className='mb-1 flex items-center justify-between'>
-                        <h3 className='card-title line-clamp-1 text-sm'>
-                          {catalog.icon && <span className=''>{catalog.icon}</span>}
-                          {catalog.name}
+                        <h3 className='card-title text-sm'>
+                          {catalog.icon && <span>{catalog.icon}</span>}
+                          <span className='line-clamp-1'>{catalog.name}</span>
                         </h3>
                         <div className='flex gap-1'>
                           <button
@@ -310,6 +362,56 @@ export function CatalogManager({ closeDialog }: CMProps) {
                       )}
                     </div>
                   </div>
+                  <div className='mt-2 flex items-center gap-2'>
+                    <label
+                      className={clsx(
+                        'label gap-2 p-0',
+                        catalog.disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
+                      )}
+                    >
+                      <input
+                        type='checkbox'
+                        className='toggle toggle-xs toggle-primary'
+                        checked={!!catalog.autoDownload}
+                        disabled={!!catalog.disabled}
+                        onChange={() => handleToggleAutoDownload(catalog.id)}
+                      />
+                      <span className='label-text text-xs'>
+                        <IoCloudDownloadOutline className='mr-1 inline h-3.5 w-3.5' />
+                        {_('Auto-download')}
+                      </span>
+                    </label>
+                  </div>
+                  {(() => {
+                    const subState = subscriptionStates[catalog.id];
+                    if (!catalog.autoDownload || !subState) return null;
+                    const lastCheckedAt = subState.lastCheckedAt;
+                    const failedCount = subState.failedEntries.length;
+                    if (lastCheckedAt === 0 && failedCount === 0) return null;
+                    return (
+                      <div className='text-base-content/60 mt-1 flex items-center gap-2 text-xs'>
+                        {lastCheckedAt > 0 && (
+                          <span>
+                            {_('Last synced {{when}}', {
+                              when: dayjs(lastCheckedAt).fromNow(),
+                            })}
+                          </span>
+                        )}
+                        {failedCount > 0 && (
+                          <>
+                            {lastCheckedAt > 0 && <span aria-hidden>·</span>}
+                            <button
+                              type='button'
+                              onClick={() => setFailedDialogCatalogId(catalog.id)}
+                              className='text-error hover:underline'
+                            >
+                              {_('{{count}} failed', { count: failedCount })}
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    );
+                  })()}
                   <div className='card-actions mt-4 justify-end'>
                     <button
                       onClick={() => handleOpenCatalog(catalog)}
@@ -339,7 +441,7 @@ export function CatalogManager({ closeDialog }: CMProps) {
               >
                 <div className='card-body p-4'>
                   <h3 className='card-title mb-1 text-sm'>
-                    {catalog.icon && <span className=''>{catalog.icon}</span>}
+                    {catalog.icon && <span>{catalog.icon}</span>}
                     {catalog.name}
                   </h3>
                   {catalog.description && (
@@ -562,6 +664,26 @@ export function CatalogManager({ closeDialog }: CMProps) {
                   </div>
                 )}
 
+                <div className='form-control'>
+                  <label className='label cursor-pointer justify-start gap-3 p-0'>
+                    <input
+                      type='checkbox'
+                      className='toggle toggle-sm toggle-primary'
+                      checked={newCatalog.autoDownload}
+                      onChange={(e) =>
+                        setNewCatalog({ ...newCatalog, autoDownload: e.target.checked })
+                      }
+                      disabled={isValidating}
+                    />
+                    <div>
+                      <span className='label-text'>{_('Auto-download new items')}</span>
+                      <p className='text-base-content/60 text-xs'>
+                        {_('Automatically download new publications when the app syncs')}
+                      </p>
+                    </div>
+                  </label>
+                </div>
+
                 <div className='modal-action'>
                   <button
                     type='button'
@@ -588,6 +710,19 @@ export function CatalogManager({ closeDialog }: CMProps) {
             </div>
           </dialog>
         </ModalPortal>
+      )}
+
+      {failedDialogCatalogId && (
+        <FailedDownloadsDialog
+          catalogId={failedDialogCatalogId}
+          catalogName={catalogs.find((c) => c.id === failedDialogCatalogId)?.name ?? ''}
+          onClose={() => {
+            setFailedDialogCatalogId(null);
+            // The dialog mutates failedEntries / knownEntryIds — refresh the
+            // status row so changes are visible without waiting for a sync.
+            reloadSubscriptionStates();
+          }}
+        />
       )}
     </div>
   );

@@ -2,8 +2,8 @@
 
 import { useState, FormEvent } from 'react';
 import { IoSearch } from 'react-icons/io5';
-import { OPDSSearch } from '@/types/opds';
 import { useTranslation } from '@/hooks/useTranslation';
+import { OPDSSearch } from '@/types/opds';
 
 interface SearchViewProps {
   search: OPDSSearch;
@@ -31,11 +31,11 @@ export function SearchView({ search, baseURL, onNavigate, resolveURL }: SearchVi
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
 
-    const map = new Map<string | null, Map<string | null, string>>();
+    const map = new Map<string | undefined, Map<string, string>>();
 
     for (const param of search.params || []) {
       const value = formData[param.name] || '';
-      const ns = param.ns ?? null;
+      const ns = param.ns ?? undefined;
 
       if (map.has(ns)) {
         map.get(ns)!.set(param.name, value);
@@ -91,9 +91,7 @@ export function SearchView({ search, baseURL, onNavigate, resolveURL }: SearchVi
               value={formData[param.name] || ''}
               onChange={(e) => handleInputChange(param.name, e.target.value)}
               required={param.required}
-              placeholder={
-                `${_('Enter {{terms}}', { terms: getParamLabel(param.name).toLowerCase() })}`
-              }
+              placeholder={`${_('Enter {{terms}}', { terms: getParamLabel(param.name).toLowerCase() })}`}
               className='input input-bordered w-full'
               // eslint-disable-next-line jsx-a11y/no-autofocus
               autoFocus={
