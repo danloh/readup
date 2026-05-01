@@ -10,7 +10,7 @@ importers:
     dependencies:
       '@ai-sdk/react':
         specifier: ^3.0.134
-        version: 3.0.170(react@19.2.5)(zod@4.3.6)
+        version: 3.0.170(react@19.2.5)(zod@4.4.1)
       '@assistant-ui/react':
         specifier: 0.11.56
         version: 0.11.56(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(use-sync-external-store@1.6.0(react@19.2.5))
@@ -27,11 +27,11 @@ importers:
         specifier: 0.4.21
         version: 0.4.21
       '@atproto/oauth-client':
-        specifier: ^0.6.0
-        version: 0.6.0
+        specifier: ^0.6.1
+        version: 0.6.1
       '@atproto/oauth-client-browser':
-        specifier: ^0.3.41
-        version: 0.3.41
+        specifier: ^0.3.42
+        version: 0.3.42
       '@choochmeque/tauri-plugin-sharekit-api':
         specifier: ^0.3.1
         version: 0.3.1
@@ -78,11 +78,11 @@ importers:
         specifier: ^1.2.8
         version: 1.2.8(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       '@serwist/next':
-        specifier: ^9.5.7
-        version: 9.5.7(next@16.2.2(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(react@19.2.5)(typescript@5.9.3)(webpack@5.106.2(esbuild@0.27.7))
+        specifier: ^9.5.10
+        version: 9.5.10(next@16.2.2(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(react@19.2.5)(typescript@5.9.3)(webpack@5.106.2(esbuild@0.27.7))
       '@tauri-apps/api':
-        specifier: 2.10.1
-        version: 2.10.1
+        specifier: 2.11.0
+        version: 2.11.0
       '@tauri-apps/plugin-cli':
         specifier: 2.4.1
         version: 2.4.1
@@ -124,10 +124,10 @@ importers:
         version: 2.8.26
       ai:
         specifier: ^6.0.168
-        version: 6.0.168(zod@4.3.6)
+        version: 6.0.168(zod@4.4.1)
       ai-sdk-ollama:
         specifier: ^3.2.0
-        version: 3.8.3(ai@6.0.168(zod@4.3.6))(zod@4.3.6)
+        version: 3.8.3(ai@6.0.168(zod@4.4.1))(zod@4.4.1)
       app-store-server-api:
         specifier: 0.17.3
         version: 0.17.3
@@ -280,8 +280,8 @@ importers:
         specifier: ^0.5.19
         version: 0.5.19(tailwindcss@3.4.19(tsx@4.21.0)(yaml@2.8.3))
       '@tauri-apps/cli':
-        specifier: 2.10.0
-        version: 2.10.0
+        specifier: 2.11.0
+        version: 2.11.0
       '@testing-library/dom':
         specifier: ^10.4.1
         version: 10.4.1
@@ -392,7 +392,7 @@ importers:
         version: 4.0.2(webpack@5.106.2(esbuild@0.27.7))
       serwist:
         specifier: ^9.3.0
-        version: 9.5.7(browserslist@4.28.1)(typescript@5.9.3)
+        version: 9.5.7(browserslist@4.28.2)(typescript@5.9.3)
       tailwindcss:
         specifier: ^3.4.18
         version: 3.4.19(tsx@4.21.0)(yaml@2.8.3)
@@ -609,11 +609,11 @@ packages:
   '@atproto/lexicon@0.6.2':
     resolution: {integrity: sha512-p3Ly6hinVZW0ETuAXZMeUGwuMm3g8HvQMQ41yyEE6AL0hAkfeKFaZKos6BdBrr6CjkpbrDZqE8M+5+QOceysMw==}
 
-  '@atproto/oauth-client-browser@0.3.41':
-    resolution: {integrity: sha512-4QTm8zPgm08vl53flrVmL+MS5IOhvWWctNZmEnPbvQ2t1ISw9Q5m815m2Sszi5ULMFjOqvT7lhKB7zQUn5gq5g==}
+  '@atproto/oauth-client-browser@0.3.42':
+    resolution: {integrity: sha512-YRNMnZNid+ipBndpKbqZ+1uzb51Ci7Pit56iF2+hBljZkE6MAW/gkGwywJigVPlhkVKCO80PaXt8CHuON5kS8w==}
 
-  '@atproto/oauth-client@0.6.0':
-    resolution: {integrity: sha512-F7ZTKzFptXgyihMkd7QTdRSkrh4XqrS+qTw+V81k5Q6Bh3MB1L3ypvfSJ6v7SSUJa6XxoZYJTCahHC1e+ndE6Q==}
+  '@atproto/oauth-client@0.6.1':
+    resolution: {integrity: sha512-QTLbEFyv7EJuwJf4A8IZnsylK5wwrzrSsxy0INcZf9zktPVQvgckWhSvbfK8alp60M+rwWfQQAlodcCF4WB78A==}
 
   '@atproto/oauth-types@0.6.3':
     resolution: {integrity: sha512-jdKuoPknJuh/WjI+mYk7agSbx9mNVMbS6Dr3k1z2YMY2oRiCQjxYBuo4MLKATbxj05nMQaZRWlHRUazoAu5Cng==}
@@ -2423,8 +2423,8 @@ packages:
   '@sec-ant/readable-stream@0.4.1':
     resolution: {integrity: sha512-831qok9r2t8AlxLko40y2ebgSDhenenCatLVeW/uBtnHPyhHOvG0C7TvfgecV+wHzIm5KUICgzmVpWS+IMEAeg==}
 
-  '@serwist/build@9.5.7':
-    resolution: {integrity: sha512-bcIeDFgsMnUq8Sqhnv15KXZhusXekpP9v8MPWVtF7+6WmNqDPztqYjGVgQz2VxOhCgrTu3ji/KeGeuKV+TN8vQ==}
+  '@serwist/build@9.5.10':
+    resolution: {integrity: sha512-N1kh8jdAWikpvUvj9gnF4DPZc9feLsu6G6206I/PvnSXz0rCSkNOKEYE2Vk/afSgy2NFNTHuLnu3gavzP5j+NA==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       typescript: '>=5.0.0'
@@ -2432,11 +2432,11 @@ packages:
       typescript:
         optional: true
 
-  '@serwist/next@9.5.7':
-    resolution: {integrity: sha512-QJi/aICIIGduVFYj5Eh5w39+CjqTKlMzhhXOyOEH/WpPoCCu0iyG5kdp/Un+JBJYk+NMfzcUmHufgLQZDfHf0Q==}
+  '@serwist/next@9.5.10':
+    resolution: {integrity: sha512-2RzJ+tp9dFhA3SjaJcF3ljRBwk0BAoUjL49sQVLq+5z6IplIdsxKNKIvOItL4bodiBiQ7gDbj/zkYpnVjJEMyA==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
-      '@serwist/cli': ^9.5.7
+      '@serwist/cli': ^9.5.10
       next: '>=14.0.0'
       react: '>=18.0.0'
       typescript: '>=5.0.0'
@@ -2444,6 +2444,14 @@ packages:
       '@serwist/cli':
         optional: true
       typescript:
+        optional: true
+
+  '@serwist/utils@9.5.10':
+    resolution: {integrity: sha512-xrGGvz8KSoyyUUSjD2Ba4b9IJOYLJBGN1tKr8t6npFPwrI6x4Eo3AaqQAWx52Jao+fmNKPKkLO8WBRvq7qRg7A==}
+    peerDependencies:
+      browserslist: '>=4'
+    peerDependenciesMeta:
+      browserslist:
         optional: true
 
   '@serwist/utils@9.5.7':
@@ -2454,8 +2462,8 @@ packages:
       browserslist:
         optional: true
 
-  '@serwist/webpack-plugin@9.5.7':
-    resolution: {integrity: sha512-wnpXoB7PIq8opP/jsVph4GFEl1GzGHzXysFil7vmUDSBRyG8VediSTfxq1F4ag6E+HoaXQtASypG6MDZ/hBkzg==}
+  '@serwist/webpack-plugin@9.5.10':
+    resolution: {integrity: sha512-3gLE3oP1wU4WG9276eEPeUHjm306OAXdxbeVYSORYDZ5JESbl/HqI9kKz1EmIg4TnH9KSqEzW//LEXJGhoVHEg==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       typescript: '>=5.0.0'
@@ -2466,8 +2474,8 @@ packages:
       webpack:
         optional: true
 
-  '@serwist/window@9.5.7':
-    resolution: {integrity: sha512-K2aRARXbO22LPyU8xL5UXhkNx6Zs+KrPSR1BydqaZPoa+RsBwVTwtwCHN9rcwu1Til+OUbfGwTWj5h1J4IkCOg==}
+  '@serwist/window@9.5.10':
+    resolution: {integrity: sha512-u2f9yHx7ZYDmremBGE8UeptnBl0tp7TCBypoW2YZwYTcdYG6vUQOT/1Sbdwj3+8bTIhWyhuo6d1X9LuDJfd02w==}
     peerDependencies:
       typescript: '>=5.0.0'
     peerDependenciesMeta:
@@ -2517,82 +2525,82 @@ packages:
     peerDependencies:
       tailwindcss: '>=3.0.0 || insiders || >=4.0.0-alpha.20 || >=4.0.0-beta.1'
 
-  '@tauri-apps/api@2.10.1':
-    resolution: {integrity: sha512-hKL/jWf293UDSUN09rR69hrToyIXBb8CjGaWC7gfinvnQrBVvnLr08FeFi38gxtugAVyVcTa5/FD/Xnkb1siBw==}
+  '@tauri-apps/api@2.11.0':
+    resolution: {integrity: sha512-7CinYODhky9lmO23xHnUFv0Xt43fbtWMyxZcLcRBlFkcgXKuEirBvHpmtJ89YMhyeGcq20Wuc47Fa4XjyniywA==}
 
-  '@tauri-apps/cli-darwin-arm64@2.10.0':
-    resolution: {integrity: sha512-avqHD4HRjrMamE/7R/kzJPcAJnZs0IIS+1nkDP5b+TNBn3py7N2aIo9LIpy+VQq0AkN8G5dDpZtOOBkmWt/zjA==}
+  '@tauri-apps/cli-darwin-arm64@2.11.0':
+    resolution: {integrity: sha512-UfMeDNlgIP252rm/KSTuu8yHatPua5TjtUEUf+jyIzVwBNcIl7Ywkdpfj+e5jVVg3EfCTp+4gwuL1dNpgF8clg==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [darwin]
 
-  '@tauri-apps/cli-darwin-x64@2.10.0':
-    resolution: {integrity: sha512-keDmlvJRStzVFjZTd0xYkBONLtgBC9eMTpmXnBXzsHuawV2q9PvDo2x6D5mhuoMVrJ9QWjgaPKBBCFks4dK71Q==}
+  '@tauri-apps/cli-darwin-x64@2.11.0':
+    resolution: {integrity: sha512-lY1+aPlgyMN7vgjtCdQ3+WODfZkebAcxnrCrO0HjqDpKSXieDkrJbimqeaoM4RwhTSrCLRHfVYiYrfE5E131tg==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [darwin]
 
-  '@tauri-apps/cli-linux-arm-gnueabihf@2.10.0':
-    resolution: {integrity: sha512-e5u0VfLZsMAC9iHaOEANumgl6lfnJx0Dtjkd8IJpysZ8jp0tJ6wrIkto2OzQgzcYyRCKgX72aKE0PFgZputA8g==}
+  '@tauri-apps/cli-linux-arm-gnueabihf@2.11.0':
+    resolution: {integrity: sha512-5uCP0AusgN3NrKC8EpkuJwjek1k8pEffBdugJSpXPey/QGbPEb8vZ542n/giJ2mZPjMSllDkdhG2QIDpBY4PpQ==}
     engines: {node: '>= 10'}
     cpu: [arm]
     os: [linux]
 
-  '@tauri-apps/cli-linux-arm64-gnu@2.10.0':
-    resolution: {integrity: sha512-YrYYk2dfmBs5m+OIMCrb+JH/oo+4FtlpcrTCgiFYc7vcs6m3QDd1TTyWu0u01ewsCtK2kOdluhr/zKku+KP7HA==}
+  '@tauri-apps/cli-linux-arm64-gnu@2.11.0':
+    resolution: {integrity: sha512-loDPqtRHMSbIcrH2VBd4GgHoQlF7jJnrZj7MxA2lj1cixS/jEgMAPFqj83U6Wvjete4HfYplbE/gCpSFifA9jw==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [linux]
     libc: [glibc]
 
-  '@tauri-apps/cli-linux-arm64-musl@2.10.0':
-    resolution: {integrity: sha512-GUoPdVJmrJRIXFfW3Rkt+eGK9ygOdyISACZfC/bCSfOnGt8kNdQIQr5WRH9QUaTVFIwxMlQyV3m+yXYP+xhSVA==}
+  '@tauri-apps/cli-linux-arm64-musl@2.11.0':
+    resolution: {integrity: sha512-DtSE8ZBlB9H+L+eHkfZ3myt00EVEyAB3e41juEHoE2qT88fgVlJvyrwa9SZYc/xTwCS9TnmK+R84tpg+ZsAg7Q==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [linux]
     libc: [musl]
 
-  '@tauri-apps/cli-linux-riscv64-gnu@2.10.0':
-    resolution: {integrity: sha512-JO7s3TlSxshwsoKNCDkyvsx5gw2QAs/Y2GbR5UE2d5kkU138ATKoPOtxn8G1fFT1aDW4LH0rYAAfBpGkDyJJnw==}
+  '@tauri-apps/cli-linux-riscv64-gnu@2.11.0':
+    resolution: {integrity: sha512-5QdgS4LD+kntClI1aj2JmwjW38LosNXxwCe8viIHEwqYIWuMPdNEIau6/cLogI38Yzx9DnfCPRfEWLyI+5li8Q==}
     engines: {node: '>= 10'}
     cpu: [riscv64]
     os: [linux]
     libc: [glibc]
 
-  '@tauri-apps/cli-linux-x64-gnu@2.10.0':
-    resolution: {integrity: sha512-Uvh4SUUp4A6DVRSMWjelww0GnZI3PlVy7VS+DRF5napKuIehVjGl9XD0uKoCoxwAQBLctvipyEK+pDXpJeoHng==}
+  '@tauri-apps/cli-linux-x64-gnu@2.11.0':
+    resolution: {integrity: sha512-5UynPXo3Zq9khjVdAbD+YogeLltdVUeOah2ioSIM3tu6H7wY9vMy6rgGJhv9r5R8ZXmk9GttMippdqYJWrnLnA==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
     libc: [glibc]
 
-  '@tauri-apps/cli-linux-x64-musl@2.10.0':
-    resolution: {integrity: sha512-AP0KRK6bJuTpQ8kMNWvhIpKUkQJfcPFeba7QshOQZjJ8wOS6emwTN4K5g/d3AbCMo0RRdnZWwu67MlmtJyxC1Q==}
+  '@tauri-apps/cli-linux-x64-musl@2.11.0':
+    resolution: {integrity: sha512-CNz7fHbApz1Zyhhq73jtGn9JqgNEV/lIWnTnUo6h6ujw+mHsTmkLszvJSM8W6JBaDjNpTTFr/RSNoVL5FMwcTg==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
     libc: [musl]
 
-  '@tauri-apps/cli-win32-arm64-msvc@2.10.0':
-    resolution: {integrity: sha512-97DXVU3dJystrq7W41IX+82JEorLNY+3+ECYxvXWqkq7DBN6FsA08x/EFGE8N/b0LTOui9X2dvpGGoeZKKV08g==}
+  '@tauri-apps/cli-win32-arm64-msvc@2.11.0':
+    resolution: {integrity: sha512-K+br+VXZ+Xx0n/9FdWohpW5Ugq+2FQUpJScqcPl1hTxXfh3fgjYgt4qA2NgrjlJo+zZPNrmUMl+NLvm0ufEqBQ==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [win32]
 
-  '@tauri-apps/cli-win32-ia32-msvc@2.10.0':
-    resolution: {integrity: sha512-EHyQ1iwrWy1CwMalEm9z2a6L5isQ121pe7FcA2xe4VWMJp+GHSDDGvbTv/OPdkt2Lyr7DAZBpZHM6nvlHXEc4A==}
+  '@tauri-apps/cli-win32-ia32-msvc@2.11.0':
+    resolution: {integrity: sha512-OFV+s3MLZnd75zl0ZAFU5riMpGK4waUEA8ZDuijDsnkU0btz/gHhqh5jVlOn8thyvgdtT3Xyoxqo099MMifH3g==}
     engines: {node: '>= 10'}
     cpu: [ia32]
     os: [win32]
 
-  '@tauri-apps/cli-win32-x64-msvc@2.10.0':
-    resolution: {integrity: sha512-NTpyQxkpzGmU6ceWBTY2xRIEaS0ZLbVx1HE1zTA3TY/pV3+cPoPPOs+7YScr4IMzXMtOw7tLw5LEXo5oIG3qaQ==}
+  '@tauri-apps/cli-win32-x64-msvc@2.11.0':
+    resolution: {integrity: sha512-AeDTWBd2cOZ6TX133BWsoo+LutG9o0JRcgjMsIfLE13ZugpgCMv/2dJbUiBGeRvbPOGin5A3aYmsArPVV6ZSHQ==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [win32]
 
-  '@tauri-apps/cli@2.10.0':
-    resolution: {integrity: sha512-ZwT0T+7bw4+DPCSWzmviwq5XbXlM0cNoleDKOYPFYqcZqeKY31KlpoMW/MOON/tOFBPgi31a2v3w9gliqwL2+Q==}
+  '@tauri-apps/cli@2.11.0':
+    resolution: {integrity: sha512-W5Wbuqsb2pHFPTj4TaRNKTj5rwXhDShPiLSY9T18y4ouSR/NNCptAEFxFsBtyNRgL6Vs1a/q9LzfqqYzEwC+Jw==}
     engines: {node: '>= 10'}
     hasBin: true
 
@@ -3608,11 +3616,6 @@ packages:
 
   browser-stdout@1.3.1:
     resolution: {integrity: sha512-qhAVI1+Av2X7qelOfAIYwXONood6XlZE/fXaBSmW/T5SzLAmCgzi+eiWE7fUvbHaeNBQH13UftjpXxsfLkMpgw==}
-
-  browserslist@4.28.1:
-    resolution: {integrity: sha512-ZC5Bd0LgJXgwGqUknZY/vkUQ04r8NXnJZ3yYi4vDmSiZmC/pdSN0NbNRPxZpbtO4uAfDUAFffO8IZoM3Gj8IkA==}
-    engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}
-    hasBin: true
 
   browserslist@4.28.2:
     resolution: {integrity: sha512-48xSriZYYg+8qXna9kwqjIVzuQxi+KYWp2+5nCYnYKPTr0LvD89Jqk2Or5ogxz0NUMfIjhh2lIUX/LyX9B4oIg==}
@@ -6810,6 +6813,14 @@ packages:
   serialize-javascript@6.0.2:
     resolution: {integrity: sha512-Saa1xPByTTq2gdeFZYLLo+RFE35NHZkAbqZeWNd3BpzppeVisAqpDjcp8dyf6uIvEqJRd46jemmyA4iFIeVk8g==}
 
+  serwist@9.5.10:
+    resolution: {integrity: sha512-yYSrhO4uFjjJNIhq4SCklrZX99UYAREMt6Wgk/1HJoJPnpm0NrLrwd/CEVQF2XEH82c/hnVA+QKRSiBeZfUfdA==}
+    peerDependencies:
+      typescript: '>=5.0.0'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+
   serwist@9.5.7:
     resolution: {integrity: sha512-4R3kezBK0YAwkU6kIKbJc1I7QmbDV+wauV6Rf2+PdEHN5tBFK+3S92JPgj+XAa1ZCtg55qJGyyzAQ+d0G5AjDg==}
     peerDependencies:
@@ -7117,6 +7128,10 @@ packages:
   symbol-tree@3.2.4:
     resolution: {integrity: sha512-9QNk5KwDF+Bvz+PyObkmSYjI5ksVUYtjW7AU22r2NKcfLJcXp96hkDWU3+XndOsUb+AQ9QhfzfCT2O+CNWT5Tw==}
 
+  tagged-tag@1.0.0:
+    resolution: {integrity: sha512-yEFYrVhod+hdNyx7g5Bnkkb0G6si8HJurOoOEgC8B/O0uXLHlaey/65KRv6cuWBNhBgHKAROVpc7QyYqE5gFng==}
+    engines: {node: '>=20'}
+
   tailwind-merge@3.5.0:
     resolution: {integrity: sha512-I8K9wewnVDkL1NTGoqWmVEIlUcB9gFriAEkXkfCjX5ib8ezGxtR3xD7iZIxrfArjEsH7F1CHD4RFUtxefdqV/A==}
 
@@ -7299,6 +7314,10 @@ packages:
   type-fest@4.41.0:
     resolution: {integrity: sha512-TeTSQ6H5YHvpqVwBRcnLDCBnDOHWYu7IvGbHT6N8AOymcr9PJGjc1GTtiWZTYg0NCgYwvnYWEkVChQAr9bjfwA==}
     engines: {node: '>=16'}
+
+  type-fest@5.6.0:
+    resolution: {integrity: sha512-8ZiHFm91orbSAe2PSAiSVBVko18pbhbiB3U9GglSzF/zCGkR+rxpHx6sEMCUm4kxY4LjDIUGgCfUMtwfZfjfUA==}
+    engines: {node: '>=20'}
 
   typed-array-buffer@1.0.3:
     resolution: {integrity: sha512-nAYYwfY3qnzX30IkA6AQZjVbtK6duGontcQm1WSG1MD94YLqK0515GNApXkoxKOWMusVssAHWLh9SeaoefYFGw==}
@@ -7880,6 +7899,9 @@ packages:
   zod@4.3.6:
     resolution: {integrity: sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg==}
 
+  zod@4.4.1:
+    resolution: {integrity: sha512-a6ENMBBGZBsnlSebQ/eKCguSBeGKSf4O7BPnqVPmYGtpBYI7VSqoVqw+QcB7kPRjbqPwhYTpFbVj/RqNz/CT0Q==}
+
   zustand@5.0.12:
     resolution: {integrity: sha512-i77ae3aZq4dhMlRhJVCYgMLKuSiZAaUPAct2AksxQ+gOtimhGMdXljRT21P5BNpeT4kXlLIckvkPM029OljD7g==}
     engines: {node: '>=12.20.0'}
@@ -7912,12 +7934,12 @@ snapshots:
       '@vercel/oidc': 3.1.0
       zod: 4.3.6
 
-  '@ai-sdk/gateway@3.0.104(zod@4.3.6)':
+  '@ai-sdk/gateway@3.0.104(zod@4.4.1)':
     dependencies:
       '@ai-sdk/provider': 3.0.8
-      '@ai-sdk/provider-utils': 4.0.23(zod@4.3.6)
+      '@ai-sdk/provider-utils': 4.0.23(zod@4.4.1)
       '@vercel/oidc': 3.2.0
-      zod: 4.3.6
+      zod: 4.4.1
 
   '@ai-sdk/provider-utils@3.0.23(zod@4.3.6)':
     dependencies:
@@ -7926,12 +7948,12 @@ snapshots:
       eventsource-parser: 3.0.7
       zod: 4.3.6
 
-  '@ai-sdk/provider-utils@4.0.23(zod@4.3.6)':
+  '@ai-sdk/provider-utils@4.0.23(zod@4.4.1)':
     dependencies:
       '@ai-sdk/provider': 3.0.8
       '@standard-schema/spec': 1.1.0
       eventsource-parser: 3.0.7
-      zod: 4.3.6
+      zod: 4.4.1
 
   '@ai-sdk/provider@2.0.1':
     dependencies:
@@ -7951,10 +7973,10 @@ snapshots:
     optionalDependencies:
       zod: 4.3.6
 
-  '@ai-sdk/react@3.0.170(react@19.2.5)(zod@4.3.6)':
+  '@ai-sdk/react@3.0.170(react@19.2.5)(zod@4.4.1)':
     dependencies:
-      '@ai-sdk/provider-utils': 4.0.23(zod@4.3.6)
-      ai: 6.0.168(zod@4.3.6)
+      '@ai-sdk/provider-utils': 4.0.23(zod@4.4.1)
+      ai: 6.0.168(zod@4.4.1)
       react: 19.2.5
       swr: 2.4.1(react@19.2.5)
       throttleit: 2.1.0
@@ -8138,7 +8160,7 @@ snapshots:
       multiformats: 9.9.0
       zod: 3.25.76
 
-  '@atproto/oauth-client-browser@0.3.41':
+  '@atproto/oauth-client-browser@0.3.42':
     dependencies:
       '@atproto-labs/did-resolver': 0.2.6
       '@atproto-labs/handle-resolver': 0.3.6
@@ -8146,11 +8168,11 @@ snapshots:
       '@atproto/did': 0.3.0
       '@atproto/jwk': 0.6.0
       '@atproto/jwk-webcrypto': 0.2.0
-      '@atproto/oauth-client': 0.6.0
+      '@atproto/oauth-client': 0.6.1
       '@atproto/oauth-types': 0.6.3
       core-js: 3.49.0
 
-  '@atproto/oauth-client@0.6.0':
+  '@atproto/oauth-client@0.6.1':
     dependencies:
       '@atproto-labs/did-resolver': 0.2.6
       '@atproto-labs/fetch': 0.2.3
@@ -8320,7 +8342,7 @@ snapshots:
 
   '@choochmeque/tauri-plugin-sharekit-api@0.3.1':
     dependencies:
-      '@tauri-apps/api': 2.10.1
+      '@tauri-apps/api': 2.11.0
 
   '@csstools/color-helpers@6.0.2': {}
 
@@ -8541,7 +8563,7 @@ snapshots:
 
   '@fabianlars/tauri-plugin-oauth@2.0.0':
     dependencies:
-      '@tauri-apps/api': 2.10.1
+      '@tauri-apps/api': 2.11.0
 
   '@floating-ui/core@1.7.5':
     dependencies:
@@ -9734,58 +9756,63 @@ snapshots:
 
   '@sec-ant/readable-stream@0.4.1': {}
 
-  '@serwist/build@9.5.7(browserslist@4.28.1)(typescript@5.9.3)':
+  '@serwist/build@9.5.10(browserslist@4.28.2)(typescript@5.9.3)':
     dependencies:
-      '@serwist/utils': 9.5.7(browserslist@4.28.1)
+      '@serwist/utils': 9.5.10(browserslist@4.28.2)
       common-tags: 1.8.2
-      glob: 10.5.0
+      glob: 13.0.6
       pretty-bytes: 6.1.1
       source-map: 0.8.0-beta.0
-      zod: 4.3.6
+      type-fest: 5.6.0
+      zod: 4.4.1
     optionalDependencies:
       typescript: 5.9.3
     transitivePeerDependencies:
       - browserslist
 
-  '@serwist/next@9.5.7(next@16.2.2(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(react@19.2.5)(typescript@5.9.3)(webpack@5.106.2(esbuild@0.27.7))':
+  '@serwist/next@9.5.10(next@16.2.2(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(react@19.2.5)(typescript@5.9.3)(webpack@5.106.2(esbuild@0.27.7))':
     dependencies:
-      '@serwist/build': 9.5.7(browserslist@4.28.1)(typescript@5.9.3)
-      '@serwist/utils': 9.5.7(browserslist@4.28.1)
-      '@serwist/webpack-plugin': 9.5.7(browserslist@4.28.1)(typescript@5.9.3)(webpack@5.106.2(esbuild@0.27.7))
-      '@serwist/window': 9.5.7(browserslist@4.28.1)(typescript@5.9.3)
-      browserslist: 4.28.1
-      glob: 10.5.0
+      '@serwist/build': 9.5.10(browserslist@4.28.2)(typescript@5.9.3)
+      '@serwist/utils': 9.5.10(browserslist@4.28.2)
+      '@serwist/webpack-plugin': 9.5.10(browserslist@4.28.2)(typescript@5.9.3)(webpack@5.106.2(esbuild@0.27.7))
+      '@serwist/window': 9.5.10(browserslist@4.28.2)(typescript@5.9.3)
+      browserslist: 4.28.2
+      glob: 13.0.6
       kolorist: 1.8.0
       next: 16.2.2(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       react: 19.2.5
       semver: 7.7.4
-      serwist: 9.5.7(browserslist@4.28.1)(typescript@5.9.3)
-      zod: 4.3.6
+      serwist: 9.5.10(browserslist@4.28.2)(typescript@5.9.3)
+      zod: 4.4.1
     optionalDependencies:
       typescript: 5.9.3
     transitivePeerDependencies:
       - webpack
 
-  '@serwist/utils@9.5.7(browserslist@4.28.1)':
+  '@serwist/utils@9.5.10(browserslist@4.28.2)':
     optionalDependencies:
-      browserslist: 4.28.1
+      browserslist: 4.28.2
 
-  '@serwist/webpack-plugin@9.5.7(browserslist@4.28.1)(typescript@5.9.3)(webpack@5.106.2(esbuild@0.27.7))':
+  '@serwist/utils@9.5.7(browserslist@4.28.2)':
+    optionalDependencies:
+      browserslist: 4.28.2
+
+  '@serwist/webpack-plugin@9.5.10(browserslist@4.28.2)(typescript@5.9.3)(webpack@5.106.2(esbuild@0.27.7))':
     dependencies:
-      '@serwist/build': 9.5.7(browserslist@4.28.1)(typescript@5.9.3)
-      '@serwist/utils': 9.5.7(browserslist@4.28.1)
+      '@serwist/build': 9.5.10(browserslist@4.28.2)(typescript@5.9.3)
+      '@serwist/utils': 9.5.10(browserslist@4.28.2)
       pretty-bytes: 6.1.1
-      zod: 4.3.6
+      zod: 4.4.1
     optionalDependencies:
       typescript: 5.9.3
       webpack: 5.106.2(esbuild@0.27.7)
     transitivePeerDependencies:
       - browserslist
 
-  '@serwist/window@9.5.7(browserslist@4.28.1)(typescript@5.9.3)':
+  '@serwist/window@9.5.10(browserslist@4.28.2)(typescript@5.9.3)':
     dependencies:
       '@types/trusted-types': 2.0.7
-      serwist: 9.5.7(browserslist@4.28.1)(typescript@5.9.3)
+      serwist: 9.5.10(browserslist@4.28.2)(typescript@5.9.3)
     optionalDependencies:
       typescript: 5.9.3
     transitivePeerDependencies:
@@ -9841,102 +9868,102 @@ snapshots:
       postcss-selector-parser: 6.0.10
       tailwindcss: 3.4.19(tsx@4.21.0)(yaml@2.8.3)
 
-  '@tauri-apps/api@2.10.1': {}
+  '@tauri-apps/api@2.11.0': {}
 
-  '@tauri-apps/cli-darwin-arm64@2.10.0':
+  '@tauri-apps/cli-darwin-arm64@2.11.0':
     optional: true
 
-  '@tauri-apps/cli-darwin-x64@2.10.0':
+  '@tauri-apps/cli-darwin-x64@2.11.0':
     optional: true
 
-  '@tauri-apps/cli-linux-arm-gnueabihf@2.10.0':
+  '@tauri-apps/cli-linux-arm-gnueabihf@2.11.0':
     optional: true
 
-  '@tauri-apps/cli-linux-arm64-gnu@2.10.0':
+  '@tauri-apps/cli-linux-arm64-gnu@2.11.0':
     optional: true
 
-  '@tauri-apps/cli-linux-arm64-musl@2.10.0':
+  '@tauri-apps/cli-linux-arm64-musl@2.11.0':
     optional: true
 
-  '@tauri-apps/cli-linux-riscv64-gnu@2.10.0':
+  '@tauri-apps/cli-linux-riscv64-gnu@2.11.0':
     optional: true
 
-  '@tauri-apps/cli-linux-x64-gnu@2.10.0':
+  '@tauri-apps/cli-linux-x64-gnu@2.11.0':
     optional: true
 
-  '@tauri-apps/cli-linux-x64-musl@2.10.0':
+  '@tauri-apps/cli-linux-x64-musl@2.11.0':
     optional: true
 
-  '@tauri-apps/cli-win32-arm64-msvc@2.10.0':
+  '@tauri-apps/cli-win32-arm64-msvc@2.11.0':
     optional: true
 
-  '@tauri-apps/cli-win32-ia32-msvc@2.10.0':
+  '@tauri-apps/cli-win32-ia32-msvc@2.11.0':
     optional: true
 
-  '@tauri-apps/cli-win32-x64-msvc@2.10.0':
+  '@tauri-apps/cli-win32-x64-msvc@2.11.0':
     optional: true
 
-  '@tauri-apps/cli@2.10.0':
+  '@tauri-apps/cli@2.11.0':
     optionalDependencies:
-      '@tauri-apps/cli-darwin-arm64': 2.10.0
-      '@tauri-apps/cli-darwin-x64': 2.10.0
-      '@tauri-apps/cli-linux-arm-gnueabihf': 2.10.0
-      '@tauri-apps/cli-linux-arm64-gnu': 2.10.0
-      '@tauri-apps/cli-linux-arm64-musl': 2.10.0
-      '@tauri-apps/cli-linux-riscv64-gnu': 2.10.0
-      '@tauri-apps/cli-linux-x64-gnu': 2.10.0
-      '@tauri-apps/cli-linux-x64-musl': 2.10.0
-      '@tauri-apps/cli-win32-arm64-msvc': 2.10.0
-      '@tauri-apps/cli-win32-ia32-msvc': 2.10.0
-      '@tauri-apps/cli-win32-x64-msvc': 2.10.0
+      '@tauri-apps/cli-darwin-arm64': 2.11.0
+      '@tauri-apps/cli-darwin-x64': 2.11.0
+      '@tauri-apps/cli-linux-arm-gnueabihf': 2.11.0
+      '@tauri-apps/cli-linux-arm64-gnu': 2.11.0
+      '@tauri-apps/cli-linux-arm64-musl': 2.11.0
+      '@tauri-apps/cli-linux-riscv64-gnu': 2.11.0
+      '@tauri-apps/cli-linux-x64-gnu': 2.11.0
+      '@tauri-apps/cli-linux-x64-musl': 2.11.0
+      '@tauri-apps/cli-win32-arm64-msvc': 2.11.0
+      '@tauri-apps/cli-win32-ia32-msvc': 2.11.0
+      '@tauri-apps/cli-win32-x64-msvc': 2.11.0
 
   '@tauri-apps/plugin-cli@2.4.1':
     dependencies:
-      '@tauri-apps/api': 2.10.1
+      '@tauri-apps/api': 2.11.0
 
   '@tauri-apps/plugin-deep-link@2.4.8':
     dependencies:
-      '@tauri-apps/api': 2.10.1
+      '@tauri-apps/api': 2.11.0
 
   '@tauri-apps/plugin-dialog@2.7.0':
     dependencies:
-      '@tauri-apps/api': 2.10.1
+      '@tauri-apps/api': 2.11.0
 
   '@tauri-apps/plugin-fs@2.5.0':
     dependencies:
-      '@tauri-apps/api': 2.10.1
+      '@tauri-apps/api': 2.11.0
 
   '@tauri-apps/plugin-haptics@2.3.2':
     dependencies:
-      '@tauri-apps/api': 2.10.1
+      '@tauri-apps/api': 2.11.0
 
   '@tauri-apps/plugin-http@2.5.8':
     dependencies:
-      '@tauri-apps/api': 2.10.1
+      '@tauri-apps/api': 2.11.0
 
   '@tauri-apps/plugin-log@2.8.0':
     dependencies:
-      '@tauri-apps/api': 2.10.1
+      '@tauri-apps/api': 2.11.0
 
   '@tauri-apps/plugin-opener@2.5.3':
     dependencies:
-      '@tauri-apps/api': 2.10.1
+      '@tauri-apps/api': 2.11.0
 
   '@tauri-apps/plugin-os@2.3.2':
     dependencies:
-      '@tauri-apps/api': 2.10.1
+      '@tauri-apps/api': 2.11.0
 
   '@tauri-apps/plugin-process@2.3.1':
     dependencies:
-      '@tauri-apps/api': 2.10.1
+      '@tauri-apps/api': 2.11.0
 
   '@tauri-apps/plugin-shell@2.3.5':
     dependencies:
-      '@tauri-apps/api': 2.10.1
+      '@tauri-apps/api': 2.11.0
 
   '@tauri-apps/plugin-updater@2.10.1':
     dependencies:
-      '@tauri-apps/api': 2.10.1
+      '@tauri-apps/api': 2.11.0
 
   '@testing-library/dom@10.4.1':
     dependencies:
@@ -10801,11 +10828,11 @@ snapshots:
 
   agent-base@7.1.4: {}
 
-  ai-sdk-ollama@3.8.3(ai@6.0.168(zod@4.3.6))(zod@4.3.6):
+  ai-sdk-ollama@3.8.3(ai@6.0.168(zod@4.4.1))(zod@4.4.1):
     dependencies:
       '@ai-sdk/provider': 3.0.8
-      '@ai-sdk/provider-utils': 4.0.23(zod@4.3.6)
-      ai: 6.0.168(zod@4.3.6)
+      '@ai-sdk/provider-utils': 4.0.23(zod@4.4.1)
+      ai: 6.0.168(zod@4.4.1)
       jsonrepair: 3.14.0
       ollama: 0.6.3
     transitivePeerDependencies:
@@ -10819,13 +10846,13 @@ snapshots:
       '@opentelemetry/api': 1.9.0
       zod: 4.3.6
 
-  ai@6.0.168(zod@4.3.6):
+  ai@6.0.168(zod@4.4.1):
     dependencies:
-      '@ai-sdk/gateway': 3.0.104(zod@4.3.6)
+      '@ai-sdk/gateway': 3.0.104(zod@4.4.1)
       '@ai-sdk/provider': 3.0.8
-      '@ai-sdk/provider-utils': 4.0.23(zod@4.3.6)
+      '@ai-sdk/provider-utils': 4.0.23(zod@4.4.1)
       '@opentelemetry/api': 1.9.0
-      zod: 4.3.6
+      zod: 4.4.1
 
   ajv-formats@2.1.1(ajv@8.18.0):
     optionalDependencies:
@@ -11115,14 +11142,6 @@ snapshots:
       fill-range: 7.1.1
 
   browser-stdout@1.3.1: {}
-
-  browserslist@4.28.1:
-    dependencies:
-      baseline-browser-mapping: 2.10.19
-      caniuse-lite: 1.0.30001788
-      electron-to-chromium: 1.5.340
-      node-releases: 2.0.37
-      update-browserslist-db: 1.2.3(browserslist@4.28.1)
 
   browserslist@4.28.2:
     dependencies:
@@ -15019,9 +15038,18 @@ snapshots:
     dependencies:
       randombytes: 2.1.0
 
-  serwist@9.5.7(browserslist@4.28.1)(typescript@5.9.3):
+  serwist@9.5.10(browserslist@4.28.2)(typescript@5.9.3):
     dependencies:
-      '@serwist/utils': 9.5.7(browserslist@4.28.1)
+      '@serwist/utils': 9.5.10(browserslist@4.28.2)
+      idb: 8.0.3
+    optionalDependencies:
+      typescript: 5.9.3
+    transitivePeerDependencies:
+      - browserslist
+
+  serwist@9.5.7(browserslist@4.28.2)(typescript@5.9.3):
+    dependencies:
+      '@serwist/utils': 9.5.7(browserslist@4.28.2)
       idb: 8.0.3
     optionalDependencies:
       typescript: 5.9.3
@@ -15423,6 +15451,8 @@ snapshots:
 
   symbol-tree@3.2.4: {}
 
+  tagged-tag@1.0.0: {}
+
   tailwind-merge@3.5.0: {}
 
   tailwindcss@3.4.19(tsx@4.21.0)(yaml@2.8.3):
@@ -15626,6 +15656,10 @@ snapshots:
 
   type-fest@4.41.0: {}
 
+  type-fest@5.6.0:
+    dependencies:
+      tagged-tag: 1.0.0
+
   typed-array-buffer@1.0.3:
     dependencies:
       call-bound: 1.0.4
@@ -15767,12 +15801,6 @@ snapshots:
       '@unrs/resolver-binding-win32-x64-msvc': 1.11.1
 
   upath@1.2.0: {}
-
-  update-browserslist-db@1.2.3(browserslist@4.28.1):
-    dependencies:
-      browserslist: 4.28.1
-      escalade: 3.2.0
-      picocolors: 1.1.1
 
   update-browserslist-db@1.2.3(browserslist@4.28.2):
     dependencies:
@@ -16323,6 +16351,8 @@ snapshots:
   zod@3.25.76: {}
 
   zod@4.3.6: {}
+
+  zod@4.4.1: {}
 
   zustand@5.0.12(@types/react@19.2.14)(react@19.2.5)(use-sync-external-store@1.6.0(react@19.2.5)):
     optionalDependencies:
