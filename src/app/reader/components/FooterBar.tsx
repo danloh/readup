@@ -220,6 +220,7 @@ const FooterBar: React.FC<FooterBarProps> = ({
         aria-label={_('Footer Bar')}
         className={clsx(
           'footer-bar shadow-xs absolute bottom-0 left-0 z-30 flex w-full flex-col h-[42px]',
+          'eink:border-base-content eink:border-t',
           'bg-base-100 transition-[opacity,transform] duration-300',
           window.innerWidth < 640 ? 'fixed' : 'absolute',
           appService?.hasRoundedWindow && 'rounded-window-bottom-right',
@@ -237,7 +238,9 @@ const FooterBar: React.FC<FooterBarProps> = ({
         {/*  footer progress bar */}
         <div
           className={clsx(
-            'footerbar-progress bg-base-200 absolute flex w-full items-center px-4 transition-all',
+            'footerbar-progress not-eink:bg-base-200 eink:bg-base-100 absolute', 
+            'flex w-full flex-col items-center px-4 transition-all',
+            'eink:border-base-content eink:border-t',
             actionTab === 'progress'
               ? 'pointer-events-auto translate-y-0 py-1 ease-out'
               : 'pointer-events-none invisible translate-y-full overflow-hidden p-0 ease-in',
@@ -292,7 +295,9 @@ const FooterBar: React.FC<FooterBarProps> = ({
         <div
           ref={iconRef}
           className={clsx(
-            'bg-base-200 z-30 mt-auto flex w-full items-center gap-x-2 justify-center p-1',
+            'not-eink:bg-base-200 eink:bg-base-100 z-30 mt-auto',
+            'flex w-full items-center justify-center gap-x-2 p-1',
+            'eink:border-base-content eink:border-t',
           )}
           style={{
             paddingBottom: appService?.isAndroidApp

@@ -336,7 +336,7 @@ class View {
                 // in scrolled mode the view expands to fit the image.
                 const bgUrl = this.docBackground
                     ?.match(/url\(["']?([^"')]+)["']?\)/)?.[1]
-                if (bgUrl) {
+                if (bgUrl && !this.container.noBackground) {
                     const img = new Image()
                     img.onload = () => {
                         this.#bgImageSize = {
@@ -390,16 +390,18 @@ class View {
         })
         const availableWidth = Math.trunc(width - marginLeft - marginRight)
         const availableHeight = Math.trunc(height - marginTop - marginBottom)
+        const sidePaddingLeft = marginLeft / 2 + gap / 2
+        const sidePaddingRight = marginRight / 2 + gap / 2
         setStyles(doc.documentElement, {
             'padding': vertical
                 ? `${marginTop * 1.5}px 0px ${marginBottom * 1.5}px 0px`
-                : `0px ${gap / 2 + marginRight / 2}px 0px ${gap / 2 + marginLeft / 2}px`,
+                : `0px ${sidePaddingRight}px 0px ${sidePaddingLeft}px`,
             '--page-margin-top': `${vertical ? marginTop * 1.5 : marginTop}px`,
-            '--page-margin-right': `${vertical ? marginRight : marginRight + gap /2}px`,
+            '--page-margin-right': `${vertical ? marginRight : sidePaddingRight}px`,
             '--page-margin-bottom': `${vertical ? marginBottom * 1.5 : marginBottom}px`,
-            '--page-margin-left': `${vertical ? marginLeft : marginLeft + gap / 2}px`,
-            '--full-width': `${Math.trunc(window.innerWidth)}`,
-            '--full-height': `${Math.trunc(window.innerHeight)}`,
+            '--page-margin-left': `${vertical ? marginLeft : sidePaddingLeft}px`,
+            '--full-width': `${Math.trunc(width)}`,
+            '--full-height': `${Math.trunc(height)}`,
             '--available-width': `${availableWidth}`,
             '--available-height': `${availableHeight}`,
         })
@@ -419,10 +421,13 @@ class View {
         this.#columnCount = columnCount || 1
 
         const doc = this.document
+        const horizontalColumnGap = columnCount > 1 ? (marginLeft + marginRight) / 4 + gap / 2 : (marginLeft + marginRight) / 2 + gap
+        const sidePaddingLeft = columnCount > 1 ? marginLeft / 4 + gap / 4 : marginLeft / 2 + gap / 2
+        const sidePaddingRight = columnCount > 1 ? marginRight / 4 + gap / 4 : marginRight / 2 + gap / 2
         setStylesImportant(doc.documentElement, {
             'box-sizing': 'border-box',
             'column-width': `${Math.trunc(columnWidth)}px`,
-            'column-gap': vertical ? `${(marginTop + marginBottom) * 1.5}px` : `${gap + marginRight / 2 + marginLeft / 2}px`,
+            'column-gap': vertical ? `${(marginTop + marginBottom) * 1.5}px` : `${horizontalColumnGap}px`,
             'column-fill': 'auto',
             ...(vertical
                 ? { 'width': `${width}px` }
@@ -446,13 +451,13 @@ class View {
         setStyles(doc.documentElement, {
             'padding': vertical
                 ? `${marginTop * 1.5}px ${marginRight}px ${marginBottom * 1.5}px ${marginLeft}px`
-                : `${marginTop}px ${gap / 2 + marginRight / 2}px ${marginBottom}px ${gap / 2 + marginLeft / 2}px`,
+                : `${marginTop}px ${sidePaddingRight}px ${marginBottom}px ${sidePaddingLeft}px`,
             '--page-margin-top': `${vertical ? marginTop * 1.5 : marginTop}px`,
-            '--page-margin-right': `${vertical ? marginRight : marginRight / 2 + gap /2}px`,
+            '--page-margin-right': `${vertical ? marginRight : sidePaddingRight}px`,
             '--page-margin-bottom': `${vertical ? marginBottom * 1.5 : marginBottom}px`,
-            '--page-margin-left': `${vertical ? marginLeft : marginLeft / 2 + gap / 2}px`,
-            '--full-width': `${Math.trunc(window.innerWidth)}`,
-            '--full-height': `${Math.trunc(window.innerHeight)}`,
+            '--page-margin-left': `${vertical ? marginLeft : sidePaddingLeft}px`,
+            '--full-width': `${Math.trunc(availableWidth)}`,
+            '--full-height': `${Math.trunc(availableHeight)}`,
             '--available-width': `${availableWidth}`,
             '--available-height': `${availableHeight}`,
         })
@@ -769,7 +774,7 @@ export class Paginator extends HTMLElement {
     static observedAttributes = [
         'flow', 'gap', 'margin-top', 'margin-bottom', 'margin-left', 'margin-right',
         'max-inline-size', 'max-block-size', 'max-column-count',
-        'no-preload', 'no-continuous-scroll',
+        'no-preload', 'no-background', 'no-continuous-scroll',
     ]
     #root = this.attachShadow({ mode: 'open' })
     #observer = new ResizeObserver(() => this.render())
@@ -831,13 +836,16 @@ export class Paginator extends HTMLElement {
             --_half-margin-right: calc(var(--_margin-right) / 2);
             --_max-width: calc(var(--_max-inline-size) * var(--_max-column-count-spread));
             --_max-height: var(--_max-block-size);
+            --_column-count: 1;
+            --_outer-min-left: calc((var(--_column-count) - 1) * (var(--_margin-left) / 4 + var(--_gap) / 4));
+            --_outer-min-right: calc((var(--_column-count) - 1) * (var(--_margin-right) / 4 + var(--_gap) / 4));
             display: grid;
             grid-template-columns:
-                minmax(0, 1fr)
+                minmax(var(--_outer-min-left), 1fr)
                 var(--_margin-left)
                 minmax(0, calc(var(--_max-width) - var(--_gap)))
                 var(--_margin-right)
-                minmax(0, 1fr);
+                minmax(var(--_outer-min-right), 1fr);
             grid-template-rows:
                 minmax(var(--_margin-top), 1fr)
                 minmax(0, var(--_max-height))
@@ -1066,6 +1074,27 @@ export class Paginator extends HTMLElement {
     get primaryIndex() {
         return this.#primaryIndex
     }
+    setAttribute(name, value) {
+        // The scrolled-mode scroll handler is debounced, so #anchor and
+        // #primaryIndex can lag behind the user's actual viewport by up to
+        // ~250ms. Toggling out of scrolled mode within that window made
+        // render() restore the stale anchor — reverting the position to a
+        // previously visible section. Flush the pending scroll state here,
+        // before the attribute change so the layout is still in scrolled
+        // mode and `this.scrolled` (which reads the attribute) is still true.
+        if (name === 'flow'
+            && this.scrolled
+            && String(value) !== 'scrolled'
+            && this.#views.size > 0) {
+            this.#flushScrolledState()
+        }
+        super.setAttribute(name, value)
+    }
+    #flushScrolledState() {
+        if (this.#views.size > 1) this.#detectPrimaryView()
+        const result = this.#getVisibleRange()
+        if (result?.range && !result.range.collapsed) this.#anchor = result.range
+    }
     attributeChangedCallback(name, _, value) {
         switch (name) {
             case 'flow':
@@ -1175,6 +1204,7 @@ export class Paginator extends HTMLElement {
     #replaceBackground(atPosition) {
         const doc = this.#primaryView?.document
         if (!doc?.documentElement) return
+        if (this.noBackground) return
         const htmlStyle = doc.defaultView.getComputedStyle(doc.documentElement)
         const themeBgColor = htmlStyle.getPropertyValue('--theme-bg-color')
         const overrideColor = htmlStyle.getPropertyValue('--override-color') === 'true'
@@ -1260,9 +1290,6 @@ export class Paginator extends HTMLElement {
         this.#top.classList.toggle('vertical', vertical)
         this.#container.classList.toggle('vertical', vertical)
 
-        const { width, height } = this.#container.getBoundingClientRect()
-        const size = vertical ? height : width
-
         const style = getComputedStyle(this.#top)
         const maxInlineSize = parseFloat(style.getPropertyValue('--_max-inline-size'))
         const maxColumnCount = parseInt(style.getPropertyValue('--_max-column-count-spread'))
@@ -1272,6 +1299,28 @@ export class Paginator extends HTMLElement {
         const marginLeft = parseFloat(style.getPropertyValue('--_margin-left'))
         this.#marginTop = marginTop
         this.#marginBottom = marginBottom
+
+        // Compute the column count from the host (Paginator) size rather than
+        // the #container size. The container width depends on --_column-count
+        // via the grid template (the outer 1fr tracks have a non-zero min for
+        // multi-column spreads), so deriving the column count from container
+        // size at threshold widths creates a feedback loop where the layout
+        // oscillates between 1 and 2 columns on resize.
+        const flow = this.getAttribute('flow')
+        const hostRect = this.getBoundingClientRect()
+        const hostSize = vertical ? hostRect.height : hostRect.width
+        const divisor = flow === 'scrolled'
+            ? 1
+            : Math.min(
+                maxColumnCount + (vertical ? 1 : 0),
+                Math.ceil(Math.floor(hostSize) / Math.floor(maxInlineSize)),
+            )
+        // Set --_column-count BEFORE measuring the container so the read
+        // below reflects the grid template that will actually be used.
+        this.#top.style.setProperty('--_column-count', divisor)
+
+        const { width, height } = this.#container.getBoundingClientRect()
+        const size = vertical ? height : width
 
         const g = parseFloat(style.getPropertyValue('--_gap')) / 100
         // The gap will be a percentage of the #container, not the whole view.
@@ -1293,7 +1342,6 @@ export class Paginator extends HTMLElement {
         // So we apply the inverse, f⁻¹ = -x / (x - 1) to the column gap.
         const gap = -g / (g - 1) * size
 
-        const flow = this.getAttribute('flow')
         if (flow === 'scrolled') {
             // FIXME: vertical-rl only, not -lr
             this.setAttribute('dir', vertical ? 'rtl' : 'ltr')
@@ -1311,7 +1359,6 @@ export class Paginator extends HTMLElement {
             return { width, height, flow, marginTop, marginRight, marginBottom, marginLeft, gap, columnWidth, columnCount: 1 }
         }
 
-        const divisor = Math.min(maxColumnCount + (vertical ? 1 : 0), Math.ceil(Math.floor(size) / Math.floor(maxInlineSize)))
         const columnWidth = vertical
             ? (size / divisor - marginTop * 1.5 - marginBottom * 1.5)
             : (size / divisor - gap - marginRight / 2 - marginLeft / 2)
@@ -1365,6 +1412,9 @@ export class Paginator extends HTMLElement {
     }
     get noPreload() {
         return this.hasAttribute('no-preload')
+    }
+    get noBackground() {
+        return this.hasAttribute('no-background')
     }
     get noContinuousScroll() {
         return this.scrolled && this.hasAttribute('no-continuous-scroll')

@@ -5,7 +5,6 @@ import { isTauriAppPlatform } from '@/services/environment';
 import { useSidebarStore } from '@/store/sidebarStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useBookDataStore } from '@/store/bookDataStore';
-import { getStyles } from '@/styles/style';
 import { tauriHandleClose, tauriHandleToggleFullScreen, tauriQuitApp } from '@/utils/window';
 import { eventDispatcher } from '@/utils/event';
 import { getParagraphActionForKey } from '@/utils/paragraphPresentation';
@@ -56,6 +55,7 @@ const useBookShortcuts = ({ sideBarBookKey, bookKeys }: UseBookShortcutsProps) =
       const flowMode = viewSettings.scrolled ? 'scrolled' : 'paginated';
       getView(sideBarBookKey)?.renderer.setAttribute('flow', flowMode);
     }
+    return true;
   };
 
   const switchSideBar = () => {
@@ -209,13 +209,11 @@ const useBookShortcuts = ({ sideBarBookKey, bookKeys }: UseBookShortcutsProps) =
     if (!sideBarBookKey) return;
     const view = getView(sideBarBookKey);
     const bookData = getBookData(sideBarBookKey);
-    const viewSettings = getViewSettings(sideBarBookKey)!;
-    viewSettings!.zoomLevel = zoomLevel;
-    setViewSettings(sideBarBookKey, viewSettings!);
     if (bookData?.isFixedLayout) {
       view?.renderer.setAttribute('scale-factor', zoomLevel);
-    } else {
-      view?.renderer.setStyles?.(getStyles(viewSettings!));
+      const viewSettings = getViewSettings(sideBarBookKey)!;
+      viewSettings!.zoomLevel = zoomLevel;
+      setViewSettings(sideBarBookKey, viewSettings!);
     }
   };
 

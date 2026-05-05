@@ -4,6 +4,7 @@ import { Insets } from '@/types/misc';
 import { useEnv } from '@/context/EnvContext';
 import { useThemeStore } from '@/store/themeStore';
 import { useReaderStore } from '@/store/readerStore';
+import { eventDispatcher } from '@/utils/event';
 
 interface SectionInfoProps {
   bookTitle?: string;
@@ -39,9 +40,15 @@ const SectionInfo: React.FC<SectionInfoProps> = ({
   );
 
   const handleNotchClick = () => {
+    if (eventDispatcher.dispatchSync('iframe-single-click')) return;
     if (isScrolled) {
       getView(bookKey)?.renderer.scrollToAnchor?.(0, 'anchor', true);
     }
+  };
+
+  const handleSectionClick = () => {
+    if (eventDispatcher.dispatchSync('iframe-single-click')) return;
+    setHoveredBookKey(bookKey);
   };
 
   return (
@@ -57,15 +64,15 @@ const SectionInfo: React.FC<SectionInfoProps> = ({
         style={{ height: `${topInset}px` }}
       />
       <div
-        onClick={() => setHoveredBookKey(bookKey)}
+        role='none'
+        tabIndex={-1}
+        onClick={handleSectionClick}
         className={clsx(
           'sectioninfo absolute flex items-center overflow-hidden font-sans',
           isEink ? 'text-sm font-normal' : 'text-neutral-content text-xs font-light',
           isVertical ? 'writing-vertical-rl max-h-[85%]' : 'top-0 h-[44px]',
           isScrolled && !isVertical && 'bg-base-100',
         )}
-        role='none'
-        tabIndex={-1}
         style={
           isVertical
             ? {
