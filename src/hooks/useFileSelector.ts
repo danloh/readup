@@ -133,6 +133,11 @@ export const FILE_SELECTION_PRESETS = {
     extensions: SUPPORTED_BOOK_EXTS,
     dialogTitle: _('Select Books'),
   },
+  dictionaries: {
+    accept: '.mdx, .mdd, .ifo, .idx, .dict, .dz, .syn, .index, .slob',
+    extensions: ['mdx', 'mdd', 'ifo', 'idx', 'dict', 'dz', 'syn', 'index', 'slob'],
+    dialogTitle: _('Select Dictionary Files'),
+  },
   fonts: {
     accept: '.ttf, .otf, .woff, .woff2',
     extensions: ['ttf', 'otf', 'woff', 'woff2'],

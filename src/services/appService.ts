@@ -16,6 +16,8 @@ import { ArticleType, FeedType } from '@/app/feed/components/dataAgent';
 import { getOSPlatform } from '@/utils/misc';
 import { ProgressHandler } from '@/utils/transfer';
 import type { BookNav } from '@/services/nav';
+import type { SelectedFile } from '@/hooks/useFileSelector';
+import type { ImportedDictionary } from './dictionaries/types';
 
 import { UsageRecord } from './usageService';
 import { loadJSONFile, safeSaveJSON } from './persistence';
@@ -23,6 +25,7 @@ import { DownloadDataResult } from './bsky/atfile';
 
 import * as BookSvc from './bookService';
 import * as CloudSvc from './cloudService';
+import * as DictSvc from './dictionaries/dictionaryService';
 import * as LibrarySvc from './libraryService';
 import * as Settings from './settingsService';
 
@@ -166,6 +169,14 @@ export abstract class BaseAppService implements AppService {
     return BookSvc.updateCoverImage(this.coverCtx, book, imageUrl, imageFile);
   }
 
+  async importDictionaries(files: SelectedFile[]): Promise<DictSvc.ImportDictionariesResult> {
+    return DictSvc.importDictionaries(this.fs, files);
+  }
+
+  async deleteDictionary(dict: ImportedDictionary): Promise<void> {
+    return DictSvc.deleteDictionary(this.fs, dict);
+  }
+  
   async importBook(
     file: string | File,
     books: Book[],

@@ -28,6 +28,7 @@ import { DEFAULT_AI_SETTINGS } from './ai/constants';
 export const DATA_SUBDIR = 'Readup';
 export const LOCAL_BOOKS_SUBDIR = `${DATA_SUBDIR}/Books`;
 export const LOCAL_FONTS_SUBDIR = `${DATA_SUBDIR}/Fonts`;
+export const LOCAL_DICTIONARIES_SUBDIR = `${DATA_SUBDIR}/Dictionaries`;
 
 export const SETTINGS_FILENAME = 'settings.json';
 
@@ -67,6 +68,13 @@ export const DEFAULT_SYSTEM_SETTINGS: Partial<SystemSettings> = {
   librarySortBy: LibrarySortByType.Updated,
   librarySortAscending: true,
   aiSettings: DEFAULT_AI_SETTINGS,
+  customDictionaries: [],
+  dictionarySettings: {
+    providerOrder: ['builtin:wiktionary'],
+    providerEnabled: {
+      'builtin:wiktionary': true,
+    },
+  },
 };
 
 export const HIGHLIGHT_COLOR_HEX: Record<HighlightColor, string> = {

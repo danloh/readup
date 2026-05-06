@@ -6,10 +6,13 @@ import { UsageRecord } from '@/services/usageService';
 import { DownloadDataResult } from '@/services/bsky/atfile';
 import { SystemSettings } from './settings';
 import { Book, BookConfig, BookContent, ImportBookOpts, Review, ViewSettings } from './book';
+import { SelectedFile } from '@/hooks/useFileSelector';
+import { ImportedDictionary } from '@/services/dictionaries/types';
+import { ImportDictionariesResult } from '@/services/dictionaries/dictionaryService';
 
 export type AppPlatform = 'web' | 'tauri';
 export type OsPlatform = 'android' | 'ios' | 'macos' | 'windows' | 'linux' | 'unknown';
-export type BaseDir = 'Books' | 'Settings' | 'Data' | 'Fonts' | 'Log' | 'Cache' | 'Temp' | 'None';
+export type BaseDir = 'Books' | 'Settings' | 'Data' | 'Dictionaries' | 'Fonts' | 'Log' | 'Cache' | 'Temp' | 'None';
 export type DeleteAction = 'cloud' | 'local' | 'both';
 export type SelectDirectoryMode = 'read' | 'write';
 export type DistChannel = 'readup' | 'playstore' | 'appstore' | 'unknown';
@@ -117,6 +120,8 @@ export interface AppService {
   getDefaultViewSettings(): ViewSettings;
   loadSettings(): Promise<SystemSettings>;
   saveSettings(settings: SystemSettings): Promise<void>;
+  importDictionaries(files: SelectedFile[]): Promise<ImportDictionariesResult>;
+  deleteDictionary(dict: ImportedDictionary): Promise<void>;
   importBook(file: string | File, books: Book[], options?: ImportBookOpts): Promise<Book | null>;
   loadPdsBook(
     hash: string,

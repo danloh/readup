@@ -26,12 +26,10 @@
       }
     ],
     "paths": {
-      "@/*": [
-        "./src/*"
-      ],
-      "@pdfjs/*": [
-        "./public/vendor/pdfjs/*"
-      ]
+      "@/*": ["./src/*"],
+      "@pdfjs/*": ["./public/vendor/pdfjs/*"],
+      "js-mdict": ["./packages/js-mdict/src/index.ts"],
+      "fflate": ["./node_modules/fflate"]
     }
   },
   "include": [

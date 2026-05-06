@@ -64,17 +64,17 @@ export const annotationToolButtons = createAnnotationToolButtons([
     quickAction: true,
   },
   {
+    type: 'excerpt',
+    label: _('Excerpt'),
+    tooltip: _('Share excerpt'),
+    Icon: CgScreenShot,
+  },
+  {
     type: 'dictionary',
     label: _('Dictionary'),
     tooltip: _('Look up text in dictionary after selection'),
     Icon: TbHexagonLetterD,
     quickAction: true,
-  },
-  {
-    type: 'excerpt',
-    label: _('Excerpt'),
-    tooltip: _('Share excerpt'),
-    Icon: CgScreenShot,
   },
   {
     type: 'wikipedia',

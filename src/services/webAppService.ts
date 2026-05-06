@@ -4,7 +4,7 @@ import { RemoteFile } from '@/utils/file';
 import { isSafariBrowser } from '@/utils/ua';
 import { isPWA } from './environment';
 import { BaseAppService } from './appService';
-import { LOCAL_BOOKS_SUBDIR, DATA_SUBDIR } from './constants';
+import { LOCAL_BOOKS_SUBDIR, DATA_SUBDIR, LOCAL_DICTIONARIES_SUBDIR } from './constants';
 
 const basePrefix = async () => '';
 
@@ -14,6 +14,8 @@ const resolvePath = (path: string, base: BaseDir): ResolvedPath => {
       return { baseDir: 0, basePrefix, fp: `${DATA_SUBDIR}/${path}`, base };
     case 'Books':
       return { baseDir: 0, basePrefix, fp: `${LOCAL_BOOKS_SUBDIR}/${path}`, base };
+    case 'Dictionaries':
+      return { baseDir: 0, basePrefix, fp: `${LOCAL_DICTIONARIES_SUBDIR}/${path}`, base };
     case 'None':
       return { baseDir: 0, basePrefix, fp: path, base };
     default:

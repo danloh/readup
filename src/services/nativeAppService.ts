@@ -35,7 +35,7 @@ import { getDirPath, getFilename } from '@/utils/path';
 import { copyURIToPath } from '@/utils/bridge';
 import { NativeFile, RemoteFile } from '@/utils/file';
 import { BaseAppService } from './appService';
-import { LOCAL_BOOKS_SUBDIR, SETTINGS_FILENAME, DATA_SUBDIR, } from './constants';
+import { LOCAL_BOOKS_SUBDIR, SETTINGS_FILENAME, DATA_SUBDIR, LOCAL_DICTIONARIES_SUBDIR, } from './constants';
 
 declare global {
   interface Window {
@@ -77,7 +77,8 @@ const getPathResolver = ({
   const getCustomBasePrefixSync = isCustomBaseDir
     ? (baseDir: BaseDir) => {
         return () => {
-          const leafDir = ['Settings', 'Data', 'Books', 'Fonts'].includes(baseDir) ? '' : baseDir;
+          const dataDirs = ['Settings', 'Data', 'Books', 'Fonts', 'Dictionaries'];
+          const leafDir = dataDirs.includes(baseDir) ? '' : baseDir;
           return leafDir ? `${customRootDir}/${leafDir}` : customRootDir!;
         };
       }
@@ -128,6 +129,15 @@ const getPathResolver = ({
           fp: customBasePrefixSync
             ? `${customBasePrefixSync()}/${LOCAL_BOOKS_SUBDIR}${path ? `/${path}` : ''}`
             : `${LOCAL_BOOKS_SUBDIR}${path ? `/${path}` : ''}`,
+          base,
+        };
+      case 'Dictionaries':
+        return {
+          baseDir: customBaseDir ?? BaseDirectory.AppData,
+          basePrefix: customBasePrefix || appDataDir,
+          fp: customBasePrefixSync
+            ? `${customBasePrefixSync()}/${LOCAL_DICTIONARIES_SUBDIR}${path ? `/${path}` : ''}`
+            : `${LOCAL_DICTIONARIES_SUBDIR}${path ? `/${path}` : ''}`,
           base,
         };
       

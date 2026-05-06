@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import { MdChevronRight } from 'react-icons/md';
+
 import { useEnv } from '@/context/EnvContext';
 import { useReaderStore } from '@/store/readerStore';
 import { useThemeStore } from '@/store/themeStore';
@@ -10,12 +12,13 @@ import Select, { getLangOptions, LangSelect } from '@/components/Select';
 import { getTranslators } from '@/services/translators';
 import { saveViewSettings } from '@/helpers/settings';
 import { SettingsPanelPanelProp } from './SettingsDialog';
+import CustomDictionaries from './CustomDictionaries';
 
 const LangPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset }) => {
   const _ = useTranslation();
   const { envConfig } = useEnv();
   const { getViewSettings, setViewSettings, recreateViewer } = useReaderStore();
-  const { settings } = useSettingsStore();
+  const { settings, activeSettingsItemId, setActiveSettingsItemId } = useSettingsStore();
   const { setUILang } = useThemeStore();
   const viewSettings = getViewSettings(bookKey) || settings.globalViewSettings;
 
@@ -24,6 +27,19 @@ const LangPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
   const [translateTargetLang, setTranslateTargetLang] = useState(viewSettings.translateTargetLang);
   const [showTranslateSource, setShowTranslateSource] = useState(viewSettings.showTranslateSource);
   const [ttsReadAloudText, setTtsReadAloudText] = useState(viewSettings.ttsReadAloudText);
+  const [showCustomDictionaries, setShowCustomDictionaries] = useState(false);
+
+  // Deep-link: callers (e.g. the dictionary popup's manage icon) can set
+  // activeSettingsItemId to `'settings.language.dictionaries.manage'` to
+  // jump straight into the Manage Dictionaries sub-page on open. Clear the
+  // id once consumed so SettingsDialog's scroll-to-element fallback
+  // (which runs on a 100ms timeout) doesn't re-fire.
+  useEffect(() => {
+    if (activeSettingsItemId === 'settings.language.dictionaries.manage') {
+      setShowCustomDictionaries(true);
+      setActiveSettingsItemId(null);
+    }
+  }, [activeSettingsItemId, setActiveSettingsItemId]);
 
   const resetToDefaults = useResetViewSettings();
 
@@ -119,6 +135,14 @@ const LangPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ttsReadAloudText]);
 
+  if (showCustomDictionaries) {
+    return (
+      <div className='my-4 w-full'>
+        <CustomDictionaries onBack={() => setShowCustomDictionaries(false)} />
+      </div>
+    );
+  }
+
   return (
     <div className='my-4 w-full space-y-4'>
       <div 
@@ -127,6 +151,21 @@ const LangPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
       >
         <b className=''>{_('Interface Language')}</b>
         <LangSelect />
+      </div>
+      <div className='w-full' data-setting-id='settings.language.dictionaries'>
+        <h2 className='mb-2 font-medium'>{_('Dictionaries')}</h2>
+        <div className='card border-base-200 bg-base-100 border shadow'>
+          <div className='divide-base-200 divide-y'>
+            <button
+              type='button'
+              className='config-item hover:bg-base-200/40 w-full text-left'
+              onClick={() => setShowCustomDictionaries(true)}
+            >
+              <span>{_('Manage Dictionaries')}</span>
+              <MdChevronRight className='text-base-content/60 h-5 w-5' />
+            </button>
+          </div>
+        </div>
       </div>
       <div 
         className='flex items-center justify-between' 
