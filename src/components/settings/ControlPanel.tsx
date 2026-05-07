@@ -10,7 +10,7 @@ import { useResetViewSettings } from '@/hooks/useResetSettings';
 import { getStyles } from '@/styles/style';
 import { RELOAD_BEFORE_SAVED_TIMEOUT_MS } from '@/services/constants';
 import { getMaxInlineSize } from '@/utils/config';
-import { saveViewSettings } from '@/helpers/settings';
+import { saveSysSettings, saveViewSettings } from '@/helpers/settings';
 import { annotationToolQuickActions } from '@/app/reader/components/annotator/AnnotationTools';
 import { SettingsPanelPanelProp } from './SettingsDialog';
 import NumberInput from './NumberInput';
@@ -51,6 +51,7 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
     viewSettings.annotationQuickAction,
   );
   const [copyToNotebook, setCopyToNotebook] = useState(viewSettings.copyToNotebook);
+  const [screenWakeLock, setScreenWakeLock] = useState(settings.screenWakeLock);
 
   const resetToDefaults = useResetViewSettings();
 
@@ -166,6 +167,12 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
   }, [animated]);
 
   useEffect(() => {
+    if (screenWakeLock === settings.screenWakeLock) return;
+    saveSysSettings(envConfig, 'screenWakeLock', screenWakeLock);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [screenWakeLock]);
+
+  useEffect(() => {
     if (viewSettings.allowScript === allowScript) return;
     saveViewSettings(envConfig, bookKey, 'allowScript', allowScript, true, false);
     setTimeout(() => {
@@ -212,6 +219,18 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
 
   return (
     <div className='my-4 w-full space-y-4'>
+      <div 
+        className='flex items-center justify-between' 
+        data-setting-id='settings.control.screenWakeLock'
+      >
+        <b className=''>{_('Keep Screen Awake')}</b>
+        <input
+          type='checkbox'
+          className='toggle toggle-success h-5'
+          checked={screenWakeLock}
+          onChange={() => setScreenWakeLock(!screenWakeLock)}
+        />
+      </div>
       <div 
         className='flex items-center justify-between' 
         data-setting-id='settings.control.clickToPaginate'

@@ -33,6 +33,7 @@ import {
 } from '../../utils/deferredAction';
 import { TransformContext } from '../../transformers/types';
 import { transformContent } from '../../transformers/transformService';
+import { setProofreadRulesVisibility } from '../ProofreadRules';
 import { annotationToolButtons } from './AnnotationTools';
 import AnnotationPopup from './AnnotationPopup';
 import DictionaryPopup from './DictionaryPopup';
@@ -1055,6 +1056,10 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
           popupWidth={proofreadPopupWidth}
           popupHeight={proofreadPopupHeight}
           onDismiss={handleDismissPopupAndSelection}
+          onManage={() => {
+            handleDismissPopupAndSelection();
+            setProofreadRulesVisibility(true);
+          }}
         />
       )}
       {editingAnnotation && editingAnnotation.color && selection && (

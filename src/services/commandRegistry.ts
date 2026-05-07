@@ -406,6 +406,12 @@ const colorPanelItems = [
 // control panel items
 const controlPanelItems = [
   {
+    id: 'settings.control.screenWakeLock',
+    labelKey: _('Keep Screen Awake'),
+    keywords: ['screen', 'wake', 'lock', 'awake', 'sleep', 'display'],
+    section: 'Device',
+  },
+  {
     id: 'settings.control.scrolledMode',
     labelKey: _('Scrolled Mode'),
     keywords: ['scroll', 'scrolled', 'mode', 'paginate', 'continuous'],
