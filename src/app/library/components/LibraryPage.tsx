@@ -267,12 +267,21 @@ const LibraryPageContent = (
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const handleImportBookDirectory = useCallback(async (event: CustomEvent) => {
+    const dirPath: string | undefined = event.detail?.path;
+    if (!dirPath) return;
+    await handleImportBooksFromDirectory(dirPath);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     eventDispatcher.on('import-book-files', handleImportBookFiles);
+    eventDispatcher.on('import-book-directory', handleImportBookDirectory);
     return () => {
       eventDispatcher.off('import-book-files', handleImportBookFiles);
+      eventDispatcher.off('import-book-directory', handleImportBookDirectory);
     };
-  }, [handleImportBookFiles]);
+  }, [handleImportBookFiles, handleImportBookDirectory]);
 
   useEffect(() => {
     if (appService?.hasWindow) {
@@ -512,18 +521,20 @@ const LibraryPageContent = (
     });
   };
 
-  const handleImportBooksFromDirectory = async () => {
+  const handleImportBooksFromDirectory = async (dirPath?: string) => {
     if (!appService || !isTauriAppPlatform()) return;
 
     console.log('Importing books from directory...');
-    let importDirectory: string | undefined = '';
-    if (appService.isAndroidApp) {
-      if (!(await requestStoragePermission())) return;
-      const response = await selectDirectory();
-      importDirectory = response.path;
-    } else {
-      const selectedDir = await appService.selectDirectory?.('read');
-      importDirectory = selectedDir;
+    let importDirectory: string | undefined = dirPath;
+    if (!importDirectory) {
+      if (appService.isAndroidApp) {
+        if (!(await requestStoragePermission())) return;
+        const response = await selectDirectory();
+        importDirectory = response.path;
+      } else {
+        const selectedDir = await appService.selectDirectory?.('read');
+        importDirectory = selectedDir;
+      }
     }
     if (!importDirectory) {
       console.log('No directory selected');
@@ -542,7 +553,7 @@ const LibraryPageContent = (
         };
       }),
     );
-    importBooks(toImportFiles);
+    importBooks(toImportFiles, undefined);
   };
 
   const handleShowDetailsBook = (book: Book) => {
