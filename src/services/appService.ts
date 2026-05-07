@@ -169,8 +169,11 @@ export abstract class BaseAppService implements AppService {
     return BookSvc.updateCoverImage(this.coverCtx, book, imageUrl, imageFile);
   }
 
-  async importDictionaries(files: SelectedFile[]): Promise<DictSvc.ImportDictionariesResult> {
-    return DictSvc.importDictionaries(this.fs, files);
+  async importDictionaries(
+    files: SelectedFile[],
+    existingDictionaries: ImportedDictionary[] = [],
+  ): Promise<DictSvc.ImportDictionariesResult> {
+    return DictSvc.importDictionaries(this.fs, files, existingDictionaries);
   }
 
   async deleteDictionary(dict: ImportedDictionary): Promise<void> {

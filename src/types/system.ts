@@ -120,7 +120,10 @@ export interface AppService {
   getDefaultViewSettings(): ViewSettings;
   loadSettings(): Promise<SystemSettings>;
   saveSettings(settings: SystemSettings): Promise<void>;
-  importDictionaries(files: SelectedFile[]): Promise<ImportDictionariesResult>;
+  importDictionaries(
+    files: SelectedFile[],
+    existingDictionaries?: ImportedDictionary[],
+  ): Promise<ImportDictionariesResult>;
   deleteDictionary(dict: ImportedDictionary): Promise<void>;
   importBook(file: string | File, books: Book[], options?: ImportBookOpts): Promise<Book | null>;
   loadPdsBook(
