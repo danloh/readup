@@ -11,6 +11,7 @@ import { DropdownProvider } from '@/context/DropdownContext';
 import { useDefaultIconSize } from '@/hooks/useResponsiveSize';
 import { useSafeAreaInsets } from '@/hooks/useSafeAreaInsets';
 import { useEinkMode } from '@/hooks/useEinkMode';
+import { getAndroidPatchedViewportContent } from '@/utils/viewport';
 import { initSystemThemeListener, loadDataTheme, useThemeStore } from '@/store/themeStore';
 import { getDirFromUILanguage } from '@/utils/rtl';
 import { getLocale } from '@/utils/misc';
@@ -56,6 +57,13 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
       });
     }
   }, [appService]);
+
+  useEffect(() => {
+    const meta = document.querySelector<HTMLMetaElement>('meta[name="viewport"]');
+    if (!meta) return;
+    const updated = getAndroidPatchedViewportContent(navigator.userAgent, meta.content);
+    if (updated) meta.content = updated;
+  }, []);
 
   // Make sure appService is available in all children components
   if (!appService) return;

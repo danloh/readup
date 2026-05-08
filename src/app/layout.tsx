@@ -1,69 +1,74 @@
 import * as React from 'react';
+import type { Metadata, Viewport } from 'next';
 import { ViewTransitions } from 'next-view-transitions';
 import { EnvProvider } from '@/context/EnvContext';
 import Providers from '@/components/Providers';
-
 import '../styles/globals.css';
 
-const url = 'https://web.readup.cc/';
+const url = 'https://readup.cc/';
 const title = 'Readup: Feed & eBook Reader on AT Protocol';
 const description = 'Feed and ebook reader';
-const previewImage = 'https://readup.cc/images/open_graph_preview_read_now.png'; // TODO
+const previewImage = 'https://readup.cc/icon.png'; // TODO
 
-export const metadata = {
-  title,
+export const metadata: Metadata = {
+  metadataBase: new URL(url),
+  title: {
+    default: title,
+    template: '%s | Readup',
+  },
   description,
   generator: 'Next.js',
   manifest: '/manifest.json',
-  keywords: ['epub', 'pdf', 'ebook', 'reader', 'readup', 'pwa'],
-  authors: [{name: 'readup'}],
-  icons: [
-    { rel: 'apple-touch-icon', url: '/apple-touch-icon.png' },
-    { rel: 'icon', url: '/icon.png' },
+  keywords: ['epub', 'pdf', 'ebook', 'feed', 'rss', 'reader', 'readup', 'pwa'],
+  authors: [
+    {
+      name: 'readup',
+    },
   ],
+  icons: {
+    icon: [{ url: '/icon.png' }, { url: '/favicon.svg' }],
+    apple: [{ url: '/apple-touch-icon.png', sizes: '180x180' }],
+  },
+  appleWebApp: {
+    capable: true,
+    title: 'Readup',
+    statusBarStyle: 'default',
+  },
+  openGraph: {
+    type: 'website',
+    url,
+    title,
+    description,
+    images: [previewImage],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title,
+    description,
+    images: [previewImage],
+  },
+  other: {
+    'apple-mobile-web-app-capable': 'yes',
+    'twitter:domain': 'readup.cc',
+    'twitter:url': url,
+  },
 };
 
-export const viewport = {
+export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
   minimumScale: 1,
+  maximumScale: 1,
   userScalable: false,
   viewportFit: 'cover',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html 
-      lang='en' 
+    <html
+      lang='en'
       className={process.env['NEXT_PUBLIC_APP_PLATFORM'] === 'tauri' ? 'edge-to-edge' : ''}
     >
-      <head>
-        <title>{title}</title>
-        <meta
-          name='viewport'
-          content='minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no, user-scalable=no, viewport-fit=cover'
-        />
-        <meta name='mobile-web-app-capable' content='yes' />
-        <meta name='apple-mobile-web-app-capable' content='yes' />
-        <meta name='apple-mobile-web-app-status-bar-style' content='default' />
-        <meta name='apple-mobile-web-app-title' content='Readup' />
-        <link rel='apple-touch-icon' sizes='180x180' href='/apple-touch-icon.png' />
-        <link rel='icon' href='/favicon.svg' />
-        <link rel='manifest' href='/manifest.json' />
-        <meta name='description' content={description} />
-        <meta property='og:url' content={url} />
-        <meta property='og:type' content='website' />
-        <meta property='og:title' content={title} />
-        <meta property='og:description' content={description} />
-        <meta property='og:image' content={previewImage} />
-        <meta name='twitter:card' content='summary_large_image' />
-        <meta property='twitter:domain' content='web.readup.cc' />
-        <meta property='twitter:url' content={url} />
-        <meta name='twitter:title' content={title} />
-        <meta name='twitter:description' content={description} />
-        <meta name='twitter:image' content={previewImage} />
-      </head>
       <body>
         <ViewTransitions>
           <EnvProvider>
