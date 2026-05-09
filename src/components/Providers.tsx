@@ -12,15 +12,25 @@ import { useDefaultIconSize } from '@/hooks/useResponsiveSize';
 import { useSafeAreaInsets } from '@/hooks/useSafeAreaInsets';
 import { useEinkMode } from '@/hooks/useEinkMode';
 import { getAndroidPatchedViewportContent } from '@/utils/viewport';
-import { initSystemThemeListener, loadDataTheme, useThemeStore } from '@/store/themeStore';
 import { getDirFromUILanguage } from '@/utils/rtl';
 import { getLocale } from '@/utils/misc';
+import { initSystemThemeListener, loadDataTheme, useThemeStore } from '@/store/themeStore';
+import { useAppLockStore } from '@/store/appLockStore';
 import { CommandPalette, CommandPaletteProvider } from './command-palette';
+import AppLockDialog from './settings/AppLockDialog';
+import AppLockScreen from './AppLockScreen';
 
 const Providers = ({ children }: { children: React.ReactNode }) => {
   const { appService } = useEnv();
   const { uiLang, setUILang } = useThemeStore();
   const { applyEinkMode } = useEinkMode();
+
+  const {
+    isInitialized: isLockInitialized,
+    isUnlocked,
+    initialize: initializeAppLock,
+  } = useAppLockStore();
+  
   const iconSize = useDefaultIconSize();
   useSafeAreaInsets(); // Initialize safe area insets
 
@@ -54,9 +64,17 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
         if (globalViewSettings.isEink) {
           applyEinkMode(true);
         }
+        // Initialize the app-lock gate from on-disk settings. Until
+        // this runs, the gate renders nothing — guarantees the
+        // library can't flash on screen before the lock screen does.
+        initializeAppLock({
+          enabled: !!settings.pinCodeEnabled,
+          hash: settings.pinCodeHash,
+          salt: settings.pinCodeSalt,
+        });
       });
     }
-  }, [appService]);
+  }, [appService, applyEinkMode, initializeAppLock]);
 
   useEffect(() => {
     const meta = document.querySelector<HTMLMetaElement>('meta[name="viewport"]');
@@ -68,14 +86,28 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
   // Make sure appService is available in all children components
   if (!appService) return;
 
+  // App-lock gate. While the lock store is uninitialized we render
+  // nothing — without this guard the library would flash on screen
+  // for a few hundred ms before `loadSettings` resolved and let the
+  // lock store decide whether to lock.
+  const showAppLockScreen = isLockInitialized && !isUnlocked;
+  const appShellHidden = !isLockInitialized || !isUnlocked;
+
   return (
     <CSPostHogProvider>
       <AuthProvider>
         <IconContext.Provider value={{ size: `${iconSize}px` }}>
           <DropdownProvider>
             <CommandPaletteProvider>
-              {children}
-              <CommandPalette />
+              <div
+                aria-hidden={appShellHidden}
+                style={appShellHidden ? { display: 'none' } : undefined}
+              >
+                {children}
+                <CommandPalette />
+              </div>
+              <AppLockDialog />
+              {showAppLockScreen && <AppLockScreen />}
             </CommandPaletteProvider>
           </DropdownProvider>
         </IconContext.Provider>

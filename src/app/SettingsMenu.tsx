@@ -22,6 +22,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useEnv } from '@/context/EnvContext';
 import { useThemeStore } from '@/store/themeStore';
 import { useSettingsStore } from '@/store/settingsStore';
+import { type AppLockDialogMode, useAppLockStore } from '@/store/appLockStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { navigateToLogin, navigateToProfile } from '@/utils/nav';
 import { tauriHandleSetAlwaysOnTop, tauriHandleToggleFullScreen } from '@/utils/window';
@@ -55,6 +56,14 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
   );
   const [isTelemetryEnabled, setIsTelemetryEnabled] = useState(settings.telemetryEnabled);
   const [alwaysInForeground, setAlwaysInForeground] = useState(settings.alwaysInForeground);
+
+  const { openDialog: openAppLockDialogInStore } = useAppLockStore();
+  const isPinEnabled = !!settings.pinCodeEnabled;
+
+  const openAppLockDialog = (mode: AppLockDialogMode) => {
+    openAppLockDialogInStore(mode);
+    setIsDropdownOpen?.(false);
+  };
 
   const showAboutReadup = () => {
     setAboutDialogVisible(true);
@@ -208,6 +217,19 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
         onClick={cycleThemeMode}
       />
       <MenuItem label={_('Settings')} Icon={PiPaletteBold} onClick={openSettingsDialog} />
+      {!isPinEnabled && (
+        <MenuItem
+          label={_('Set PIN…')}
+          tooltip={_('Require a 4-digit PIN to open Readup')}
+          onClick={() => openAppLockDialog('set')}
+        />
+      )}
+      {isPinEnabled && (
+        <MenuItem label={_('Change PIN…')} onClick={() => openAppLockDialog('change')} />
+      )}
+      {isPinEnabled && (
+        <MenuItem label={_('Disable PIN…')} onClick={() => openAppLockDialog('disable')} />
+      )}
       {appService?.canCustomizeRootDir && (
         <>
           <hr aria-hidden='true' className='border-base-200 my-1' />
