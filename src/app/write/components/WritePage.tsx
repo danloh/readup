@@ -108,7 +108,9 @@ const WritePage = () => {
             <h4 className='line-clamp-2 w-[90%] text-sm font-semibold'>
               {formatTitle(book.title).replace(/\u00A0/g, ' ')}
             </h4>
-            <p className='truncate text-xs opacity-75'>{formatAuthors(book.author)}</p>
+            <p className='truncate text-xs opacity-75'>
+              {formatAuthors(book.author || book.metadata?.author || '')}
+            </p>
           </div>
           <label className='block mb-2'>
             {_('Rating')}
