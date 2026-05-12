@@ -178,6 +178,9 @@ const getColorStyles = (
     hr.background-img {
       mix-blend-mode: multiply;
     }
+    p[width][height] > img:only-child {
+      mix-blend-mode: multiply;
+    }
     /* inline images */
     *:has(> img.has-text-siblings):not(body) {
       ${overrideColor ? `background-color: ${bg};` : ''}
@@ -346,6 +349,12 @@ const getPageLayoutStyles = (
     height: auto;
   }
 
+  /* some mobi */
+  p[width][height] > img:only-child { 
+    width: unset !important;
+    height: unset !important;
+  }
+
   /* page break */
   body.paginated-mode div[style*="page-break-after: always"],
   body.paginated-mode div[style*="page-break-after:always"],
@@ -455,6 +464,10 @@ const getParagraphLayoutStyles = (
     ${vertical && overrideLayout ? `margin-right: ${paragraphMargin}em !important;` : ''}
     ${!vertical && overrideLayout ? `margin-top: ${paragraphMargin}em !important;` : ''}
     ${!vertical && overrideLayout ? `margin-bottom: ${paragraphMargin}em !important;` : ''}
+  }
+
+  p > font:only-child { 
+    display: flow-root; 
   }
 
   :lang(zh), :lang(ja), :lang(ko) {
