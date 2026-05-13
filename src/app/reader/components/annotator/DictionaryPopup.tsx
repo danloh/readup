@@ -54,6 +54,8 @@ const DictionaryPopup: React.FC<DictionaryPopupProps> = ({
           canGoBack={state.canGoBack}
           goBack={state.goBack}
           onManage={onManage}
+          canAddToVocabulary={state.canAddToVocabulary}
+          onAddToVocabulary={state.onAddToVocabulary}
         />
         <div className='min-h-0 flex-1'>
           <DictionaryResultsBody {...state} />

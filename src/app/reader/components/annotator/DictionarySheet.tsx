@@ -29,6 +29,8 @@ const DictionarySheet: React.FC<DictionarySheetProps> = ({ word, lang, onDismiss
           canGoBack={state.canGoBack}
           goBack={state.goBack}
           onManage={onManage}
+          canAddToVocabulary={state.canAddToVocabulary}
+          onAddToVocabulary={state.onAddToVocabulary}
         />
       }
       contentClassName='!px-0'

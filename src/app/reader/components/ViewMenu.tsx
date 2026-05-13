@@ -1,6 +1,5 @@
 import clsx from 'clsx';
-import React, { useEffect } from 'react';
-import { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { GrSystem } from "react-icons/gr";
 import { MdZoomOut, MdZoomIn, MdSync, MdSyncProblem } from 'react-icons/md';
 import { PiScrollLight, PiBookOpenLight, PiParagraphFill } from "react-icons/pi";

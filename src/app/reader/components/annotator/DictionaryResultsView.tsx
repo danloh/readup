@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { MdArrowBack, MdChevronRight, MdSettings } from 'react-icons/md';
+import { useRouter } from 'next/navigation';
+import { MdArrowBack, MdChevronRight, MdSettings, MdBookmark } from 'react-icons/md';
+import { FaPlus } from 'react-icons/fa';
 import clsx from 'clsx';
 import { openUrl } from '@tauri-apps/plugin-opener';
 
@@ -9,6 +11,8 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useEnv } from '@/context/EnvContext';
 import { useThemeStore } from '@/store/themeStore';
 import { useCustomDictionaryStore } from '@/store/customDictionaryStore';
+import { useVocabularyBookStore } from '@/store/vocabularyBookStore';
+import { useVocabularyBook } from '@/hooks/useVocabularyBook';
 import { getEnabledProviders } from '@/services/dictionaries/registry';
 import { isTauriAppPlatform } from '@/services/environment';
 import {
@@ -48,6 +52,9 @@ export interface DictionaryResultsState {
   resolveWebSearchUrl: (id: string) => string | undefined;
   onWebSearchClickTauri: (e: React.MouseEvent<HTMLAnchorElement>, id: string) => void;
   noProvidersAtAll: boolean;
+  getDefinitionSummary: () => string;
+  canAddToVocabulary: boolean;
+  onAddToVocabulary: () => Promise<void>;
 }
 
 /**
@@ -69,6 +76,8 @@ export function useDictionaryResults({
 }: UseDictionaryResultsArgs): DictionaryResultsState {
   const { appService } = useEnv();
   const { dictionaries, settings } = useCustomDictionaryStore();
+  const { addEntry, entryExists } = useVocabularyBookStore();
+  const { save: saveVocabFile } = useVocabularyBook();
   const isDarkMode = useThemeStore((s) => s.isDarkMode);
 
   const computedProviders = getEnabledProviders({
@@ -282,6 +291,50 @@ export function useDictionaryResults({
   const canGoBack = historyStack.length > 1;
   const noProvidersAtAll = providers.length === 0;
 
+  const getDefinitionSummary = useCallback(() => {
+    const loadedCards = Object.entries(cards).filter(
+      ([, c]) => c.state === 'loaded' && c.outcome?.ok,
+    );
+    if (loadedCards.length === 0) return '';
+
+    const definitionTexts: string[] = [];
+    for (const [providerId] of loadedCards) {
+      const container = containerRefs.current.get(providerId);
+      if (container) {
+        const text = container.textContent?.trim();
+        if (text) {
+          definitionTexts.push(text);
+        }
+      }
+    }
+
+    return definitionTexts.slice(0, 2).join(' | ').substring(0, 500);
+  }, [cards]);
+
+  const canAddToVocabulary = !entryExists(currentWord) && !noProvidersAtAll;
+
+  const onAddToVocabulary = useCallback(async () => {
+    if (!canAddToVocabulary) return;
+
+    const definition = getDefinitionSummary();
+    if (!definition) {
+      console.warn('No definition found for word', currentWord);
+      return;
+    }
+
+    addEntry({
+      word: currentWord,
+      definition,
+      source: 'dictionary',
+    });
+
+    try {
+      await saveVocabFile();
+    } catch (error) {
+      console.warn('Failed to save vocabulary book:', error);
+    }
+  }, [currentWord, canAddToVocabulary, getDefinitionSummary, addEntry, saveVocabFile]);
+
   return {
     currentWord,
     canGoBack,
@@ -295,6 +348,9 @@ export function useDictionaryResults({
     resolveWebSearchUrl,
     onWebSearchClickTauri,
     noProvidersAtAll,
+    getDefinitionSummary,
+    canAddToVocabulary,
+    onAddToVocabulary,
   };
 }
 
@@ -303,6 +359,8 @@ interface DictionaryResultsHeaderProps {
   canGoBack: boolean;
   goBack: () => void;
   onManage?: () => void;
+  canAddToVocabulary?: boolean;
+  onAddToVocabulary?: () => Promise<void>;
 }
 
 export const DictionaryResultsHeader: React.FC<DictionaryResultsHeaderProps> = ({
@@ -310,8 +368,23 @@ export const DictionaryResultsHeader: React.FC<DictionaryResultsHeaderProps> = (
   canGoBack,
   goBack,
   onManage,
+  canAddToVocabulary,
+  onAddToVocabulary,
 }) => {
   const _ = useTranslation();
+  const router = useRouter();
+  const [isAdding, setIsAdding] = useState(false);
+
+  const handleAddClick = async () => {
+    if (isAdding || !onAddToVocabulary || !canAddToVocabulary) return;
+    setIsAdding(true);
+    try {
+      await onAddToVocabulary();
+    } finally {
+      setIsAdding(false);
+    }
+  };
+
   return (
     <div className='-mt-3 flex h-8 w-full items-center justify-between px-2'>
       <div className='flex h-8 w-8 items-center justify-center'>
@@ -329,7 +402,27 @@ export const DictionaryResultsHeader: React.FC<DictionaryResultsHeaderProps> = (
       <span data-testid='dict-title' className='line-clamp-1 flex-1 text-center font-bold'>
         {currentWord}
       </span>
-      <div className='flex h-8 w-8 items-center justify-center'>
+      <div className='flex h-8 gap-1 items-center justify-center'>
+        {canAddToVocabulary && onAddToVocabulary ? (
+          <button
+            type='button'
+            aria-label={_('Add to Vocabulary')}
+            title={_('Add to Vocabulary')}
+            onClick={handleAddClick}
+            disabled={isAdding}
+            className='btn btn-ghost btn-square btn-xs text-base-content/60 hover:text-base-content not-eink:hover:bg-base-200/60 disabled:opacity-50'
+          >
+            <FaPlus size={16} />
+          </button>
+        ) : null}
+        <button
+          type='button'
+          title={_('Vocabulary Book')}
+          className='btn btn-ghost btn-square btn-xs text-base-content/60 hover:text-base-content not-eink:hover:bg-base-200/60 disabled:opacity-50'
+          onClick={() => router.push('/vocabulary')}
+        >
+          <MdBookmark />
+        </button>
         {onManage ? (
           <button
             type='button'

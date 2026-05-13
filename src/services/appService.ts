@@ -17,8 +17,8 @@ import { getOSPlatform } from '@/utils/misc';
 import { ProgressHandler } from '@/utils/transfer';
 import type { BookNav } from '@/services/nav';
 import type { SelectedFile } from '@/hooks/useFileSelector';
+import { DEFAULT_VOCABULARY_BOOK, VocabularyBook } from '@/store/vocabularyBookStore';
 import type { ImportedDictionary } from './dictionaries/types';
-
 import { UsageRecord } from './usageService';
 import { loadJSONFile, safeSaveJSON } from './persistence';
 import { DownloadDataResult } from './bsky/atfile';
@@ -387,5 +387,18 @@ export abstract class BaseAppService implements AppService {
 
   async saveReviews(data: Review[]): Promise<void> {
     await safeSaveJSON(this.fs, 'reviews.json', 'Books', data);
+  }
+
+  // Vocabulary data management --------------------------------------------------
+  async loadVocabulary(): Promise<VocabularyBook> {
+    const mainResult = await loadJSONFile(this.fs, 'vocabulary.json', 'Books');
+    if (mainResult.success) {
+      return mainResult.data as VocabularyBook;
+    }
+    return DEFAULT_VOCABULARY_BOOK;
+  }
+
+  async saveVocabulary(data: VocabularyBook): Promise<void> {
+    await safeSaveJSON(this.fs, 'vocabulary.json', 'Books', data);
   }
 }

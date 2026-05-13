@@ -9,6 +9,7 @@ import { Book, BookConfig, BookContent, ImportBookOpts, Review, ViewSettings } f
 import { SelectedFile } from '@/hooks/useFileSelector';
 import { ImportedDictionary } from '@/services/dictionaries/types';
 import { ImportDictionariesResult } from '@/services/dictionaries/dictionaryService';
+import { VocabularyBook } from '@/store/vocabularyBookStore';
 
 export type AppPlatform = 'web' | 'tauri';
 export type OsPlatform = 'android' | 'ios' | 'macos' | 'windows' | 'linux' | 'unknown';
@@ -179,6 +180,8 @@ export interface AppService {
   saveArticles(articles: ArticleType[]): Promise<void>;
   saveReviews(data: Review[]): Promise<void>;
   loadReviews(): Promise<Review[]>;
+  saveVocabulary(data: VocabularyBook): Promise<void>;
+  loadVocabulary(): Promise<VocabularyBook>;
   // for reading tracker 
   loadUsageData(): Promise<UsageRecord>;
   saveUsageData(data: UsageRecord): Promise<void>;
