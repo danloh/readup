@@ -1,4 +1,4 @@
-import {MDD} from '../dist/cjs/index.js';
+import { MDD } from "js-mdict";
 
 const mdd = new MDD('./tests/data/Collins.mdd');
 console.log(mdd.header);

@@ -13,6 +13,7 @@
     "forceConsistentCasingInFileNames": true,
     "sourceMap": true,
     "outDir": "dist",
+    "rootDir": "./src",
     "lib": ["DOM", "ES2022"],
     "declaration": true,
     "paths": {

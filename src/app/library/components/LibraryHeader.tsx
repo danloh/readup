@@ -15,6 +15,7 @@ import { debounce } from '@/utils/debounce';
 import Dropdown from '@/components/Dropdown';
 import ViewMenu from './ViewMenu';
 import { setBackupDialogVisible } from './BackupWindow';
+import { MdBookmark } from 'react-icons/md';
 
 interface LibraryHeaderProps {
   onImportBooksFromFiles: () => void;
@@ -156,6 +157,16 @@ const LibraryHeader: React.FC<LibraryHeaderProps> = (
               aria-label={_('Backup & Restore')}
             >
               <FaRegWindowRestore className='h-4 w-4' />
+            </button>
+          </div>
+          <div className='tooltip tooltip-bottom' data-tip={_('Vocabulary Book')}>
+            <button
+              type='button'
+              className='btn btn-ghost h-8 min-h-8 w-8 p-0'
+              onClick={() => router.push('/vocabulary')}
+              aria-label={_('Vocabulary Book')}
+            >
+              <MdBookmark className='h-4 w-4' />
             </button>
           </div>
           <Dropdown

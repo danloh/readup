@@ -301,14 +301,14 @@ export function useDictionaryResults({
     for (const [providerId] of loadedCards) {
       const container = containerRefs.current.get(providerId);
       if (container) {
-        const text = container.textContent?.trim();
+        const text = container.getHTML()?.trim();
         if (text) {
           definitionTexts.push(text);
         }
       }
     }
 
-    return definitionTexts.slice(0, 2).join(' | ').substring(0, 500);
+    return definitionTexts.slice(0, 2).join(' <br/> ');
   }, [cards]);
 
   const canAddToVocabulary = !entryExists(currentWord) && !noProvidersAtAll;

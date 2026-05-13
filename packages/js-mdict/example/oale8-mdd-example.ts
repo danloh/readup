@@ -1,4 +1,4 @@
-import { MDD } from '../dist/cjs/index.js';
+import { MDD } from 'js-mdict';
 
 const mdx = new MDD('./tests/data/oale8.mdd');
 console.log(mdx.header);

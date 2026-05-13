@@ -1,4 +1,4 @@
-import {MDX} from '../dist/cjs/index.js';
+import {MDX} from 'js-mdict';
 
 const mdx = new MDX('./tests/data/new-oxford-en-ch-dict.mdx');
 console.log(mdx.header);

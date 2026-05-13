@@ -148,9 +148,9 @@ export default function VocabularyPage() {
   return (
     <div className='flex h-screen flex-col bg-base-100'>
       {/* Header */}
-      <div className='bg-base-200 border-b border-base-300 p-4'>
+      <div className='bg-base-200 border-b border-base-300 p-2'>
         <div className='flex items-center justify-between'>
-          <div className='flex items-center gap-3'>
+          <div className='flex items-center gap-1'>
             <button
               type='button'
               onClick={() => {
@@ -161,13 +161,13 @@ export default function VocabularyPage() {
                   router.back();
                 }
               }}
-              className='btn btn-ghost btn-sm'
+              className='btn btn-ghost btn-xs'
             >
               <MdArrowBack size={20} />
             </button>
-            <h1 className='text-xl font-bold'>
-              {_('Vocabulary Book')} ({allEntries.length})
-            </h1>
+            <b className='text-lg font-bold'>
+              {_('Vocabulary')} ({allEntries.length})
+            </b>
           </div>
           <div className='flex gap-2'>
             {/* View Mode Toggles */}
@@ -178,7 +178,7 @@ export default function VocabularyPage() {
                 setViewMode('study');
                 setSelectedEntries(new Set());
               }}
-              className={clsx('btn btn-sm', viewMode === 'study' ? 'btn-primary' : 'btn-outline')}
+              className={clsx('btn btn-xs', viewMode === 'study' ? 'btn-primary' : 'btn-outline')}
             >
               <BiCard size={16} />
             </button>
@@ -189,7 +189,7 @@ export default function VocabularyPage() {
                 setViewMode('grid');
                 setSelectedEntries(new Set());
               }}
-              className={clsx('btn btn-sm', viewMode === 'grid' ? 'btn-primary' : 'btn-outline')}
+              className={clsx('btn btn-xs', viewMode === 'grid' ? 'btn-primary' : 'btn-outline')}
             >
               <MdGridView size={16} />
             </button>
@@ -199,7 +199,7 @@ export default function VocabularyPage() {
               onClick={() => {
                 setViewMode('select');
               }}
-              className={clsx('btn btn-sm', viewMode === 'select' ? 'btn-primary' : 'btn-outline')}
+              className={clsx('btn btn-xs', viewMode === 'select' ? 'btn-primary' : 'btn-outline')}
             >
               <MdViewWeek size={16} />
             </button>
@@ -210,17 +210,16 @@ export default function VocabularyPage() {
                 type='button'
                 onClick={handleBulkDelete}
                 disabled={isDeleting}
-                className='btn btn-sm btn-error'
+                className='btn btn-xs btn-error'
               >
                 {isDeleting ? (
                   <>
-                    <span className='loading loading-spinner loading-sm' />
+                    <span className='loading loading-spinner loading-xs' />
                     {_('Deleting')}
                   </>
                 ) : (
                   <>
-                    <MdDelete size={16} />
-                    {_('Delete')} ({selectedEntries.size})
+                    <MdDelete size={16} /> {selectedEntries.size}
                   </>
                 )}
               </button>
@@ -330,7 +329,7 @@ export default function VocabularyPage() {
                     type='button'
                     onClick={handlePrevious}
                     disabled={currentIndex === 0}
-                    className='btn btn-outline disabled:opacity-50'
+                    className='btn btn-sm btn-outline disabled:opacity-50'
                   >
                     {_('Previous')}
                   </button>
@@ -338,7 +337,7 @@ export default function VocabularyPage() {
                     type='button'
                     onClick={handleNext}
                     disabled={currentIndex === allEntries.length - 1}
-                    className='btn btn-primary disabled:opacity-50'
+                    className='btn btn-sm btn-primary disabled:opacity-50'
                   >
                     {currentIndex === allEntries.length - 1 ? _('Completed') : _('Next')}
                   </button>

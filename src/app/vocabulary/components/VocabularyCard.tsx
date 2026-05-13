@@ -32,7 +32,7 @@ export const VocabularyCard: React.FC<VocabularyCardProps> = ({ entry, onDelete 
       >
         {/* Front side - Word */}
         <div
-          className='absolute w-full h-full bg-gradient-to-br from-primary to-primary-focus rounded-xl shadow-lg p-6 flex flex-col items-center justify-center text-center cursor-pointer'
+          className='absolute w-full h-full bg-gradient-to-br from-primary to-primary-focus rounded-xl shadow-lg p-2 flex flex-col items-center justify-center text-center cursor-pointer'
           style={{
             backfaceVisibility: 'hidden',
           }}
@@ -47,7 +47,7 @@ export const VocabularyCard: React.FC<VocabularyCardProps> = ({ entry, onDelete 
 
         {/* Back side - Definition */}
         <div
-          className='absolute w-full h-full bg-gradient-to-br from-secondary to-secondary-focus rounded-xl shadow-lg p-6 flex flex-col items-center justify-center text-center cursor-pointer'
+          className='absolute w-full h-full bg-gradient-to-br from-secondary to-secondary-focus rounded-xl shadow-lg p-2 flex flex-col items-center justify-center text-center cursor-pointer'
           style={{
             backfaceVisibility: 'hidden',
             transform: 'rotateY(180deg)',
@@ -55,9 +55,10 @@ export const VocabularyCard: React.FC<VocabularyCardProps> = ({ entry, onDelete 
           onClick={() => setIsFlipped(false)}
         >
           <div className='text-sm opacity-60 mb-4'>Tap to flip</div>
-          <p className='text-white text-base leading-relaxed line-clamp-8 overflow-auto max-h-48'>
-            {entry.definition}
-          </p>
+          <div 
+            className='overflow-auto max-h-48' 
+            dangerouslySetInnerHTML={{ __html: entry.definition }} 
+          />
           {entry.reviewCount !== undefined && entry.reviewCount > 0 && (
             <div className='text-xs opacity-40 mt-4'>Reviewed {entry.reviewCount}x</div>
           )}

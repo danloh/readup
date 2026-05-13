@@ -1,5 +1,6 @@
 import  Benchmark from 'benchmark';
-import { MDX } from '../../dist/cjs/mdx.js';
+import { MDX } from 'js-mdict';
+
 
 const suite = new Benchmark.Suite();
 
