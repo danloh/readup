@@ -16,6 +16,7 @@ import { useResponsiveSize } from '@/hooks/useResponsiveSize';
 import Popup from '@/components/Popup';
 import { Overlay } from '@/components/Overlay';
 import { useFoliateEvents } from '../hooks/useFoliateEvents';
+import { shouldCheckAsFootnote } from '../utils/footnoteHeuristics';
 
 interface FootnotePopupProps {
   bookKey: string;
@@ -242,7 +243,7 @@ const FootnotePopup: React.FC<FootnotePopupProps> = ({ bookKey, bookDoc }) => {
     if (footnoteClasses.some((cls) => anchor.classList.contains(cls))) {
       detail['follow'] = true;
     }
-    if (/^.{0,2}\d+$/.test(anchor.textContent || '')) {
+    if (shouldCheckAsFootnote(anchor)) {
       detail['check'] = true;
     }
     historyRef.current = { items: [detail], index: 0 };
