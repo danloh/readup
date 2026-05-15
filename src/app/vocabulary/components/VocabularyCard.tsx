@@ -47,7 +47,7 @@ export const VocabularyCard: React.FC<VocabularyCardProps> = ({ entry, onDelete 
 
         {/* Back side - Definition */}
         <div
-          className='absolute w-full h-full bg-gradient-to-br from-secondary to-secondary-focus rounded-xl shadow-lg p-2 flex flex-col items-center justify-center text-center cursor-pointer'
+          className='absolute w-full h-full bg-gradient-to-br from-secondary to-secondary-focus rounded-xl shadow-lg p-2 flex flex-col items-center justify-center cursor-pointer'
           style={{
             backfaceVisibility: 'hidden',
             transform: 'rotateY(180deg)',
@@ -56,7 +56,7 @@ export const VocabularyCard: React.FC<VocabularyCardProps> = ({ entry, onDelete 
         >
           <div className='text-sm opacity-60 mb-4'>Tap to flip</div>
           <div 
-            className='overflow-auto max-h-48' 
+            className='overflow-auto max-h-48 text-sm' 
             dangerouslySetInnerHTML={{ __html: entry.definition }} 
           />
           {entry.reviewCount !== undefined && entry.reviewCount > 0 && (

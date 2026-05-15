@@ -301,14 +301,26 @@ export function useDictionaryResults({
     for (const [providerId] of loadedCards) {
       const container = containerRefs.current.get(providerId);
       if (container) {
-        const text = container.getHTML()?.trim();
-        if (text) {
-          definitionTexts.push(text);
+        // Try to get HTML content first (works on all browsers including mobile)
+        // and remove the invalid link
+        let html = container
+          .innerHTML?.trim()
+          .replace(/<a\s+(?!href=["']?https?:\/\/)([^>]*)>([^<]*)<\/a>/gi, '$2');
+
+        if (html) {
+          definitionTexts.push(html);
+        } else {
+          // Fall back to text content if HTML is empty
+          const text = container.textContent?.trim();
+          if (text) {
+            definitionTexts.push(text);
+          }
         }
       }
     }
 
-    return definitionTexts.slice(0, 2).join(' <br/> ');
+    // Join with HTML separator
+    return definitionTexts.slice(0, 2).join('<hr class="my-2" />');
   }, [cards]);
 
   const canAddToVocabulary = !entryExists(currentWord) && !noProvidersAtAll;

@@ -248,9 +248,10 @@ export default function VocabularyPage() {
                   />
                   <div className='flex-1 min-w-0'>
                     <div className='font-semibold truncate'>{entry.word}</div>
-                    <div className='text-sm text-base-content/60 truncate'>
-                      {entry.definition}
-                    </div>
+                    <div 
+                      className='text-sm max-h-36 overflow-y-auto'
+                      dangerouslySetInnerHTML={{ __html: entry.definition }}
+                    />
                   </div>
                 </div>
               ))}
@@ -284,9 +285,10 @@ export default function VocabularyPage() {
                       </button>
                     </div>
                     <div className='font-bold text-lg mb-2 pr-6 break-words'>{entry.word}</div>
-                    <div className='text-sm opacity-90 line-clamp-3 break-words'>
-                      {entry.definition}
-                    </div>
+                    <div 
+                      className='text-sm max-h-48 overflow-y-auto'
+                      dangerouslySetInnerHTML={{ __html: entry.definition }}
+                    />
                     {entry.reviewCount !== undefined && entry.reviewCount > 0 && (
                       <div className='text-xs opacity-60 mt-2'>
                         Reviewed {entry.reviewCount}x
