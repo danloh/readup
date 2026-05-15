@@ -454,7 +454,6 @@ describe('services/constants', () => {
     it('has boolean display flags', () => {
       expect(typeof DEFAULT_VIEW_CONFIG.showHeader).toBe('boolean');
       expect(typeof DEFAULT_VIEW_CONFIG.showFooter).toBe('boolean');
-      expect(typeof DEFAULT_VIEW_CONFIG.showBarsOnScroll).toBe('boolean');
       expect(typeof DEFAULT_VIEW_CONFIG.showPaginationButtons).toBe('boolean');
     });
 

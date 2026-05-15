@@ -274,9 +274,7 @@ const FoliateViewer: React.FC<{
         detail.doc.addEventListener('mousedown', handleMousedown.bind(null, bookKey));
         detail.doc.addEventListener('mouseup', handleMouseup.bind(null, bookKey));
         detail.doc.addEventListener('click', handleClick.bind(null, bookKey, doubleClickDisabled));
-        // passive: false so handleWheel can preventDefault for mouse-wheel
-        // events and replace the native jerky scroll with a smooth animation.
-        detail.doc.addEventListener('wheel', handleWheel.bind(null, bookKey), { passive: false });
+        detail.doc.addEventListener('wheel', handleWheel.bind(null, bookKey));
         detail.doc.addEventListener('touchstart', handleTouchStart.bind(null, bookKey));
         detail.doc.addEventListener('touchmove', handleTouchMove.bind(null, bookKey));
         detail.doc.addEventListener('touchend', handleTouchEnd.bind(null, bookKey));
@@ -551,8 +549,8 @@ const FoliateViewer: React.FC<{
     const showDoubleBorderFooter = showDoubleBorder && viewSettings.showFooter;
     const showTopHeader = viewSettings.showHeader && !viewSettings.vertical;
     const showBottomFooter = viewSettings.showFooter && !viewSettings.vertical;
-    const moreTopInset = showTopHeader ? Math.max(0, 44 - insets.top) : 0;
-    const moreBottomInset = showBottomFooter ? Math.max(0, 44 - insets.bottom) : 0;
+    const moreTopInset = showTopHeader ? Math.max(0, 16 - insets.top) : 0;
+    const moreBottomInset = showBottomFooter ? Math.max(0, 16 - insets.bottom) : 0;
     const moreRightInset = showDoubleBorderHeader ? 32 : 0;
     const moreLeftInset = showDoubleBorderFooter ? 32 : 0;
     const topMargin = (showTopHeader ? insets.top : viewInsets.top) + moreTopInset;
@@ -565,12 +563,11 @@ const FoliateViewer: React.FC<{
     viewRef.current?.renderer.setAttribute('margin-bottom', `${bottomMargin}px`);
     viewRef.current?.renderer.setAttribute('margin-left', `${leftMargin}px`);
     if (viewSettings.scrolled) {
-      const showBarsOnScroll = viewSettings.showBarsOnScroll;
-      const headerVisible = showTopHeader && showBarsOnScroll;
-      const footerVisible = showBottomFooter && showBarsOnScroll;
+      const headerVisible = showTopHeader;
+      const footerVisible = showBottomFooter;
       const safeBottomPadding = appService?.hasSafeAreaInset ? gridInsets.bottom * 0.33 : 0;
-      const footerBarHeight = 44 + safeBottomPadding;
-      const scrollTop = headerVisible ? gridInsets.top + 44 : 0;
+      const footerBarHeight = safeBottomPadding + viewSettings.marginBottomPx;
+      const scrollTop = headerVisible ? gridInsets.top + viewSettings.marginTopPx : 0;
       const scrollBottom = footerVisible ? footerBarHeight : 0;
       setScrollMargins({ top: scrollTop, bottom: scrollBottom });
     } else {
@@ -641,7 +638,6 @@ const FoliateViewer: React.FC<{
     viewSettings?.doubleBorder,
     viewSettings?.showHeader,
     viewSettings?.showFooter,
-    viewSettings?.showBarsOnScroll,
     viewSettings?.scrolled,
     viewSettings?.noContinuousScroll,
   ]);

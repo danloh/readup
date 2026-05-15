@@ -74,7 +74,6 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
   const [borderColor, setBorderColor] = useState(viewSettings.borderColor);
   const [showHeader, setShowHeader] = useState(viewSettings.showHeader);
   const [showFooter, setShowFooter] = useState(viewSettings.showFooter);
-  const [showBarsOnScroll, setShowBarsOnScroll] = useState(viewSettings.showBarsOnScroll);
   const [screenOrientation, setScreenOrientation] = useState(viewSettings.screenOrientation);
 
   const resetToDefaults = useResetViewSettings();
@@ -106,7 +105,6 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
       borderColor: setBorderColor,
       showHeader: setShowHeader,
       showFooter: setShowFooter,
-      showBarsOnScroll: setShowBarsOnScroll,
     });
   };
 
@@ -319,11 +317,6 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
   }, [borderColor]);
 
   useEffect(() => {
-    saveViewSettings(envConfig, bookKey, 'showBarsOnScroll', showBarsOnScroll, false, false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showBarsOnScroll]);
-
-  useEffect(() => {
     if (showHeader === viewSettings.showHeader) return;
     if (showHeader && !viewSettings.vertical) {
       const minMarginTop = Math.max(0, Math.round((44 - gridInsets.top) / 4) * 4);
@@ -534,7 +527,7 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
               onChange={showHeader && !isVertical ? setMarginTopPx : setCompactMarginTopPx}
               min={
                 showHeader && !isVertical
-                  ? Math.max(0, Math.round((44 - gridInsets.top) / 4) * 4)
+                  ? Math.max(0, Math.round((16 - gridInsets.top) / 4) * 4)
                   : 0
               }
               max={88}
@@ -548,7 +541,7 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
               onChange={showFooter && !isVertical ? setMarginBottomPx : setCompactMarginBottomPx}
               min={
                 showFooter && !isVertical
-                  ? Math.max(0, Math.round((44 - gridInsets.bottom) / 4) * 4)
+                  ? Math.max(0, Math.round((16 - gridInsets.bottom) / 4) * 4)
                   : 0
               }
               max={88}
@@ -701,15 +694,6 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
           className='toggle toggle-success h-5'
           checked={showFooter}
           onChange={() => setShowFooter(!showFooter)}
-        />
-      </div>
-      <div className='flex items-center justify-between'>
-        <b className=''>{_('Apply also in Scrolled Mode')}</b>
-        <input
-          type='checkbox'
-          className='toggle toggle-success h-5'
-          checked={showBarsOnScroll}
-          onChange={() => setShowBarsOnScroll(!showBarsOnScroll)}
         />
       </div>
     </div>

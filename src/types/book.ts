@@ -208,7 +208,6 @@ export interface ViewConfig {
 
   showHeader: boolean;
   showFooter: boolean;
-  showBarsOnScroll: boolean;
   showPaginationButtons: boolean;
 
   animated: boolean;

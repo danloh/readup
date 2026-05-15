@@ -55,7 +55,6 @@ const ProgressInfoView: React.FC<PageInfoProps> = ({
   const progress = getProgress(bookKey);
   
   const showDoubleBorder = viewSettings.vertical && viewSettings.doubleBorder;
-  const isScrolled = viewSettings.scrolled;
   const isVertical = viewSettings.vertical;
   const isEink = viewSettings.isEink;
 
@@ -98,7 +97,6 @@ const ProgressInfoView: React.FC<PageInfoProps> = ({
         'progressinfo absolute bottom-0 flex items-center justify-between font-sans',
         isEink ? 'text-sm font-normal' : 'text-neutral-content text-xs font-extralight',
         isVertical ? 'writing-vertical-rl' : 'w-full',
-        isScrolled && !isVertical && 'bg-base-100',
       )}
       aria-label={
         [
@@ -132,10 +130,8 @@ const ProgressInfoView: React.FC<PageInfoProps> = ({
       }
     >
       <div
-        className={clsx(
-          'flex items-center justify-center gap-1',
-          isVertical ? 'h-full' : 'h-[42px] w-full',
-        )}
+        className={clsx('flex items-center justify-center gap-1', isVertical ? 'h-full' : 'w-full')}
+        style={isVertical ? {} : { height: `${viewSettings.marginBottomPx}px` }}
       >
         <span className='remaining-info-label text-start truncate'>{remainingInfo}</span>
         <span className='progress-info-label ms-auto text-end truncate'>{progressInfo}</span>

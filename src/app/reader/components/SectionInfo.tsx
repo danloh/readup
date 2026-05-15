@@ -32,8 +32,9 @@ const SectionInfo: React.FC<SectionInfoProps> = ({
   gridInsets,
 }) => {
   const { appService } = useEnv();
-  const { hoveredBookKey, getView, setHoveredBookKey } = useReaderStore();
+  const { hoveredBookKey, getView, getViewSettings, setHoveredBookKey } = useReaderStore();
   const { systemUIVisible, statusBarHeight } = useThemeStore();
+  const viewSettings = getViewSettings(bookKey)!;
   const topInset = Math.max(
     gridInsets.top,
     appService?.isAndroidApp && systemUIVisible ? statusBarHeight / 2 : 0,
@@ -70,8 +71,7 @@ const SectionInfo: React.FC<SectionInfoProps> = ({
         className={clsx(
           'sectioninfo absolute flex items-center overflow-hidden font-sans',
           isEink ? 'text-sm font-normal' : 'text-neutral-content text-xs font-light',
-          isVertical ? 'writing-vertical-rl max-h-[85%]' : 'top-0 h-[44px]',
-          isScrolled && !isVertical && 'bg-base-100',
+          isVertical ? 'writing-vertical-rl max-h-[85%]' : 'top-0',
         )}
         style={
           isVertical
@@ -87,6 +87,7 @@ const SectionInfo: React.FC<SectionInfoProps> = ({
                 top: `${topInset}px`,
                 paddingInline: `calc(${horizontalGap / 2}% + ${contentInsets.left / 2}px)`,
                 width: '100%',
+                height: `${viewSettings.marginTopPx}px`,
               }
         }
       >

@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import clsx from 'clsx';
 import { MdDelete } from 'react-icons/md';
 import type { VocabularyEntry } from '@/store/vocabularyBookStore';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface VocabularyCardProps {
   entry: VocabularyEntry;
@@ -11,6 +12,7 @@ interface VocabularyCardProps {
 }
 
 export const VocabularyCard: React.FC<VocabularyCardProps> = ({ entry, onDelete }) => {
+  const _ = useTranslation();
   const [isFlipped, setIsFlipped] = useState(false);
 
   return (
@@ -38,7 +40,7 @@ export const VocabularyCard: React.FC<VocabularyCardProps> = ({ entry, onDelete 
           }}
           onClick={() => setIsFlipped(true)}
         >
-          <div className='text-sm opacity-60 mb-4'>Tap to reveal</div>
+          <div className='text-sm opacity-60 mb-4'>{_('Tap to reveal')}</div>
           <h2 className='text-4xl font-bold text-white mb-4 break-words'>{entry.word}</h2>
           {entry.source && (
             <div className='text-xs opacity-40 mt-4'>{entry.source}</div>
@@ -47,14 +49,18 @@ export const VocabularyCard: React.FC<VocabularyCardProps> = ({ entry, onDelete 
 
         {/* Back side - Definition */}
         <div
-          className='absolute w-full h-full bg-gradient-to-br from-secondary to-secondary-focus rounded-xl shadow-lg p-2 flex flex-col items-center justify-center cursor-pointer'
+          className='absolute w-full h-full bg-gradient-to-br from-secondary to-secondary-focus rounded-xl shadow-lg p-2 flex flex-col items-center justify-center'
           style={{
             backfaceVisibility: 'hidden',
             transform: 'rotateY(180deg)',
           }}
-          onClick={() => setIsFlipped(false)}
         >
-          <div className='text-sm opacity-60 mb-4'>Tap to flip</div>
+          <div 
+            className='text-sm opacity-80 mb-4 cursor-pointer' 
+            onClick={() => setIsFlipped(false)}
+          >
+            {_('Tap to flip')}
+          </div>
           <div 
             className='overflow-auto max-h-48 text-sm' 
             dangerouslySetInnerHTML={{ __html: entry.definition }} 

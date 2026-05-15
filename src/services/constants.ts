@@ -226,7 +226,6 @@ export const DEFAULT_VIEW_CONFIG: ViewConfig = {
 
   showHeader: true,
   showFooter: true,
-  showBarsOnScroll: false,
   showPaginationButtons: false,
 
   animated: false,
