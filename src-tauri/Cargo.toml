@@ -22,7 +22,7 @@ webdriver = ["tauri-plugin-webdriver"]
 devtools = ["tauri/devtools"]
 
 [build-dependencies]
-tauri-build = { version = "2.6.0", features = [] }
+tauri-build = { version = "2.6.2", features = [] }
 
 [dependencies]
 futures = "0.3.32"
@@ -41,21 +41,21 @@ bytes = "1.11.1"
 chrono = "0.4.44"
 walkdir = "2"
 # FIXME: remove the devtools feature in production
-tauri = { version = "2.11.0", features = [ "protocol-asset", "devtools"] }
-tauri-build = "2.6.0"
+tauri = { version = "2.11.2", features = [ "protocol-asset", "devtools"] }
+tauri-build = "2.6.2"
 tauri-plugin-log = "2.8.0"
-tauri-plugin-fs = "2.5.0"
-tauri-plugin-dialog = "2.7.0"
+tauri-plugin-fs = "2.5.1"
+tauri-plugin-dialog = "2.7.1"
 tauri-plugin-os = "2.3.2"
-tauri-plugin-http = { version = "2.5.8", features = ["dangerous-settings"] }
+tauri-plugin-http = { version = "2.5.9", features = ["dangerous-settings"] }
 tauri-plugin-shell = "2.3.5"
 tauri-plugin-process = "2.3.1"
 tauri-plugin-oauth = "2"
-tauri-plugin-opener = "2.5.3"
-tauri-plugin-deep-link = "2.4.8"
+tauri-plugin-opener = "2.5.4"
+tauri-plugin-deep-link = "2.4.9"
 tauri-plugin-sign-in-with-apple = "1.0.2"
 tauri-plugin-haptics = "2.3.2"
-tauri-plugin-persisted-scope = "2.3.6"
+tauri-plugin-persisted-scope = "2.3.7"
 tauri-plugin-sharekit = "0.3"
 tauri-plugin-webdriver = { version = "0.2", optional = true }
 tauri-plugin-native-bridge = { path = "./plugins/tauri-plugin-native-bridge" }
@@ -74,7 +74,7 @@ objc2-foundation = { version = "0.3", features = ["NSError", "NSArray"] }
 
 [target.'cfg(any(target_os = "macos", windows, target_os = "linux"))'.dependencies]
 tauri-plugin-cli = "2.4.1"
-tauri-plugin-single-instance = "2.4.1"
+tauri-plugin-single-instance = "2.4.2"
 tauri-plugin-updater = "2.10.1"
 tauri-plugin-window-state = "2.4.1"
 
