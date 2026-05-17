@@ -26,7 +26,7 @@ import { ImportError } from '@/services/errors';
 import { buildPseStreamFileName } from '@/services/opds/pseStream';
 import { navigateToReader } from '@/utils/nav';
 import { 
-  getFileExtFromPath, isSearchLink, MIME, parseMediaType, resolveURL 
+  getFileExtFromPath, isSearchLink, looksLikeXMLContent, MIME, parseMediaType, resolveURL 
 } from '../utils/opdsUtils';
 import { 
   getProxiedURL, fetchWithAuth, probeAuth, needsProxy, probeFilename 
@@ -203,7 +203,7 @@ export default function BrowserPage() {
         const responseURL = res.url;
         const text = await res.text();
 
-        if (text.startsWith('<')) {
+        if (looksLikeXMLContent(text)) {
           const doc = new DOMParser().parseFromString(text, MIME.XML as DOMParserSupportedType);
           const {
             documentElement: { localName },
