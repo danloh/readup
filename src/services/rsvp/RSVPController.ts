@@ -2,7 +2,7 @@ import { compare as compareCFI } from 'foliate-js/epubcfi.js';
 import { XCFI } from '@/utils/xcfi';
 import { FoliateView } from '@/types/view';
 import { RsvpWord, RsvpState, RsvpPosition, RsvpStopPosition, RsvpStartChoice } from './types';
-import { containsCJK, getHyphenParts, splitTextIntoWords } from './utils';
+import { containsCJK, getHyphenParts, isCJKPunctuation, splitTextIntoWords } from './utils';
 
 const DEFAULT_WPM = 300;
 const MIN_WPM = 100;
@@ -15,11 +15,13 @@ const SCALE_STEP = 0.5;
 const DEFAULT_PUNCTUATION_PAUSE_MS = 100;
 const PUNCTUATION_PAUSE_OPTIONS = [25, 50, 75, 100, 125, 150, 175, 200];
 const DEFAULT_SPLIT_HYPHENS = false;
+const DEFAULT_CJK_CHAR_MODE = false;
 const WPM_KEY_PREFIX = 'readup_rsvp_wpm_';
 const SCALE_KEY_PREFIX = 'readup_rsvp_scale_';
 const PUNCTUATION_PAUSE_KEY_PREFIX = 'readup_rsvp_pause_';
 const POSITION_KEY_PREFIX = 'readup_rsvp_pos_';
 const SPLIT_HYPHENS_KEY = 'readup_rsvp_split_hyphens';
+const CJK_CHAR_MODE_KEY = 'readup_rsvp_cjk_char_mode';
 
 // Section-only CFI (no '!') sorts before any word CFI in that section.
 const stripCfiPath = (cfi: string): string => cfi.replace(/!.*\)$/, ')');
@@ -40,6 +42,8 @@ export class RSVPController extends EventTarget {
     scale: DEFAULT_FONT_SCALE,
     punctuationPauseMs: DEFAULT_PUNCTUATION_PAUSE_MS,
     splitHyphens: DEFAULT_SPLIT_HYPHENS,
+    cjkCharMode: DEFAULT_CJK_CHAR_MODE,
+    hasCJK: false,
     progress: 0,
   };
 
@@ -82,6 +86,10 @@ export class RSVPController extends EventTarget {
     const savedSplitHyphens = this.loadSplitHyphensFromStorage();
     if (savedSplitHyphens !== null) {
       this.state.splitHyphens = savedSplitHyphens;
+    }
+    const savedCjkCharMode = this.loadCjkCharModeFromStorage();
+    if (savedCjkCharMode !== null) {
+      this.state.cjkCharMode = savedCjkCharMode;
     }
   }
 
@@ -158,6 +166,34 @@ export class RSVPController extends EventTarget {
   private loadSplitHyphensFromStorage(): boolean | null {
     try {
       const stored = localStorage.getItem(SPLIT_HYPHENS_KEY);
+      if (stored !== null) return stored === '1';
+    } catch {
+      /* ignore */
+    }
+    return null;
+  }
+
+  setCjkCharMode(value: boolean): void {
+    if (this.state.cjkCharMode === value) return;
+    this.state.cjkCharMode = value;
+    try {
+      localStorage.setItem(CJK_CHAR_MODE_KEY, value ? '1' : '0');
+    } catch {
+      /* ignore */
+    }
+    // Char mode changes the segmentation result, so the cached words and the
+    // current section's word list both need to be rebuilt.
+    this.cachedWords = null;
+    if (this.state.active) {
+      this.reextractPreservingPosition();
+    } else {
+      this.emitStateChange();
+    }
+  }
+
+  private loadCjkCharModeFromStorage(): boolean | null {
+    try {
+      const stored = localStorage.getItem(CJK_CHAR_MODE_KEY);
       if (stored !== null) return stored === '1';
     } catch {
       /* ignore */
@@ -409,6 +445,7 @@ export class RSVPController extends EventTarget {
       playing: true,
       words,
       currentIndex: clampedStart,
+      hasCJK: this.computeHasCJK(words),
     };
     this.emitStateChange();
 
@@ -716,6 +753,7 @@ export class RSVPController extends EventTarget {
       words,
       currentIndex: 0,
       currentPartIndex: 0,
+      hasCJK: this.computeHasCJK(words),
     };
     this.emitStateChange();
 
@@ -726,6 +764,48 @@ export class RSVPController extends EventTarget {
         this.scheduleNextWord();
       });
     }
+  }
+
+  // Re-segment the current section in place after a setting (e.g. char mode)
+  // changes the word list. Keeps the reader near the same spot by matching the
+  // previous word's range against the new word list.
+  private reextractPreservingPosition(): void {
+    this.clearTimer();
+    const prevWord = this.state.words[this.state.currentIndex];
+    const words = this.extractWordsWithRanges();
+
+    let newIndex = 0;
+    if (words.length > 0 && prevWord?.range && prevWord.docIndex !== undefined) {
+      for (let i = 0; i < words.length; i++) {
+        const word = words[i];
+        if (!word?.range || word.docIndex !== prevWord.docIndex) continue;
+        try {
+          if (word.range.compareBoundaryPoints(Range.START_TO_START, prevWord.range) >= 0) {
+            newIndex = i;
+            break;
+          }
+        } catch {
+          // Detached or cross-document range compare throws; skip.
+        }
+      }
+    }
+
+    this.state = {
+      ...this.state,
+      words,
+      currentIndex: words.length > 0 ? Math.min(words.length - 1, Math.max(0, newIndex)) : 0,
+      currentPartIndex: 0,
+      hasCJK: this.computeHasCJK(words),
+    };
+    this.emitStateChange();
+
+    if (this.state.playing && words.length > 0) {
+      this.scheduleNextWord();
+    }
+  }
+
+  private computeHasCJK(words: RsvpWord[]): boolean {
+    return words.some((word) => containsCJK(word.text));
   }
 
   private scheduleNextWord(): void {
@@ -817,7 +897,7 @@ export class RSVPController extends EventTarget {
     const walk = (node: Node): void => {
       if (node.nodeType === Node.TEXT_NODE) {
         const text = node.textContent || '';
-        const nodeWords = splitTextIntoWords(text, this.primaryLanguage);
+        const nodeWords = splitTextIntoWords(text, this.primaryLanguage, this.state.cjkCharMode);
 
         let offset = 0;
         for (const word of nodeWords) {
@@ -887,8 +967,14 @@ export class RSVPController extends EventTarget {
     const hasCJK = containsCJK(word);
 
     if (hasCJK) {
-      // For CJK characters, center the ORP since each character is more balanced
-      return Math.floor(word.length / 2);
+      // Center the ORP on a real character — never on trailing punctuation.
+      // Char mode emits tokens like "是。" where a naive length/2 would land
+      // the focus on the punctuation instead of the character.
+      let coreLength = word.length;
+      while (coreLength > 0 && isCJKPunctuation(word[coreLength - 1]!)) {
+        coreLength--;
+      }
+      return Math.floor(Math.max(coreLength, 1) / 2);
     }
 
     const cleanWord = word.replace(/[^\p{L}\p{N}_]/gu, '');

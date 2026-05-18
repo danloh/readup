@@ -35,9 +35,14 @@ interface BackupResult {
   type: 'backup' | 'restore';
   booksAdded?: number;
   booksUpdated?: number;
+  settingsRestored?: boolean;
 }
 
-export const BackupWindow: React.FC = () => {
+interface BackupWindowProps {
+  onPullLibrary: (fullRefresh?: boolean, verbose?: boolean) => void;
+}
+
+export const BackupWindow: React.FC<BackupWindowProps> = ({ onPullLibrary }) => {
   const _ = useTranslation();
   const { appService } = useEnv();
   const { setLibrary } = useLibraryStore();
@@ -47,12 +52,14 @@ export const BackupWindow: React.FC = () => {
   const [progress, setProgress] = useState<BackupProgress>({ current: 0, total: 0 });
   const [errorMessage, setErrorMessage] = useState('');
   const [result, setResult] = useState<BackupResult | null>(null);
+  const [includeCredentials, setIncludeCredentials] = useState(false);
 
   const resetState = () => {
     setStatus('idle');
     setProgress({ current: 0, total: 0 });
     setErrorMessage('');
     setResult(null);
+    setIncludeCredentials(false);
   };
 
   useEffect(() => {
@@ -85,9 +92,14 @@ export const BackupWindow: React.FC = () => {
     try {
       const timestamp = new Date().toISOString().slice(0, 10);
       const filename = `readup-backup-${timestamp}.zip`;
-      const saved = await saveBackupFile(appService, filename, (current, total, currentFile) => {
-        setProgress({ current, total, currentFile });
-      });
+      const saved = await saveBackupFile(
+        appService,
+        filename,
+        { includeCredentials },
+        (current, total, currentFile) => {
+          setProgress({ current, total, currentFile });
+        },
+      );
       if (saved) {
         setResult({ type: 'backup' });
         setStatus('completed');
@@ -121,7 +133,7 @@ export const BackupWindow: React.FC = () => {
         ? result.files[0].file
         : await appService.openFile(result.files[0]!.path!, 'None');
 
-      const { booksAdded, booksUpdated } = await restoreFromBackupZip(
+      const { booksAdded, booksUpdated, settingsRestored } = await restoreFromBackupZip(
         appService,
         zipFile,
         (current, total, currentFile) => {
@@ -136,9 +148,10 @@ export const BackupWindow: React.FC = () => {
         type: 'restore',
         booksAdded: Math.min(booksAdded, booksCount),
         booksUpdated: Math.min(booksUpdated, booksCount),
+        settingsRestored,
       });
       setStatus('completed');
-      // TODO: cloud sync
+      onPullLibrary(true);
     } catch (error) {
       console.error('Restore failed:', error);
       setErrorMessage(_('Restore failed: {{error}}', { error: String(error) }));
@@ -176,9 +189,23 @@ export const BackupWindow: React.FC = () => {
             <div className='space-y-3'>
               <p className='text-base-content/70 text-sm'>
                 {_(
-                  'Create a backup of your library or restore from a previous backup. Restoring will merge with your current library.',
+                  'Create a backup of your library and settings or restore from a previous backup. Restoring will merge with your current library.',
                 )}
               </p>
+
+              <label className='flex cursor-pointer items-start gap-2'>
+                <input
+                  type='checkbox'
+                  checked={includeCredentials}
+                  onChange={(e) => setIncludeCredentials(e.target.checked)}
+                  className='checkbox checkbox-sm mt-0.5 shrink-0'
+                />
+                <span className='text-base-content/70 text-sm'>
+                  {_(
+                    'Include account credentials (sync tokens, passwords). The backup file is not encrypted.',
+                  )}
+                </span>
+              </label>
 
               <button className='btn btn-outline w-full gap-2' onClick={handleBackup}>
                 <LuArchive className='h-5 w-5' />
@@ -247,11 +274,11 @@ export const BackupWindow: React.FC = () => {
               <div className='bg-success/10 border-success/20 rounded-lg border p-3'>
                 <p className='text-success/80 text-sm'>
                   {result.type === 'backup'
-                    ? _('Your library has been saved to the selected location.')
+                    ? _('Your library and settings have been saved to the selected location.')
                     : _('{{added}} books added, {{updated}} books updated.', {
                         added: result.booksAdded ?? 0,
                         updated: result.booksUpdated ?? 0,
-                      })}
+                      }) + (result.settingsRestored ? ' ' + _('Settings have been restored.') : '')}
                 </p>
               </div>
             </div>

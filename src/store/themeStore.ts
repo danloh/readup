@@ -13,6 +13,7 @@ import { EnvConfigType, isWebAppPlatform } from '@/services/environment';
 declare global {
   interface Window {
     __READUP_IS_EINK?: boolean;
+    onNativeColorSchemeChange?: (colorScheme: 'light' | 'dark') => void;
   }
 }
 
@@ -172,6 +173,13 @@ export const initSystemThemeListener = (appService: AppService) => {
   if (typeof window === 'undefined' || !appService) return;
 
   const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+  const applySystemTheme = (systemIsDarkMode: boolean) => {
+    if (typeof window !== 'undefined' && localStorage) {
+      localStorage.setItem('systemIsDarkMode', systemIsDarkMode ? 'true' : 'false');
+    }
+    useThemeStore.getState().handleSystemThemeChange(systemIsDarkMode);
+  };
+
   const updateColorTheme = async () => {
     let systemIsDarkMode;
     if (appService.isIOSApp) {
@@ -180,10 +188,7 @@ export const initSystemThemeListener = (appService: AppService) => {
     } else {
       systemIsDarkMode = mediaQuery.matches;
     }
-    if (typeof window !== 'undefined' && localStorage) {
-      localStorage.setItem('systemIsDarkMode', systemIsDarkMode ? 'true' : 'false');
-    }
-    useThemeStore.getState().handleSystemThemeChange(systemIsDarkMode);
+    applySystemTheme(systemIsDarkMode);
   };
 
   const updateWindowTheme = async () => {
@@ -197,5 +202,16 @@ export const initSystemThemeListener = (appService: AppService) => {
   mediaQuery?.addEventListener('change', updateColorTheme);
   document.addEventListener('visibilitychange', updateColorTheme);
   window.addEventListener('resize', updateWindowTheme);
+
+  // iOS WKWebView never fires the `prefers-color-scheme` media query
+  // `change` event while the app stays foregrounded (e.g. toggling dark
+  // mode from Control Center), so the native plugin pushes the new
+  // appearance through this callback instead.
+  if (appService.isIOSApp) {
+    window.onNativeColorSchemeChange = (colorScheme) => {
+      applySystemTheme(colorScheme === 'dark');
+    };
+  }
+  
   updateColorTheme();
 };
