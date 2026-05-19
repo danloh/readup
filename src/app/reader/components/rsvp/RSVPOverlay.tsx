@@ -816,13 +816,13 @@ const RSVPOverlay: React.FC<RSVPOverlayProps> = ({
                   <IoMdColorPalette size={18}  color={orpColor || accentColor} />
                 </span>
                 <select
-                  className='cursor-pointer rounded p-1 text-xs font-medium hover:bg-gray-500/30'
+                  className='cursor-pointer rounded p-1 text-xs font-medium'
                   value={orpColor}
                   onChange={(e) => updateOrpColor(e.target.value || accentColor)}
                 >
                   {ORP_COLOR_OPTIONS.map((opt) => (
                     <option key={opt} value={opt} style={{ color: opt || accentColor }}>
-                      {opt || 'default'}
+                      {opt || 'Default'}
                     </option>
                   ))}
                 </select>
@@ -834,7 +834,7 @@ const RSVPOverlay: React.FC<RSVPOverlayProps> = ({
               <label className='flex cursor-pointer items-center gap-1 text-xs opacity-80'>
                 <span className='text-xs'><MdOutlineMotionPhotosPause size={18} /></span>
                 <select
-                  className='cursor-pointer rounded p-1 text-xs font-medium hover:bg-gray-500/30'
+                  className='cursor-pointer rounded p-1 text-xs font-medium'
                   value={state.punctuationPauseMs}
                   onChange={(e) => controller.setPunctuationPause(parseInt(e.target.value, 10))}
                 >
