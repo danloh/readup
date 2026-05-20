@@ -71,9 +71,13 @@ export const DEFAULT_SYSTEM_SETTINGS: Partial<SystemSettings> = {
   aiSettings: DEFAULT_AI_SETTINGS,
   customDictionaries: [],
   dictionarySettings: {
-    providerOrder: ['builtin:wiktionary'],
+    providerOrder: [
+      'builtin:wiktionary', 
+      'builtin:wikipedia',
+    ],
     providerEnabled: {
       'builtin:wiktionary': true,
+      'builtin:wikipedia': true,
     },
   },
 };

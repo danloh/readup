@@ -1,6 +1,8 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useCustomDictionaryStore } from '@/store/customDictionaryStore';
 import { BUILTIN_WEB_SEARCH_IDS } from '@/services/dictionaries/types';
+import { useSettingsStore } from '@/store/settingsStore';
+import { EnvConfigType } from '@/services/environment';
 
 const ZERO = (s: string) => s.startsWith('web:builtin:');
 
@@ -122,5 +124,61 @@ describe('customDictionaryStore — web search CRUD', () => {
 
     // Unknown id: silent no-op.
     expect(() => updateDictionary('mdict:nope', { name: 'X' })).not.toThrow();
+  });
+
+  it('appends providerEnabled keys missing from providerOrder so the dict still appears in the list', async () => {
+    // Real-world bug: settings replica pushes can land out of order
+    // under per-field LWW (e.g. a remote device's providerEnabled push
+    // landed but its providerOrder push didn't, or arrived first with
+    // an older value). The UI list is driven by providerOrder, so
+    // dicts present in providerEnabled but absent from providerOrder
+    // would silently disappear from the picker. Append them at the
+    // end so users see them with a "feel-of-dict-lost" repair.
+    type SettingsState = ReturnType<typeof useSettingsStore.getState>;
+    useSettingsStore.setState({
+      settings: {
+        customDictionaries: [],
+        dictionarySettings: {
+          providerOrder: ['builtin:wiktionary', 'builtin:wikipedia', 'imp-known'],
+          providerEnabled: {
+            'builtin:wiktionary': false,
+            'builtin:wikipedia': true,
+            'imp-known': true,
+            'imp-orphaned-1': true,
+            'imp-orphaned-2': false,
+          },
+          webSearches: [],
+        },
+      } as unknown as SettingsState['settings'],
+    } as unknown as SettingsState);
+
+    const fakeAppService = { exists: vi.fn().mockResolvedValue(false) };
+    const fakeEnv = {
+      getAppService: () => Promise.resolve(fakeAppService),
+    } as unknown as EnvConfigType;
+
+    await useCustomDictionaryStore.getState().loadCustomDictionaries(fakeEnv);
+
+    const after = useCustomDictionaryStore.getState().settings;
+    // Existing order is preserved; default-builtin backfill runs first.
+    // Orphan providerEnabled keys are inserted BEFORE the first builtin
+    // so user-imported dicts stay at the top of the list (rather than
+    // stranded after the builtins where the user might miss them).
+    // Existing imp-known is already after builtins (intentional user
+    // choice persisted in providerOrder) so it stays put. The
+    // `builtin:system` sentinel was added in the default order when
+    // the system-dictionary provider landed; backfill appends it
+    // after the persisted builtins on hydration.
+    expect(after.providerOrder).toEqual([
+      'imp-orphaned-1',
+      'imp-orphaned-2',
+      'builtin:wiktionary',
+      'builtin:wikipedia',
+      'imp-known',
+      'builtin:system',
+      'web:builtin:google',
+      'web:builtin:urban',
+      'web:builtin:merriam-webster',
+    ]);
   });
 });

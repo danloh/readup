@@ -173,6 +173,7 @@ const FoliateViewer: React.FC<{
   const skipToReadingPosition = useCallback(() => {
     const view = getView(bookKey);
     const progress = getProgress(bookKey);
+    console.log('progress: ', progress);
     if (view && progress) {
       view.renderer.scrollToAnchor?.(progress.range);
     }

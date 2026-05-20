@@ -8,6 +8,9 @@ import { BookNote, BooknoteGroup, HighlightColor, HighlightStyle } from '@/types
 import { NOTE_PREFIX } from '@/types/view';
 import { NativeTouchEventType } from '@/types/system';
 import { getOSPlatform, makeSafeFilename, uniqueId } from '@/utils/misc';
+import { invokeSystemDictionary } from '@/services/dictionaries/systemDictionary';
+import { isSystemDictionaryEnabled } from '@/services/dictionaries/registry';
+import { useCustomDictionaryStore } from '@/store/customDictionaryStore';
 import { useBookDataStore } from '@/store/bookDataStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useReaderStore } from '@/store/readerStore';
@@ -18,7 +21,14 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useResponsiveSize } from '@/hooks/useResponsiveSize';
 import useShortcuts from '@/hooks/useShortcuts';
 import { 
-  getPopupPosition, getPosition, getTextFromRange, Point, Position, TextSelection 
+  getPopupPosition, 
+  getPosition, 
+  getRangeRectInWebview, 
+  getRangeTextStyleInWebview, 
+  getTextFromRange, 
+  Point, 
+  Position, 
+  TextSelection 
 } from '@/utils/sel';
 import { eventDispatcher } from '@/utils/event';
 import { findTocItemBS } from '@/services/nav';
@@ -772,6 +782,27 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
 
   const handleDictionary = () => {
     if (!selection || !selection.text) return;
+    // System-dictionary path: when the user has opted in via Settings →
+    // Languages → Dictionaries, hand the selection to the OS instead of
+    // opening the in-app popup. Exclusivity is enforced at the store
+    // level (enabling system disables everything else and vice versa),
+    // so a single check on the system flag is sufficient.
+    const dictSettings = useCustomDictionaryStore.getState().settings;
+    if (isSystemDictionaryEnabled(dictSettings)) {
+      // Build the macOS HUD anchor: the selection rect (so the HUD
+      // appears at the original word) and the underlying paragraph's
+      // text style (so AppKit re-draws the small label at the same
+      // font size / colour as the original, matching the system
+      // right-click → Look Up presentation).
+      const rect = selection.range ? getRangeRectInWebview(selection.range) : null;
+      const style = selection.range ? getRangeTextStyleInWebview(selection.range) : null;
+      void invokeSystemDictionary(
+        selection.text,
+        rect ? { rect, style: style ?? undefined } : undefined,
+      );
+      handleDismissPopupAndSelection();
+      return;
+    }
     setShowAnnotPopup(false);
     setShowDictPopup(true);
   };

@@ -169,6 +169,8 @@ pub fn run() {
             macos::apple_auth::start_apple_sign_in,
             #[cfg(target_os = "macos")]
             macos::traffic_light::set_traffic_lights,
+            #[cfg(target_os = "macos")]
+            macos::system_dictionary::show_lookup_popover,
         ])
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_persisted_scope::init())
