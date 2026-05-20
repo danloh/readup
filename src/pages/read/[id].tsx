@@ -14,6 +14,13 @@ export default function Page() {
   const id = router.query['id'] as string;
   const searchParams = useSearchParams();
   const did = searchParams?.get('did') || '';
+  const loc = searchParams?.get('loc') || '';
+
+  useEffect(() => {
+    if (loc && id) {
+      localStorage.setItem(`loc-${id}`, loc);
+    }
+  }, [id, loc]);
 
   return (
     <CSPostHogProvider>
@@ -26,7 +33,7 @@ export default function Page() {
   );
 }
 
-const ReadPage: React.FC<{ id: string; did: string }> = ({ id, did }) => {
+const ReadPage: React.FC<{ id: string; did: string; }> = ({ id, did }) => {
   const [book, setBook] = useState<Book | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

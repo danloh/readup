@@ -29,7 +29,7 @@ import { initDayjs } from '@/utils/time';
 import ReaderContent from './ReaderContent';
 import { ProofreadRulesManager } from './ProofreadRules';
 
-const Reader: React.FC<{ ids?: string }> = ({ ids }) => {
+const Reader: React.FC<{ ids?: string; }> = ({ ids }) => {
   const router = useRouter();
   const { appService } = useEnv();
   const { hoveredBookKey } = useReaderStore();

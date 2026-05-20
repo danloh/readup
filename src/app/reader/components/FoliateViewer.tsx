@@ -529,7 +529,9 @@ const FoliateViewer: React.FC<{
       }
       applyMarginAndGap();
 
-      const lastLocation = config.location;
+      const storedLoc = localStorage.getItem(`loc-${bookKey.split('-')[0]!}`);
+      const lastLocation = config.location || storedLoc;
+      
       if (lastLocation) {
         await view.init({ lastLocation });
       } else {

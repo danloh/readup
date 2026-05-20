@@ -34,7 +34,12 @@ import SideBar from './sidebar/SideBar';
 import Notebook from './notebook/Notebook';
 import BooksGrid from './BooksGrid';
 
-const ReaderContent: React.FC<{ids?: string; settings: SystemSettings}> = ({ ids, settings }) => {
+interface ReaderContentProps {
+  ids?: string; 
+  settings: SystemSettings; 
+}
+
+const ReaderContent: React.FC<ReaderContentProps> = ({ ids, settings }) => {
   const _ = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();

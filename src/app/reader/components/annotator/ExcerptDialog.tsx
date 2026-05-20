@@ -309,14 +309,23 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
         }
       }
 
+      // add location information for the share link
+      let shareUrl = 'https://readup.cc';
+      if (bookUploaded) {
+        const loc = selection.cfi || selection.href;
+        if (loc) {
+          shareUrl = `https://readup.cc/read/${book.hash}?did=${user.did}&loc=${loc}`;
+        } else {
+          shareUrl = `https://readup.cc/read/${book.hash}?did=${user.did}`;
+        }
+      }
+
       const agent = await getAtpAgent();
       const resp = await postWithImageAndLink(agent, {
         text: `Excerpt from book: ${book.title} \n\n #booksky #readsky \n\n`,
         imageData: imageUrl,
         altText: selection.text,
-        url: bookUploaded 
-          ? `https://readup.cc/read/${book.hash}?did=${user.did}` 
-          : 'https://readup.cc',
+        url: shareUrl,
         linkTitle: bookUploaded ? 'Read the Book' : undefined
       });
       if (resp.success) {
