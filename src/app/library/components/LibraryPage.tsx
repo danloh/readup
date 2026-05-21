@@ -20,8 +20,9 @@ import { eventDispatcher } from '@/utils/event';
 import { parseOpenWithFiles } from '@/helpers/openWith';
 import { isTauriAppPlatform } from '@/services/environment';
 import { SUPPORTED_BOOK_EXTS } from '@/services/constants';
-import { transferManager } from '@/services/transferManager';
 import { getImportErrorMessage } from '@/services/errors';
+import { buildBookLookupIndex } from '@/services/bookService';
+import { ingestFile } from '@/services/ingestService';
 import { useEnv } from '@/context/EnvContext';
 import { useAuth } from '@/context/AuthContext';
 import { useLibraryStore } from '@/store/libraryStore';
@@ -55,8 +56,6 @@ import {
 import TransferQueuePanel from './TransferQueuePanel';
 import GroupHeader from './GroupHeader';
 import { BackupWindow } from './BackupWindow';
-import { buildBookLookupIndex } from '@/services/bookService';
-import { ingestFile } from '@/services/ingestService';
 import ImportFromFolderDialog, { ImportFromFolderResult } from './ImportFromFolderDialog';
 
 /**
@@ -572,41 +571,6 @@ const LibraryPageContent = (
       const groupId = searchParams?.get('group') || '';
       importBooks(result.files, groupId);
     });
-  };
-
-  const handleImportBooksFromDirectory0 = async (dirPath?: string) => {
-    if (!appService || !isTauriAppPlatform()) return;
-
-    console.log('Importing books from directory...');
-    let importDirectory: string | undefined = dirPath;
-    if (!importDirectory) {
-      if (appService.isAndroidApp) {
-        if (!(await requestStoragePermission())) return;
-        const response = await selectDirectory();
-        importDirectory = response.path;
-      } else {
-        const selectedDir = await appService.selectDirectory?.('read');
-        importDirectory = selectedDir;
-      }
-    }
-    if (!importDirectory) {
-      console.log('No directory selected');
-      return;
-    }
-    const files = await appService.readDirectory(importDirectory, 'None');
-    const supportedFiles = files.filter((file) => {
-      const ext = file.path.split('.').pop()?.toLowerCase() || '';
-      return SUPPORTED_BOOK_EXTS.includes(ext);
-    });
-    const toImportFiles = await Promise.all(
-      supportedFiles.map(async (file) => {
-        return {
-          path: await joinPaths(importDirectory, file.path),
-          basePath: importDirectory,
-        };
-      }),
-    );
-    importBooks(toImportFiles, undefined);
   };
 
   const handleImportBooksFromDirectory = async (dirPath?: string) => {

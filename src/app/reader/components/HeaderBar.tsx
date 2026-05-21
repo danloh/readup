@@ -50,7 +50,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
   const _ = useTranslation();
   const { envConfig, appService } = useEnv();
   const headerRef = useRef<HTMLDivElement>(null);
-  const { isTrafficLightVisible } = useTrafficLight();
+  const { isTrafficLightVisible } = useTrafficLight(headerRef);
   const { trafficLightInFullscreen, setTrafficLightVisibility } = useTrafficLightStore();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [headerWidth, setHeaderWidth] = useState(0);
@@ -88,7 +88,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
     if (!appService?.hasTrafficLight) return;
 
     if (hoveredBookKey === bookKey && isTopLeft) {
-      setTrafficLightVisibility(true, { x: 10, y: 20 });
+      setTrafficLightVisibility(true);
     } else if (!hoveredBookKey) {
       setTimeout(() => {
         if (!getIsSideBarVisible()) {

@@ -47,10 +47,11 @@ export const NavTab: React.FC<{activeTab: string}> = ({ activeTab }) => {
   const { safeAreaInsets: insets } = useThemeStore();
   const { systemUIVisible, statusBarHeight } = useThemeStore();
   const { isFontLayoutSettingsDialogOpen } = useSettingsStore();
-  const { isTrafficLightVisible } = useTrafficLight();
+  
+  const headerRef = useRef<HTMLDivElement>(null);
+  const { isTrafficLightVisible } = useTrafficLight(headerRef);
   const windowButtonVisible = appService?.hasWindowBar && !isTrafficLightVisible;
 
-  const headerRef = useRef<HTMLDivElement>(null);
   const tabs = ['library', 'feed', 'catalog', 'streak'];
 
   if (!insets) return null;
@@ -70,9 +71,7 @@ export const NavTab: React.FC<{activeTab: string}> = ({ activeTab }) => {
       style={{
         marginTop: appService?.hasSafeAreaInset
           ? `max(${insets.top}px, ${systemUIVisible ? statusBarHeight : 0}px)`
-          : appService?.hasTrafficLight
-            ? '-2px'
-            : '0px',
+          : '0px',
       }}
     >
       <div className='flex font-bold items-center z-50 justify-start mx-1 logo-menu'>
