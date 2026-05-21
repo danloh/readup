@@ -118,6 +118,15 @@ export interface AppService {
     content: string | ArrayBuffer,
     options?: { filePath?: string; mimeType?: string },
   ): Promise<boolean>;
+  /**
+   * Best-effort: extend the Tauri `fs_scope` and `asset_protocol_scope`
+   * to cover the given paths. No-op on web. Used after a directory or
+   * file path is recovered from somewhere other than the native picker
+   * (e.g. localStorage of the last-used import folder), since the
+   * dialog plugin only auto-allows `fs_scope` for paths it returned in
+   * the current session.
+   */
+  allowPathsInScopes?(paths: string[], isDirectory: boolean): Promise<void>;
 
   getDefaultViewSettings(): ViewSettings;
   loadSettings(): Promise<SystemSettings>;
