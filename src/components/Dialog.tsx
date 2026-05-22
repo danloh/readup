@@ -1,6 +1,9 @@
 import clsx from 'clsx';
 import React, { ReactNode, useEffect, useRef, useState } from 'react';
 import { MdArrowBackIosNew, MdArrowForwardIos, MdClose } from 'react-icons/md';
+import { OverlayScrollbarsComponent } from 'overlayscrollbars-react';
+import 'overlayscrollbars/overlayscrollbars.css';
+
 import { useEnv } from '@/context/EnvContext';
 import { useDrag } from '@/hooks/useDrag';
 import { useThemeStore } from '@/store/themeStore';
@@ -28,6 +31,15 @@ interface DialogProps {
   boxClassName?: string;
   contentClassName?: string;
   onClose: () => void;
+  /**
+   * Replace the body's native `overflow-y-auto` with OverlayScrollbars so
+   * the scrollbar is the floating, theme-aware kind instead of the host's
+   * native one (which Android/iOS webviews auto-hide entirely, leaving the
+   * user with no visible scrollbar). Opt-in per dialog — set true for
+   * long-content dialogs like Settings; leave false for short modals where
+   * native scrolling is fine.
+   */
+  useOverlayScroll?: boolean;
 }
 
 const Dialog: React.FC<DialogProps> = ({
@@ -43,6 +55,7 @@ const Dialog: React.FC<DialogProps> = ({
   boxClassName,
   contentClassName,
   onClose,
+  useOverlayScroll = false,
 }) => {
   const _ = useTranslation();
   const { appService } = useEnv();
@@ -246,14 +259,31 @@ const Dialog: React.FC<DialogProps> = ({
           )}
         </div>
 
-        <div
-          className={clsx(
-            'text-base-content my-2 flex-grow overflow-y-auto px-6 sm:px-[10%]',
-            contentClassName,
-          )}
-        >
-          {children}
-        </div>
+        {useOverlayScroll ? (
+          // OverlayScrollbarsComponent owns the scroller; the inner viewport
+          // gets `overflow-y-auto` automatically. Keep the same flex /
+          // padding chassis so the body still occupies remaining height
+          // and the children's horizontal rhythm is unchanged.
+          <OverlayScrollbarsComponent
+            className={clsx('text-base-content my-2 flex-grow px-4 sm:px-[10%]', contentClassName)}
+            options={{
+              scrollbars: { autoHide: 'scroll', clickScroll: true },
+              showNativeOverlaidScrollbars: false,
+            }}
+            defer
+          >
+            {children}
+          </OverlayScrollbarsComponent>
+        ) : (
+          <div
+            className={clsx(
+              'text-base-content my-2 flex-grow overflow-y-auto px-4 sm:px-[10%]',
+              contentClassName,
+            )}
+          >
+            {children}
+          </div>
+        )}
       </div>
     </dialog>
   );

@@ -27,6 +27,7 @@ import { saveViewSettings } from '@/helpers/settings';
 import { useResetViewSettings } from '@/hooks/useResetSettings';
 import { SettingsPanelPanelProp } from './SettingsDialog';
 import NumberInput from './NumberInput';
+import { BoxedList, SettingLabel, SettingsRow, SettingsSwitchRow } from './primitives';
 
 const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset }) => {
   const _ = useTranslation();
@@ -356,12 +357,24 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
 
   return (
     <div className='my-4 w-full space-y-4'>
+      <div 
+        className='flex items-center justify-between px-4' 
+        data-setting-id='settings.layout.overrideBookLayout'
+      >
+        <SettingLabel>{_('Override Book Layout')}</SettingLabel>
+        <input
+          type='checkbox'
+          className='toggle toggle-success h-5'
+          checked={overrideLayout}
+          onChange={() => setOverrideLayout(!overrideLayout)}
+        />
+      </div>
       {mightBeRTLBook && (
         <div 
-          className='flex items-center justify-between' 
+          className='flex items-center justify-between px-4' 
           data-setting-id='settings.layout.writingMode'
         >
-          <b className=''>{_('Writing Mode')}</b>
+          <SettingLabel>{_('Writing Mode')}</SettingLabel>
           <div className='flex gap-4'>
             <button
               title={_('Default')}
@@ -407,295 +420,239 @@ const LayoutPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRese
         </div>
       )}
 
-      {appService?.hasOrientationLock && (
-        <div className='flex items-center justify-between'>
-          <b className=''>{_('Orientation')}</b>
-          <div className='flex gap-4'>
-            <div className='tooltip tooltip-bottom' data-tip={_('Auto')}>
-              <button
-                className={clsx(
-                  'btn btn-ghost btn-circle btn-sm',
-                  screenOrientation === 'auto' ? 'btn-active bg-base-300' : '',
-                )}
-                onClick={() => setScreenOrientation('auto')}
-              >
-                <MdOutlineScreenRotation />
-              </button>
-            </div>
-            <div className='tooltip tooltip-bottom' data-tip={_('Portrait')}>
-              <button
-                className={clsx(
-                  'btn btn-ghost btn-circle btn-sm',
-                  screenOrientation === 'portrait' && 'btn-active bg-base-300',
-                )}
-                onClick={() => setScreenOrientation('portrait')}
-              >
-                <IoPhonePortraitOutline />
-              </button>
-            </div>
-            <div className='tooltip tooltip-bottom' data-tip={_('Landscape')}>
-              <button
-                className={clsx(
-                  'btn btn-ghost btn-circle btn-sm',
-                  screenOrientation === 'landscape' && 'btn-active bg-base-300',
-                )}
-                onClick={() => setScreenOrientation('landscape')}
-              >
-                <IoPhoneLandscapeOutline />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className='w-full'>
-        <div className='card bg-base-100 border-base-200 border shadow'>
-          <div className='divide-base-200 divide-y'>
-            <div 
-              className='flex items-center justify-between' 
-              data-setting-id='settings.layout.useBookLayout'
-            >
-              <b className=''>{_('Use Book Layout')}</b>
-              <input
-                type='checkbox'
-                className='toggle toggle-success h-5'
-                checked={useBookLayout}
-                onChange={() => setUseBookLayout(!useBookLayout)}
-              />
-            </div>
-            <NumberInput
-              Icon={RiPageSeparator}
-              label={_('Paragraph Margin')}
-              disabled={useBookLayout}
-              value={paragraphMargin}
-              onChange={setParagraphMargin}
-              min={0}
-              max={4}
-              step={0.1}
-              data-setting-id='settings.layout.paragraphMargin'
-            />
-            <NumberInput
-              Icon={MdFormatLineSpacing}
-              label={_('Line Spacing')}
-              disabled={useBookLayout}
-              value={lineHeight}
-              onChange={setLineHeight}
-              min={1.0}
-              max={3.0}
-              step={0.1}
-              data-setting-id='settings.layout.lineSpacing'
-            />
-            {langCode !== 'zh' && (
-              <NumberInput
-                Icon={LuWholeWord}
-                label={_('Word Spacing')}
-                disabled={useBookLayout}
-                value={wordSpacing}
-                onChange={setWordSpacing}
-                min={-4}
-                max={8}
-                step={0.5}
-                data-setting-id='settings.layout.wordSpacing'
-              />
-            )}
-            <NumberInput
-              Icon={RiLetterSpacing2}
-              label={_('Letter Spacing')}
-              disabled={useBookLayout}
-              value={letterSpacing}
-              onChange={setLetterSpacing}
-              min={-2}
-              max={4}
-              step={0.5}
-              data-setting-id='settings.layout.letterSpacing'
-            />
-            <NumberInput
-              Icon={FaIndent}
-              label={_('Text Indent')}
-              disabled={useBookLayout}
-              value={textIndent}
-              onChange={setTextIndent}
-              min={-2}
-              max={4}
-              step={1}
-              data-setting-id='settings.layout.paragraphIndent'
-            />
-            <NumberInput
-              Icon={CgBorderTop}
-              label={_('Top Margin (px)')}
-              value={showHeader && !isVertical ? marginTopPx : compactMarginTopPx}
-              onChange={showHeader && !isVertical ? setMarginTopPx : setCompactMarginTopPx}
-              min={
-                showHeader && !isVertical
-                  ? Math.max(0, Math.round((16 - gridInsets.top) / 4) * 4)
-                  : 0
-              }
-              max={88}
-              step={4}
-              data-setting-id='settings.layout.pageMargins.Top'
-            />
-            <NumberInput
-              Icon={CgBorderBottom}
-              label={_('Bottom Margin (px)')}
-              value={showFooter && !isVertical ? marginBottomPx : compactMarginBottomPx}
-              onChange={showFooter && !isVertical ? setMarginBottomPx : setCompactMarginBottomPx}
-              min={
-                showFooter && !isVertical
-                  ? Math.max(0, Math.round((16 - gridInsets.bottom) / 4) * 4)
-                  : 0
-              }
-              max={88}
-              step={4}
-              data-setting-id='settings.layout.pageMargins.Bottom'
-            />
-            <NumberInput
-              Icon={CgBorderLeft}
-              label={_('Left Margin (px)')}
-              value={showFooter && isVertical ? marginLeftPx : compactMarginLeftPx}
-              onChange={showFooter && isVertical ? setMarginLeftPx : setCompactMarginLeftPx}
-              min={0}
-              max={88}
-              step={4}
-              data-setting-id='settings.layout.pageMargins.Left'
-            />
-            <NumberInput
-              Icon={CgBorderRight}
-              label={_('Right Margin (px)')}
-              value={showHeader && isVertical ? marginRightPx : compactMarginRightPx}
-              onChange={showHeader && isVertical ? setMarginRightPx : setCompactMarginRightPx}
-              min={0}
-              max={88}
-              step={4}
-              data-setting-id='settings.layout.pageMargins.Right'
-            />
-            <NumberInput
-              Icon={PiSplitHorizontalBold}
-              label={_('Column Gap (%)')}
-              value={gapPercent}
-              onChange={setGapPercent}
-              min={0}
-              max={30}
-              data-setting-id='settings.layout.pageGap'
-            />
-            <NumberInput
-              Icon={TbNumber}
-              label={_('Maximum Number of Columns')}
-              value={maxColumnCount}
-              onChange={setMaxColumnCount}
-              min={1}
-              max={4}
-              data-setting-id='settings.layout.maxColumnCount'
-            />
-            <NumberInput
-              Icon={viewSettings.vertical ? AiOutlineColumnHeight : AiOutlineColumnWidth}
-              label={viewSettings.vertical 
-                ? _('Maximum Column Height') 
-                : _('Maximum Column Width')
-              }
-              value={maxInlineSize}
-              onChange={setMaxInlineSize}
-              disabled={false}
-              min={200}
-              max={9999}
-              step={50}
-              data-setting-id='settings.layout.maxInlineSize'
-            />
-            <NumberInput
-              Icon={viewSettings.vertical ? AiOutlineColumnWidth : AiOutlineColumnHeight}
-              label={viewSettings.vertical 
-                ? _('Maximum Column Width') 
-                : _('Maximum Column Height')
-              }
-              value={maxBlockSize}
-              onChange={setMaxBlockSize}
-              disabled={false}
-              min={400}
-              max={9999}
-              step={50}
-              data-setting-id='settings.layout.maxBlockSize'
-            />
-          </div>
-        </div>
-      </div>
-
-      <div 
-        className='flex items-center justify-between' 
-        data-setting-id='settings.layout.overrideBookLayout'
-      >
-        <b className=''>{_('Override Book Layout')}</b>
-        <input
-          type='checkbox'
-          className='toggle toggle-success h-5'
-          checked={overrideLayout}
-          onChange={() => setOverrideLayout(!overrideLayout)}
-        />
-      </div>
-      <div 
-        className='flex items-center justify-between' 
-        data-setting-id='settings.layout.fullJustification'
-      >
-        <b className=''>{_('Full Justification')}</b>
-        <input
-          type='checkbox'
-          className='toggle toggle-success h-5'
-          checked={fullJustification}
-          disabled={useBookLayout}
-          onChange={() => setFullJustification(!fullJustification)}
-        />
-      </div>
-      <div 
-        className='flex items-center justify-between' 
-        data-setting-id='settings.layout.hyphenation'
-      >
-        <b className=''>{_('Hyphenation')}</b>
-        <input
-          type='checkbox'
-          className='toggle toggle-success h-5'
-          checked={hyphenation}
-          disabled={useBookLayout}
-          onChange={() => setHyphenation(!hyphenation)}
-        />
-      </div>
-
       {viewSettings.vertical && (
-        <div 
-          className='flex items-center justify-between' 
-          data-setting-id='settings.layout.borderFrame'
-        >
-          <b className=''>{_('Double Border')}</b>
-          <input
-            type='checkbox'
-            className='toggle toggle-success h-5'
+        <BoxedList title={_('Border Frame')} data-setting-id='settings.layout.borderFrame'>
+          <SettingsSwitchRow
+            label={_('Double Border')}
             checked={doubleBorder}
             onChange={() => setDoubleBorder(!doubleBorder)}
           />
-        </div>
+          <SettingsRow label={_('Border Color')}>
+            <div className='flex gap-4'>
+              <button
+                className={`btn btn-circle btn-sm bg-red-300 hover:bg-red-500 ${borderColor === 'red' ? 'btn-active !bg-red-500' : ''}`}
+                onClick={() => setBorderColor('red')}
+              ></button>
+              <button
+                className={`btn btn-circle btn-sm bg-black/50 hover:bg-black ${borderColor === 'black' ? 'btn-active !bg-black' : ''}`}
+                onClick={() => setBorderColor('black')}
+              ></button>
+            </div>
+          </SettingsRow>
+        </BoxedList>
       )}
 
-      <div 
-        className='flex items-center justify-between' 
-        data-setting-id='settings.layout.showHeader'
-      >
-        <b className=''>{_('Show Header')}</b>
-        <input
-          type='checkbox'
-          className='toggle toggle-success h-5'
+      <BoxedList title={_('Paragraph')}>
+        <SettingsSwitchRow
+          label={_('Use Book Layout')}
+          checked={useBookLayout}
+          onChange={() => setUseBookLayout(!useBookLayout)}
+          data-setting-id='settings.layout.useBookLayout'
+        />
+        <NumberInput
+          Icon={RiPageSeparator}
+          label={_('Paragraph Margin')}
+          value={paragraphMargin}
+          onChange={setParagraphMargin}
+          disabled={useBookLayout}
+          min={0}
+          max={4}
+          step={0.1}
+          data-setting-id='settings.layout.paragraphMargin'
+        />
+        <NumberInput
+          Icon={MdFormatLineSpacing}
+          label={_('Line Spacing')}
+          value={lineHeight}
+          onChange={setLineHeight}
+          disabled={useBookLayout}
+          min={1.0}
+          max={3.0}
+          step={0.1}
+          data-setting-id='settings.layout.lineSpacing'
+        />
+        {langCode !== 'zh' && (
+          <NumberInput
+            Icon={LuWholeWord}
+            label={_('Word Spacing')}
+            value={wordSpacing}
+            onChange={setWordSpacing}
+            disabled={useBookLayout}
+            min={-4}
+            max={8}
+            step={0.5}
+            data-setting-id='settings.layout.wordSpacing'
+          />
+        )}
+        <NumberInput
+          Icon={RiLetterSpacing2}
+          label={_('Letter Spacing')}
+          value={letterSpacing}
+          onChange={setLetterSpacing}
+          disabled={useBookLayout}
+          min={-2}
+          max={4}
+          step={0.5}
+          data-setting-id='settings.layout.letterSpacing'
+        />
+        <NumberInput
+          Icon={FaIndent}
+          label={_('Text Indent')}
+          value={textIndent}
+          onChange={setTextIndent}
+          disabled={useBookLayout}
+          min={-2}
+          max={4}
+          step={1}
+          data-setting-id='settings.layout.paragraphIndent'
+        />
+        <SettingsSwitchRow
+          label={_('Full Justification')}
+          checked={fullJustification}
+          disabled={useBookLayout}
+          onChange={() => setFullJustification(!fullJustification)}
+          data-setting-id='settings.layout.fullJustification'
+        />
+        <SettingsSwitchRow
+          label={_('Hyphenation')}
+          checked={hyphenation}
+          disabled={useBookLayout}
+          onChange={() => setHyphenation(!hyphenation)}
+          data-setting-id='settings.layout.hyphenation'
+        />
+      </BoxedList>
+
+      <BoxedList title={_('Page')} data-setting-id='settings.layout.pageMargins'>
+        <NumberInput
+          Icon={CgBorderTop}
+          label={_('Top Margin (px)')}
+          value={showHeader && !isVertical ? marginTopPx : compactMarginTopPx}
+          onChange={showHeader && !isVertical ? setMarginTopPx : setCompactMarginTopPx}
+          min={
+            showHeader && !isVertical ? Math.max(0, Math.round((16 - gridInsets.top) / 4) * 4) : 0
+          }
+          max={88}
+          step={4}
+        />
+        <NumberInput
+          Icon={CgBorderBottom}
+          label={_('Bottom Margin (px)')}
+          value={showFooter && !isVertical ? marginBottomPx : compactMarginBottomPx}
+          onChange={showFooter && !isVertical ? setMarginBottomPx : setCompactMarginBottomPx}
+          min={
+            showFooter && !isVertical
+              ? Math.max(0, Math.round((16 - gridInsets.bottom) / 4) * 4)
+              : 0
+          }
+          max={88}
+          step={4}
+        />
+        <NumberInput
+          Icon={CgBorderLeft}
+          label={_('Left Margin (px)')}
+          value={showFooter && isVertical ? marginLeftPx : compactMarginLeftPx}
+          onChange={showFooter && isVertical ? setMarginLeftPx : setCompactMarginLeftPx}
+          min={0}
+          max={88}
+          step={4}
+        />
+        <NumberInput
+          Icon={CgBorderRight}
+          label={_('Right Margin (px)')}
+          value={showHeader && isVertical ? marginRightPx : compactMarginRightPx}
+          onChange={showHeader && isVertical ? setMarginRightPx : setCompactMarginRightPx}
+          min={0}
+          max={88}
+          step={4}
+        />
+        <NumberInput
+          Icon={PiSplitHorizontalBold}
+          label={_('Column Gap (%)')}
+          value={gapPercent}
+          onChange={setGapPercent}
+          min={0}
+          max={30}
+          data-setting-id='settings.layout.pageGap'
+        />
+        <NumberInput
+          Icon={TbNumber}
+          label={_('Maximum Number of Columns')}
+          value={maxColumnCount}
+          onChange={setMaxColumnCount}
+          min={1}
+          max={4}
+          data-setting-id='settings.layout.maxColumnCount'
+        />
+        <NumberInput
+          Icon={viewSettings.vertical ? AiOutlineColumnHeight : AiOutlineColumnWidth}
+          label={viewSettings.vertical ? _('Maximum Column Height') : _('Maximum Column Width')}
+          value={maxInlineSize}
+          onChange={setMaxInlineSize}
+          disabled={false}
+          min={200}
+          max={9999}
+          step={50}
+          data-setting-id='settings.layout.maxInlineSize'
+        />
+        <NumberInput
+          Icon={viewSettings.vertical ? AiOutlineColumnWidth : AiOutlineColumnHeight}
+          label={viewSettings.vertical ? _('Maximum Column Width') : _('Maximum Column Height')}
+          value={maxBlockSize}
+          onChange={setMaxBlockSize}
+          disabled={false}
+          min={400}
+          max={9999}
+          step={50}
+          data-setting-id='settings.layout.maxBlockSize'
+        />
+      </BoxedList>
+
+      <BoxedList title={_('Header & Footer')} data-setting-id='settings.layout.showHeader'>
+        <SettingsSwitchRow
+          label={_('Show Header')}
           checked={showHeader}
           onChange={() => setShowHeader(!showHeader)}
         />
-      </div>
-      <div 
-        className='flex items-center justify-between'
-        data-setting-id='settings.layout.showFooter'
-      >
-        <b className=''>{_('Show Footer')}</b>
-        <input
-          type='checkbox'
-          className='toggle toggle-success h-5'
+        <SettingsSwitchRow
+          label={_('Show Footer')}
           checked={showFooter}
           onChange={() => setShowFooter(!showFooter)}
+          data-setting-id='settings.layout.showFooter'
         />
-      </div>
+      </BoxedList>
+
+      {appService?.hasOrientationLock && (
+        <BoxedList title={_('Screen')}>
+          <SettingsRow label={_('Orientation')}>
+            <div className='flex gap-4'>
+              <div className='lg:tooltip lg:tooltip-bottom' data-tip={_('Auto')}>
+                <button
+                  className={`btn btn-ghost btn-circle btn-sm ${screenOrientation === 'auto' ? 'btn-active bg-base-300' : ''}`}
+                  onClick={() => setScreenOrientation('auto')}
+                >
+                  <MdOutlineScreenRotation />
+                </button>
+              </div>
+              <div className='lg:tooltip lg:tooltip-bottom' data-tip={_('Portrait')}>
+                <button
+                  className={`btn btn-ghost btn-circle btn-sm ${screenOrientation === 'portrait' ? 'btn-active bg-base-300' : ''}`}
+                  onClick={() => setScreenOrientation('portrait')}
+                >
+                  <IoPhonePortraitOutline />
+                </button>
+              </div>
+              <div className='lg:tooltip lg:tooltip-bottom' data-tip={_('Landscape')}>
+                <button
+                  className={`btn btn-ghost btn-circle btn-sm ${screenOrientation === 'landscape' ? 'btn-active bg-base-300' : ''}`}
+                  onClick={() => setScreenOrientation('landscape')}
+                >
+                  <IoPhoneLandscapeOutline />
+                </button>
+              </div>
+            </div>
+          </SettingsRow>
+        </BoxedList>
+      )}
     </div>
   );
 };

@@ -35,11 +35,11 @@ const ColorInput: React.FC<ColorInputProps> = (
 
   const getPickerPositionClass = () => {
     if (pickerPosition === 'right') {
-      return 'right-0';
+      return 'end-0';
     } else if (pickerPosition === 'center') {
-      return 'left-1/2 -translate-x-1/2';
+      return 'start-1/2 -translate-x-1/2';
     }
-    return 'left-0';
+    return 'start-0';
   };
 
   if (compact) {
@@ -76,7 +76,7 @@ const ColorInput: React.FC<ColorInputProps> = (
       <label className='mb-1 block text-sm font-medium'>{label}</label>
       <div className='flex items-center'>
         <div
-          className='border-base-200 relative mr-2 flex h-7 w-8 cursor-pointer items-center justify-center overflow-hidden rounded border'
+          className='border-base-200 relative me-2 flex h-7 w-8 cursor-pointer items-center justify-center overflow-hidden rounded border'
           style={{ backgroundColor: value }}
           onClick={() => setIsOpen(!isOpen)}
         />

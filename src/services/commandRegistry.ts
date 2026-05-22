@@ -389,18 +389,7 @@ const colorPanelItems = [
     keywords: ['code', 'highlighting', 'syntax', 'programming'],
     section: 'Code',
   },
-  {
-    id: 'settings.color.einkMode',
-    labelKey: _('E-Ink Mode'),
-    keywords: ['eink', 'e-ink', 'kindle', 'e-reader', 'epaper'],
-    section: 'Eink',
-  },
-  {
-    id: 'settings.color.colorEinkMode',
-    labelKey: _('Color E-Ink Mode'),
-    keywords: ['color', 'eink', 'e-ink', 'kaleido'],
-    section: 'Eink',
-  },
+  
 ];
 
 // control panel items
@@ -482,6 +471,18 @@ const controlPanelItems = [
     labelKey: _('Paging Animation'),
     keywords: ['paging', 'animation', 'transition', 'effect'],
     section: 'Animation',
+  },
+  {
+    id: 'settings.control.einkMode',
+    labelKey: _('E-Ink Mode'),
+    keywords: ['eink', 'e-ink', 'kindle', 'e-reader', 'epaper'],
+    section: 'Device',
+  },
+  {
+    id: 'settings.control.colorEinkMode',
+    labelKey: _('Color E-Ink Mode'),
+    keywords: ['color', 'eink', 'e-ink', 'kaleido'],
+    section: 'Device',
   },
   {
     id: 'settings.control.allowJavascript',

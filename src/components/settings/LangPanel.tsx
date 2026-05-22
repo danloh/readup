@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { MdChevronRight } from 'react-icons/md';
 
 import { useEnv } from '@/context/EnvContext';
 import { useReaderStore } from '@/store/readerStore';
@@ -8,11 +7,18 @@ import { useSettingsStore } from '@/store/settingsStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useResetViewSettings } from '@/hooks/useResetSettings';
 import { RELOAD_BEFORE_SAVED_TIMEOUT_MS,TRANSLATOR_LANGS } from '@/services/constants';
-import Select, { getLangOptions, LangSelect } from '@/components/Select';
+import { getLangOptions, LangSelect } from '@/components/Select';
 import { getTranslators } from '@/services/translators';
 import { saveViewSettings } from '@/helpers/settings';
 import { SettingsPanelPanelProp } from './SettingsDialog';
 import CustomDictionaries from './CustomDictionaries';
+import { 
+  BoxedList, 
+  NavigationRow, 
+  SettingsRow, 
+  SettingsSelect, 
+  SettingsSwitchRow 
+} from './primitives';
 
 const LangPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset }) => {
   const _ = useTranslation();
@@ -145,77 +151,64 @@ const LangPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
 
   return (
     <div className='my-4 w-full space-y-4'>
-      <div 
-        className='flex items-center justify-between' 
-        data-setting-id='settings.language.interfaceLanguage'
+      <BoxedList title={_('Language')} data-setting-id='settings.language.interfaceLanguage'>
+        <SettingsRow label={_('Language')}>
+          <LangSelect />
+        </SettingsRow>
+      </BoxedList>
+
+      <BoxedList
+        title={_('Dictionaries')}
+        data-setting-id='settings.language.dictionaries'
+        cardClassName='overflow-hidden'
       >
-        <b className=''>{_('Interface Language')}</b>
-        <LangSelect />
-      </div>
-      <div className='w-full' data-setting-id='settings.language.dictionaries'>
-        <h2 className='mb-2 font-medium'>{_('Dictionaries')}</h2>
-        <div className='card border-base-200 bg-base-100 border shadow'>
-          <div className='divide-base-200 divide-y'>
-            <button
-              type='button'
-              className='config-item hover:bg-base-200/40 w-full text-left'
-              onClick={() => setShowCustomDictionaries(true)}
-            >
-              <span>{_('Manage Dictionaries')}</span>
-              <MdChevronRight className='text-base-content/60 h-5 w-5' />
-            </button>
-          </div>
-        </div>
-      </div>
-      <div 
-        className='flex items-center justify-between' 
-        data-setting-id='settings.language.translationEnabled'
-      >
-        <b className=''>{_('Enable Translation')}</b>
-        <input
-          type='checkbox'
-          className='toggle toggle-success h-5'
+        <NavigationRow
+          title={_('Manage Dictionaries')}
+          onClick={() => setShowCustomDictionaries(true)}
+          className='h-14'
+        />
+      </BoxedList>
+
+      <BoxedList title={_('Translation')} data-setting-id='settings.language.translationEnabled'>
+        <SettingsSwitchRow
+          label={_('Enable Translation')}
           checked={translationEnabled}
           onChange={() => setTranslationEnabled(!translationEnabled)}
           disabled={!bookKey}
         />
-      </div>
-      <div className='flex items-center justify-between'>
-        <b className=''>{_('Show Source Text')}</b>
-        <input
-          type='checkbox'
-          className='toggle toggle-success h-5'
+        <SettingsSwitchRow
+          label={_('Show Source Text')}
           checked={showTranslateSource}
           onChange={() => setShowTranslateSource(!showTranslateSource)}
         />
-      </div>
-      <div className='config-item' data-setting-id='settings.language.ttsTextTranslation'>
-        <span className=''>{_('TTS Text')}</span>
-        <Select
-          value={ttsReadAloudText}
-          onChange={handleSelectTTSText}
-          options={getTTSTextOptions()}
-        />
-      </div>
-      <div 
-        className='flex items-center justify-between' 
-        data-setting-id='settings.language.targetLanguage'
-      >
-        <b className=''>{_('Translate To')}</b>
-        <Select
-          value={getCurrentTargetLangOption().value}
-          onChange={handleSelectTargetLang}
-          options={getLangOptions(TRANSLATOR_LANGS, _('System Language'))}
-        />
-      </div>
-      <div className='w-full' data-setting-id='settings.language.translationProvider'>
-        <Select
-          className="w-full"
-          value={getCurrentTranslationProviderOption().value}
-          onChange={handleSelectTranslationProvider}
-          options={getTranslationProviderOptions()}
-        />
-      </div>
+        <SettingsRow label={_('TTS Text')} data-setting-id='settings.language.ttsTextTranslation'>
+          <SettingsSelect
+            value={ttsReadAloudText}
+            onChange={handleSelectTTSText}
+            ariaLabel={_('TTS Text')}
+            options={getTTSTextOptions()}
+          />
+        </SettingsRow>
+        <SettingsRow
+          label={_('Translation Service')}
+          data-setting-id='settings.language.translationProvider'
+        >
+          <SettingsSelect
+            value={getCurrentTranslationProviderOption().value}
+            onChange={handleSelectTranslationProvider}
+            ariaLabel={_('Translation Service')}
+            options={getTranslationProviderOptions()}
+          />
+        </SettingsRow>
+        <SettingsRow label={_('Translate To')} data-setting-id='settings.language.targetLanguage'>
+          <SettingsSelect
+            value={getCurrentTargetLangOption().value}
+            onChange={handleSelectTargetLang}
+            ariaLabel={_('Translate To')}
+            options={getLangOptions(TRANSLATOR_LANGS, _('System Language'))}
+          />
+        </SettingsRow>
+      </BoxedList>
     </div>
   );
 };

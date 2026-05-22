@@ -1,3 +1,4 @@
+import clsx from 'clsx';
 import React, { useState, useEffect } from 'react';
 import { MdOutlineLightMode, MdOutlineDarkMode } from 'react-icons/md';
 import { MdRadioButtonUnchecked, MdRadioButtonChecked } from 'react-icons/md';
@@ -21,29 +22,32 @@ import { useResponsiveSize } from '@/hooks/useResponsiveSize';
 import { 
   CODE_LANGUAGES, CodeLanguage, manageSyntaxHighlighting 
 } from '@/utils/highlightjs';
-import Select from '@/components/Select';
 import { HighlightColor } from '@/types/book';
 import { HIGHLIGHT_COLOR_HEX } from '@/services/constants';
 import { saveViewSettings } from '@/helpers/settings';
 import { useResetViewSettings } from '@/hooks/useResetSettings';
-import { useEinkMode } from '@/hooks/useEinkMode';
 import ThemeEditor from './ThemeEditor';
 import ColorInput from './ColorInput';
 import { SettingsPanelPanelProp } from './SettingsDialog';
 import ReadingRulerSettings from './ReadingRulerSettings';
+import { 
+  BoxedList, 
+  SectionTitle, 
+  SettingLabel, 
+  SettingsRow, 
+  SettingsSelect, 
+  SettingsSwitchRow 
+} from './primitives';
 
 const ColorPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset }) => {
   const _ = useTranslation();
   const { 
     themeMode, themeColor, isDarkMode, setThemeMode, setThemeColor, saveCustomTheme 
   } = useThemeStore();
-  const { envConfig, appService } = useEnv();
+  const { envConfig } = useEnv();
   const { settings, setSettings } = useSettingsStore();
   const { getView, getViewSettings } = useReaderStore();
   const viewSettings = getViewSettings(bookKey) || settings.globalViewSettings;
-  const { applyEinkMode } = useEinkMode();
-  const [isEink, setIsEink] = useState(viewSettings.isEink);
-  const [isColorEink, setIsColorEink] = useState(viewSettings.isColorEink);
   const [invertImgColor, setInvertImgColor] = useState(viewSettings.invertImgColor);
 
   const iconSize16 = useResponsiveSize(16);
@@ -52,7 +56,7 @@ const ColorPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset
   const [customThemes, setCustomThemes] = useState<Theme[]>([]);
   const [showCustomThemeEditor, setShowCustomThemeEditor] = useState(false);
   const [overrideColor, setOverrideColor] = useState(viewSettings.overrideColor);
-  const [ttsHighlightColor, setTtsHighlightColor] = useState(viewSettings.ttsHighlightColor);
+  
   const [codeHighlighting, setcodeHighlighting] = useState(viewSettings.codeHighlighting);
   const [codeLanguage, setCodeLanguage] = useState(viewSettings.codeLanguage);
   const [customHighlightColors, setCustomHighlightColors] = useState(
@@ -72,7 +76,6 @@ const ColorPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset
       invertImgColor: setInvertImgColor,
       codeHighlighting: setcodeHighlighting,
       codeLanguage: setCodeLanguage,
-      isEink: setIsEink,
       readingRulerEnabled: setReadingRulerEnabled,
       readingRulerLines: setReadingRulerLines,
       readingRulerOpacity: setReadingRulerOpacity,
@@ -86,22 +89,6 @@ const ColorPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset
     onRegisterReset(handleReset);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  useEffect(() => {
-    saveViewSettings(envConfig, bookKey, 'isEink', isEink);
-    if (isEink) {
-      getView(bookKey)?.renderer.setAttribute('eink', '');
-    } else {
-      getView(bookKey)?.renderer.removeAttribute('eink');
-    }
-    applyEinkMode(isEink);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isEink]);
-
-  useEffect(() => {
-    saveViewSettings(envConfig, bookKey, 'isColorEink', isColorEink);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isColorEink]);
 
   useEffect(() => {
     if (invertImgColor === viewSettings.invertImgColor) return;
@@ -208,7 +195,7 @@ const ColorPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset
             className='flex items-center justify-between' 
             data-setting-id='settings.color.themeMode'
           >
-            <b className='font-medium'>{_('Theme Mode')}</b>
+            <SettingLabel>{_('Theme Mode')}</SettingLabel>
             <div className='flex gap-4'>
               <button
                 title={_('Light Mode')}
@@ -234,160 +221,38 @@ const ColorPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset
             </div>
           </div>
 
-          {(appService?.isAndroidApp || appService?.appPlatform === 'web') && (
-            <div 
-              className='flex items-center justify-between' 
-              data-setting-id='settings.color.einkMode'
-            >
-              <b className=''>{_('E-Ink Mode')}</b>
-              <input
-                type='checkbox'
-                className='toggle toggle-success h-5'
-                checked={isEink}
-                onChange={() => setIsEink(!isEink)}
-              />
-            </div>
-          )}
-
-          {(appService?.isAndroidApp || appService?.appPlatform === 'web') && (
-            <div 
-              className='flex items-center justify-between' 
-              data-setting-id='settings.color.colorEinkMode'
-            >
-              <b className=''>{_('Color E-Ink Mode')}</b>
-              <input
-                type='checkbox'
-                className='toggle toggle-success h-5'
-                disabled={!isEink}
-                checked={isColorEink}
-                onChange={() => setIsColorEink(!isColorEink)}
-              />
-            </div>
-          )}
-
-          <div 
-            className='flex items-center justify-between' 
+          <label 
             data-setting-id='settings.color.invertImageColors'
+            className={clsx(
+              'flex items-center justify-between px-4',
+              !isDarkMode && 'cursor-not-allowed opacity-50',
+              isDarkMode && 'cursor-pointer',
+            )}
           >
-            <b className=''>{_('Invert Image Colors')}</b>
+            <SettingLabel>{_('Invert Image Colors')}</SettingLabel>
             <input
               type='checkbox'
               className='toggle toggle-success h-5'
               checked={invertImgColor}
               onChange={() => setInvertImgColor(!invertImgColor)}
             />
-          </div>
+          </label>
 
-          <div 
-            className='flex items-center justify-between'
+          <label 
             data-setting-id='settings.color.overrideBookColor'
+            className='flex cursor-pointer items-center justify-between px-4'
           >
-            <b className=''>{_('Override Book Color')}</b>
+            <SettingLabel>{_('Override Book Color')}</SettingLabel>
             <input
               type='checkbox'
               className='toggle toggle-success h-5'
               checked={overrideColor}
               onChange={() => setOverrideColor(!overrideColor)}
             />
-          </div>
-
-          <div 
-            className='flex items-center justify-between'
-            data-setting-id='settings.color.codeHighlighting'
-          >
-            <b className=''>{_('Enable Code Highlighting')}</b>
-            <input
-              type='checkbox'
-              className='toggle toggle-success h-5'
-              checked={codeHighlighting}
-              onChange={() => setcodeHighlighting(!codeHighlighting)}
-            />
-          </div>
-          <div className='flex items-center justify-between'>
-            <b className=''>{_('Code Language')}</b>
-            <Select
-              value={codeLanguage}
-              onChange={(event) => setCodeLanguage(event.target.value as CodeLanguage)}
-              options={CODE_LANGUAGES.map((lang) => ({
-                value: lang,
-                label: lang === 'auto-detect' ? _('Auto') : lang,
-              }))}
-              disabled={!codeHighlighting}
-            />
-          </div>
-
-          <div 
-            className='flex items-center justify-between'
-            data-setting-id='settings.color.ttsHighlightStyle'
-          >
-            <b className='mb-2 font-medium'>{_('TTS Highlight Color')}</b>
-            <div className='flex items-center gap-2'>
-              <div
-                className='border-base-300 h-6 w-6 rounded-full border-2 shadow-sm'
-                style={{ backgroundColor: ttsHighlightColor }}
-              />
-              <ColorInput
-                label=''
-                value={ttsHighlightColor}
-                compact={true}
-                pickerPosition='right'
-                onChange={(value: string) => {
-                  setTtsHighlightColor(value);
-                  saveViewSettings(envConfig, bookKey, 'ttsHighlightColor', value);
-                }}
-              />
-            </div>
-          </div>
-
-          <div data-setting-id='settings.color.highlightColors'>
-            <h2 className='mb-2 font-medium'>{_('Available Highlight Colors')}</h2>
-            <div className='card border-base-200 bg-base-100 overflow-visible border p-4 shadow'>
-              <div className='grid grid-cols-3 gap-2 sm:grid-cols-5'>
-                {(['red', 'violet', 'blue', 'green', 'yellow'] as HighlightColor[]).map(
-                  (color, index, array) => {
-                    const position =
-                      index === 0 ? 'left' : index === array.length - 1 ? 'right' : 'center';
-                    return (
-                      <div key={color} className='flex flex-col items-center gap-2'>
-                        <div
-                          className='border-base-300 h-8 w-8 rounded-full border-2 shadow-sm'
-                          style={{ backgroundColor: customHighlightColors[color] }}
-                        />
-                        <ColorInput
-                          label=''
-                          value={customHighlightColors[color]}
-                          compact={true}
-                          pickerPosition={position}
-                          onChange={(value: string) => {
-                            customHighlightColors[color] = value;
-                            setCustomHighlightColors({ ...customHighlightColors });
-                            settings.globalReadSettings.customHighlightColors =
-                              customHighlightColors;
-                            setSettings(settings);
-                          }}
-                        />
-                      </div>
-                    );
-                  },
-                )}
-              </div>
-            </div>
-          </div>
-
-          <ReadingRulerSettings
-            enabled={readingRulerEnabled}
-            lines={readingRulerLines}
-            opacity={readingRulerOpacity}
-            color={readingRulerColor}
-            onEnabledChange={setReadingRulerEnabled}
-            onLinesChange={setReadingRulerLines}
-            onOpacityChange={setReadingRulerOpacity}
-            onColorChange={setReadingRulerColor}
-            data-setting-id='settings.color.readingRuler'
-          />
+          </label>
 
           <div data-setting-id='settings.color.themeColor'>
-            <h2 className='mb-2 font-medium'>{_('Theme Color')}</h2>
+            <SectionTitle className='mb-2'>{_('Theme Color')}</SectionTitle>
             <div className='grid grid-cols-3 gap-4'>
               {themes.concat(customThemes).map(({ name, label, colors, isCustomizale }) => (
                 <button
@@ -441,6 +306,76 @@ const ColorPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset
               </button>
             </div>
           </div>
+
+          <div data-setting-id='settings.color.highlightColors'>
+            <SectionTitle className='mb-2'>{_('Available Highlight Colors')}</SectionTitle>
+            <div className='card border-base-200 bg-base-100 overflow-visible border p-4 shadow'>
+              <div className='grid grid-cols-3 gap-2 sm:grid-cols-5'>
+                {(['red', 'violet', 'blue', 'green', 'yellow'] as HighlightColor[]).map(
+                  (color, index, array) => {
+                    const position =
+                      index === 0 ? 'left' : index === array.length - 1 ? 'right' : 'center';
+                    return (
+                      <div key={color} className='flex flex-col items-center gap-2'>
+                        <div
+                          className='border-base-300 h-8 w-8 rounded-full border-2 shadow-sm'
+                          style={{ backgroundColor: customHighlightColors[color] }}
+                        />
+                        <ColorInput
+                          label=''
+                          value={customHighlightColors[color]}
+                          compact={true}
+                          pickerPosition={position}
+                          onChange={(value: string) => {
+                            customHighlightColors[color] = value;
+                            setCustomHighlightColors({ ...customHighlightColors });
+                            settings.globalReadSettings.customHighlightColors =
+                              customHighlightColors;
+                            setSettings(settings);
+                          }}
+                        />
+                      </div>
+                    );
+                  },
+                )}
+              </div>
+            </div>
+          </div>
+
+          <ReadingRulerSettings
+            enabled={readingRulerEnabled}
+            lines={readingRulerLines}
+            opacity={readingRulerOpacity}
+            color={readingRulerColor}
+            onEnabledChange={setReadingRulerEnabled}
+            onLinesChange={setReadingRulerLines}
+            onOpacityChange={setReadingRulerOpacity}
+            onColorChange={setReadingRulerColor}
+            data-setting-id='settings.color.readingRuler'
+          />
+
+          <BoxedList 
+            title={_('Code Highlighting')} 
+            data-setting-id={'settings.color.codeHighlighting'}
+          >
+            <SettingsSwitchRow
+              label={_('Enable Highlighting')}
+              checked={codeHighlighting}
+              onChange={() => setcodeHighlighting(!codeHighlighting)}
+            />
+            <SettingsRow label={_('Code Language')}>
+              <SettingsSelect
+                value={codeLanguage}
+                onChange={(event) => setCodeLanguage(event.target.value as CodeLanguage)}
+                ariaLabel={_('Code Language')}
+                disabled={!codeHighlighting}
+                options={CODE_LANGUAGES.map((lang) => ({
+                  value: lang,
+                  label: lang === 'auto-detect' ? _('Auto') : lang,
+                }))}
+              />
+            </SettingsRow>
+          </BoxedList>
         </>
       )}
     </div>

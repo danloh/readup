@@ -1,5 +1,6 @@
 import { BookMetadata } from '@/libs/document';
 import { AnnotationToolType } from './annotator';
+import { TTSMediaMetadataMode } from '@/services/tts';
 
 export type BookFormat =
   'EPUB' | 'PDF' | 'MOBI' | 'AZW'| 'AZW3' | 'CBZ' | 'FB2'| 'FBZ' | 'TXT' | 'MD';
@@ -228,6 +229,7 @@ export interface TTSConfig {
   ttsVoice: string;
   ttsLocation: string;
   ttsHighlightColor: string;
+  ttsMediaMetadata: TTSMediaMetadataMode;
 }
 
 export interface TranslatorConfig {

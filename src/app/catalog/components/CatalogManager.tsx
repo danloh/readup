@@ -292,7 +292,7 @@ export function CatalogManager({ closeDialog }: CMProps) {
       </div>
 
       {/* My Catalogs */}
-      <section className='mb-12 text-base'>
+      <section className='mb-8 text-base'>
         <div className='mb-4 flex items-center justify-between'>
           <h2 className='font-semibold'>{_('My Catalogs')}</h2>
           <button onClick={() => setShowAddDialog(true)} className='btn btn-primary btn-sm'>

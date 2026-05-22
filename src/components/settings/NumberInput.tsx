@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { IconType } from 'react-icons';
 import { FiMinus, FiPlus } from 'react-icons/fi';
 import { useTranslation } from '@/hooks/useTranslation';
+import { SettingLabel } from './primitives';
 
 interface NumberInputProps {
   className?: string;
@@ -63,10 +64,13 @@ const NumberInput: React.FC<NumberInputProps> = ({
   };
 
   return (
-    <div className={clsx('config-item', className)} data-setting-id={settingId}>
-      <div className='flex min-w-0 items-center'>
+    <div
+      className={clsx('flex h-14 items-center justify-between pe-4', className)}
+      data-setting-id={settingId}
+    >
+      <div className='flex min-w-0 items-center gap-0.5'>
+        <SettingLabel>{label}</SettingLabel>
         {Icon && (<Icon className='text-base-content' />)}
-        <span className='text-base-content line-clamp-2 mx-1'>{label}</span>
       </div>
       <div className='text-base-content flex items-center gap-2'>
         <form onSubmit={handleSubmit}>

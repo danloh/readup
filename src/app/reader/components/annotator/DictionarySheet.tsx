@@ -25,6 +25,7 @@ const DictionarySheet: React.FC<DictionarySheetProps> = ({ word, lang, onDismiss
       dismissible
       header={
         <DictionaryResultsHeader
+          headerClassName='-mt-4'
           currentWord={state.currentWord}
           canGoBack={state.canGoBack}
           goBack={state.goBack}
@@ -33,7 +34,7 @@ const DictionarySheet: React.FC<DictionarySheetProps> = ({ word, lang, onDismiss
           onAddToVocabulary={state.onAddToVocabulary}
         />
       }
-      contentClassName='!px-0'
+      contentClassName='!px-0 !mt-0'
       onClose={onDismiss}
     >
       <DictionaryResultsBody {...state} />

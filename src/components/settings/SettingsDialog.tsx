@@ -43,8 +43,13 @@ const SettingsDialog: React.FC<{ bookKey: string }> = ({ bookKey }) => {
   const _ = useTranslation();
   const { appService } = useEnv();
   const panelRef = useRef<HTMLDivElement | null>(null);
-  const { setFontLayoutSettingsDialogOpen, activeSettingsItemId, setActiveSettingsItemId } = 
-    useSettingsStore();
+  const { 
+    setFontLayoutSettingsDialogOpen, 
+    activeSettingsItemId, 
+    setActiveSettingsItemId,
+    requestedPanel,
+    setRequestedPanel, 
+  } = useSettingsStore();
   
   const { open: openCommandPalette } = useCommandPalette();
 
@@ -93,12 +98,28 @@ const SettingsDialog: React.FC<{ bookKey: string }> = ({ bookKey }) => {
   ] as TabConfig[];
 
   const [activePanel, setActivePanel] = useState<SettingsPanelType>(() => {
+    // Deep-link: if a caller asked for a specific panel before opening the
+    // dialog, honor that for the initial state. The store-clear lives in
+    // a useEffect below so we never call a zustand setter during render
+    // (would warn "Cannot update a component while rendering another").
+    if (requestedPanel && tabConfig.some((tab) => tab.tab === requestedPanel)) {
+      return requestedPanel as SettingsPanelType;
+    }
     const lastPanel = localStorage.getItem('lastConfigPanel');
     if (lastPanel && tabConfig.some((tab) => tab.tab === lastPanel)) {
       return lastPanel as SettingsPanelType;
     }
     return 'Font' as SettingsPanelType;
   });
+
+  // Clear the deep-link request after the initial render has consumed it,
+  // so the next dialog open doesn't stick on the same panel. Effect runs
+  // once on mount; subsequent callers must call setRequestedPanel before
+  // opening the dialog again.
+  useEffect(() => {
+    if (requestedPanel) setRequestedPanel(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSetActivePanel = (tab: SettingsPanelType) => {
     setActivePanel(tab);
@@ -194,6 +215,7 @@ const SettingsDialog: React.FC<{ bookKey: string }> = ({ bookKey }) => {
         appService?.isMobile && 'sm:max-w-[90%] sm:w-3/4',
       )}
       snapHeight={appService?.isMobile ? 0.7 : undefined}
+      useOverlayScroll
       header={
         <div className='flex w-full flex-col items-center'>
           <div className='flex w-full flex-row items-center justify-between'>

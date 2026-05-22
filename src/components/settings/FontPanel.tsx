@@ -1,7 +1,5 @@
 import clsx from 'clsx';
 import React, { useEffect, useState } from 'react';
-import { RiFontSize2, RiFontSize } from "react-icons/ri";
-import { RxFontBold } from "react-icons/rx";
 
 import {
   CJK_EXCLUDE_PATTENS,
@@ -30,6 +28,7 @@ import { useResetViewSettings } from '@/hooks/useResetSettings';
 import { SettingsPanelPanelProp } from './SettingsDialog';
 import NumberInput from './NumberInput';
 import FontDropdown from './FontDropDown';
+import { BoxedList, SettingLabel, SettingsRow } from './primitives';
 
 const genCJKFontsList = (sysFonts: string[]) => {
   return Array.from(new Set([...sysFonts, ...CJK_SERIF_FONTS, ...CJK_SANS_SERIF_FONTS]))
@@ -72,8 +71,11 @@ const FontFace = ({
 }: FontFaceProps) => {
   const _ = useTranslation();
   return (
-    <div className={clsx('config-item', className)} data-setting-id={settingId}>
-      <span className='min-w-10'>{label}</span>
+    <div
+      className={clsx('flex h-14 items-center justify-between pe-4', className)}
+      data-setting-id={settingId}
+    >
+      <SettingLabel className='min-w-10'>{label}</SettingLabel>
       <FontDropdown
         family={family}
         options={options.map((option) => ({ option, label: _(option) }))}
@@ -255,117 +257,102 @@ const FontPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
 
   return (
     <div className='my-4 w-full space-y-4'>
-      <div 
-        className='flex items-center justify-between' 
+      <label 
         data-setting-id='settings.font.overrideBookFont'
+        className='flex cursor-pointer items-center justify-between px-4'
       >
-        <b className=''>{_('Override Book Font')}</b>
+        <SettingLabel>{_('Override Book Font')}</SettingLabel>
         <input
           type='checkbox'
           className='toggle toggle-success h-5'
           checked={overrideFont}
           onChange={() => setOverrideFont(!overrideFont)}
         />
-      </div>
+      </label>
 
-      <div className='w-full'>
-        <div className='card border-base-200 border shadow'>
-          <div className='divide-base-200 divide-y'>
-            <NumberInput
-              Icon={RiFontSize2}
-              label={_('Default Font Size')}
-              value={defaultFontSize}
-              onChange={setDefaultFontSize}
-              min={minFontSize}
-              max={120}
-              data-setting-id='settings.font.defaultFontSize'
-            />
-            <NumberInput
-              Icon={RiFontSize}
-              label={_('Minimum Font Size')}
-              value={minFontSize}
-              onChange={setMinFontSize}
-              min={1}
-              max={120}
-              data-setting-id='settings.font.minimumFontSize'
-            />
-            <NumberInput
-              Icon={RxFontBold}
-              label={_('Font Weight')}
-              value={fontWeight}
-              onChange={setFontWeight}
-              min={100}
-              max={900}
-              step={100}
-              data-setting-id='settings.font.fontWeight'
-            />
-          </div>
-        </div>
-      </div>
+      <BoxedList title={_('Font Size')}>
+        <NumberInput
+          label={_('Default Font Size')}
+          value={defaultFontSize}
+          onChange={setDefaultFontSize}
+          min={minFontSize}
+          max={120}
+          data-setting-id='settings.font.defaultFontSize'
+        />
+        <NumberInput
+          label={_('Minimum Font Size')}
+          value={minFontSize}
+          onChange={setMinFontSize}
+          min={1}
+          max={120}
+          data-setting-id='settings.font.minimumFontSize'
+        />
+      </BoxedList>
 
-      <div className='w-full'>
-        <div className='card border-base-200 border shadow'>
-          <div className='divide-base-200 divide-y'>
-            <div className='config-item' data-setting-id='settings.font.defaultFont'>
-              <span className=''>{_('Default Font')}</span>
-              <FontDropdown
-                options={fontFamilyOptions}
-                selected={defaultFont}
-                onSelect={setDefaultFont}
-                onGetFontFamily={handleFontFamilyFont}
-              />
-            </div>
+      <BoxedList title={_('Font Weight')} data-setting-id='settings.font.fontWeight'>
+        <NumberInput
+          label={_('Font Weight')}
+          value={fontWeight}
+          onChange={setFontWeight}
+          min={100}
+          max={900}
+          step={100}
+        />
+      </BoxedList>
 
-            {(isCJKEnv() || view?.language.isCJK) && (
-              <FontFace
-                className='config-item-top'
-                family='serif'
-                label={_('CJK Font')}
-                options={CJKFonts}
-                selected={defaultCJKFont}
-                onSelect={setDefaultCJKFont}
-                data-setting-id='settings.font.cjkFont'
-              />
-            )}
-          </div>
-        </div>
-      </div>
+      <BoxedList title={_('Font Family')}>
+        <SettingsRow label={_('Default Font')} data-setting-id='settings.font.defaultFont'>
+          <FontDropdown
+            options={fontFamilyOptions}
+            selected={defaultFont}
+            onSelect={setDefaultFont}
+            onGetFontFamily={handleFontFamilyFont}
+          />
+        </SettingsRow>
+        {(isCJKEnv() || view?.language.isCJK) && (
+          <FontFace
+            family='serif'
+            label={_('CJK Font')}
+            options={CJKFonts}
+            selected={defaultCJKFont}
+            onSelect={setDefaultCJKFont}
+            data-setting-id='settings.font.cjkFont'
+          />
+        )}
+      </BoxedList>
 
-      <div className='w-full'>
-        <div className='card border-base-200 border shadow'>
-          <div className='divide-base-200 divide-y'>
-            <FontFace
-              className='config-item-top'
-              family='serif'
-              label={_('Serif Font')}
-              options={[...SERIF_FONTS.filter(filterNonFreeFonts), ...CJK_SERIF_FONTS]}
-              moreOptions={sysFonts}
-              selected={serifFont}
-              onSelect={setSerifFont}
-              data-setting-id='settings.font.serifFont'
-            />
-            <FontFace
-              family='sans-serif'
-              label={_('Sans-Serif Font')}
-              options={[...SANS_SERIF_FONTS.filter(filterNonFreeFonts), ...CJK_SANS_SERIF_FONTS]}
-              moreOptions={sysFonts}
-              selected={sansSerifFont}
-              onSelect={setSansSerifFont}
-              data-setting-id='settings.font.sansSerifFont'
-            />
-            <FontFace
-              className='config-item-bottom'
-              family='monospace'
-              label={_('Monospace Font')}
-              options={MONOSPACE_FONTS}
-              moreOptions={sysFonts}
-              selected={monospaceFont}
-              onSelect={setMonospaceFont}
-              data-setting-id='settings.font.monospaceFont'
-            />
-          </div>
-        </div>
-      </div>
+      <BoxedList title={_('Font Face')}>
+        <FontFace
+          family='serif'
+          label={_('Serif Font')}
+          options={[...SERIF_FONTS.filter(filterNonFreeFonts), ...CJK_SERIF_FONTS]}
+          moreOptions={sysFonts}
+          selected={serifFont}
+          onSelect={setSerifFont}
+          data-setting-id='settings.font.serifFont'
+        />
+        <FontFace
+          family='sans-serif'
+          label={_('Sans-Serif Font')}
+          options={[
+            ...SANS_SERIF_FONTS.filter(filterNonFreeFonts),
+            ...CJK_SANS_SERIF_FONTS,
+          ]}
+          moreOptions={sysFonts}
+          selected={sansSerifFont}
+          onSelect={setSansSerifFont}
+          data-setting-id='settings.font.sansSerifFont'
+        />
+        <FontFace
+          family='monospace'
+          label={_('Monospace Font')}
+          options={[...MONOSPACE_FONTS]}
+          moreOptions={sysFonts}
+          selected={monospaceFont}
+          onSelect={setMonospaceFont}
+          data-setting-id='settings.font.monospaceFont'
+        />
+      </BoxedList>
     </div>
   );
 };
