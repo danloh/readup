@@ -31,6 +31,9 @@ interface AnnotationPopupProps {
   popupHeight: number;
   onHighlight: (update?: boolean) => void;
   onDismiss: () => void;
+  globalToggleAvailable?: boolean;
+  globalToggleActive?: boolean;
+  onToggleGlobal?: () => void;
 }
 
 const AnnotationPopup: React.FC<AnnotationPopupProps> = ({
@@ -48,6 +51,9 @@ const AnnotationPopup: React.FC<AnnotationPopupProps> = ({
   popupHeight,
   onHighlight,
   onDismiss,
+  globalToggleAvailable,
+  globalToggleActive,
+  onToggleGlobal,
 }) => {
   return (
     <div dir={dir}>
@@ -109,6 +115,9 @@ const AnnotationPopup: React.FC<AnnotationPopupProps> = ({
                 selectedStyle={selectedStyle}
                 selectedColor={selectedColor}
                 onHandleHighlight={onHighlight}
+                globalToggleAvailable={globalToggleAvailable}
+                globalToggleActive={globalToggleActive}
+                onToggleGlobal={onToggleGlobal}
               />
             )
           )}

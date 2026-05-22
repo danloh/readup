@@ -2,7 +2,10 @@
 
 import clsx from 'clsx';
 import { useCallback, useEffect, useState } from 'react';
-import { IoAdd, IoTrash, IoOpenOutline, IoBook, IoEyeOff, IoEye, IoPencil, IoCloudDownloadOutline } from 'react-icons/io5';
+import { 
+  IoAdd, IoBook, IoEyeOff, IoEye, IoCloudDownloadOutline, IoEllipsisVertical 
+} from 'react-icons/io5';
+import { MdChevronRight } from 'react-icons/md';
 import { useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
 
@@ -14,6 +17,10 @@ import { saveSysSettings } from '@/helpers/settings';
 import { OPDSCatalog } from '@/types/opds';
 import { isLanAddress } from '@/utils/network';
 import ModalPortal from '@/components/ModalPortal';
+import { SectionTitle } from '@/components/settings/primitives';
+import MenuItem from '@/components/MenuItem';
+import Menu from '@/components/Menu';
+import Dropdown from '@/components/Dropdown';
 import { eventDispatcher } from '@/utils/event';
 import { 
   deleteSubscriptionState, loadSubscriptionState, OPDSSubscriptionState 
@@ -294,16 +301,19 @@ export function CatalogManager({ closeDialog }: CMProps) {
       {/* My Catalogs */}
       <section className='mb-8 text-base'>
         <div className='mb-4 flex items-center justify-between'>
-          <h2 className='font-semibold'>{_('My Catalogs')}</h2>
-          <button onClick={() => setShowAddDialog(true)} className='btn btn-primary btn-sm'>
+          <SectionTitle>{_('My Catalogs')}</SectionTitle>
+          <button
+            onClick={() => setShowAddDialog(true)}
+            className='eink-bordered border-base-200 hover:border-base-300 hover:bg-base-200/60 focus-visible:ring-base-content/15 inline-flex h-8 items-center gap-1.5 rounded-lg border px-3 text-sm font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2'
+          >
             <IoAdd className='h-4 w-4' />
             {_('Add Catalog')}
           </button>
         </div>
 
         {catalogs.length === 0 ? (
-          <div className='border-base-300 rounded-lg border-2 border-dashed p-12 text-center'>
-            <IoBook className='text-base-content/30 mx-auto mb-4 h-12 w-12' />
+          <div className='eink-bordered border-base-300 rounded-lg border-2 border-dashed p-8 text-center'>
+            <IoBook className='text-base-content/40 mx-auto mb-4 h-12 w-12' />
             <h3 className='mb-2 font-semibold'>{_('No catalogs yet')}</h3>
             <p className='text-base-content/70 mb-4 text-sm'>
               {_('Add your first OPDS catalog to start browsing books')}
@@ -313,164 +323,217 @@ export function CatalogManager({ closeDialog }: CMProps) {
             </button>
           </div>
         ) : (
-          <div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
-            {catalogs.map((catalog) => (
-              <div
-                key={catalog.id}
-                className='card bg-base-100 border-base-300 h-full border shadow-sm transition-shadow hover:shadow-md'
-              >
-                <div className='card-body h-full justify-between p-4'>
-                  <div className='flex items-center justify-between'>
-                    <div className='min-w-0 flex-1'>
-                      <div className='mb-1 flex items-center justify-between'>
-                        <h3 className='card-title text-sm'>
-                          {catalog.icon && <span>{catalog.icon}</span>}
-                          <span className='line-clamp-1'>{catalog.name}</span>
-                        </h3>
-                        <div className='flex gap-1'>
-                          <button
-                            onClick={() => handleEditCatalog(catalog)}
-                            className='btn btn-ghost btn-xs btn-square'
-                            title={_('Edit')}
-                          >
-                            <IoPencil className='h-4 w-4' />
-                          </button>
-                          <button
-                            onClick={() => handleRemoveCatalog(catalog.id)}
-                            className='btn btn-ghost btn-xs btn-square'
-                            title={_('Remove')}
-                          >
-                            <IoTrash className='h-4 w-4' />
-                          </button>
-                        </div>
+          <div className='grid grid-cols-1 gap-2 sm:grid-cols-2'>
+            {catalogs.map((catalog) => {
+              const subState = subscriptionStates[catalog.id];
+              const lastCheckedAt = subState?.lastCheckedAt ?? 0;
+              const failedCount = subState?.failedEntries.length ?? 0;
+              const showSubscriptionStatus =
+                catalog.autoDownload && subState && (lastCheckedAt > 0 || failedCount > 0);
+
+              return (
+                // Whole card is the browse trigger. Uses role='button' (not
+                // a real <button>) because it nests other interactive
+                // elements: the 3-dot menu, auto-download toggle, and
+                // failed-downloads link. Inner controls call
+                // e.stopPropagation() so their clicks don't bubble.
+                <div
+                  key={catalog.id}
+                  role='button'
+                  tabIndex={catalog.disabled ? -1 : 0}
+                  onClick={() => !catalog.disabled && handleOpenCatalog(catalog)}
+                  onKeyDown={(e) => {
+                    if (catalog.disabled) return;
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleOpenCatalog(catalog);
+                    }
+                  }}
+                  className={clsx(
+                    'card eink-bordered bg-base-100 border-base-200 group/card flex flex-col border transition-colors duration-150',
+                    'focus-visible:ring-base-content/15 focus-visible:outline-none focus-visible:ring-2',
+                    catalog.disabled
+                      ? 'cursor-not-allowed opacity-60'
+                      : 'hover:bg-base-200/40 cursor-pointer',
+                  )}
+                >
+                  <div className='flex flex-1 flex-col gap-2.5 px-4 pb-2 pt-4'>
+                    {/* Header: icon + name + chevron hint (whole card is
+                        the click target) | overflow menu (Edit / Remove). */}
+                    <div className='flex items-start justify-between gap-2'>
+                      <h4 className='flex min-w-0 flex-1 items-center gap-1.5 text-sm font-semibold'>
+                        {catalog.icon && <span className='flex-shrink-0'>{catalog.icon}</span>}
+                        <span className='truncate'>{catalog.name}</span>
+                      </h4>
+                      {/* stopPropagation on the trigger wrapper so opening
+                          the menu doesn't also browse the catalog.
+                          The Dropdown component itself handles floating the
+                          menu via daisyui's `.dropdown .dropdown-content`
+                          position:absolute rule — don't add !relative here
+                          or the menu inlines into the card layout. */}
+                      <div
+                        className='-mr-1.5 -mt-1 flex-shrink-0'
+                        onClick={(e) => e.stopPropagation()}
+                        onKeyDown={(e) => e.stopPropagation()}
+                      >
+                        <Dropdown
+                          label={_('Catalog actions')}
+                          className='dropdown-bottom dropdown-end'
+                          buttonClassName='text-base-content/55 hover:bg-base-200 hover:text-base-content focus-visible:ring-base-content/15 flex h-7 w-7 items-center justify-center rounded-md transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2'
+                          toggleButton={<IoEllipsisVertical className='h-4 w-4' />}
+                        >
+                          <Menu className='dropdown-content no-triangle border-base-300 z-20 mt-1 min-w-[8rem] rounded-lg border shadow-lg'>
+                            <MenuItem
+                              noIcon
+                              
+                              label={_('Edit')}
+                              onClick={() => handleEditCatalog(catalog)}
+                            />
+                            <MenuItem
+                              noIcon
+                              label={_('Remove')}
+                              onClick={() => handleRemoveCatalog(catalog.id)}
+                            />
+                          </Menu>
+                        </Dropdown>
                       </div>
-                      {catalog.description && (
-                        <p className='text-base-content/70 mb-2 line-clamp-1 h-6 text-sm sm:line-clamp-2 sm:h-10'>
-                          {catalog.description}
-                        </p>
-                      )}
-                      <p className='text-base-content/50 line-clamp-1 text-xs'>{catalog.url}</p>
-                      {catalog.username && (
-                        <p className='text-base-content/50 mt-1 text-xs'>
-                          {_('Username')}: {catalog.username}
-                        </p>
-                      )}
-                      {hasOPDSCustomHeaders(catalog.customHeaders) && (
-                        <p className='text-base-content/50 mt-1 text-xs'>
-                          {_('Custom Headers')}: {Object.keys(catalog.customHeaders || {}).length}
-                        </p>
-                      )}
+                    </div>
+
+                    {/* Description (optional) — single line in My Catalogs
+                        to keep cards compact and consistent in height
+                        regardless of description length. */}
+                    {catalog.description && (
+                      <p className='text-base-content/70 line-clamp-1 text-xs leading-relaxed'>
+                        {catalog.description}
+                      </p>
+                    )}
+
+                    {/* URL — quieter, mono-ish */}
+                    <p className='text-base-content/55 truncate text-[11px]' title={catalog.url}>
+                      {catalog.url}
+                    </p>
+
+                    {/* Auto-download row — label and toggle live in a SAME
+                        flex line (items-center → vertically centered with
+                        each other). Subline sits beneath as a sibling.
+                        The subline always renders (with &nbsp; placeholder
+                        when no status data) so the row's total height stays
+                        constant — toggling AD on/off or sync-status data
+                        arriving via opds-sync-complete never shifts the
+                        card. Browse is the whole-card click; stopPropagation
+                        on the label so toggling doesn't also browse. */}
+                    <div className='mt-auto flex flex-col gap-0.5 hidden'>
+                      <label
+                        onClick={(e) => e.stopPropagation()}
+                        className={clsx(
+                          'flex items-center justify-between gap-2',
+                          catalog.disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
+                        )}
+                      >
+                        <span className='text-base-content/80 inline-flex items-center gap-1.5 text-xs'>
+                          <IoCloudDownloadOutline className='h-3.5 w-3.5' />
+                          {_('Auto-download')}
+                        </span>
+                        <input
+                          type='checkbox'
+                          className='toggle toggle-sm toggle-primary flex-shrink-0'
+                          checked={!!catalog.autoDownload}
+                          disabled={!!catalog.disabled}
+                          onChange={() => handleToggleAutoDownload(catalog.id)}
+                        />
+                      </label>
+                      <span className='text-base-content/55 truncate text-[11px] leading-tight'>
+                        {showSubscriptionStatus ? (
+                          <>
+                            {lastCheckedAt > 0 && (
+                              <span>
+                                {_('Last synced {{when}}', {
+                                  when: dayjs(lastCheckedAt).fromNow(),
+                                })}
+                              </span>
+                            )}
+                            {failedCount > 0 && (
+                              <>
+                                {lastCheckedAt > 0 && <span aria-hidden> · </span>}
+                                <button
+                                  type='button'
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setFailedDialogCatalogId(catalog.id);
+                                  }}
+                                  className='text-error hover:underline'
+                                >
+                                  {_('{{count}} failed', { count: failedCount })}
+                                </button>
+                              </>
+                            )}
+                          </>
+                        ) : (
+                          // &nbsp; reserves line-height so the row above
+                          // stays anchored at a consistent vertical position.
+                          <>&nbsp;</>
+                        )}
+                      </span>
                     </div>
                   </div>
-                  <div className='mt-2 flex items-center gap-2'>
-                    <label
-                      className={clsx(
-                        'label gap-2 p-0',
-                        catalog.disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
-                      )}
-                    >
-                      <input
-                        type='checkbox'
-                        className='toggle toggle-xs toggle-primary'
-                        checked={!!catalog.autoDownload}
-                        disabled={!!catalog.disabled}
-                        onChange={() => handleToggleAutoDownload(catalog.id)}
-                      />
-                      <span className='label-text text-xs'>
-                        <IoCloudDownloadOutline className='mr-1 inline h-3.5 w-3.5' />
-                        {_('Auto-download')}
-                      </span>
-                    </label>
-                  </div>
-                  {(() => {
-                    const subState = subscriptionStates[catalog.id];
-                    if (!catalog.autoDownload || !subState) return null;
-                    const lastCheckedAt = subState.lastCheckedAt;
-                    const failedCount = subState.failedEntries.length;
-                    if (lastCheckedAt === 0 && failedCount === 0) return null;
-                    return (
-                      <div className='text-base-content/60 mt-1 flex items-center gap-2 text-xs'>
-                        {lastCheckedAt > 0 && (
-                          <span>
-                            {_('Last synced {{when}}', {
-                              when: dayjs(lastCheckedAt).fromNow(),
-                            })}
-                          </span>
-                        )}
-                        {failedCount > 0 && (
-                          <>
-                            {lastCheckedAt > 0 && <span aria-hidden>·</span>}
-                            <button
-                              type='button'
-                              onClick={() => setFailedDialogCatalogId(catalog.id)}
-                              className='text-error hover:underline'
-                            >
-                              {_('{{count}} failed', { count: failedCount })}
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    );
-                  })()}
-                  <div className='card-actions mt-4 justify-end'>
-                    <button
-                      onClick={() => handleOpenCatalog(catalog)}
-                      className='btn btn-sm btn-primary'
-                    >
-                      <IoOpenOutline className='h-4 w-4' />
-                      {_('Browse')}
-                    </button>
-                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>
 
       {/* Popular Catalogs */}
       <section className={clsx('text-base', popularCatalogs.length === 0 && 'hidden')}>
-        <h2 className='mb-4 font-semibold'>{_('Popular Catalogs')}</h2>
-        <div className='grid gap-4 sm:grid-cols-2'>
-          {popularCatalogs.filter((catalog) => !catalog.disabled).map((catalog) => {
-            const isAdded = catalogs.some((c) => c.url === catalog.url);
-            return (
-              <div
-                key={catalog.id}
-                className='card bg-base-100 border-base-300 border shadow-sm transition-shadow hover:shadow-md'
-              >
-                <div className='card-body p-4'>
-                  <h3 className='card-title mb-1 text-sm'>
-                    {catalog.icon && <span>{catalog.icon}</span>}
-                    {catalog.name}
-                  </h3>
-                  {catalog.description && (
-                    <p className='text-base-content/70 line-clamp-2 text-sm'>
-                      {catalog.description}
-                    </p>
-                  )}
-                  <div className='card-actions mt-4 justify-end gap-2'>
-                    {!isAdded && (
+        <SectionTitle className='mb-3'>{_('Popular Catalogs')}</SectionTitle>
+        <div className='grid grid-cols-1 gap-3 sm:grid-cols-2'>
+          {popularCatalogs
+            .filter((catalog) => !catalog.disabled)
+            .map((catalog) => {
+              const isAdded = catalogs.some((c) => c.url === catalog.url);
+              return (
+                <div
+                  key={catalog.id}
+                  className='card eink-bordered bg-base-100 border-base-200 flex flex-col border'
+                >
+                  <div className='flex flex-1 flex-col gap-2.5 p-4'>
+                    <h4>
                       <button
-                        onClick={() => handleAddPopularCatalog(catalog)}
-                        className='btn btn-sm'
+                        type='button'
+                        onClick={() => handleOpenCatalog(catalog)}
+                        className='flex w-full min-w-0 items-center gap-1.5 rounded-sm text-start text-sm font-semibold transition-colors duration-150 hover:underline focus-visible:underline focus-visible:outline-none'
                       >
-                        <IoAdd className='h-4 w-4' />
-                        {_('Add')}
+                        {catalog.icon && <span className='flex-shrink-0'>{catalog.icon}</span>}
+                        <span className='truncate'>{catalog.name}</span>
                       </button>
+                    </h4>
+                    {catalog.description && (
+                      <p className='text-base-content/70 line-clamp-2 text-xs leading-relaxed'>
+                        {catalog.description}
+                      </p>
                     )}
-                    <button
-                      onClick={() => handleOpenCatalog(catalog)}
-                      className='btn btn-sm btn-primary'
-                    >
-                      <IoOpenOutline className='h-4 w-4' />
-                      {_('Browse')}
-                    </button>
+                    <div className='border-base-200 mt-auto flex items-center justify-end gap-1 border-t pt-3'>
+                      {!isAdded && (
+                        <button
+                          onClick={() => handleAddPopularCatalog(catalog)}
+                          className='hover:bg-base-200 focus-visible:ring-base-content/15 inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2'
+                        >
+                          <IoAdd className='h-4 w-4' />
+                          {_('Add')}
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleOpenCatalog(catalog)}
+                        className='hover:bg-base-200 focus-visible:ring-base-content/15 inline-flex items-center gap-0.5 rounded-md px-2 py-1 text-xs font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2'
+                      >
+                        {_('Browse')}
+                        <MdChevronRight className='h-4 w-4' />
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
         </div>
       </section>
 
@@ -479,7 +542,7 @@ export function CatalogManager({ closeDialog }: CMProps) {
         <ModalPortal>
           <dialog className='modal modal-open'>
             <div className='modal-box'>
-              <h3 className='mb-4 text-lg font-bold'>
+              <h3 className='mb-4 text-lg font-semibold tracking-tight'>
                 {editingCatalogId ? _('Edit OPDS Catalog') : _('Add OPDS Catalog')}
               </h3>
               <form
@@ -498,7 +561,7 @@ export function CatalogManager({ closeDialog }: CMProps) {
                     value={newCatalog.name}
                     onChange={(e) => setNewCatalog({ ...newCatalog, name: e.target.value.trim() })}
                     placeholder={_('My Online Library')}
-                    className='input input-bordered placeholder:text-sm'
+                    className='input input-bordered eink-bordered placeholder:text-sm'
                     disabled={isValidating}
                     required
                   />
@@ -516,7 +579,7 @@ export function CatalogManager({ closeDialog }: CMProps) {
                       setUrlError('');
                     }}
                     placeholder='https://example.com/opds'
-                    className='input input-bordered placeholder:text-sm'
+                    className='input input-bordered eink-bordered placeholder:text-sm'
                     disabled={isValidating}
                     required
                   />
@@ -535,7 +598,7 @@ export function CatalogManager({ closeDialog }: CMProps) {
                     value={newCatalog.description}
                     onChange={(e) => setNewCatalog({ ...newCatalog, description: e.target.value })}
                     placeholder={_('A brief description of this catalog')}
-                    className='textarea textarea-bordered text-sm placeholder:text-sm'
+                    className='textarea textarea-bordered eink-bordered text-sm placeholder:text-sm'
                     rows={2}
                     disabled={isValidating}
                   />
@@ -550,7 +613,7 @@ export function CatalogManager({ closeDialog }: CMProps) {
                     value={newCatalog.proxy}
                     onChange={(e) => setNewCatalog({ ...newCatalog, proxy: e.target.value.trim() })}
                     placeholder={_('URL for proxy')}
-                    className='input input-bordered placeholder:text-sm'
+                    className='input input-bordered eink-bordered placeholder:text-sm'
                     disabled={isValidating}
                   />
                 </div>
@@ -567,7 +630,7 @@ export function CatalogManager({ closeDialog }: CMProps) {
                       setProxyConsentError('');
                     }}
                     placeholder={_('Username')}
-                    className='input input-bordered placeholder:text-sm'
+                    className='input input-bordered eink-bordered placeholder:text-sm'
                     disabled={isValidating}
                     autoComplete='username'
                   />
@@ -586,7 +649,7 @@ export function CatalogManager({ closeDialog }: CMProps) {
                         setProxyConsentError('');
                       }}
                       placeholder={_('Password')}
-                      className='input input-bordered w-full pr-10 placeholder:text-sm'
+                      className='input input-bordered eink-bordered w-full pr-10 placeholder:text-sm'
                       disabled={isValidating}
                       autoComplete='current-password'
                     />
@@ -620,7 +683,7 @@ export function CatalogManager({ closeDialog }: CMProps) {
                       'CF-Access-Client-Id': 'your-client-id',
                       'CF-Access-Client-Secret': 'your-client-secret',
                     })}
-                    className='textarea textarea-bordered font-mono text-sm placeholder:text-xs'
+                    className='textarea textarea-bordered eink-bordered font-mono text-sm placeholder:text-xs'
                     rows={4}
                     disabled={isValidating}
                     spellCheck={false}
@@ -664,7 +727,7 @@ export function CatalogManager({ closeDialog }: CMProps) {
                   </div>
                 )}
 
-                <div className='form-control'>
+                <div className='form-control hidden'>
                   <label className='label cursor-pointer justify-start gap-3 p-0'>
                     <input
                       type='checkbox'
@@ -684,16 +747,33 @@ export function CatalogManager({ closeDialog }: CMProps) {
                   </label>
                 </div>
 
-                <div className='modal-action'>
+                <div className='modal-action gap-2'>
                   <button
                     type='button'
                     onClick={handleCloseDialog}
-                    className='btn btn-sm'
                     disabled={isValidating}
+                    className={clsx(
+                      'eink-bordered',
+                      'h-10 rounded-lg px-4 text-sm font-medium',
+                      'text-base-content hover:bg-base-200',
+                      'transition-colors duration-150',
+                      'focus-visible:ring-base-content/15 focus-visible:outline-none focus-visible:ring-2',
+                      'disabled:cursor-not-allowed disabled:opacity-60',
+                      'disabled:hover:bg-transparent',
+                    )}
                   >
                     {_('Cancel')}
                   </button>
-                  <button type='submit' className='btn btn-sm btn-primary' disabled={isValidating}>
+                  <button
+                    type='submit'
+                    disabled={isValidating}
+                    className={clsx(
+                      'btn btn-primary',
+                      'h-10 min-h-10 rounded-lg border-0 px-5 text-sm font-medium',
+                      'focus-visible:ring-primary/40 focus-visible:outline-none focus-visible:ring-2',
+                      isValidating && 'opacity-60',
+                    )}
+                  >
                     {isValidating ? (
                       <>
                         <span className='loading loading-dots text-success loading-sm'></span>

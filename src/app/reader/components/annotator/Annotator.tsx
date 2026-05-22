@@ -43,6 +43,13 @@ import {
 } from '../../utils/deferredAction';
 import { TransformContext } from '../../transformers/types';
 import { transformContent } from '../../transformers/transformService';
+import { 
+  expandAllRenderedSections, 
+  expandGlobalAnnotation, 
+  isSyntheticGlobalValue, 
+  removeGlobalAnnotationOverlays, 
+  sourceCfiFromSyntheticValue 
+} from '../../utils/globalAnnotations';
 import { setProofreadRulesVisibility } from '../ProofreadRules';
 import { annotationToolButtons } from './AnnotationTools';
 import AnnotationPopup from './AnnotationPopup';
@@ -348,21 +355,41 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
   const onCreateOverlay = (event: Event) => {
     const detail = (event as CustomEvent).detail;
     const { booknotes = [] } = getConfig(bookKey)!;
-    booknotes
-      .filter(
-        (booknote) =>
-          booknote.type === 'annotation' &&
-          !booknote.deletedAt &&
-          getIndexFromCfi(booknote.cfi) === detail.index,
-      )
+    // Resolve the live (doc, overlayer) pair for this section so we can
+    // fan out global annotations across every text-occurrence in it.
+    const sectionContent = view?.renderer?.getContents().find((c) => c.index === detail.index) as
+      | { doc?: Document; index?: number }
+      | undefined;
+    const sectionDoc = sectionContent?.doc;
+
+    const activeAnnotations = booknotes.filter((b) => b.type === 'annotation' && !b.deletedAt);
+
+    // 1. Draw native overlays only for notes whose anchor (cfi) lives
+    //    inside this section — same as before.
+    activeAnnotations
+      .filter((booknote) => getIndexFromCfi(booknote.cfi) === detail.index)
       .map((annotation) => {
-        // console.log('Adding annotation to overlay', annotation);
         try {
           view?.addAnnotation(annotation);
         } catch (err) {
           console.warn('Failed to add annotation', { annotation, error: err });
         }
       });
+
+    // 2. Fan out every `global` annotation in this newly-rendered
+    //    section, regardless of which section originally anchored it.
+    //    `expandGlobalAnnotation` already skips the home anchor when the
+    //    synthetic CFI collides with `note.cfi`.
+    if (sectionDoc) {
+      for (const annotation of activeAnnotations) {
+        if (!annotation.global) continue;
+        try {
+          expandGlobalAnnotation(view ?? null, annotation, sectionDoc, detail.index);
+        } catch (err) {
+          console.warn('Failed to expand global annotation', { annotation, error: err });
+        }
+      }
+    }
   };
 
   const onDrawAnnotation = (event: Event) => {
@@ -412,7 +439,14 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
     const { value, index, range } = detail;
     const { booknotes = [] } = getConfig(bookKey)!;
     const isNote = value.startsWith(NOTE_PREFIX);
-    const cfi = isNote ? value.replace(NOTE_PREFIX, '') : value;
+    const rawValue = isNote ? value.replace(NOTE_PREFIX, '') : value;
+    // A click on a fan-out copy of a global annotation reports a
+    // synthetic value (`${cfi}#g${i}`); map it back to the source
+    // booknote so the popup behaves identically to clicking the
+    // original anchor.
+    const cfi = isSyntheticGlobalValue(rawValue) 
+      ? sourceCfiFromSyntheticValue(rawValue) 
+      : rawValue;
     const annotations = booknotes.filter(
       (booknote) => booknote.type === 'annotation' && !booknote.deletedAt && booknote.cfi === cfi,
     );
@@ -631,6 +665,17 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
       Promise.all(
         notes.map((note) => view?.addAnnotation({ ...note, value: `${NOTE_PREFIX}${note.cfi}` })),
       );
+      // Fan-out for any annotation flagged `global`. Semantics is
+      // book-wide, so we don't filter by `location` here: every note
+      // with `global=true` gets expanded across every section that
+      // happens to be rendered right now. Sections rendered later are
+      // covered by `onCreateOverlay`.
+      const globalAnnotations = booknotes.filter(
+        (item) => !item.deletedAt && item.type === 'annotation' && item.style && item.global,
+      );
+      for (const annotation of globalAnnotations) {
+        if (view) expandAllRenderedSections(view, annotation);
+      }
     } catch (e) {
       console.warn(e);
     }
@@ -742,13 +787,28 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
     );
     const views = getViewsById(bookKey.split('-')[0]!);
     if (existingIndex !== -1) {
-      views.forEach((view) => view?.addAnnotation(annotation, true));
+      const existing = annotations[existingIndex]!;
+      // Tear down both the original anchor and any global fan-outs that
+      // were drawn for the previous style/color, so the redraw below
+      // doesn't end up overlaying two highlights at the same position.
+      views.forEach((view) => view?.addAnnotation(existing, true));
+      if (existing.global) {
+        views.forEach((view) => removeGlobalAnnotationOverlays(view, existing));
+      }
       if (update) {
-        annotation.id = annotations[existingIndex]!.id;
+        annotation.id = existing.id;
+        // Carry the existing `global` flag forward — toggling color/style
+        // shouldn't silently demote a global highlight back to single-range.
+        if (existing.global) annotation.global = true;
         annotations[existingIndex] = annotation;
         views.forEach((view) => view?.addAnnotation(annotation));
+        if (annotation.global) {
+          views.forEach((view) => {
+            if (view) expandAllRenderedSections(view, annotation);
+          });
+        }
       } else {
-        annotations[existingIndex]!.deletedAt = Date.now();
+        existing.deletedAt = Date.now();
         handleDismissPopup();
       }
     } else {
@@ -760,6 +820,43 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
     const updatedConfig = updateBooknotes(bookKey, annotations);
     if (updatedConfig) {
       saveConfig(envConfig, bookKey, updatedConfig, settings);
+    }
+  };
+
+  /**
+   * Toggle the `global` flag on the annotation currently anchored at
+   * `selection.cfi`. When enabling, fan out overlays for every other
+   * occurrence of `selection.text` in the same section; when disabling,
+   * tear them down. The original anchor highlight at `cfi` is left
+   * untouched in either direction.
+   *
+   * Hidden for fixed-layout formats (PDF/CBZ) because they don't expose
+   * a per-section text DOM we can scan.
+   */
+  const handleToggleGlobal = () => {
+    if (!selection || !selection.cfi || !selection.text) return;
+    if (bookData.isFixedLayout) return;
+    const { booknotes: annotations = [] } = config;
+    const idx = annotations.findIndex(
+      (a) => a.type === 'annotation' && a.style && !a.deletedAt && a.cfi === selection.cfi,
+    );
+    if (idx === -1) return;
+    const existing = annotations[idx]!;
+    const nextGlobal = !existing.global;
+    annotations[idx] = { ...existing, global: nextGlobal, updatedAt: Date.now() };
+    const updatedConfig = updateBooknotes(bookKey, annotations);
+    if (updatedConfig) {
+      saveConfig(envConfig, bookKey, updatedConfig, settings);
+    }
+
+    const views = getViewsById(bookKey.split('-')[0]!);
+    if (nextGlobal) {
+      const updated = annotations[idx]!;
+      views.forEach((v) => {
+        if (v) expandAllRenderedSections(v, updated);
+      });
+    } else {
+      views.forEach((v) => removeGlobalAnnotationOverlays(v, existing));
     }
   };
 
@@ -966,6 +1063,22 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
   };
 
   const selectionAnnotated = selection?.annotated;
+  // For the ✓ (global) toggle in HighlightOptions: figure out whether
+  // the booknote anchored at the current selection is currently global,
+  // and whether the toggle should be shown at all (only meaningful for
+  // re-flowable formats with a non-empty selection text).
+  const currentAnnotation = selection?.cfi
+    ? config.booknotes?.find(
+        (a) => a.type === 'annotation' && a.style && !a.deletedAt && a.cfi === selection.cfi,
+      )
+    : undefined;
+  const globalToggleAvailable =
+    !bookData.isFixedLayout &&
+    !!selection?.annotated &&
+    !!currentAnnotation &&
+    !!selection?.text &&
+    selection.text.trim().length > 0;
+  const globalToggleActive = !!currentAnnotation?.global;
   const toolButtons = annotationToolButtons.map(({ type, label, Icon }) => {
     switch (type) {
       case 'copy':
@@ -1122,6 +1235,9 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
           popupHeight={annotPopupHeight}
           onHighlight={handleHighlight}
           onDismiss={handleDismissPopupAndSelection}
+          globalToggleAvailable={globalToggleAvailable}
+          globalToggleActive={globalToggleActive}
+          onToggleGlobal={handleToggleGlobal}
         />
       )}
       {showExcerptDialog && selection && bookData.book && (
