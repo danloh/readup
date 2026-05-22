@@ -254,6 +254,7 @@ export const DEFAULT_TTS_CONFIG: TTSConfig = {
   ttsVoice: '',
   ttsLocation: '',
   ttsHighlightColor: 'green',
+  ttsMediaMetadata: 'sentence',
 };
 
 export const DEFAULT_TRANSLATOR_CONFIG: TranslatorConfig = {
