@@ -14,7 +14,7 @@ import { useDeviceControlStore } from '@/store/deviceStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useResponsiveSize } from '@/hooks/useResponsiveSize';
 import { eventDispatcher } from '@/utils/event';
-import { PageInfo } from '@/types/book';
+import { FIXED_LAYOUT_FORMATS, type BookFormat, type PageInfo } from '@/types/book';
 import { Insets } from '@/types/misc';
 import Button from '@/components/Button';
 import Slider from '@/components/Slider';
@@ -25,7 +25,7 @@ import { debounce } from '@/utils/debounce';
 
 interface FooterBarProps {
   bookKey: string;
-  bookFormat: string;
+  bookFormat: BookFormat;
   section?: PageInfo;
   pageinfo?: PageInfo;
   isHoveredAnim: boolean;
@@ -188,7 +188,10 @@ const FooterBar: React.FC<FooterBarProps> = ({
   const isMobile = appService?.isMobile || window.innerWidth < 640;
   const isVisible = hoveredBookKey === bookKey;
   const ttsEnabled = viewState?.ttsEnabled;
-  const progressInfo = bookFormat === 'PDF' ? section : pageinfo;
+  const progressInfo = useMemo(
+    () => (FIXED_LAYOUT_FORMATS.has(bookFormat) ? section : pageinfo),
+    [bookFormat, section, pageinfo],
+  );
   const progressValid = !!progressInfo;
   const progressFraction =
     progressValid && progressInfo?.total > 0

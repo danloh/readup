@@ -2,7 +2,7 @@ import clsx from 'clsx';
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-import { Insets } from '@/types/misc';
+import type { Insets } from '@/types/misc';
 import { useEnv } from '@/context/EnvContext';
 import { useReaderStore } from '@/store/readerStore';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -81,10 +81,12 @@ const ProgressInfoView: React.FC<PageInfoProps> = ({
 
   const { page = 0, pages = 0 } = view?.renderer || {};
   const pagesLeft = bookData?.isFixedLayout
-    ? 1
+    ? pageInfo
+      ? Math.max(pageInfo.total - pageInfo.current, 1)
+      : 0
     : Math.min(Math.max(pages - page, 1), pageInfo ? pageInfo.total - pageInfo.current : pages);
   const calcTime = Math.round((pagesLeft * SIZE_PER_LOC) / SIZE_PER_TIME_UNIT);
-  const showLeft = pages > 0 || bookData?.isFixedLayout;
+  const showLeft = pagesLeft > 0 && (pages > 0 || !!bookData?.isFixedLayout);
   const timeLeft = showLeft ? _('{{time}}m', { time: calcTime }) : '';
   const pageLeft = showLeft ? _('{{count}}p', { count: pagesLeft }) : '';
   const remainingInfo = `${timeLeft}${timeLeft && pageLeft ? ' § ' : ''}${pageLeft}`;
