@@ -6,6 +6,7 @@ import { useThemeStore } from '@/store/themeStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useResetViewSettings } from '@/hooks/useResetSettings';
+import { useKeyDownActions } from '@/hooks/useKeyDownActions';
 import { RELOAD_BEFORE_SAVED_TIMEOUT_MS,TRANSLATOR_LANGS } from '@/services/constants';
 import { getLangOptions, LangSelect } from '@/components/Select';
 import { getTranslators } from '@/services/translators';
@@ -34,6 +35,15 @@ const LangPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
   const [showTranslateSource, setShowTranslateSource] = useState(viewSettings.showTranslateSource);
   const [ttsReadAloudText, setTtsReadAloudText] = useState(viewSettings.ttsReadAloudText);
   const [showCustomDictionaries, setShowCustomDictionaries] = useState(false);
+
+  // Android Back / Esc: when the Manage Dictionaries sub-page is open,
+  // intercept and step back to the language list instead of letting
+  // <Dialog>'s listener close the whole Settings dialog. See the matching
+  // comment in FontPanel.tsx for the LIFO-dispatch reasoning.
+  useKeyDownActions({
+    enabled: showCustomDictionaries,
+    onCancel: () => setShowCustomDictionaries(false),
+  });
 
   // Deep-link: callers (e.g. the dictionary popup's manage icon) can set
   // activeSettingsItemId to `'settings.language.dictionaries.manage'` to

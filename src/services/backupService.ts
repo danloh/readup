@@ -36,16 +36,10 @@ export const BACKUP_SETTINGS_BLACKLIST = [
   'localBooksDir',
   'customRootDir',
   'savedBookCoverForLockScreenPath',
-  // Per-device identity — restoring causes sync identity / HLC collisions.
-  'replicaDeviceId',
-  'kosync.deviceId',
   // Sync cursors — stale values make sync skip pulls or re-push everything.
   'lastSyncedAtBooks',
   'lastSyncedAtConfigs',
   'lastSyncedAtNotes',
-  'lastSyncedAtReplicas',
-  'readwise.lastSyncedAt',
-  'hardcover.lastSyncedAt',
   // Transient runtime state — book keys may not exist post-restore; screen
   // brightness is live device state.
   'lastOpenBooks',
@@ -62,12 +56,8 @@ export const BACKUP_SETTINGS_BLACKLIST = [
  * and are handled separately in `sanitizeSettingsForBackup`.
  */
 export const BACKUP_SETTINGS_CREDENTIAL_FIELDS = [
-  'kosync.username',
-  'kosync.userkey',
-  'kosync.password',
-  'readwise.accessToken',
-  'hardcover.accessToken',
   'aiSettings.aiGatewayApiKey',
+  'aiSettings.openrouterApiKey',
 ] as const;
 
 const isPlainObject = (value: unknown): value is Record<string, unknown> =>
