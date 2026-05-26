@@ -52,7 +52,6 @@ const TTSPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset }
         className='flex items-center justify-between'
         data-setting-id='settings.color.ttsHighlightStyle'
       >
-        <b className='mb-2 font-medium'>{_('TTS Highlight Color')}</b>
         <SectionTitle className='mb-2'>{_('TTS Highlight Color')}</SectionTitle>
         <div className='flex items-center gap-2'>
           <div

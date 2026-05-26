@@ -2,7 +2,7 @@ import clsx from 'clsx';
 import React, { useEffect, useRef, useState } from 'react';
 import { RiFontSize } from 'react-icons/ri';
 import { VscSymbolColor } from 'react-icons/vsc';
-import { PiDotsThreeVerticalBold, PiRobot } from 'react-icons/pi';
+import { PiDotsThreeVerticalBold, PiRobot, PiSpeakerHigh } from 'react-icons/pi';
 import { MdClose } from 'react-icons/md';
 import { FaLanguage } from "react-icons/fa";
 import { BiCustomize, BiLayout } from "react-icons/bi";
@@ -23,10 +23,11 @@ import ControlPanel from './ControlPanel';
 import LangPanel from './LangPanel';
 import MiscPanel from './MiscPanel';
 import AIPanel from './AIPanel';
+import TTSPanel from './TTSPanel';
 import { useCommandPalette } from '../command-palette';
 
 export type SettingsPanelType = 
-  'Font' | 'Layout' | 'Color' | 'Control' | 'Language' | 'AI' | 'Custom';
+  'Font' | 'Layout' | 'Color' | 'Control' | 'Language' | 'AI' | 'TTS' | 'Custom';
 export type SettingsPanelPanelProp = {
   bookKey: string;
   onRegisterReset: (resetFn: () => void) => void;
@@ -91,6 +92,12 @@ const SettingsDialog: React.FC<{ bookKey: string }> = ({ bookKey }) => {
       disabled: process.env.NODE_ENV === 'production',
     },
     {
+      tab: 'TTS',
+      icon: PiSpeakerHigh,
+      label: _('TTS'),
+      disabled: process.env.NODE_ENV === 'production',
+    },
+    {
       tab: 'Custom',
       icon: BiCustomize,
       label: _('Custom'),
@@ -144,6 +151,7 @@ const SettingsDialog: React.FC<{ bookKey: string }> = ({ bookKey }) => {
     Control: null,
     Language: null,
     AI: null,
+    TTS: null,
     Custom: null,
   });
 
@@ -176,6 +184,7 @@ const SettingsDialog: React.FC<{ bookKey: string }> = ({ bookKey }) => {
         control: 'Control',
         language: 'Language',
         ai: 'AI',
+        tts: 'TTS',
         custom: 'Custom',
       };
       const panelKey = parts[1]?.toLowerCase();
@@ -324,6 +333,9 @@ const SettingsDialog: React.FC<{ bookKey: string }> = ({ bookKey }) => {
           />
         )}
         {activePanel === 'AI' && <AIPanel />}
+        {activePanel === 'TTS' && (
+          <TTSPanel bookKey={bookKey} onRegisterReset={(fn) => registerResetFunction('TTS', fn)} />
+        )}
         {activePanel === 'Custom' && (
           <MiscPanel
             bookKey={bookKey}

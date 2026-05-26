@@ -57,7 +57,7 @@ const ContextWord = React.memo(function ContextWord({
 const STORAGE_KEY_CONTEXT = 'readup_rsvp_context';
 const STORAGE_KEY_ORP_COLOR = 'readup_rsvp_orp_color';
 const STORAGE_KEY_HIGHLIGHT_WORD = 'readup_rsvp_cjk_highlight_word';
-const ORP_COLOR_OPTIONS = ['', '#EF4444', '#3B82F6', '#22C55E', '#F97316', '#A855F7'];
+const ORP_COLOR_OPTIONS = ['', 'Red', 'SkyBlue', 'Green', 'Orange', 'Purple'];
 
 // Context panel windowing — long sections (e.g. AZW3 chapters with 40k+ words)
 // would otherwise render tens of thousands of <span> elements and freeze the UI

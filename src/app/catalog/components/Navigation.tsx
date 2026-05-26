@@ -80,7 +80,7 @@ export function Navigation({
         <div className='flex gap-1'>
           {onBack && (
             <button
-              className='btn btn-ghost btn-xs h-8 min-h-8 w-8 p-0 disabled:bg-transparent'
+              className='btn btn-ghost btn-xs h-8 min-h-8 w-8 p-0 disabled:cursor-not-allowed disabled:bg-transparent disabled:opacity-40'
               onClick={onBack}
               disabled={!canGoBack}
               title={_('Back')}
@@ -90,7 +90,7 @@ export function Navigation({
           )}
           {onForward && (
             <button
-              className='btn btn-ghost btn-xs h-8 min-h-8 w-8 p-0 disabled:bg-transparent'
+              className='btn btn-ghost btn-xs h-8 min-h-8 w-8 p-0 disabled:cursor-not-allowed disabled:bg-transparent disabled:opacity-40'
               onClick={onForward}
               disabled={!canGoForward}
               title={_('Forward')}

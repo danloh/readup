@@ -20,6 +20,7 @@ import { OPDSFeed, OPDSPublication, OPDSSearch } from '@/types/opds';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useTheme } from '@/hooks/useTheme';
 import { useTransferQueue } from '@/hooks/useTransferQueue';
+import { useKeyDownActions } from '@/hooks/useKeyDownActions';
 import { READUP_OPDS_USER_AGENT } from '@/services/constants';
 import { transferManager } from '@/services/transferManager';
 import { ImportError } from '@/services/errors';
@@ -625,6 +626,14 @@ export default function BrowserPage() {
 
   const canGoBack = historyIndex > 0;
   const canGoForward = historyIndex < history.length - 1;
+
+  useKeyDownActions({
+    onCancel: () => {
+      if (historyIndexRef.current > 0) {
+        handleBack();
+      }
+    },
+  });
 
   const publication =
     selectedPublication && state.feed
