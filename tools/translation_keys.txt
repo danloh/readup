@@ -43,7 +43,7 @@ Auto Spread
 Auto Upload Books to PDS
 Auto-Retrieve
 Auto-Retrieve Metadata
-Available Highlight Colors
+Highlight Colors
 Azure Translator
 Back
 Background Color
