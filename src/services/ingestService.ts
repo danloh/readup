@@ -19,7 +19,7 @@ export interface IngestFileOptions {
   /** Collection to place the book in. */
   groupId?: string;
   groupName?: string;
-  /** Tag parsed from a Send-to-Readest email subject (`#scifi`). */
+  /** Tag parsed from a Send-to email subject (`#scifi`). */
   subjectTag?: string;
   /** Upload to the cloud even when the user has disabled autoUpload. */
   forceUpload?: boolean;

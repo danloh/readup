@@ -509,7 +509,7 @@ class View {
                 'max-width': vertical
                     ? `${width - (pageFullscreen ? 0 : (marginLeft + marginRight))}px`
                     : (maxWidth !== 'none' && maxWidth !== '0px' ? maxWidth : '100%'),
-                'object-fit': pageFullscreen ? 'cover': 'contain',
+                'object-fit': 'contain',
                 'page-break-inside': 'avoid',
                 'break-inside': 'avoid',
                 'box-sizing': 'border-box',
@@ -536,7 +536,7 @@ class View {
                     ancestor = ancestor.parentElement
                 }
                 if (el.localName === 'svg') {
-                    el.setAttribute('preserveAspectRatio', 'xMidYMid slice')
+                    el.setAttribute('preserveAspectRatio', 'xMidYMid meet')
                 }
             }
         }
@@ -1195,7 +1195,7 @@ export class Paginator extends HTMLElement {
     // Only `aria-hidden` is used — `inert` would also block pointer events
     // and text selection, which breaks visible non-primary views such as
     // the right column of a dual-page spread when each column belongs to
-    // a different section (/#4243, /#4259).
+    // a different section (#4243, #4259).
     //
     // Visible non-primary views stay exposed to assistive tech because a
     // sighted user can read them on the same spread.
@@ -1600,6 +1600,10 @@ export class Paginator extends HTMLElement {
         if (state.pinched) return
         state.pinched = globalThis.visualViewport.scale > 1
         if (this.scrolled || state.pinched) return
+        // When the host opts out of swipe-to-paginate, let touch events reach
+        // native behavior (text selection, etc.) without us tracking or
+        // pre-empting them.
+        if (this.hasAttribute('no-swipe')) return
         if (e.touches.length > 1) {
             if (this.#touchScrolled) e.preventDefault()
             return
@@ -1641,6 +1645,7 @@ export class Paginator extends HTMLElement {
         if (!this.#touchScrolled) return
         this.#touchScrolled = false
         if (this.scrolled) return
+        if (this.hasAttribute('no-swipe')) return
 
         // XXX: Firefox seems to report scale as 1... sometimes...?
         // at this point I'm basically throwing `requestAnimationFrame` at

@@ -1,4 +1,5 @@
 import clsx from 'clsx';
+import { useEffect, useState } from 'react';
 import { LiaInfoCircleSolid } from 'react-icons/lia';
 
 import { Book } from '@/types/book';
@@ -23,6 +24,21 @@ const BookItem: React.FC<BookItemProps> = ({
   const _ = useTranslation();
   const iconSize16 = useResponsiveSize(16);
 
+  const [coverAspect, setCoverAspect] = useState<number | null>(null);
+  useEffect(() => {
+    setCoverAspect(null);
+  }, [book.hash, book.metadata?.coverImageUrl, book.coverImageUrl]);
+
+  const CELL_ASPECT_RATIO = 28 / 41;
+  const fitCoverInGrid = mode === 'grid' && coverAspect !== null;
+  const shouldShrinkWidth = fitCoverInGrid && coverAspect! < CELL_ASPECT_RATIO;
+  const bookitemMainStyle = fitCoverInGrid
+    ? {
+        aspectRatio: coverAspect!,
+        ...(shouldShrinkWidth ? { width: `${(coverAspect! / CELL_ASPECT_RATIO) * 100}%` } : {}),
+      }
+    : undefined;
+
   return (
     <div
       className={clsx(
@@ -34,12 +50,19 @@ const BookItem: React.FC<BookItemProps> = ({
     >
       <div
         className={clsx(
-          'bookitem-main relative flex aspect-[28/41] items-center justify-center cursor-pointer rounded overflow-hidden',
+          'bookitem-main relative flex items-center justify-center cursor-pointer rounded overflow-hidden',
+          !fitCoverInGrid && 'aspect-[28/41]',
           mode === 'grid' && 'items-end',
           mode === 'list' && 'min-w-20 items-center',
         )}
+        style={bookitemMainStyle}
       >
-        <BookCover mode={mode} book={book} imageClassName='rounded shadow-md' />
+        <BookCover 
+          mode={mode} 
+          book={book} 
+          imageClassName='rounded shadow-md' 
+          onAspectRatioChange={setCoverAspect} 
+        />
       </div>
       <div
         className={clsx(

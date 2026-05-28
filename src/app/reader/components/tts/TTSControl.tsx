@@ -142,7 +142,7 @@ const TTSControl: React.FC<TTSControlProps> = ({ bookKey, iconRef }) => {
           <button
             onClick={tts.handleBackToCurrentTTSLocation}
             className={clsx(
-              'bg-base-300 rounded-full px-4 py-2 font-sans text-sm shadow-lg',
+              'not-eink:bg-base-300 eink-bordered whitespace-nowrap rounded-full px-4 py-2 font-sans text-sm shadow-lg',
               safeAreaInsets?.top ? 'h-11' : 'h-9',
             )}
           >

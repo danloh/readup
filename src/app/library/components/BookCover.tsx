@@ -12,6 +12,7 @@ interface BookCoverProps {
   imageClassName?: string;
   isPreview?: boolean;
   onImageError?: () => void;
+  onAspectRatioChange?: (ratio: number) => void;
 }
 
 const BookCover: React.FC<BookCoverProps> = memo<BookCoverProps>((props: BookCoverProps) => {
@@ -22,6 +23,7 @@ const BookCover: React.FC<BookCoverProps> = memo<BookCoverProps>((props: BookCov
     imageClassName,
     isPreview,
     onImageError,
+    onAspectRatioChange,
   } = props;
   const coverRef = useRef<HTMLDivElement>(null);
 
@@ -38,8 +40,12 @@ const BookCover: React.FC<BookCoverProps> = memo<BookCoverProps>((props: BookCov
     }
   };
 
-  const handleImageLoad = () => {
+  const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
     toggleImageVisibility(true);
+    const img = e.currentTarget;
+    if (onAspectRatioChange && img.naturalWidth > 0 && img.naturalHeight > 0) {
+      onAspectRatioChange(img.naturalWidth / img.naturalHeight);
+    }
   };
 
   const handleImageError = () => {
