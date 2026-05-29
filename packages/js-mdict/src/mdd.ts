@@ -1,5 +1,5 @@
 import { Mdict } from './mdict';
-import { MDictOptions } from './mdict-base';
+import { KeyInfoItem, KeyWordItem, MDictOptions } from './mdict-base';
 import { BlobScanner, Scanner } from './scanner';
 import { bytesToBase64 } from './byte-utils';
 
@@ -33,6 +33,9 @@ export class MDD extends Mdict {
    */
   locate(resourceKey: string): LocateResult;
   locate(resourceKey: string): LocateResult | Promise<LocateResult> {
+    if (this.options.lazy && this.keywordList.length === 0) {
+      return this.locateLazy(resourceKey);
+    }
     let normalizedKey = resourceKey.replace(/\//g, '\\');
     if (normalizedKey.length > 0 && !normalizedKey.startsWith('\\')) {
       normalizedKey = '\\' + normalizedKey;
@@ -55,6 +58,9 @@ export class MDD extends Mdict {
    * paying for base64 encoding/decoding.
    */
   locateBytes(resourceKey: string): { keyText: string; data: Uint8Array | null } | Promise<{ keyText: string; data: Uint8Array | null }> {
+    if (this.options.lazy && this.keywordList.length === 0) {
+      return this.locateBytesLazy(resourceKey);
+    }
     let normalizedKey = resourceKey.replace(/\//g, '\\');
     if (normalizedKey.length > 0 && !normalizedKey.startsWith('\\')) {
       normalizedKey = '\\' + normalizedKey;
@@ -67,5 +73,56 @@ export class MDD extends Mdict {
     });
     const buf = this.lookupRecordByKeyBlock(item);
     return buf instanceof Promise ? buf.then(finish) : finish(buf);
+  }
+
+  /**
+   * Lazy-init counterpart to `lookupKeyBlockByWord`. Same algorithm as
+   * `MDX.lookupKeyBlockByWordLazy` — locate the containing block via the
+   * per-block envelope index, decode that block, scan for the exact key.
+   */
+  private async lookupKeyBlockByWordLazy(word: string): Promise<KeyWordItem | undefined> {
+    const keyInfoId = this.lookupKeyInfoByWord(word);
+    const tryBlock = async (i: number): Promise<KeyWordItem | undefined> => {
+      const block = (await this.lookupPartialKeyBlockListByKeyInfoId(i)) as KeyWordItem[];
+      return block.find((k) => this.comp(k.keyText, word) === 0);
+    };
+    if (keyInfoId >= 0) {
+      const hit = await tryBlock(keyInfoId);
+      if (hit) return hit;
+    }
+    const stripped = this.strip(word);
+    const list = this.keyInfoList as KeyInfoItem[];
+    for (let i = 0; i < list.length; i++) {
+      if (i === keyInfoId) continue;
+      const info = list[i]!;
+      if (this.strip(info.firstKey) <= stripped && stripped <= this.strip(info.lastKey)) {
+        const hit = await tryBlock(i);
+        if (hit) return hit;
+      }
+    }
+    return undefined;
+  }
+
+  private async locateLazy(resourceKey: string): Promise<LocateResult> {
+    let normalizedKey = resourceKey.replace(/\//g, '\\');
+    if (normalizedKey.length > 0 && !normalizedKey.startsWith('\\')) {
+      normalizedKey = '\\' + normalizedKey;
+    }
+    const item = await this.lookupKeyBlockByWordLazy(normalizedKey);
+    if (!item) return { keyText: resourceKey, definition: null };
+    const buf = await this.lookupRecordByKeyBlock(item);
+    if (!buf) return { keyText: resourceKey, definition: null };
+    return { keyText: resourceKey, definition: bytesToBase64(buf) };
+  }
+
+  private async locateBytesLazy(resourceKey: string): Promise<{ keyText: string; data: Uint8Array | null }> {
+    let normalizedKey = resourceKey.replace(/\//g, '\\');
+    if (normalizedKey.length > 0 && !normalizedKey.startsWith('\\')) {
+      normalizedKey = '\\' + normalizedKey;
+    }
+    const item = await this.lookupKeyBlockByWordLazy(normalizedKey);
+    if (!item) return { keyText: resourceKey, data: null };
+    const data = await this.lookupRecordByKeyBlock(item);
+    return { keyText: resourceKey, data: data ?? null };
   }
 }

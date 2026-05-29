@@ -52,6 +52,7 @@ export class Mdict extends MdictBase {
       isStripKey: options.isStripKey ?? true,
       isCaseSensitive: options.isCaseSensitive ?? true,
       encryptType: options.encryptType ?? -1,
+      lazy: options.lazy ?? false,
     };
     const passcode = options.passcode || undefined;
     super(input as string | Scanner, name, passcode, options);

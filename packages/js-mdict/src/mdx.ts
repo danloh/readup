@@ -1,5 +1,5 @@
 import { Mdict } from './mdict';
-import { KeyWordItem, MDictOptions } from './mdict-base';
+import { KeyInfoItem, KeyWordItem, MDictOptions } from './mdict-base';
 import { BlobScanner, Scanner } from './scanner';
 import common from './utils';
 
@@ -45,6 +45,11 @@ export class MDX extends Mdict {
    */
   lookup(word: string): LookupResult;
   lookup(word: string): LookupResult | Promise<LookupResult> {
+    // Lazy init never populated keywordList — fall through to a per-block
+    // decode rather than the empty eager binary search.
+    if (this.options.lazy && this.keywordList.length === 0) {
+      return this.lookupLazy(word);
+    }
     const keyWordItem = this.lookupKeyBlockByWord(word);
     if (!keyWordItem) {
       return { keyText: word, definition: null };
@@ -55,6 +60,48 @@ export class MDX extends Mdict {
     };
     const def = this.lookupRecordByKeyBlock(keyWordItem);
     return def instanceof Promise ? def.then(finish) : finish(def);
+  }
+
+  /**
+   * Locate a single key without the full keywordList. Uses the per-block
+   * envelope index (`keyInfoList`) to find which block could contain the
+   * word, decodes just that block, then linearly scans for an exact match.
+   * Robust against case/strip mismatches that would break a per-block
+   * binary search.
+   */
+  async lookupKeyBlockByWordLazy(word: string): Promise<KeyWordItem | undefined> {
+    const keyInfoId = this.lookupKeyInfoByWord(word);
+    const tryBlock = async (i: number): Promise<KeyWordItem | undefined> => {
+      const block = (await this.lookupPartialKeyBlockListByKeyInfoId(i)) as KeyWordItem[];
+      return block.find((k) => this.comp(k.keyText, word) === 0);
+    };
+    if (keyInfoId >= 0) {
+      const hit = await tryBlock(keyInfoId);
+      if (hit) return hit;
+    }
+    // Fallback: some bundles have keyInfoList ordering that doesn't line up
+    // with `comp` (e.g. case-folded or stripped). Scan blocks whose envelope
+    // could contain `word` by a strip-normalised compare. Bounded by block
+    // count (typically a few thousand); only the matching block is decoded.
+    const stripped = this.strip(word);
+    const list = this.keyInfoList as KeyInfoItem[];
+    for (let i = 0; i < list.length; i++) {
+      if (i === keyInfoId) continue;
+      const info = list[i]!;
+      if (this.strip(info.firstKey) <= stripped && stripped <= this.strip(info.lastKey)) {
+        const hit = await tryBlock(i);
+        if (hit) return hit;
+      }
+    }
+    return undefined;
+  }
+
+  private async lookupLazy(word: string): Promise<LookupResult> {
+    const item = await this.lookupKeyBlockByWordLazy(word);
+    if (!item) return { keyText: word, definition: null };
+    const def = await this.lookupRecordByKeyBlock(item);
+    if (!def) return { keyText: word, definition: null };
+    return { keyText: word, definition: this.meta.decoder.decode(def) };
   }
 
   /**

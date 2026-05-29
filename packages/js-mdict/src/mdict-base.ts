@@ -69,6 +69,18 @@ export interface MDictOptions {
   isStripKey?: boolean;
   isCaseSensitive?: boolean;
   encryptType?: number;
+  /**
+   * Skip decoding every key block at init time. The full `keywordList` stays
+   * empty; lookups fall through to a lazy path that decodes only the single
+   * key block containing the queried word. Cuts init from 30-90 s to
+   * ~100 ms on large (250 MB+) dictionaries at the cost of slightly slower
+   * first-time lookup (one key block decompress per cold lookup).
+   *
+   * When this is set, methods that need the full keyword list (`associate`,
+   * `prefix`, `contains`, `fuzzy_search`, `suggest`, `lookupAll`) cannot be
+   * used — only `lookup` / `locate` are supported.
+   */
+  lazy?: boolean;
 }
 
 export interface MDictHeader {
@@ -544,7 +556,13 @@ class MDictBase {
     // _readKeyBlock method is very slow, avoid invoke dirctly
     // this method will return the whole words list of the dictionaries file, this is very slow
     // NOTE: 本方法非常缓慢，也有可能导致内存溢出，请不要直接调用
-    await this._readKeyBlocks();
+    //
+    // Lazy mode skips this entirely. The per-key-block index built by
+    // `_readKeyInfos` is enough to locate any single word via
+    // `lookupKeyInfoByWord` + `lookupPartialKeyBlockListByKeyInfoId`.
+    if (!this.options.lazy) {
+      await this._readKeyBlocks();
+    }
 
     // STEP5: read record header
     await this._readRecordHeader();
@@ -556,10 +574,14 @@ class MDictBase {
     // _readRecordBlock method is very slow, avoid invoke directly
     // this._readRecordBlock();
 
-    // Finally: resort the keyword list
-    this.keywordList.sort((ki1: KeyWordItem, ki2: KeyWordItem): number => {
-      return ki1.keyText.localeCompare(ki2.keyText);
-    });
+    // Finally: resort the keyword list. Skipped in lazy mode since the
+    // keyword list was never materialised — partial blocks are sorted on
+    // demand inside the lazy lookup path.
+    if (!this.options.lazy) {
+      this.keywordList.sort((ki1: KeyWordItem, ki2: KeyWordItem): number => {
+        return ki1.keyText.localeCompare(ki2.keyText);
+      });
+    }
 
   }
 
@@ -850,6 +872,14 @@ class MDictBase {
     );
 
     this.keyInfoList = keyBlockInfoList;
+
+    // NOTE: must set here so that callers that skip `_readKeyBlocks` (e.g.
+    // lazy-init mode used by browser dictionaries) still get a valid
+    // absolute offset for per-block decoding via
+    // `lookupPartialKeyBlockListByKeyInfoId`. Eager `_readKeyBlocks` will
+    // simply overwrite this with the same value.
+    this._keyBlockStartOffset = this._keyBlockInfoEndOffset;
+    this._keyBlockEndOffset = this._keyBlockStartOffset + this.keyHeader.keywordBlockPackedSize;
 
     // NOTE: must set at here, otherwise, if we haven't invoked the _decodeKeyBlockInfo method,
     // var `_recordBlockStartOffset` will not be set.
