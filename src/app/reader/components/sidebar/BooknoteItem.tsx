@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import dayjs from 'dayjs';
-import React, { useRef, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { marked } from 'marked';
 import { MdDelete, MdEdit } from 'react-icons/md';
 
@@ -13,9 +13,9 @@ import { useBookDataStore } from '@/store/bookDataStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useResponsiveSize } from '@/hooks/useResponsiveSize';
 import { eventDispatcher } from '@/utils/event';
+import { isCfiInLocation } from '@/utils/cfi';
 import TextButton from '@/components/TextButton';
 import TextEditor, { TextEditorRef } from '@/components/TextEditor';
-import useScrollToItem from '../../hooks/useScrollToItem';
 import { removeBookNoteOverlays } from '../../utils/annotatorUtil';
 
 interface BooknoteItemProps {
@@ -44,7 +44,23 @@ const BooknoteItem: React.FC<BooknoteItemProps> = ({ bookKey, item, isNearest, o
   const size18 = useResponsiveSize(18);
 
   const progress = getProgress(bookKey);
-  const { isCurrent, viewRef } = useScrollToItem(cfi, progress, isNearest);
+
+  // Active highlight: keep visual "current" state but don't scroll from the
+  // item itself anymore — the parent (virtualized) BooknoteView handles
+  // scrolling via virtuosoRef.scrollToIndex, avoiding N getBoundingClientRect
+  // calls when the list grows large.
+  const isCurrent = useMemo(
+    () => isCfiInLocation(cfi, progress?.location) || !!isNearest,
+    [cfi, progress?.location, isNearest],
+  );
+
+  // marked.parse is heavy when called on every list scroll re-render across
+  // hundreds of items. Cache by note text — note edits change item.note and
+  // bust the cache automatically.
+  const noteHtml = useMemo(() => (note ? marked.parse(note) : ''), [note]);
+
+  // dayjs().fromNow() reformats every render; cache per createdAt.
+  const createdAtLabel = useMemo(() => dayjs(item.createdAt).fromNow(), [item.createdAt]);
 
   const handleClickItem = (event: React.MouseEvent | React.KeyboardEvent) => {
     event.preventDefault();
@@ -136,7 +152,7 @@ const BooknoteItem: React.FC<BooknoteItemProps> = ({ bookKey, item, isNearest, o
 
   return (
     <li
-      ref={viewRef}
+      aria-current={isCurrent ? 'page' : undefined}
       role='button'
       className={clsx(
         'border-base-300 content group relative my-2 cursor-pointer rounded-lg p-2',
@@ -168,7 +184,7 @@ const BooknoteItem: React.FC<BooknoteItemProps> = ({ bookKey, item, isNearest, o
           <div
             className='content prose prose-sm font-size-sm'
             dir='auto'
-            dangerouslySetInnerHTML={{ __html: marked.parse(item.note) }}
+            dangerouslySetInnerHTML={{ __html: noteHtml }}
           ></div>
         )}
         <div className='flex items-start'>
@@ -236,9 +252,7 @@ const BooknoteItem: React.FC<BooknoteItemProps> = ({ bookKey, item, isNearest, o
             <span className='truncate text-sm text-gray-500 sm:text-xs'>
               {item.page ? _('p {{page}}' + ' · ', { page: item.page }) : ''}
             </span>
-            <span className='truncate text-sm text-gray-500 sm:text-xs'>
-              {dayjs(item.createdAt).fromNow()}
-            </span>
+            <span className='truncate text-sm text-gray-500 sm:text-xs'>{createdAtLabel}</span>
           </div>
           <div
             className={clsx('flex items-center justify-end gap-3', isEditable && 'w-full')}
@@ -268,4 +282,9 @@ const BooknoteItem: React.FC<BooknoteItemProps> = ({ bookKey, item, isNearest, o
   );
 };
 
-export default BooknoteItem;
+// Memoize: BooknoteView re-renders on every progress tick / config change.
+// Without React.memo each tick would re-render every visible note row even
+// though their props are unchanged. Default shallow compare is enough since
+// `item` and `onClick` are stable references from the parent's useMemo /
+// useCallback.
+export default React.memo(BooknoteItem);
