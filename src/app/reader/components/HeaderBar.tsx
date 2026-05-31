@@ -246,6 +246,8 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
           <SettingsToggler bookKey={bookKey} />
           <NotebookToggler bookKey={bookKey} />
           <Dropdown
+            label={_('View Options')}
+            containerClassName='h-8'
             className='exclude-title-bar-mousedown dropdown-bottom dropdown-end'
             buttonClassName='btn btn-ghost h-8 min-h-8 w-8 p-0'
             toggleButton={<PiDotsThreeVerticalBold size={iconSize16} />}
