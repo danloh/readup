@@ -26,6 +26,8 @@ import { transferManager } from '@/services/transferManager';
 import { ImportError } from '@/services/errors';
 import { buildPseStreamFileName } from '@/services/opds/pseStream';
 import { navigateToReader } from '@/utils/nav';
+import { Book } from '@/types/book';
+import { findExistingBookForPublication } from '../utils/findExistingBook';
 import { 
   getFileExtFromPath, isSearchLink, looksLikeXMLContent, MIME, parseMediaType, resolveURL 
 } from '../utils/opdsUtils';
@@ -63,6 +65,10 @@ export default function BrowserPage() {
   const { appService } = useEnv();
   const { user } = useAuth();
   const { libraryLoaded } = useLibrary();
+  // Subscribe to library so the publication detail page can detect copies
+  // already imported (shown as "Open & Read" instead of "Download"), and
+  // re-evaluate whenever a download finishes or a book is removed.
+  const library = useLibraryStore((s) => s.library);
   const { settings } = useSettingsStore();
   const [viewMode, setViewMode] = useState<ViewMode>('loading');
   const [state, setState] = useState<OPDSState>({
@@ -82,6 +88,7 @@ export default function BrowserPage() {
   const searchParams = useSearchParams();
   const catalogUrl = searchParams?.get('url') || '';
   const catalogId = searchParams?.get('id') || '';
+
   const usernameRef = useRef<string | null | undefined>(undefined);
   const passwordRef = useRef<string | null | undefined>(undefined);
   const customHeadersRef = useRef<Record<string, string>>({});
@@ -641,7 +648,16 @@ export default function BrowserPage() {
           selectedPublication.itemIndex
         ] || state.feed.publications?.[selectedPublication.itemIndex]
       : state.publication;
+  
+  const [existingBookForPublication, setExistingBookForPublication] = useState<Book | null>(null);
 
+  useEffect(() => {
+    const metadataMatch = libraryLoaded
+      ? findExistingBookForPublication(publication, library)
+      : null;
+    setExistingBookForPublication(metadataMatch);
+  }, [publication, library, libraryLoaded]);
+  
   return (
     <div
       className={clsx(
@@ -701,6 +717,7 @@ export default function BrowserPage() {
           <PublicationView
             publication={publication}
             baseURL={state.baseURL}
+            existingBook={existingBookForPublication}
             onDownload={handleDownload}
             onStream={handleStream}
             resolveURL={resolveURL}
