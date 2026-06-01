@@ -296,8 +296,8 @@ pub fn run() {
     // #[cfg(desktop)]
     // let builder = builder.plugin(tauri_plugin_updater::Builder::new().build());
 
-    #[cfg(desktop)]
-    let builder = builder.plugin(tauri_plugin_window_state::Builder::default().build());
+    // #[cfg(desktop)]
+    // let builder = builder.plugin(tauri_plugin_window_state::Builder::default().build());
 
     #[cfg(target_os = "macos")]
     let builder = builder.plugin(macos::traffic_light::init());
