@@ -18,7 +18,7 @@ export default function Page() {
 
   useEffect(() => {
     if (loc && id) {
-      localStorage.setItem(`loc-${id}`, loc);
+      localStorage.setItem(`loc-${id}`, decodeURIComponent(loc));
     }
   }, [id, loc]);
 

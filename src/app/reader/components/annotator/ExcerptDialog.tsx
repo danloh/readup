@@ -42,6 +42,7 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [shouldUploadBook, setShouldUploadBook] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
+  const [customHashtags, setCustomHashtags] = useState<string>('');
 
   // Style customization state
   const [styles, setStyles] = useState({
@@ -79,16 +80,20 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
             box-sizing: border-box;
           }
           
-          html, body {
+          html {
             width: 100%;
             height: 100%;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             line-height: 1.6;
+          }
+
+          body {
+            width: 100%;
+            height: auto;
             color: ${styles.fontColor};
             background-color: ${styles.backgroundColor};
-          }
-          
-          body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
             padding: 32px;
             max-width: 900px;
             margin: 0 auto;
@@ -105,14 +110,14 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
           }
           
           .book-title {
-            font-size: 20px;
+            font-size: 22px;
             font-weight: 600;
             margin-bottom: 8px;
             color: ${styles.fontColor};
           }
           
           .book-meta {
-            font-size: 14px;
+            font-size: ${styles.fontSize * 0.6}px;
             color: ${hexToRgba(styles.fontColor, 0.6)};
             line-height: 1.4;
           }
@@ -204,9 +209,9 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
     // Calculate iframe height based on content
     setTimeout(() => {
       const iframe = iframeRef.current;
-      if (iframe && iframe.contentDocument) {
-        const contentHeight = iframe.contentDocument.documentElement.scrollHeight;
-        setIframeHeight(`${contentHeight + 24}px`);
+      if (iframe && iframe.contentDocument && iframe.contentDocument.body) {
+        const contentHeight = iframe.contentDocument.body.scrollHeight;
+        setIframeHeight(`${contentHeight}px`);
       }
     }, 100);  
   }, [isOpen, selection.text, styles, book, progress?.sectionLabel]);
@@ -314,15 +319,26 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
       if (bookUploaded) {
         const loc = selection.cfi || selection.href;
         if (loc) {
-          shareUrl = `https://readup.cc/read/${book.hash}?did=${user.did}&loc=${loc}`;
+          shareUrl = `https://readup.cc/read/${book.hash}?did=${user.did}&loc=${encodeURIComponent(loc)}`;
         } else {
           shareUrl = `https://readup.cc/read/${book.hash}?did=${user.did}`;
         }
       }
 
       const agent = await getAtpAgent();
+      
+      // Build hashtags
+      const defaultHashtags = '#booksky #readsky';
+      const tagsToAdd = customHashtags
+        .trim()
+        .split(/\s+/)
+        .filter(tag => tag.length > 0)
+        .map(tag => tag.startsWith('#') ? tag : `#${tag}`)
+        .join(' ');
+      const allHashtags = tagsToAdd ? `${defaultHashtags} ${tagsToAdd}` : defaultHashtags;
+
       const resp = await postWithImageAndLink(agent, {
-        text: `Excerpt from book: ${book.title} \n\n #booksky #readsky \n\n`,
+        text: `Excerpt from book: ${book.title} ${allHashtags} \n`,
         imageData: imageUrl,
         altText: selection.text,
         url: shareUrl,
@@ -496,8 +512,25 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
           )}
         </div>
 
+        {/* Hashtags Section */}
+        <div className='pt-4'>
+          <label className='text-sm font-medium text-base-content block mb-2'>
+            {_('Add Hashtags')}
+          </label>
+          <input
+            type='text'
+            placeholder={_('Add hashtags (space-separated)...')}
+            value={customHashtags}
+            onChange={(e) => setCustomHashtags(e.target.value)}
+            className='input input-sm input-bordered w-full'
+          />
+          <p className='text-xs text-base-content/60 mt-2'>
+            {_('Default')}: #booksky #readsky {customHashtags && `+ ${customHashtags.trim().split(/\s+/).filter(tag => tag.length > 0).map(tag => tag.startsWith('#') ? tag : `#${tag}`).join(' ')}`}
+          </p>
+        </div>
+
         {/* Upload Book Option */}
-        <div className='border-t border-base-300 pt-4'>
+        <div className='pt-4'>
           <label className='flex items-center gap-3 cursor-pointer'>
             <input
               type='checkbox'
