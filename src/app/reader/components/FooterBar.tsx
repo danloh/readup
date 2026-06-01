@@ -45,7 +45,7 @@ const FooterBar: React.FC<FooterBarProps> = ({
   const { getConfig, setConfig, getBookData } = useBookDataStore();
   const { hoveredBookKey, setHoveredBookKey } = useReaderStore();
   const { getView, getViewState, getProgress, getViewSettings } = useReaderStore();
-  const { isSideBarVisible, setSideBarVisible } = useSidebarStore();
+  const { isSideBarVisible, isSideBarPinned, setSideBarVisible } = useSidebarStore();
   const { acquireBackKeyInterception, releaseBackKeyInterception } = useDeviceControlStore();
 
   const [actionTab, setActionTab] = useState('');
@@ -225,7 +225,7 @@ const FooterBar: React.FC<FooterBarProps> = ({
           'footer-bar shadow-xs absolute bottom-0 left-0 z-30 flex w-full flex-col h-[42px]',
           'eink:border-base-content eink:border-t',
           'bg-base-100 transition-[opacity,transform] duration-300',
-          window.innerWidth < 640 ? 'fixed' : 'absolute',
+          !isSideBarPinned ? 'fixed' : 'absolute',
           appService?.hasRoundedWindow && 'rounded-window-bottom-right',
           !isSideBarVisible && appService?.hasRoundedWindow && 'rounded-window-bottom-left',
           isHoveredAnim && 'hover-bar-anim',
@@ -308,7 +308,7 @@ const FooterBar: React.FC<FooterBarProps> = ({
               : isMobile ? `${gridInsets.bottom * 0.33 + 16}px` : '0px',
           }}
         >
-          {!isSideBarVisible && (
+          {(!isSideBarVisible || !isSideBarPinned) && (
             <Button
               icon={<TOCIcon className='' />}
               onClick={() => handleSetActionTab('toc')}

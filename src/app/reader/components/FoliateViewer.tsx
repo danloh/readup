@@ -21,6 +21,7 @@ import {
   transformStylesheet,
   applyScrollbarStyle,
   getThemeCode,
+  applyTableTouchScroll,
 } from '@/styles/style';
 import { mountAdditionalFonts } from '@/styles/font';
 import { getBookDirFromLanguage, getBookDirFromWritingMode } from '@/utils/book';
@@ -225,6 +226,7 @@ const FoliateViewer: React.FC<{
 
       applyImageStyle(detail.doc);
       applyTableStyle(detail.doc);
+      applyTableTouchScroll(detail.doc);
       applyThemeModeClass(detail.doc, isDarkMode);
       applyScrollModeClass(detail.doc, viewSettings.scrolled || false);
       applyScrollbarStyle(document, viewSettings.hideScrollbar || false);
