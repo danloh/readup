@@ -55,8 +55,11 @@ const ReadPage: React.FC<{ id: string; did: string; }> = ({ id, did }) => {
         setError(null);
 
         const libraryBooks = await appService.loadLibraryBooks();
+        // check if in library and available
         const existingBook = libraryBooks.find((b) => b.hash === id);
-        if (existingBook) {
+        const bookAvailable = existingBook && await appService.isBookAvailable(existingBook);
+        
+        if (bookAvailable) {
           setBook(existingBook);
           setIsLoading(false);
           console.log(`Loading book locally: id=${id}, did=${did}`);

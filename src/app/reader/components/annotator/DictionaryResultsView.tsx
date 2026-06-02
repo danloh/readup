@@ -1,10 +1,11 @@
 'use client';
 
+import clsx from 'clsx';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { MdArrowBack, MdChevronRight, MdSettings, MdBookmark } from 'react-icons/md';
+import { MdArrowBack, MdChevronRight, MdSettings } from 'react-icons/md';
 import { FaPlus } from 'react-icons/fa';
-import clsx from 'clsx';
+import { TbVocabulary } from 'react-icons/tb';
 import { openUrl } from '@tauri-apps/plugin-opener';
 
 import { useTranslation } from '@/hooks/useTranslation';
@@ -449,7 +450,7 @@ export const DictionaryResultsHeader: React.FC<DictionaryResultsHeaderProps> = (
           className='btn btn-ghost btn-square btn-xs text-base-content/60 hover:text-base-content not-eink:hover:bg-base-200/60 disabled:opacity-50'
           onClick={() => router.push('/vocabulary')}
         >
-          <MdBookmark />
+          <TbVocabulary />
         </button>
         {onManage ? (
           <button

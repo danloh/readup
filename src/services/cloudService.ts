@@ -325,7 +325,7 @@ export async function loadPdsBook(
       }
     }
 
-    // Save config metadata
+    // insert to books
     if (!existingBook) {
       books.splice(0, 0, book);
     }
