@@ -287,6 +287,7 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
 
     try {
       // Upload book if toggle is enabled and book hasn't been uploaded yet
+      // FIXME: re-upload sometimes, uploadedAt is not a solid criterion
       if (shouldUploadBook && !book.uploadedAt && appService) {
         setIsUploading(true);
         eventDispatcher.dispatch('toast', {
@@ -355,7 +356,7 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
     } catch (error) {
       console.error('Error sharing excerpt:', error);
       eventDispatcher.dispatch('toast', {
-        message: 'Error sharing excerpt',
+        message: 'Error on sharing excerpt',
         timeout: 2000,
         type: 'error',
       });

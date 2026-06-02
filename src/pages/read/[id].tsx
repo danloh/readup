@@ -101,7 +101,7 @@ const ReadPage: React.FC<{ id: string; did: string; }> = ({ id, did }) => {
   if (isLoading) {
     return (
       <div className='fixed inset-0 z-40 flex items-center justify-center'>
-        <Spinner loading />
+        <Spinner loading text={'Loading book from PDS...'} />
       </div>
     );
   }
@@ -109,7 +109,7 @@ const ReadPage: React.FC<{ id: string; did: string; }> = ({ id, did }) => {
   if (error) {
     return (
       <div className='full-height'>
-        <p>Error loading book: {error}</p>
+        <p>Error on loading book: {error}</p>
       </div>
     );
   }

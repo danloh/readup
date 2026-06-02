@@ -5,8 +5,9 @@ import { useTranslation } from '@/hooks/useTranslation';
 
 const Spinner: React.FC<{
   loading: boolean;
+  text?: string;
   className?: string;
-}> = ({ loading, className }) => {
+}> = ({ loading, text, className }) => {
   const _ = useTranslation();
   const { safeAreaInsets } = useThemeStore();
   if (!loading) return null;
@@ -22,6 +23,7 @@ const Spinner: React.FC<{
       <span
         className={clsx('loading loading-lg not-eink:loading-dots eink:loading-spinner', className)}
       ></span>
+      {text?.trim() && (<span className='opacity-65 text-xs'>{text}</span>)}
       <span className='sr-only'>{_('Loading...')}</span>
     </div>
   );

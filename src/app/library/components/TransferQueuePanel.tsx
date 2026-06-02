@@ -293,6 +293,7 @@ const TransferQueuePanel: React.FC = () => {
   // TODO: stared articles
   const dataFiles: DataFileItem[] = [
     {name: 'library.json', col: 'cc.readup.rdata', base: 'Books'}, 
+    {name: 'vocabulary.json', col: 'cc.readup.rdata', base: 'Books'}, 
     {name: 'feeds.json',  col: 'cc.readup.rdata', base: 'Books'},
     {name: 'usage.json',  col: 'cc.readup.rdata', base: 'Books'},
     {name: 'reviews.json', col: 'cc.readup.rdata', base: 'Books'},

@@ -1,7 +1,7 @@
 import clsx from 'clsx';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { BookDoc, convertBlobUrlToDataUrl, getDirection } from '@/libs/document';
-import { BookConfig, PageInfo } from '@/types/book';
+import { BookConfig, BookNote, PageInfo } from '@/types/book';
 import { FoliateView, wrappedFoliateView } from '@/types/view';
 import { Insets } from '@/types/misc';
 import { useEnv } from '@/context/EnvContext';
@@ -531,11 +531,32 @@ const FoliateViewer: React.FC<{
       }
       applyMarginAndGap();
 
-      const storedLoc = localStorage.getItem(`loc-${bookKey.split('-')[0]!}`);
-      const lastLocation = config.location || storedLoc;
+      const locKey = `loc-${bookKey.split('-')[0]!}`;
+      const storedLoc = localStorage.getItem(locKey);
+      const lastLocation = storedLoc || config.location;
       
       if (lastLocation) {
         await view.init({ lastLocation });
+        if (storedLoc) {
+          // Highlight the text located by storedLoc
+          try {
+            const now = Date.now();
+            const highlightLoc: BookNote = {
+              id: `read-loc-temp-${now}`,
+              cfi: storedLoc,
+              type: 'annotation',
+              style: 'highlight',
+              color: 'green',
+              note: '',
+              createdAt: now,
+              updatedAt: now,
+            };
+            view.addAnnotation(highlightLoc);
+          } catch (err) {
+            console.warn('Failed to highlight stored location', { storedLoc, error: err });
+          }
+          localStorage.removeItem(locKey);
+        }
       } else {
         await view.goToFraction(0);
       }

@@ -7,6 +7,7 @@ import { LiaFileImportSolid } from 'react-icons/lia';
 import { IoMdCloseCircle } from 'react-icons/io';
 import { IoFileTray } from 'react-icons/io5';
 import { AiOutlineCloudSync } from 'react-icons/ai';
+import { TbVocabulary } from 'react-icons/tb';
 
 import { useTranslation } from '@/hooks/useTranslation';
 import { useTransferQueue } from '@/hooks/useTransferQueue';
@@ -15,7 +16,6 @@ import { debounce } from '@/utils/debounce';
 import Dropdown from '@/components/Dropdown';
 import ViewMenu from './ViewMenu';
 import { setBackupDialogVisible } from './BackupWindow';
-import { MdBookmark } from 'react-icons/md';
 
 interface LibraryHeaderProps {
   onImportBooksFromFiles: () => void;
@@ -166,7 +166,7 @@ const LibraryHeader: React.FC<LibraryHeaderProps> = (
               onClick={() => router.push('/vocabulary')}
               aria-label={_('Vocabulary Book')}
             >
-              <MdBookmark className='h-4 w-4' />
+              <TbVocabulary className='h-4 w-4' />
             </button>
           </div>
           <Dropdown

@@ -379,16 +379,17 @@ const RSVPControl: React.FC<RSVPControlProps> = ({ bookKey, gridInsets }) => {
                     removeRsvpHighlight();
 
                     // Create a persistent highlight for the sentence
+                    const now0 = Date.now();
                     const highlight: BookNote = {
-                      id: `rsvp-temp-${Date.now()}`,
+                      id: `rsvp-temp-${now0}`,
                       type: 'annotation',
                       cfi: sentenceCfi,
                       text: sentenceText,
                       style: 'underline',
                       color: themeCode.primary as any, // same as ORP focal point
                       note: '',
-                      createdAt: Date.now(),
-                      updatedAt: Date.now(),
+                      createdAt: now0,
+                      updatedAt: now0,
                     };
 
                     tempHighlightRef.current = highlight;
