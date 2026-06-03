@@ -110,7 +110,7 @@ const BookDetailView: React.FC<BookDetailViewProps> = ({
               </p>
             )}
           </div>
-         <div className='flex flex-nowrap items-center gap-2 sm:gap-x-4'>
+         <div className='flex flex-nowrap items-center gap-x-4'>
             {onEdit && showBtns && (
               <button
                 onClick={onEdit}

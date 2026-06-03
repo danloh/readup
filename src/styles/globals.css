@@ -446,7 +446,7 @@ foliate-fxl {
 }
 
 .touch-target::before {
-  content: "";
+  content: '';
   position: absolute;
   inset: -12px;
 }
@@ -488,139 +488,144 @@ foliate-fxl {
   transition: none !important;
 }
 
-[data-eink="true"] [class*="shadow-"] {
+[data-eink='true'] [class*='shadow-'] {
   box-shadow: none !important;
 }
 
-[data-eink="true"] [class*="text-base-content"] {
+[data-eink='true'] [class*='text-base-content'] {
   color: theme('colors.base-content') !important;
 }
 
-[data-eink="true"] [class*="text-blue"] {
-  color: theme('colors.base-content') !important;
-  font-weight: normal;
-}
-
-[data-eink="true"] [class*="text-red"] {
+[data-eink='true'] [class*='text-blue'] {
   color: theme('colors.base-content') !important;
   font-weight: normal;
 }
 
-[data-eink="true"] [class*="text-neutral-content"] {
+[data-eink='true'] [class*='text-red'] {
+  color: theme('colors.base-content') !important;
+  font-weight: normal;
+}
+
+[data-eink='true'] [class*='text-neutral-content'] {
   color: theme('colors.base-content') !important;
 }
 
-[data-eink="true"] [class*="placeholder"]::placeholder {
+[data-eink='true'] [class*='placeholder']::placeholder {
   color: theme('colors.base-content') !important;
 }
 
-[data-eink="true"] [class*="bg-base-content"] {
+[data-eink='true'] [class*='bg-base-content'] {
   background-color: theme('colors.base-content') !important;
 }
 
-[data-eink="true"] [class*="font-light"] {
+[data-eink='true'] [class*='font-light'] {
   font-weight: normal !important;
 }
 
-[data-eink="true"] [class*="text-bold-in-eink"] {
+[data-eink='true'] [class*='text-bold-in-eink'] {
   font-weight: bold;
 }
 
-[data-eink="true"] .eink-bordered {
+[data-eink='true'] .eink-bordered {
   border-width: 1px !important;
   border-color: theme('colors.base-content') !important;
   background-color: theme('colors.base-100') !important;
 }
 
-[data-eink="true"] input.search-input, [data-eink="true"] input.search-input:focus {
+[data-eink='true'] input.search-input, [data-eink='true'] input.search-input:focus {
   border-width: 1px !important;
   border-radius: 9999px;
   border-color: theme('colors.base-content') !important;
   background-color: theme('colors.base-100') !important;
 }
 
-[data-eink="true"] .modal-box {
+[data-eink='true'] .modal-box {
   box-shadow: none !important;
   border-width: 1px !important;
   border-color: theme('colors.base-content') !important;
 }
 
-[data-eink="true"] .dialog-overlay {
+[data-eink='true'] .dialog-overlay {
   background-color: transparent !important;
 }
 
-[data-eink="true"] .menu-container {
+[data-eink='true'] .menu-container {
   background-color: theme('colors.base-100') !important;
   border: 1px solid theme('colors.base-content') !important;
 }
 
-[data-eink="true"] hr {
+[data-eink='true'] hr {
   border-color: theme('colors.base-content/0.75') !important;
 }
 
-[data-eink="true"] button, [data-eink="true"] .btn {
+[data-eink='true'] button, [data-eink='true'] .btn {
   color: theme('colors.base-content') !important;
 }
 
-[data-eink="true"] .btn-primary {
+[data-eink='true'] .btn-primary {
   background-color: theme('colors.base-content') !important;
   border: 1px solid theme('colors.base-content') !important;
   color: theme('colors.base-100') !important;
 }
 
-[data-eink="true"] .bg-primary {
+[data-eink='true'] .bg-primary {
   background-color: theme('colors.base-100') !important;
   border: 1px solid theme('colors.base-content') !important;
   color: theme('colors.base-content') !important;
 }
 
-[data-eink="true"] .dropdown-toggle {
+[data-eink='true'] .dropdown-toggle {
   background-color: theme('colors.transparent') !important;
-}
-
-[data-eink="true"] .opds-navigation .card {
-  background-color: theme('colors.base-100') !important;
-  border: 1px solid theme('colors.base-content') !important;
-}
-
-[data-eink="true"] .booknote-item {
-  background-color: theme('colors.base-100') !important;
-  border: 1px solid theme('colors.base-content') !important;
-}
-
-[data-eink="true"] .booknote-text {
-  background-color: theme('colors.base-100') !important;
-}
-
-[data-eink="true"] .bookitem-main, [data-eink="true"] .groupitem-main {
-  border: 1px solid theme('colors.base-content') !important;
-}
-
-[data-eink="true"] .popup-container {
-  border: 1px solid theme('colors.base-content') !important;
-  background-color: theme('colors.base-100') !important;
-}
-
-[data-eink="true"] .popup-triangle-outer {
+  /* A toggle that also carries a fill class (e.g. btn-outline) gets its label
+     inverted to base-100 by the rule above; with the background neutralized to
+     transparent that leaves white-on-white. Keep the text base-content so the
+     label stays legible (issue #4435). */
   color: theme('colors.base-content') !important;
 }
 
-[data-eink="true"] .popup-triangle-inner {
+[data-eink='true'] .opds-navigation .card {
+  background-color: theme('colors.base-100') !important;
+  border: 1px solid theme('colors.base-content') !important;
+}
+
+[data-eink='true'] .booknote-item {
+  background-color: theme('colors.base-100') !important;
+  border: 1px solid theme('colors.base-content') !important;
+}
+
+[data-eink='true'] .booknote-text {
+  background-color: theme('colors.base-100') !important;
+}
+
+[data-eink='true'] .bookitem-main, [data-eink='true'] .groupitem-main {
+  border: 1px solid theme('colors.base-content') !important;
+}
+
+[data-eink='true'] .popup-container {
+  border: 1px solid theme('colors.base-content') !important;
+  background-color: theme('colors.base-100') !important;
+}
+
+[data-eink='true'] .popup-triangle-outer {
+  color: theme('colors.base-content') !important;
+}
+
+[data-eink='true'] .popup-triangle-inner {
   color: theme('colors.base-100') !important;
 }
 
-[data-eink="true"] .annotation-notes {
+[data-eink='true'] .annotation-notes {
   transform-origin: top left;
   transform: translate(-1px, -1px);
 }
 
-[data-eink="true"] .alert {
+[data-eink='true'] .alert {
   color: theme('colors.base-content') !important;
   border: 1px solid theme('colors.base-content') !important;
   background-color: theme('colors.base-100') !important;
 }
 
-[data-eink="true"] input[type="checkbox"] {
+[data-eink='true'] input[type='checkbox'] {
   --tglbg: theme('colors.base-100') !important;
 }
 

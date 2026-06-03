@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import Image from 'next/image';
 import { useEnv } from '@/context/EnvContext';
 import { useTranslation } from '@/hooks/useTranslation';
 import { checkForAppUpdates, checkAppReleaseNotes } from '@/helpers/updater';
 import { parseWebViewInfo } from '@/utils/ua';
 import { getAppVersion } from '@/utils/version';
 import Dialog from './Dialog';
+import Link from './Link';
+import Logo from './Logo';
 
 export const setAboutDialogVisible = (visible: boolean) => {
   const dialog = document.getElementById('about_window');
@@ -86,10 +87,11 @@ export const AboutWindow = () => {
       <div className='about-content flex flex-col items-center justify-center'>
         <div className='flex flex-col items-center gap-2 px-8 py-2'>
           <div className='mb-2 mt-6'>
-            <Image src='/icon.png' alt='App Logo' className='h-20 w-20' width={64} height={64} />
+            <Logo width={64} height={64} />
           </div>
           <div className='flex select-text flex-col items-center'>
             <h2 className='mb-2 text-2xl font-bold'>Readup</h2>
+            <p className='mb-4'>{_('Feed with Books')}</p>
             <p className='text-neutral-content text-center text-sm'>
               {_('Version {{version}}', { version: getAppVersion() })} {`(${browserInfo})`}
             </p>
@@ -97,7 +99,7 @@ export const AboutWindow = () => {
           <div className='h-5'>
             {!updateStatus && (
               <span
-                className='btn btn-sm btn-primary cursor-pointer p-1 text-xs'
+                className='btn btn-xs btn-primary cursor-pointer p-1 text-xs'
                 onClick={appService?.hasUpdater ? handleCheckUpdate : handleShowRecentUpdates}
               >
                 {_('Check Update')}
@@ -118,7 +120,16 @@ export const AboutWindow = () => {
 
         <div className='flex flex-col items-center px-4 text-center' dir='ltr'>
           <p className='text-neutral-content text-sm'>
-            © {new Date().getFullYear()} Readup Team.
+            © {new Date().getFullYear()} Readup Team
+          </p>
+          <p className='text-neutral-content text-xs mt-2'>
+              Licensed under the{' '}
+              <Link
+                href='https://www.gnu.org/licenses/agpl-3.0.html'
+                className='text-blue-500 underline'
+              >
+                GNU Affero General Public License v3.0
+              </Link>
           </p>
         </div>
       </div>

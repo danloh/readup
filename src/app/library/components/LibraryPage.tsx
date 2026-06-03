@@ -44,6 +44,8 @@ import { requestStoragePermission } from '@/utils/permission';
 import DropIndicator from '@/components/DropIndicator';
 import ModalPortal from '@/components/ModalPortal';
 import Spinner from '@/components/Spinner';
+import Logo from '@/components/Logo';
+import { setAuthDialogVisible } from '@/components/AuthWindow';
 import { useDragDropImport } from '../hooks/useDragDropImport';
 import BookDetailModal from './metadata/BookDetailModal';
 import LibraryHeader from './LibraryHeader';
@@ -970,19 +972,33 @@ const LibraryPageContent = (
             </div>
           </OverlayScrollbarsComponent>
         ) : (
-          <div className='hero drop-zone h-screen items-center justify-center'>
+          <div className='hero h-screen items-center justify-center'>
             <div className='hero-content text-neutral-content text-center'>
-              <div className='max-w-md'>
-                <h1 className='mb-5 text-5xl font-bold'>{_('Welcome to Readup')}</h1>
-                <p className='mb-5'>
+              <div className='flex flex-col items-center max-w-md'>
+                <Logo width={72} height={72} aria-hidden className='mb-4' />
+                <h1 className='mb-4 text-4xl font-bold'>{_('Welcome to Readup')}</h1>
+                <p className='mb-8'>
                   {_('Feed & eBook Reader on atproto')}
                 </p>
                 <button 
-                  className='btn btn-primary rounded-xl' 
+                  className='btn btn-primary btn-wide h-11 rounded-lg' 
                   onClick={handleImportBooksFromFiles}
                 >
                   {_('Import Books')}
                 </button>
+                {!user && (
+                  <button
+                    type='button'
+                    className={clsx(
+                      'text-base-content/70 hover:text-base-content mt-1 py-2 text-xs',
+                      'underline underline-offset-4',
+                      'focus-visible:text-base-content focus-visible:outline-none',
+                    )}
+                    onClick={() => setAuthDialogVisible(true)}
+                  >
+                    {_('Sign in with atproto and sync your library to PDS')}
+                  </button>
+                )}
               </div>
             </div>
           </div>

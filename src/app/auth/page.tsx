@@ -92,8 +92,8 @@ export default function AuthPage({handleClose}: Props) {
             className="flex flex-col gap-2" 
             onSubmit={onSubmit}
           >
-            <label className="w-full flex items-center gap-2">
-              <span className="text-accent">Service</span> 
+            <label className="w-full flex flex-col gap-2">
+              <span className="text-primary">Service</span> 
               <input
                 type="text"
                 name="host"
@@ -101,30 +101,30 @@ export default function AuthPage({handleClose}: Props) {
                 placeholder="e.g. bsky.social"
                 value={host}
                 onChange={(event) => setHost(event.target.value || 'bsky.social')}
-                className="input input-sm border-none w-full" 
+                className="input input-sm input-primary w-full" 
                 disabled={isLoading}
               />
             </label>
-            <label className="w-full flex items-center gap-2">
-              <span className="text-accent">Handle</span>
+            <label className="w-full flex flex-col gap-2">
+              <span className="text-primary">Handle</span>
               <input
                 type="text"
                 name="handle"
                 id="handle" 
                 placeholder="e.g. my.bsky.social"
-                className="input input-sm border-none w-full" 
+                className="input input-sm input-primary w-full" 
                 onChange={(event) => setHandle(event.target.value)}
                 required
                 disabled={isLoading}
               />
             </label>
-            <label className="w-full flex items-center gap-2">
-              <span className="text-accent">Password</span>
+            <label className="w-full flex flex-col gap-2">
+              <span className="text-primary">Password</span>
               <input
                 type="password"
                 name="pass"
                 id="pass" 
-                className="input input-sm border-none w-full" 
+                className="input input-sm input-primary w-full" 
                 placeholder="App Password" 
                 onChange={(event) => setPassword(event.target.value)}
                 required
@@ -132,7 +132,7 @@ export default function AuthPage({handleClose}: Props) {
               />
             </label>
             <a 
-              className="text-sm text-success px-2" 
+              className="text-sm text-success px-1" 
               href="https://bsky.app/settings/app-passwords" 
               target="_blank"
               rel="noopener noreferrer"
@@ -141,18 +141,18 @@ export default function AuthPage({handleClose}: Props) {
             </a>
             <button 
               type="submit" 
-              className="btn btn-primary"
+              className="btn btn-primary btn-sm btn-wide w-full"
               disabled={isLoading}
             >
               {isLoading ? _('Signing in...') : _('Sign in with atproto')}
             </button>
             <a 
-              className="text-xs text-success text-center px-1" 
+              className="text-xs text-center px-1" 
               href="https://bsky.app" 
               target="_blank"
               rel="noopener noreferrer"
             >
-              {_("No ATmosphere account? Let's start with Bluesky")}
+              {_("No atproto account? Let's start with Bluesky")}
             </a>
           </form>
         )}
@@ -161,7 +161,7 @@ export default function AuthPage({handleClose}: Props) {
         {authMode === 'oauth' && (
           <div className="flex flex-col gap-4">
             <label className="w-full flex items-center gap-2">
-              <span className="text-accent">Service</span> 
+              <span className="text-primary">Service</span> 
               <input
                 type="text"
                 name="host-oauth"
@@ -169,7 +169,7 @@ export default function AuthPage({handleClose}: Props) {
                 placeholder="e.g. bsky.social"
                 value={host}
                 onChange={(event) => setHost(event.target.value || 'bsky.social')}
-                className="w-full input input-sm border-none"
+                className="w-full input input-sm input-primary"
                 disabled={isLoading}
               />
             </label>
