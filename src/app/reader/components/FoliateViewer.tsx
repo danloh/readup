@@ -15,15 +15,14 @@ import {
   applyThemeModeClass,
   applyTranslationStyle,
   applyScrollModeClass,
-  applyTableStyle,
   keepTextAlignment,
   getStyles,
   transformStylesheet,
   applyScrollbarStyle,
   getThemeCode,
-  applyTableTouchScroll,
 } from '@/styles/style';
 import { mountAdditionalFonts } from '@/styles/font';
+import { applyScrollableStyle, applyTableTouchScroll } from '@/utils/scrollable';
 import { getBookDirFromLanguage, getBookDirFromWritingMode } from '@/utils/book';
 import { useUICSS } from '@/hooks/useUICSS';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -225,7 +224,7 @@ const FoliateViewer: React.FC<{
       }
 
       applyImageStyle(detail.doc);
-      applyTableStyle(detail.doc);
+      applyScrollableStyle(detail.doc);
       applyTableTouchScroll(detail.doc);
       applyThemeModeClass(detail.doc, isDarkMode);
       applyScrollModeClass(detail.doc, viewSettings.scrolled || false);

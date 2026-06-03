@@ -42,6 +42,7 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [shouldUploadBook, setShouldUploadBook] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
   const [customHashtags, setCustomHashtags] = useState<string>('');
 
   // Style customization state
@@ -282,7 +283,8 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
       onCancel();
       return;
     }
-
+    
+    setIsSharing(true);
     let bookUploaded = !!book.uploadedAt;
 
     try {
@@ -306,7 +308,7 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
         } catch (uploadError) {
           console.error('Failed to upload book:', uploadError);
           eventDispatcher.dispatch('toast', {
-            message: 'Failed to upload book',
+            message: `Failed to upload book: ${uploadError}`,
             timeout: 2000,
             type: 'warning',
           });
@@ -356,12 +358,13 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
     } catch (error) {
       console.error('Error sharing excerpt:', error);
       eventDispatcher.dispatch('toast', {
-        message: 'Error on sharing excerpt',
+        message: `Error on sharing excerpt: ${error}`,
         timeout: 2000,
         type: 'error',
       });
     } finally {
       setIsUploading(false);
+      setIsSharing(false);
     }
   };
 
@@ -551,13 +554,17 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
 
         {/* Footer Actions */}
         <div className='mt-4 flex justify-center gap-4'>
-          <button onClick={onCancel} className='btn btn-ghost btn-sm' disabled={isUploading}>
+          <button 
+            onClick={onCancel} 
+            className='btn btn-ghost btn-sm' 
+            disabled={isUploading || isSharing}
+          >
             {_('Cancel')}
           </button>
           <button 
             onClick={handleShare} 
             className='btn btn-primary btn-sm' 
-            disabled={isRendering || isUploading}
+            disabled={isRendering || isUploading || isSharing}
           >
             {isUploading ? (
               <>
@@ -565,7 +572,7 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
                 {_('Uploading...')}
               </>
             ) : (
-              _('Share')
+              isSharing ? _('Sharing') : _('Share')
             )}
           </button>
         </div>

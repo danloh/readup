@@ -144,7 +144,7 @@ export async function refreshSession(): Promise<User> {
   const usr = userJson ? JSON.parse(userJson) as User : null;
   
   if (!usr) {
-    throw new Error('Not logged in - user data not found');
+    throw new Error('Not logged in');
   }
 
   // Validate required fields

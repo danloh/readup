@@ -17,7 +17,7 @@ const debounce = (f, wait, immediate) => {
 // Transforms ALL children of the container so multi-view layouts
 // animate as a unified whole. Extra elements (e.g. background) are
 // also transformed so they slide in sync with the content.
-const animateScroll = (element, scrollProp, startValue, endValue, duration, extraElements = []) => new Promise(resolve => {
+const cssAnimateScroll = (element, scrollProp, startValue, endValue, duration, extraElements = []) => new Promise(resolve => {
     if (document.hidden) {
         element[scrollProp] = endValue
         return resolve()
@@ -79,6 +79,38 @@ const animateScroll = (element, scrollProp, startValue, endValue, duration, extr
     // Fallback timeout in case transitionend doesn't fire
     setTimeout(cleanup, duration + 50)
 })
+
+const lerp = (min, max, x) => x * (max - min) + min
+const easeOutQuad = x => 1 - (1 - x) * (1 - x)
+// rAF animation of a scalar (used for the native scroll offset). Unlike the
+// CSS-transform animate, this never composites the whole section as a
+// single layer, so it doesn't block when the section exceeds the GPU texture
+// limit — it just changes scroll offset each frame (incremental/tiled).
+const rafAnimateScroll = (a, b, duration, ease, render) => new Promise(resolve => {
+    let start
+    const step = now => {
+        if (document.hidden) {
+            render(lerp(a, b, 1))
+            return resolve()
+        }
+        start ??= now
+        const fraction = Math.min(1, (now - start) / duration)
+        render(lerp(a, b, ease(fraction)))
+        if (fraction < 1) requestAnimationFrame(step)
+        else resolve()
+    }
+    if (document.hidden) {
+        render(lerp(a, b, 1))
+        return resolve()
+    }
+    requestAnimationFrame(step)
+})
+
+// A CSS-transform page-turn must composite the whole section as one layer. Once
+// that layer is past the GPU texture limit (large sections; worse at high DPR on
+// Android) Blink blocks the UI for ~1s preparing it before the turn snaps. Above
+// this accumulated rendered-view size, animate the native scroll offset instead.
+const RAF_ANIMATE_SCROLL_THRESHOLD = 20000
 
 // collapsed range doesn't return client rects sometimes (or always?)
 // try make get a non-collapsed range or element
@@ -235,7 +267,7 @@ const setSelectionTo = (target, collapse) => {
 // viewport as `aria-hidden`. Views still visible to sighted users (e.g. the
 // right column in a dual-page spread that belongs to a different section
 // than the left column) stay exposed to assistive tech.
-// See #4243 and #4259.
+// See /#4243 and /#4259.
 export const isViewVisibleInContainer = (viewRect, containerRect) =>
     viewRect.right > containerRect.left
     && viewRect.left < containerRect.right
@@ -272,16 +304,23 @@ const getBackground = doc => {
         : bodyStyle.background
 }
 
-// Compute the full-bleed background segments for paginated mode. Each rendered
-// view yields one segment positioned so it tracks its content on screen
+// Compute the background segments for paginated mode. Each rendered view yields
+// one segment positioned so it tracks its content on screen
 // (segStart = inset + viewOffset - scrollPos). Because the paginator rebuilds
 // these on every scroll, the backgrounds stay glued to the content while the
 // user drags a swipe; when two sections with different backgrounds are both on
 // screen the seam falls on the real content boundary instead of one flat colour
-// spanning the viewport. A segment that meets a content edge is stretched out
-// into the full-bleed gutter (outside #container) so a coloured page fills the
-// screen edge to edge, matching its content area. `views` is the sorted list of
-// { size, bg } with bg already resolved ('' = transparent → no segment).
+// spanning the viewport.
+//
+// Each segment is clamped to the content area [containerStart, containerEnd] so
+// a coloured page stays inside its own column and never bleeds into the outer
+// margin gutters (the --_outer-min tracks that keep the left/right margins in
+// step with the centre gap). Otherwise a body-coloured page would spill its
+// colour into the outer gutter while an adjacent transparent/image page did not,
+// shifting the spread off-centre (~250px wide on a desktop, #4394). In
+// single-column mode the gutters are zero, so the clamp still fills the viewport
+// edge to edge. `views` is the sorted list of { size, bg } with bg already
+// resolved ('' = transparent → no segment).
 export const computeBackgroundSegments = (views, scrollPos, bgSize, inset, containerSize) => {
     const containerStart = inset
     const containerEnd = inset + containerSize
@@ -293,13 +332,24 @@ export const computeBackgroundSegments = (views, scrollPos, bgSize, inset, conta
         offset += view.size
         if (segEnd <= 0 || segStart >= bgSize) continue // off screen
         if (!view.bg) continue // transparent → let the host/theme show through
-        let start = segStart
-        let end = segEnd
-        if (start <= containerStart && end > containerStart) start = 0
-        if (start < containerEnd && end >= containerEnd) end = bgSize
+        const start = Math.max(segStart, containerStart)
+        const end = Math.min(segEnd, containerEnd)
+        if (end <= start) continue // entirely in an outer gutter
         segments.push({ start, size: end - start, bg: view.bg })
     }
     return segments
+}
+
+// When a host background texture is active (mounted on the reader container as
+// `.foliate-viewer::before`), a page whose own background is transparent must
+// NOT paint a fill — an opaque fill would occlude the texture. Returns '' (no
+// fill, so the texture shows through) for a transparent page under a texture,
+// and the resolved colour otherwise. Shared by scrolled-mode view elements and
+// paginated-mode segments so both modes treat textures identically (#4399).
+export const textureAwareBackground = (resolved, hasTexture) => {
+    const isTransparent = !resolved
+        || /^\s*(transparent|rgba\(0,\s*0,\s*0,\s*0\))/.test(resolved)
+    return hasTexture && isTransparent ? '' : resolved
 }
 
 const makeMarginals = (length, part) => Array.from({ length }, () => {
@@ -987,22 +1037,10 @@ export class Paginator extends HTMLElement {
             overflow: hidden;
             display: flex;
             flex-direction: row;
-            /* GPU acceleration hints for smoother scrolling on high refresh rate displays */
-            transform: translateZ(0);
-            backface-visibility: hidden;
-            -webkit-backface-visibility: hidden;
-            perspective: 1000px;
-            -webkit-perspective: 1000px;
             transition: opacity 50ms ease-in;
         }
         #container.vertical {
             flex-direction: column;
-        }
-        #container > * {
-            /* Ensure child elements are GPU-accelerated for smooth transform animations */
-            transform: translateZ(0);
-            backface-visibility: hidden;
-            -webkit-backface-visibility: hidden;
         }
         :host([flow="scrolled"]) #container {
             grid-column: 2 / 5;
@@ -1105,7 +1143,7 @@ export class Paginator extends HTMLElement {
             }
             // Preload backward when fewer than minPages behind, mirroring the
             // forward buffer so scrolling up never dead-ends at the top with the
-            // previous section unloaded (#4112). The
+            // previous section unloaded (/#4112). The
             // #loadAdjacentSection scroll compensation keeps the viewport
             // anchored as the section is inserted above.
             if (this.scrolled && !this.noPreload && !this.noContinuousScroll
@@ -1308,7 +1346,7 @@ export class Paginator extends HTMLElement {
     // Only `aria-hidden` is used — `inert` would also block pointer events
     // and text selection, which breaks visible non-primary views such as
     // the right column of a dual-page spread when each column belongs to
-    // a different section (#4243, #4259).
+    // a different section (/#4243, /#4259).
     //
     // Visible non-primary views stay exposed to assistive tech because a
     // sighted user can read them on the same spread.
@@ -1358,6 +1396,7 @@ export class Paginator extends HTMLElement {
         const bgTextureId = htmlStyle.getPropertyValue('--bg-texture-id')
         const isDarkMode = htmlStyle.getPropertyValue('color-scheme') === 'dark'
         const fallbackBg = themeBgColor || ''
+        const hasTexture = !!bgTextureId && bgTextureId !== 'none'
 
         const resolveBackground = (background) => {
             if (!background) return fallbackBg
@@ -1382,15 +1421,12 @@ export class Paginator extends HTMLElement {
             // In scrolled mode, set background directly on each view element
             // so it scrolls with the content. The static #background provides
             // the fallback color for margins and gaps between views.
-            const hasTexture = !!bgTextureId && bgTextureId !== 'none'
             this.#background.innerHTML = ''
             this.#background.style.display = ''
             this.#background.style.background = hasTexture ? '' : fallbackBg
             for (const [, view] of this.#sortedViews) {
                 const resolved = resolveBackground(view.docBackground)
-                const isTransparent = !resolved
-                    || /^\s*(transparent|rgba\(0,\s*0,\s*0,\s*0\))/.test(resolved)
-                view.element.style.background = hasTexture && isTransparent ? '' : resolved
+                view.element.style.background = textureAwareBackground(resolved, hasTexture)
             }
             return
         }
@@ -1408,13 +1444,15 @@ export class Paginator extends HTMLElement {
         const scrollPos = Math.abs(atPosition ?? this.#renderedStart)
         const views = this.#sortedViews.map(([, view]) => ({
             size: view.element.getBoundingClientRect()[this.sideProp],
-            bg: resolveBackground(view.docBackground),
+            bg: textureAwareBackground(resolveBackground(view.docBackground), hasTexture),
         }))
         const segments = computeBackgroundSegments(views, scrollPos, bgSize, inset, this.size)
 
         this.#background.innerHTML = ''
         this.#background.style.display = ''
-        this.#background.style.background = fallbackBg
+        // Under a texture, leave the container transparent so the host texture
+        // shows through the gaps a transparent page no longer fills (#4399).
+        this.#background.style.background = hasTexture ? '' : fallbackBg
 
         const posProp = this.#vertical ? 'top' : 'left'
         const sizeProp = this.#vertical ? 'height' : 'width'
@@ -1817,6 +1855,20 @@ export class Paginator extends HTMLElement {
         if ((reason === 'snap' || smooth) && this.hasAttribute('animated') && !this.hasAttribute('eink')) {
             const startPosition = this.containerPosition
             this.#isAnimating = true
+            // For a large section the CSS-transform animation blocks the UI while
+            // Blink composites the oversized layer; animate the native scroll
+            // offset instead (incremental/tiled, like a swipe), keeping the
+            // per-page backgrounds synced each frame.
+            if (this.#renderedViewSize > RAF_ANIMATE_SCROLL_THRESHOLD) {
+                return rafAnimateScroll(startPosition, offset, 300, easeOutQuad, x => {
+                    this.#container[this.scrollProp] = x
+                    if (!this.scrolled) this.#replaceBackground()
+                }).then(() => {
+                    this.#isAnimating = false
+                    this.#scrollBounds = [offset, this.atStart ? 0 : size, this.atEnd ? 0 : size]
+                    this.#afterScroll(reason)
+                })
+            }
             // Slide the per-view backgrounds in lockstep with the content. The
             // content animates via a transform on each view; we re-sync the
             // backgrounds to that animated offset every frame so each page's
@@ -1838,7 +1890,7 @@ export class Paginator extends HTMLElement {
                 requestAnimationFrame(syncBackground)
             }
             // Use GPU-accelerated scroll animation for smoother experience on high refresh rate screens
-            return animateScroll(
+            return cssAnimateScroll(
                 this.#container,
                 this.scrollProp,
                 startPosition,
@@ -2137,7 +2189,7 @@ export class Paginator extends HTMLElement {
         // loaded view in scrolled mode. The browser suppresses scroll
         // anchoring while scrollTop is 0, so the inserted section would push
         // the visible content down and the viewport would drift into the
-        // previous section (#4112). Capture the scroll position
+        // previous section (/#4112). Capture the scroll position
         // before the insertion so it can be restored once the view renders.
         const firstIndex = this.#sortedViews[0]?.[0]
         const isPrepend = this.scrolled && firstIndex != null && index < firstIndex
@@ -2296,7 +2348,7 @@ export class Paginator extends HTMLElement {
             // Continuous scrolled mode keeps the target view rendered, so we
             // scroll straight to it without fading the container — fading
             // produced a hard blank-screen flash on adjacent navigation
-            // (#4112 follow-up). Paginated mode and discrete
+            // (/#4112 follow-up). Paginated mode and discrete
             // no-continuous-scroll still fade to hide the page reposition.
             const blank = !this.scrolled || this.noContinuousScroll
             if (blank) this.#container.style.opacity = '0'

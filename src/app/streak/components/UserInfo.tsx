@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { PiUserCircle } from 'react-icons/pi';
 import UserAvatar from '@/components/UserAvatar';
+import { setAuthDialogVisible } from '@/components/AuthWindow';
 import { useAuth } from '@/context/AuthContext';
 import { getProfile, UserProfile } from '@/services/bsky/auth';
 
@@ -66,7 +67,13 @@ const UserInfo: React.FC = () => {
             {profile.description}
           </p>
         )}
-        <button className='link text-xs' onClick={logout}>Log Out</button>
+        {user ? (
+          <button className='link text-sm' onClick={logout}>Log Out</button>
+        ) : (
+          <button className='link text-sm' onClick={() => setAuthDialogVisible(true)}>
+            Log In
+          </button>
+        )}
       </div>
     </div>
   );
