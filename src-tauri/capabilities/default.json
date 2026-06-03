@@ -186,6 +186,8 @@
     "haptics:allow-selection-feedback",
     "deep-link:default",
     "sharekit:default",
+    "clipboard-manager:allow-write-text",
+    "clipboard-manager:allow-read-text",
     "native-tts:default",
     "native-bridge:default"
   ]

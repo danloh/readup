@@ -80,6 +80,7 @@ const FoliateViewer: React.FC<{
   const _ = useTranslation();
   const { getView, setView: setFoliateView, setViewInited, setProgress } = useReaderStore();
   const { getProgress, getViewState, getViewSettings, setViewSettings } = useReaderStore();
+  const setPreviewMode = useReaderStore((s) => s.setPreviewMode);
   const { getParallels } = useParallelViewStore();
   const { getBookData } = useBookDataStore();
   const { appService } = useEnv();
@@ -322,6 +323,11 @@ const FoliateViewer: React.FC<{
     const detail = (event as CustomEvent).detail;
     if (detail.reason !== 'scroll' && detail.reason !== 'page') return;
 
+    // First user-initiated navigation after a deep-link landing — promote
+    // the preview into the real reading position. Subsequent progress writes
+    // can flow normally.
+    setPreviewMode(bookKey, false);
+
     const parallelViews = getParallels(bookKey);
     if (parallelViews && parallelViews.size > 0) {
       parallelViews.forEach((key) => {
@@ -560,6 +566,15 @@ const FoliateViewer: React.FC<{
         await view.goToFraction(0);
       }
       setViewInited(bookKey, true);
+
+      // The reader is showing a deep-link target, not the user's actual reading
+      // position. Mark the view as a preview so progress writers (auto-save,
+      // cloud sync, kosync) skip until the user takes a reading action. The
+      // flag clears on the first user-initiated relocate (page / scroll) in
+      // docRelocateHandler below.
+      // if (overrideLocation) {
+      //   setPreviewMode(bookKey, true);
+      // }
     };
 
     openBook();

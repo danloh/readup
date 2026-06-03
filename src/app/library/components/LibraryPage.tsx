@@ -33,6 +33,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useTheme } from '@/hooks/useTheme';
 import { useUICSS } from '@/hooks/useUICSS';
 import { SelectedFile, useFileSelector } from '@/hooks/useFileSelector';
+import { useAppUrlIngress } from '@/hooks/useAppUrlIngress';
 import { useOpenWithBooks } from '@/hooks/useOpenWithBooks';
 import useShortcuts from '@/hooks/useShortcuts';
 import { useTransferQueue } from '@/hooks/useTransferQueue';
@@ -170,6 +171,7 @@ const LibraryPageContent = (
   useTheme({ systemUIVisible: true, appThemeColor: 'base-200' });
   useUICSS();
 
+  useAppUrlIngress();
   useOpenWithBooks();
   useTransferQueue(libraryLoaded);
 

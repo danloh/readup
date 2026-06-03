@@ -80,6 +80,7 @@ function seedViewState(key: string, overrides: Record<string, unknown> = {}) {
         ttsEnabled: false,
         syncing: false,
         gridInsets: null,
+        previewMode: false,
         viewSettings: null,
         ...overrides,
       },

@@ -43,5 +43,16 @@
     </array>
     <key>LSSupportsOpeningDocumentsInPlace</key>
     <true/>
+    <key>CFBundleURLTypes</key>
+    <array>
+      <dict>
+        <key>CFBundleURLName</key>
+        <string>cc.readup</string>
+        <key>CFBundleURLSchemes</key>
+        <array>
+          <string>readup</string>
+        </array>
+      </dict>
+    </array>
   </dict>
 </plist>

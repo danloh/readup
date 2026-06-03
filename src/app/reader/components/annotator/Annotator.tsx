@@ -34,6 +34,7 @@ import { eventDispatcher } from '@/utils/event';
 import { findTocItemBS } from '@/services/nav';
 import { throttle } from '@/utils/throttle';
 import { getWordCount } from '@/utils/word';
+import { writeTextToClipboard } from '@/utils/clipboard';
 import { getIndexFromCfi, isCfiInLocation } from '@/utils/cfi';
 import { useFoliateEvents } from '../../hooks/useFoliateEvents';
 import { useTextSelector } from '../../hooks/useTextSelector';
@@ -707,7 +708,7 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
 
     setTimeout(() => {
       // Delay to ensure it won't be overridden by system clipboard actions
-      navigator.clipboard?.writeText(selection.text);
+      void writeTextToClipboard(selection.text);
     }, 100);
 
     if (dismissPopup) {
@@ -1040,7 +1041,7 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
 
     setTimeout(() => {
       // Delay to ensure it won't be overridden by system clipboard actions
-      navigator.clipboard?.writeText(markdownContent);
+      void writeTextToClipboard(markdownContent);
     }, 100);
 
     const filename = `${makeSafeFilename(book.title)}.md`;

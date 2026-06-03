@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useEnv } from '@/context/EnvContext';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useAppUrlIngress } from '@/hooks/useAppUrlIngress';
 import { useOpenWithBooks } from '@/hooks/useOpenWithBooks';
 import { useSettingsStore } from '@/store/settingsStore';
 import { tauriHandleSetAlwaysOnTop } from '@/utils/window';
@@ -15,6 +16,7 @@ export default function ReadPage() {
   const { appService } = useEnv();
   const { settings } = useSettingsStore();
 
+  useAppUrlIngress();
   useOpenWithBooks();
 
   useEffect(() => {
