@@ -44,6 +44,7 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
   const [shouldUploadBook, setShouldUploadBook] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
+  const [attachQr, setAttachQr] = useState(true);
   const [customHashtags, setCustomHashtags] = useState<string>('');
 
   // Style customization state
@@ -357,7 +358,7 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
 
       // Add QR code to iframe
       let finalImageUrl = imageUrl;
-      const iframe = iframeRef.current;
+      const iframe = attachQr && bookUploaded ? iframeRef.current : undefined;
       if (iframe && iframe.contentDocument) {
         const iframeBody = iframe.contentDocument.body;
         const qrSection = iframe.contentDocument.createElement('div');
@@ -432,7 +433,7 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
   return (
     <Dialog
       isOpen={isOpen}
-      title={_('Excerpt')}
+      title={_('Excerpt and Share')}
       onClose={onCancel}
       boxClassName='sm:!w-[75%] sm:h-auto sm:!max-h-[90vh] sm:!max-w-5xl'
       contentClassName='sm:!px-8 sm:!py-2'
@@ -577,23 +578,6 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
           )}
         </div>
 
-        {/* Hashtags Section */}
-        <div className='pt-4'>
-          <label className='text-sm font-medium text-base-content block mb-2'>
-            {_('Add Hashtags')}
-          </label>
-          <input
-            type='text'
-            placeholder={_('Add hashtags (space-separated)...')}
-            value={customHashtags}
-            onChange={(e) => setCustomHashtags(e.target.value)}
-            className='input input-sm input-bordered w-full'
-          />
-          <p className='text-xs text-base-content/60 mt-2'>
-            {_('Default')}: #booksky #readsky {customHashtags && `+ ${customHashtags.trim().split(/\s+/).filter(tag => tag.length > 0).map(tag => tag.startsWith('#') ? tag : `#${tag}`).join(' ')}`}
-          </p>
-        </div>
-
         {/* Upload Book Option */}
         <div className='pt-4'>
           <label className='flex items-center gap-3 cursor-pointer'>
@@ -610,6 +594,39 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
           </label>
           <p className='text-xs text-base-content/60 mt-1 ml-6'>
             {_('This will make your book discoverable in the Atmosphere')}
+          </p>
+        </div>
+
+        {/* Attach QRCode Option */}
+        <div className='pt-4'>
+          <label className='flex items-center gap-3 cursor-pointer'>
+            <input
+              type='checkbox'
+              checked={attachQr}
+              onChange={(e) => setAttachQr(e.target.checked)}
+              className='checkbox checkbox-xs'
+              disabled={isRendering}
+            />
+            <span className='text-sm font-medium text-base-content'>
+              {_('Attach QR Code on sharing')}
+            </span>
+          </label>
+        </div>
+
+        {/* Hashtags Section */}
+        <div className='pt-4'>
+          <label className='text-sm font-medium text-base-content block mb-2'>
+            {_('Add Hashtags')}
+          </label>
+          <input
+            type='text'
+            placeholder={_('Add hashtags (space-separated)...')}
+            value={customHashtags}
+            onChange={(e) => setCustomHashtags(e.target.value)}
+            className='input input-sm input-bordered w-full'
+          />
+          <p className='text-xs text-base-content/60 mt-2'>
+            {_('Default')}: #booksky #readsky {customHashtags && `+ ${customHashtags.trim().split(/\s+/).filter(tag => tag.length > 0).map(tag => tag.startsWith('#') ? tag : `#${tag}`).join(' ')}`}
           </p>
         </div>
 
