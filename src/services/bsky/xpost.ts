@@ -437,8 +437,8 @@ export async function postWithImageAndLink(
 
     // Construct post text with image and link using RichText
     const displayText = linkTitle
-      ? `${text}\n\n🔗 ${linkTitle}`
-      : `${text}\n\n${url}`;
+      ? `${text}\n📖 ${linkTitle}`
+      : `${text}\n${url}`;
 
     // Create RichText with link and hashtag facets
     const rt = new RichText({

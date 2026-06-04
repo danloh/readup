@@ -1,6 +1,7 @@
 import clsx from 'clsx';
 import React, { useState, useEffect, useRef } from 'react';
 import { toPng } from 'html-to-image';
+import QRCode from 'qrcode';
 
 import { Book } from '@/types/book';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -103,6 +104,12 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
             white-space: normal;
             font-size: 16px;
           }
+
+          .double-border {
+            border-width: 4px;
+            border-style: double;
+            border-color: ${hexToRgba(getContrastHex(styles.backgroundColor), 0.5)};
+          }
           
           .header {
             margin-bottom: 32px;
@@ -136,6 +143,23 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
             line-height: ${styles.lineHeight};
             color: ${styles.fontColor};
             letter-spacing: -0.3px;
+          }
+
+          .qr-code {
+            margin-top: 4px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 2px;
+          }
+          .qr-code img {
+            max-width: 64px;
+            max-height: 64px;
+          }
+          .qr-code span {
+            font-weight: bold;
+            font-size: 12px;
           }
           
           p {
@@ -174,22 +198,22 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
           }
         </style>
       </head>
-      <body>
+      <body class="double-border">
         <div class="header">
           <div class="book-title">${book.title}</div>
           <div class="book-meta">
             ${book.author 
-              ? `<div class="book-meta-item">${book.author}</div>`
+              ? `<div class="book-meta-item">© ${book.author}</div>`
               : ''
             }
             ${progress?.sectionLabel
               ? `<div class="book-meta-item">
-                  ${progress.sectionLabel}
+                  § ${progress.sectionLabel}
                 </div>`
               : ''
             }
             <div class="book-meta-item">
-              ${new Date().toLocaleDateString(lang, {
+              ๏ ${new Date().toLocaleDateString(lang, {
                 weekday: "long",
                 year: "numeric",
                 month: "long",
@@ -328,6 +352,43 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
         }
       }
 
+      // Generate QR code URL
+      const qrCodeImageUrl = await QRCode.toDataURL(shareUrl);
+
+      // Add QR code to iframe
+      let finalImageUrl = imageUrl;
+      const iframe = iframeRef.current;
+      if (iframe && iframe.contentDocument) {
+        const iframeBody = iframe.contentDocument.body;
+        const qrSection = iframe.contentDocument.createElement('div');
+        qrSection.className = 'qr-code';
+        qrSection.innerHTML = `<img src="${qrCodeImageUrl}" /><span>Readup.cc</span>`;
+        iframeBody.appendChild(qrSection);
+
+        // Wait for QR code image to load
+        await new Promise(resolve => {
+          const img = qrSection.querySelector('img') as HTMLImageElement;
+          if (img) {
+            img.onload = () => setTimeout(resolve, 100);
+            img.onerror = () => setTimeout(resolve, 100);
+          } else {
+            resolve(undefined);
+          }
+        });
+
+        // Regenerate image with QR code
+        const dataUrlWithQR = await toPng(iframeBody, {
+          cacheBust: true,
+          pixelRatio: 2,
+          backgroundColor: styles.backgroundColor,
+          quality: 0.95,
+        });
+        setImageUrl(dataUrlWithQR);
+
+        // Use the new image with QR code for sharing
+        finalImageUrl = dataUrlWithQR;
+      }
+
       const agent = await getAtpAgent();
       
       // Build hashtags
@@ -341,8 +402,8 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
       const allHashtags = tagsToAdd ? `${defaultHashtags} ${tagsToAdd}` : defaultHashtags;
 
       const resp = await postWithImageAndLink(agent, {
-        text: `Excerpt from book: ${book.title} ${allHashtags} \n`,
-        imageData: imageUrl,
+        text: `Excerpt from book: ${book.title} ${allHashtags}`,
+        imageData: finalImageUrl || imageUrl,
         altText: selection.text,
         url: shareUrl,
         linkTitle: bookUploaded ? 'Read the Book' : undefined
