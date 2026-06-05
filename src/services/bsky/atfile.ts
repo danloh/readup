@@ -51,7 +51,7 @@ export async function uploadFile(file: File, agent: AtpAgent): Promise<BlobRef| 
 
   const blobCid = blob.ref?.["$link"] ?? blob.ref;
   console.log(`✓ Blob uploaded: ${blobCid}`);
-  console.log("Blob structure:", JSON.stringify(blob, null, 2));
+  // console.log("Blob structure:", JSON.stringify(blob, null, 2));
 
   if (!blob) {
     console.error("Upload failed: no blob returned");
@@ -98,12 +98,12 @@ export async function xhrUploadFile(
 
       xhr.onload = () => {
         if (xhr.status >= 200 && xhr.status < 300) {
-          console.log("xhr upload resp: ", JSON.stringify(xhr.response, null, 2));
+          // console.log("xhr upload resp: ", JSON.stringify(xhr.response, null, 2));
           const resp: BlobResp = JSON.parse(xhr.responseText); 
           const blob = resp.blob;
           const blobCid = blob.ref?.["$link"] ?? blob.ref;
           console.log(`✓ Blob uploaded: ${blobCid}`);
-          console.log("Blob structure:", JSON.stringify(blob, null, 2));
+          // console.log("Blob structure:", JSON.stringify(blob, null, 2));
 
           if (!blob) {
             console.error("Upload failed: no blob returned");
@@ -141,7 +141,7 @@ export async function uploadBookFile(
   const agent = new AtpAgent({ service: `https://${usr.host}` });
   await agent.resumeSession(usr as AtpSessionData);
   
-  console.log("Agent: ", agent);
+  // console.log("Agent: ", agent);
   // upload cover
   // const coverBlob = coverFile ? await uploadFile(coverFile, agent) : undefined;
   const coverBlob = coverFile ? await xhrUploadFile(coverFile, usr, onProgress) : undefined;
@@ -189,8 +189,8 @@ export async function uploadBookFile(
     createdAt: new Date().toISOString(),
   };
 
-  console.log("Record data:", JSON.stringify(recordData, null, 2));
-  console.log(`Creating record in ${RBOOK_COLLECTION}...`);
+  // console.log("Record data:", JSON.stringify(recordData, null, 2));
+  // console.log(`Creating record in ${RBOOK_COLLECTION}...`);
   const createRes = await agent.com.atproto.repo.putRecord({
     repo: did,
     collection: RBOOK_COLLECTION,
@@ -198,8 +198,8 @@ export async function uploadBookFile(
     record: recordData,
   });
 
-  console.log("put record resp: ", createRes);
-  console.log(`✓ Record created: URI: ${createRes.data.uri} | CID: ${createRes.data.cid}`);
+  // console.log("put record resp: ", createRes);
+  // console.log(`✓ Record created: URI: ${createRes.data.uri} | CID: ${createRes.data.cid}`);
 
   return {
     success: createRes.success,

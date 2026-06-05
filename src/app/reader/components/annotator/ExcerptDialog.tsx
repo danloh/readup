@@ -337,8 +337,9 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
             timeout: 2000,
             type: 'warning',
           });
-          setIsUploading(false);
           return;
+        } finally {
+          setIsUploading(false);
         }
       }
 
@@ -366,16 +367,29 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
         qrSection.innerHTML = `<img src="${qrCodeImageUrl}" /><span>Readup.cc</span>`;
         iframeBody.appendChild(qrSection);
 
-        // Wait for QR code image to load
-        await new Promise(resolve => {
-          const img = qrSection.querySelector('img') as HTMLImageElement;
-          if (img) {
-            img.onload = () => setTimeout(resolve, 100);
-            img.onerror = () => setTimeout(resolve, 100);
-          } else {
-            resolve(undefined);
-          }
-        });
+        // Wait for QR code image to load with timeout (mobile browsers may not fire load events reliably)
+        await Promise.race([
+          new Promise<void>(resolve => {
+            const img = qrSection.querySelector('img') as HTMLImageElement;
+            if (img) {
+              const onLoad = () => {
+                img.removeEventListener('load', onLoad);
+                img.removeEventListener('error', onError);
+                setTimeout(resolve, 100);
+              };
+              const onError = () => {
+                img.removeEventListener('load', onLoad);
+                img.removeEventListener('error', onError);
+                setTimeout(resolve, 100); // Continue even if load fails
+              };
+              img.addEventListener('load', onLoad);
+              img.addEventListener('error', onError);
+            } else {
+              resolve();
+            }
+          }),
+          new Promise<void>(resolve => setTimeout(resolve, 800)) // Timeout after 800ms
+        ]);
 
         // Regenerate image with QR code
         const dataUrlWithQR = await toPng(iframeBody, {
@@ -425,7 +439,6 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
         type: 'error',
       });
     } finally {
-      setIsUploading(false);
       setIsSharing(false);
     }
   };
