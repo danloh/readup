@@ -169,7 +169,7 @@ const ReadLanding = () => {
             showManualOpen ? 'opacity-100' : 'pointer-events-none h-0 overflow-hidden opacity-0'
           }`}
         >
-          <a href={appUrl} className='btn btn-primary btn-block' rel='noopener'>
+          <a href={appUrl} className='btn btn-primary btn-block hidden' rel='noopener'>
             <IoBookOutline className='h-5 w-5' aria-hidden='true' />
             {_('Open in Readup app')}
           </a>
@@ -177,7 +177,7 @@ const ReadLanding = () => {
             <IoOpenOutline className='h-5 w-5' aria-hidden='true' />
             {_('Continue in browser')}
           </a>
-          <p className='text-base-content/60 mt-3 text-center text-xs'>
+          <p className='text-base-content/60 mt-3 text-center text-xs hidden'>
             {_("Don't have Readup?")}{' '}
             <a
               href={DOWNLOAD_READUP_URL}
