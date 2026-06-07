@@ -86,6 +86,7 @@ export interface AppService {
   isIOSApp: boolean;
   isMacOSApp: boolean;
   isLinuxApp: boolean;
+  isWindowsApp: boolean;
   isPortableApp: boolean;
   isDesktopApp: boolean;
   isAppImage: boolean;
@@ -113,10 +114,22 @@ export interface AppService {
   selectDirectory(mode: SelectDirectoryMode): Promise<string>;
   selectFiles(name: string, extensions: string[]): Promise<string[]>;
   readDirectory(path: string, base: BaseDir): Promise<FileItem[]>;
+  // Pass `null` for `content` when `options.filePath` already points to the
+  // file on disk you want to save/share — the native share path reads it
+  // directly instead of buffering an in-memory copy.
   saveFile(
     filename: string,
-    content: string | ArrayBuffer,
-    options?: { filePath?: string; mimeType?: string },
+    content: string | ArrayBuffer | null,
+    options?: {
+      filePath?: string;
+      mimeType?: string;
+      share?: boolean;
+      // Anchor point for the macOS / iPad share sheet. Coordinates are in
+      // CSS pixels of the WebView; the sharekit plugin maps them onto the
+      // native NSView. Without this, NSSharingServicePicker defaults to
+      // (0,0) of the WebView and pops at the top-left of the window.
+      sharePos?: { x: number; y: number; preferredEdge?: 'top' | 'bottom' | 'left' | 'right' };
+    },
   ): Promise<boolean>;
   /**
    * Best-effort: extend the Tauri `fs_scope` and `asset_protocol_scope`

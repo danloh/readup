@@ -1,7 +1,7 @@
 'use client';
 
 import { Suspense, useEffect, useState } from 'react';
-import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { IoAlertCircleOutline, IoBookOutline, IoOpenOutline } from 'react-icons/io5';
 import { DOWNLOAD_READUP_URL, READUP_WEB_BASE_URL } from '@/services/constants';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -38,25 +38,16 @@ const buildWebReaderUrl = (bookHash: string, did: string, cfi?: string): string 
   const params = new URLSearchParams();
   params.set('did', did);
   if (cfi) params.set('loc', cfi);
-  const query = did || cfi ? `?${params.toString()}` : '';
-  return `/read/${bookHash}${query}`; // FIXME
+  const query = `?${params.toString()}`;
+  return `/read/${bookHash}${query}`;
 };
 
+// QUERY:  (readup:|https:)//..share?id=&did=&nid=&loc=
 const ReadLanding = () => {
   const _ = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const pathname = usePathname();
   const [showManualOpen, setShowManualOpen] = useState(true);
-
-  // Resolve from (/bookhash?loc=&nid=&did=) 
-  // let bookHash = null;
-  // if (pathname) {
-  //   const segments = pathname.split('/').filter(Boolean);
-  //   if (segments[0] === 'read') {
-  //     bookHash = segments[1] ?? null;
-  //   }
-  // }
 
   const bookHash = searchParams?.get('id') ?? undefined;
   const noteId = searchParams?.get('nid') ?? undefined;
@@ -68,12 +59,9 @@ const ReadLanding = () => {
     const platform = detectPlatform();
     const appUrl = buildShareAppUrl({ bookHash, noteId, did, cfi });
     const webReaderUrl = buildWebReaderUrl(bookHash, did, cfi);
-    let path = `read/${bookHash}?t=deeplink`;
+    let path = `share?id=${bookHash}&did=${did}`; // FIXME, to buildIntentUrl
     if (noteId) {
       path += `&nid=${noteId}`;
-    }
-    if (did) {
-      path += `&did=${did}`;
     }
     if (cfi) {
       path += `&loc=${encodeURIComponent(cfi)}`;
@@ -121,7 +109,7 @@ const ReadLanding = () => {
       window.clearTimeout(desktopTimer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bookHash, noteId, cfi]);
+  }, [bookHash, did, noteId, cfi]);
 
   // Invalid link — missing book or did.
   if (!bookHash || !did) {
@@ -156,7 +144,7 @@ const ReadLanding = () => {
           subtitle={
             showManualOpen
               ? _("If Readup didn't open automatically, choose an option below:")
-              : _('Continue reading where you left off.')
+              : _('Continue reading...')
           }
           alt={_('Readup')}
         />

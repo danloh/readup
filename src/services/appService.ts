@@ -39,6 +39,7 @@ export abstract class BaseAppService implements AppService {
   isAppDataSandbox = false;
   isAndroidApp = false;
   isIOSApp = false;
+  isWindowsApp = false;
   isMobileApp = false;
   isPortableApp = false;
   isDesktopApp = false;
@@ -71,8 +72,13 @@ export abstract class BaseAppService implements AppService {
   abstract selectFiles(name: string, extensions: string[]): Promise<string[]>;
   abstract saveFile(
     filename: string,
-    content: string | ArrayBuffer,
-    options?: { filePath?: string; mimeType?: string },
+    content: string | ArrayBuffer | null,
+    options?: {
+      filePath?: string;
+      mimeType?: string;
+      share?: boolean;
+      sharePos?: { x: number; y: number; preferredEdge?: 'top' | 'bottom' | 'left' | 'right' };
+    },
   ): Promise<boolean>;
   abstract ask(message: string): Promise<boolean>;
 

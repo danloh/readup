@@ -1035,21 +1035,29 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
     setShowExportDialog(true);
   };
 
-  const handleConfirmExport = async (markdownContent: string, isPlainText: boolean) => {
+  const handleConfirmExport = async (
+    content: string,
+    isPlainText: boolean,
+    sharePos?: { x: number; y: number; preferredEdge?: 'top' | 'bottom' | 'left' | 'right' },
+  ) => {
     const { book } = bookData;
     if (!book) return;
 
     setTimeout(() => {
       // Delay to ensure it won't be overridden by system clipboard actions
-      void writeTextToClipboard(markdownContent);
+      void writeTextToClipboard(content);
     }, 100);
 
     const ext = isPlainText ? 'txt' : 'md';
     const mimeType = isPlainText ? 'text/plain' : 'text/markdown';
     const filename = `${makeSafeFilename(book.title)}.${ext}`;
-    const saved = await appService?.saveFile(
-      filename, markdownContent, { mimeType }
-    );
+    const saved = await appService?.saveFile(filename, content, {
+      mimeType,
+      share: true,
+      sharePos,
+    });
+
+    if (appService?.isMacOSApp) return;
     eventDispatcher.dispatch('toast', {
       type: 'info',
       message: saved ? _('Exported successfully') : _('Copied to clipboard'),

@@ -21,7 +21,11 @@ interface ExportMarkdownDialogProps {
   booknotes: BookNote[];
   booknoteGroups: { [href: string]: BooknoteGroup };
   onCancel: () => void;
-  onExport: (markdown: string, isPlainText: boolean) => void;
+  onExport: (
+    markdown: string,
+    isPlainText: boolean,
+    sharePos?: { x: number; y: number; preferredEdge?: 'top' | 'bottom' | 'left' | 'right' },
+  ) => void;
 }
 
 const ExportMarkdownDialog: React.FC<ExportMarkdownDialogProps> = ({
@@ -228,8 +232,19 @@ const ExportMarkdownDialog: React.FC<ExportMarkdownDialogProps> = ({
     }));
   };
 
-  const handleExport = () => {
-    onExport(markdownPreview, !!exportConfig.exportAsPlainText);
+  const handleExport = (e: React.MouseEvent<HTMLButtonElement>) => {
+    // Anchor the macOS / iPad share sheet to the Export button rect so
+    // NSSharingServicePicker doesn't fall back to the WebView's top-left.
+    // `preferredEdge: 'bottom'` maps to NSMinYEdge — in the flipped WKWebView
+    // coord space that's the rect's top edge, so the popover appears above
+    // the button regardless of whether there is room below it.
+    const rect = e.currentTarget.getBoundingClientRect();
+    const sharePosition = {
+      x: rect.left + rect.width / 2,
+      y: rect.top,
+      preferredEdge: 'bottom' as const,
+    };
+    onExport(markdownPreview, !!exportConfig.exportAsPlainText, sharePosition);
   };
 
   return (

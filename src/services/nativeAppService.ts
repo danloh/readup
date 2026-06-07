@@ -403,6 +403,7 @@ export class NativeAppService extends BaseAppService {
   override isMacOSApp = OS_TYPE === 'macos';
   override isLinuxApp = OS_TYPE === 'linux';
   override isMobileApp = ['android', 'ios'].includes(OS_TYPE);
+  override isWindowsApp = OS_TYPE === 'windows';
   override isDesktopApp = ['macos', 'windows', 'linux'].includes(OS_TYPE);
   override isAppImage = Boolean(window.__READUP_IS_APPIMAGE);
   override isEink = Boolean(window.__READUP_IS_EINK);
@@ -543,27 +544,64 @@ export class NativeAppService extends BaseAppService {
 
   async saveFile(
     filename: string,
-    content: string | ArrayBuffer,
-    options?: { filePath?: string; mimeType?: string },
+    content: string | ArrayBuffer | null,
+    options?: {
+      filePath?: string;
+      mimeType?: string;
+      share?: boolean;
+      sharePos?: { x: number; y: number; preferredEdge?: 'top' | 'bottom' | 'left' | 'right' };
+    },
   ): Promise<boolean> {
     try {
       const ext = filename.split('.').pop() || '';
-      if (this.isIOSApp && options?.filePath) {
-        await shareFile(options.filePath, {
-          mimeType: options?.mimeType || 'application/octet-stream',
-        });
-      } else {
-        const filePath = await saveDialog({
-          defaultPath: filename,
-          filters: [{ name: ext.toUpperCase(), extensions: [ext] }],
-        });
-        if (!filePath) return false;
-
-        if (typeof content === 'string') {
-          await writeTextFile(filePath, content);
-        } else {
-          await writeFile(filePath, new Uint8Array(content));
+      // Linux desktop has no system share sheet; Windows WebView2's native
+      // share UI (via tauri-plugin-sharekit) blocks the main thread waiting
+      // on complete/cancel callbacks that may never fire when the user
+      // dismisses the picker, freezing the app (issue #4343). Both fall
+      // through to saveDialog instead.
+      const wantShare = 
+        !this.isLinuxApp && !this.isWindowsApp && (this.isIOSApp || options?.share);
+      if (wantShare) {
+        let shareablePath = options?.filePath;
+        if (!shareablePath) {
+          shareablePath = await this.resolveFilePath(filename, 'Temp');
+          if (typeof content === 'string') {
+            await writeTextFile(shareablePath, content);
+          } else if (content) {
+            await writeFile(shareablePath, new Uint8Array(content));
+          }
         }
+        try {
+          await shareFile(shareablePath, {
+            mimeType: options?.mimeType || 'application/octet-stream',
+            // Anchor the macOS NSSharingServicePicker / iPad popover to
+            // the trigger button. Without this, the picker pops at the
+            // WebView's top-left corner.
+            ...(options?.sharePos ? { position: options.sharePos } : {}),
+          });
+        } catch (error) {
+          // The plugin throws on user cancellation (e.g. dismissing the
+          // Android share sheet returns "Share cancelled"). That's not a
+          // failure — the user explicitly chose not to share, so we must
+          // NOT fall back to saveDialog and pop a "Save As..." prompt.
+          // Same goes for any other share error: the caller asked for a
+          // share sheet, fulfilled or not, the saveDialog flow is a
+          // completely different user intent.
+          console.warn('shareFile did not complete:', error);
+        }
+        return true;
+      }
+
+      const filePath = await saveDialog({
+        defaultPath: filename,
+        filters: [{ name: ext.toUpperCase(), extensions: [ext] }],
+      });
+      if (!filePath) return false;
+
+      if (typeof content === 'string') {
+        await writeTextFile(filePath, content);
+      } else if (content) {
+        await writeFile(filePath, new Uint8Array(content));
       }
       return true;
     } catch (error) {
