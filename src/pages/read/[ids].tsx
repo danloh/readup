@@ -9,6 +9,7 @@ import { Book } from '@/types/book';
 import Reader from '@/app/read/components/Reader';
 import Spinner from '@/components/Spinner';
 import { BOOK_IDS_SEPARATOR } from '@/services/constants';
+import { loadSharedBook } from '@/libs/share';
 
 export default function Page() {
   const router = useRouter();
@@ -36,59 +37,33 @@ export default function Page() {
 
 const ReadPage: React.FC<{ ids: string; did: string; }> = ({ ids, did }) => {
   const [book, setBook] = useState<Book | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const { envConfig } = useEnv();
 
   // if did and ids, may need to download book from PDS
   useEffect(() => {
     const loadBookFromPDS = async () => {
+      if (!ids || !did) {
+        return;
+      }
+
+      const appService = await envConfig.getAppService();
+      if (!appService) {
+        return;
+      }
+
+      const primaryId = ids.split(BOOK_IDS_SEPARATOR).filter(Boolean)[0]?.trim();
+      if (!primaryId) {
+        return;
+      }
+
+      setIsLoading(true);
+
       try {
-        if (!ids || !did) {
-          console.error('Book ID and DID are required');
-          return;
-        }
-
-        const appService = await envConfig.getAppService();
-        if (!appService) {
-          console.error('App service is not initialized');
-          return;
-        }
-
-        setIsLoading(true);
-        
-        const primaryId = ids.split(BOOK_IDS_SEPARATOR).filter(Boolean)[0]?.trim();
-        if (!primaryId) {
-          console.error('No valid book id to load book');
-          return;
-        }
-
-        // check if any book(first) in library and available
-        const libraryBooks = await appService.loadLibraryBooks();
-        const existingBook = libraryBooks.find((b) => b.hash === primaryId);
-        const bookAvailable = existingBook && await appService.isBookAvailable(existingBook);
-        
-        if (bookAvailable) {
-          setBook(existingBook);
-          setIsLoading(false);
-          console.log(`Loading book locally: id=${primaryId}`);
-          return;
-        }
-
-        // Load book from PDS using hash (id) and DID
-        console.log(`Loading book from PDS: id=${primaryId}, did=${did}`);
-        const loadedBook = await appService.loadPdsBook(primaryId, did, libraryBooks);
-
-        if (!loadedBook) {
-          console.error('Failed to load book from PDS');
-          return;
-        }
-
-        // Save updated library with the new book
-        await appService.saveLibraryBooks(libraryBooks);
-
+        const loadedBook = await loadSharedBook({bookHash: primaryId, did, appService});
         setBook(loadedBook);
       } catch (err) {
-        console.error('Error loading PDS book:', err);
+        console.warn('Error loading PDS book:', err);
       } finally {
         setIsLoading(false);
       }
