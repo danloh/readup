@@ -428,7 +428,7 @@ export const UpdaterContent = ({
       <div className='flex w-full max-w-2xl flex-col gap-4'>
         <div className='flex flex-col justify-center gap-4 sm:flex-row sm:items-start'>
           <div className='flex items-center justify-center'>
-            <Image src='/icon.png' alt='Logo' className='h-20 w-20' width={64} height={64} />
+            <Image src='/favicon.svg' alt='Logo' className='h-20 w-20' width={64} height={64} />
           </div>
 
           {checkUpdate ? (

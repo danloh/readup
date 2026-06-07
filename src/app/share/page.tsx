@@ -6,9 +6,9 @@ import { IoAlertCircleOutline, IoBookOutline, IoOpenOutline } from 'react-icons/
 import { DOWNLOAD_READUP_URL, READUP_WEB_BASE_URL } from '@/services/constants';
 import { useTranslation } from '@/hooks/useTranslation';
 import { buildShareAppUrl } from '@/utils/deeplink';
-import { BrandHeader } from '@/components/landing/BrandHeader';
-import { Card } from '@/components/landing/Card';
-import { PageFooter } from '@/components/landing/PageFooter';
+import { BrandHeader } from '@/components/BrandHeader';
+import { Card } from '@/components/Card';
+import { PageFooter } from '@/components/PageFooter';
 
 type Platform = 'android-chromium' | 'android-other' | 'ios' | 'desktop' | 'unknown';
 

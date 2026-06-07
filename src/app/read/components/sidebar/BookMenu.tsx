@@ -124,9 +124,9 @@ const BookMenu: React.FC<BookMenuProps> = ({ menuClassName, setIsDropdownOpen })
         onClick={handleToggleSortTOC}
       />
       <MenuItem label={_('Proofread')} onClick={showProofreadRulesWindow} />
-      <MenuItem label={_('Reload Page')} shortcut='Shift+R' onClick={handleReloadPage} />
-      <hr aria-hidden='true' className='border-base-200 my-1' />
       <MenuItem label={_('Export Annotations')} onClick={handleExportAnnotations} />
+      <hr aria-hidden='true' className='border-base-200 my-1' />
+      <MenuItem label={_('Reload Page')} shortcut='Shift+R' onClick={handleReloadPage} />
     </Menu>
   );
 };
