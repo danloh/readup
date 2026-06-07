@@ -8,70 +8,79 @@ import { CSPostHogProvider } from '@/context/PHContext';
 import { Book } from '@/types/book';
 import Reader from '@/app/reader/components/Reader';
 import Spinner from '@/components/Spinner';
+import { BOOK_IDS_SEPARATOR } from '@/services/constants';
 
 export default function Page() {
   const router = useRouter();
-  const id = router.query['id'] as string;
+  const ids = router.query['ids'] as string;
   const searchParams = useSearchParams();
   const did = searchParams?.get('did') || '';
-  const loc = searchParams?.get('loc') || '';
-
-  useEffect(() => {
-    if (loc && id) {
-      localStorage.setItem(`loc-${id}`, decodeURIComponent(loc));
-    }
-  }, [id, loc]);
+  
+  // const loc = searchParams?.get('loc') || '';
+  // useEffect(() => {
+  //   if (loc && id) {
+  //     localStorage.setItem(`loc-${id}`, decodeURIComponent(loc));
+  //   }
+  // }, [id, loc]);
 
   return (
     <CSPostHogProvider>
       <EnvProvider>
         <AuthProvider>
-          <ReadPage id={id.trim()} did={did.trim()} />
+          <ReadPage ids={ids.trim()} did={did.trim()} />
         </AuthProvider>
       </EnvProvider>
     </CSPostHogProvider>
   );
 }
 
-const ReadPage: React.FC<{ id: string; did: string; }> = ({ id, did }) => {
+const ReadPage: React.FC<{ ids: string; did: string; }> = ({ ids, did }) => {
   const [book, setBook] = useState<Book | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const { envConfig } = useEnv();
 
+  // if did and ids, may need to download book from PDS
   useEffect(() => {
-    const loadBook = async () => {
+    const loadBookFromPDS = async () => {
       try {
-        if (!id || !did) {
-          throw new Error('Book ID and DID are required');
+        if (!ids || !did) {
+          console.error('Book ID and DID are required');
+          return;
         }
 
         const appService = await envConfig.getAppService();
         if (!appService) {
-          throw new Error('App service is not initialized');
+          console.error('App service is not initialized');
+          return;
         }
 
         setIsLoading(true);
-        setError(null);
+        
+        const primaryId = ids.split(BOOK_IDS_SEPARATOR).filter(Boolean)[0]?.trim();
+        if (!primaryId) {
+          console.error('No valid book id to load book');
+          return;
+        }
 
+        // check if any book(first) in library and available
         const libraryBooks = await appService.loadLibraryBooks();
-        // check if in library and available
-        const existingBook = libraryBooks.find((b) => b.hash === id);
+        const existingBook = libraryBooks.find((b) => b.hash === primaryId);
         const bookAvailable = existingBook && await appService.isBookAvailable(existingBook);
         
         if (bookAvailable) {
           setBook(existingBook);
           setIsLoading(false);
-          console.log(`Loading book locally: id=${id}, did=${did}`);
+          console.log(`Loading book locally: id=${primaryId}`);
           return;
         }
 
         // Load book from PDS using hash (id) and DID
-        console.log(`Loading book from PDS: id=${id}, did=${did}`);
-        const loadedBook = await appService.loadPdsBook(id, did, libraryBooks);
+        console.log(`Loading book from PDS: id=${primaryId}, did=${did}`);
+        const loadedBook = await appService.loadPdsBook(primaryId, did, libraryBooks);
 
         if (!loadedBook) {
-          throw new Error('Failed to load book from PDS');
+          console.error('Failed to load book from PDS');
+          return;
         }
 
         // Save updated library with the new book
@@ -79,42 +88,24 @@ const ReadPage: React.FC<{ id: string; did: string; }> = ({ id, did }) => {
 
         setBook(loadedBook);
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to load book';
         console.error('Error loading PDS book:', err);
-        setError(errorMessage);
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadBook();
-  }, [id, did, envConfig]);
-
-  if (!id || !did) {
-    return (
-      <div className='full-height'>
-        <p>No Book ID or DID provided</p>
-      </div>
-    );
-  }
+    loadBookFromPDS();
+  }, [ids, did, envConfig]);
 
   if (isLoading) {
     return (
       <div className='fixed inset-0 z-40 flex items-center justify-center'>
-        <Spinner loading text={'Loading book from PDS...'} />
+        <Spinner loading text={'Loading Book...'} />
       </div>
     );
   }
 
-  if (error) {
-    return (
-      <div className='full-height'>
-        <p>Error on loading book: {error}</p>
-      </div>
-    );
-  }
-
-  if (!book) {
+  if (did && !book) {
     return (
       <div className='full-height'>
         <p>Book not found</p>
@@ -122,5 +113,5 @@ const ReadPage: React.FC<{ id: string; did: string; }> = ({ id, did }) => {
     );
   }
 
-  return <Reader ids={id} />;
+  return <Reader ids={ids} />;
 }

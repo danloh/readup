@@ -1,6 +1,7 @@
 import { BookMetadata } from '@/libs/document';
-import { AnnotationToolType } from './annotator';
 import { TTSMediaMetadataMode } from '@/services/tts';
+import { ShareLinkType } from '@/utils/deeplink';
+import { AnnotationToolType } from './annotator';
 
 export type BookFormat =
   'EPUB' | 'PDF' | 'MOBI' | 'AZW'| 'AZW3' | 'CBZ' | 'FB2'| 'FBZ' | 'TXT' | 'MD';
@@ -284,6 +285,7 @@ export interface NoteExportConfig {
   includePageNumber: boolean;
   includeTimestamp: boolean;
   includeChapterSeparator: boolean;
+  linkType: ShareLinkType;
   noteSeparator: string;
   useCustomTemplate: boolean;
   customTemplate: string;

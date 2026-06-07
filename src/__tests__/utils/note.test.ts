@@ -518,6 +518,45 @@ describe('renderNoteTemplate', () => {
     });
   });
 
+  describe('Annotation link variants', () => {
+    const linkData: NoteTemplateData = {
+      title: 'Book',
+      author: 'Author',
+      exportDate: '2024-01-15',
+      chapters: [
+        {
+          title: 'Ch1',
+          annotations: [
+            {
+              text: 'quote',
+              webLink: 'https://readup.cc/share?id=abc&nid=n1',
+              appLink: 'readup://book?id=abc&nid=n1',
+              link: 'https://readup.cc/share?id=abc&nid=n1',
+            },
+          ],
+        },
+      ],
+    };
+
+    it('should render annotation.webLink', () => {
+      const template = '{{ chapters[0].annotations[0].webLink }}';
+      const result = renderNoteTemplate(template, linkData);
+      expect(result).toBe('https://readup.cc/share?id=abc&nid=n1');
+    });
+
+    it('should render annotation.appLink with readup:// scheme', () => {
+      const template = '{{ chapters[0].annotations[0].appLink }}';
+      const result = renderNoteTemplate(template, linkData);
+      expect(result).toBe('readup://book?id=abc&nid=n1');
+    });
+
+    it('should still render legacy annotation.link', () => {
+      const template = '{{ chapters[0].annotations[0].link }}';
+      const result = renderNoteTemplate(template, linkData);
+      expect(result).toBe('https://readup.cc/share?id=abc&nid=n1');
+    });
+  });
+
   describe('Whitespace handling', () => {
     it('should trim blocks correctly', () => {
       const template = `Start

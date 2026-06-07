@@ -4,7 +4,7 @@ import { GrSystem } from "react-icons/gr";
 import { MdZoomOut, MdZoomIn, MdSync, MdSyncProblem } from 'react-icons/md';
 import { PiScrollLight, PiBookOpenLight, PiParagraphFill } from "react-icons/pi";
 import { BiCheckboxChecked, BiCheckbox, BiMoon, BiSun } from "react-icons/bi";
-import { IoMdExpand } from 'react-icons/io';
+import { IoMdExpand, IoMdShare } from 'react-icons/io';
 import { TbArrowAutofitWidth, TbColumns1, TbColumns2 } from 'react-icons/tb';
 
 import { MAX_ZOOM_LEVEL, MIN_ZOOM_LEVEL, ZOOM_STEP } from '@/services/constants';
@@ -23,6 +23,7 @@ import { getMaxInlineSize } from '@/utils/config';
 import { tauriHandleToggleFullScreen } from '@/utils/window';
 import { saveViewSettings } from '@/helpers/settings';
 import { formatLocaleDateTime } from '@/utils/book';
+import { writeTextToClipboard } from '@/utils/clipboard';
 
 interface ViewMenuProps {
   bookKey: string;
@@ -37,7 +38,7 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
   const { user } = useAuth();
   const { envConfig, appService } = useEnv();
   const { getBookData } = useBookDataStore();
-  const { getView, getViewSettings, setViewSettings } = useReaderStore();
+  const { getView, getViewSettings, getProgress, setViewSettings } = useReaderStore();
   const bookData = getBookData(bookKey)!;
   const viewSettings = getViewSettings(bookKey)!;
 
@@ -89,6 +90,71 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
   const handleStartRSVP = () => {
     setIsDropdownOpen?.(false);
     eventDispatcher.dispatch('rsvp-start', { bookKey });
+  };
+
+  const handleShare = async () => {
+    setIsDropdownOpen?.(false);
+    const book = bookData?.book;
+    if (!book) return;
+    
+    if (!user) {
+      eventDispatcher.dispatch('toast', {
+        message: _('Sign in to share book'),
+        timeout: 2000,
+        type: 'warning',
+      });
+      return;
+    }
+
+    let bookUploaded = !!book.uploadedAt;
+    // upload book to PDS for sharing
+    if (!bookUploaded && appService) {
+      eventDispatcher.dispatch('toast', {
+        message: 'Uploading book to PDS...',
+        timeout: 1000,
+        type: 'info',
+      });
+      try {
+        await appService.uploadBook(book, false);
+        eventDispatcher.dispatch('toast', {
+          message: 'Book uploaded successfully',
+          timeout: 1000,
+          type: 'info',
+        });
+        bookUploaded = true;
+      } catch (uploadError) {
+        console.error('Failed to upload book:', uploadError);
+        eventDispatcher.dispatch('toast', {
+          message: `Failed to upload book: ${uploadError}`,
+          timeout: 2000,
+          type: 'warning',
+        });
+        return;
+      }
+    }
+
+    if (bookUploaded) {
+      // build share url
+      const progress = getProgress(bookKey);
+      const loc = progress?.location;
+      const shareUrl = loc 
+        ? `https://readup.cc/share?id=${book.hash}&did=${user.did}&loc=${encodeURIComponent(loc)}`
+        : `https://readup.cc/share?id=${book.hash}&did=${user.did}`;
+      
+      // copy the shareUrl
+      void writeTextToClipboard(shareUrl);
+      eventDispatcher.dispatch('toast', {
+        message: _('You hare copied the link, share it to share the book'),
+        timeout: 5000,
+        type: 'info',
+      });
+    } else {
+      eventDispatcher.dispatch('toast', {
+        message: 'Cannot share the book',
+        timeout: 2000,
+        type: 'warning',
+      });
+    }
   };
 
   useEffect(() => {
@@ -309,6 +375,8 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
           onClick={() => setApplyThemeToPDF(!applyThemeToPDF)}
         />
       )}
+      <hr aria-hidden='true' className='border-base-300 my-1' />
+      <MenuItem label={_('Share Book')} Icon={IoMdShare} onClick={handleShare} />
       <hr aria-hidden='true' className='border-base-200 my-1' />
       <MenuItem
         label={

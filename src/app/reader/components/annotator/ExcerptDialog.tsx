@@ -347,11 +347,9 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
       let shareUrl = 'https://readup.cc';
       if (bookUploaded) {
         const loc = selection.cfi || selection.href;
-        if (loc) {
-          shareUrl = `https://readup.cc/read/${book.hash}?did=${user.did}&loc=${encodeURIComponent(loc)}`;
-        } else {
-          shareUrl = `https://readup.cc/read/${book.hash}?did=${user.did}`;
-        }
+        shareUrl = loc
+          ? `https://readup.cc/read/${book.hash}?did=${user.did}&loc=${encodeURIComponent(loc)}`
+          : `https://readup.cc/read/${book.hash}?did=${user.did}`;
       }
 
       // Generate QR code URL
@@ -367,7 +365,7 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
         qrSection.innerHTML = `<img src="${qrCodeImageUrl}" /><span>Readup.cc</span>`;
         iframeBody.appendChild(qrSection);
 
-        // Wait for QR code image to load with timeout (mobile browsers may not fire load events reliably)
+        // Wait for QR code image to load and render
         await Promise.race([
           new Promise<void>(resolve => {
             const img = qrSection.querySelector('img') as HTMLImageElement;
@@ -375,21 +373,29 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
               const onLoad = () => {
                 img.removeEventListener('load', onLoad);
                 img.removeEventListener('error', onError);
-                setTimeout(resolve, 100);
+                setTimeout(resolve, 500); // Wait after load to ensure rendering
               };
               const onError = () => {
                 img.removeEventListener('load', onLoad);
                 img.removeEventListener('error', onError);
-                setTimeout(resolve, 100); // Continue even if load fails
+                setTimeout(resolve, 500);
               };
-              img.addEventListener('load', onLoad);
-              img.addEventListener('error', onError);
+              img.addEventListener('load', onLoad, { once: true });
+              img.addEventListener('error', onError, { once: true });
+              
+              // Check if already loaded (cached)
+              if (img.complete) {
+                onLoad();
+              }
             } else {
               resolve();
             }
           }),
-          new Promise<void>(resolve => setTimeout(resolve, 800)) // Timeout after 800ms
+          new Promise<void>(resolve => setTimeout(resolve, 1000)) // Timeout after 1s
         ]);
+
+        // Additional wait to ensure mobile browsers have rendered
+        await new Promise(resolve => setTimeout(resolve, 200));
 
         // Regenerate image with QR code
         const dataUrlWithQR = await toPng(iframeBody, {

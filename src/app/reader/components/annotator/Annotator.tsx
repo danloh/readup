@@ -1035,7 +1035,7 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
     setShowExportDialog(true);
   };
 
-  const handleConfirmExport = async (markdownContent: string) => {
+  const handleConfirmExport = async (markdownContent: string, isPlainText: boolean) => {
     const { book } = bookData;
     if (!book) return;
 
@@ -1044,18 +1044,17 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
       void writeTextToClipboard(markdownContent);
     }, 100);
 
-    const filename = `${makeSafeFilename(book.title)}.md`;
+    const ext = isPlainText ? 'txt' : 'md';
+    const mimeType = isPlainText ? 'text/plain' : 'text/markdown';
+    const filename = `${makeSafeFilename(book.title)}.${ext}`;
     const saved = await appService?.saveFile(
-      filename, markdownContent, { mimeType: 'text/markdown' }
+      filename, markdownContent, { mimeType }
     );
     eventDispatcher.dispatch('toast', {
       type: 'info',
       message: saved ? _('Exported successfully') : _('Copied to clipboard'),
       timeout: 2000,
     });
-
-    setShowExportDialog(false);
-    setExportData(null);
   };
 
   const handleCancelExport = () => {
@@ -1254,6 +1253,7 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
         <ExportMarkdownDialog
           bookKey={bookKey}
           isOpen={showExportDialog}
+          bookHash={bookData.book.hash}
           bookTitle={bookData.book.title}
           bookAuthor={bookData.book.author || ''}
           booknotes={exportData.booknotes}

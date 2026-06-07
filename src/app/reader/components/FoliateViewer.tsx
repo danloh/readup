@@ -1,6 +1,9 @@
 import clsx from 'clsx';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+
 import { BookDoc, convertBlobUrlToDataUrl, getDirection } from '@/libs/document';
+import { BOOK_IDS_SEPARATOR } from '@/services/constants';
 import { BookConfig, BookNote, PageInfo } from '@/types/book';
 import { FoliateView, wrappedFoliateView } from '@/types/view';
 import { Insets } from '@/types/misc';
@@ -78,6 +81,7 @@ const FoliateViewer: React.FC<{
   contentInsets: Insets;
 }> = ({ bookKey, bookDoc, config, gridInsets, contentInsets: insets }) => {
   const _ = useTranslation();
+  const searchParams = useSearchParams();
   const { getView, setView: setFoliateView, setViewInited, setProgress } = useReaderStore();
   const { getProgress, getViewState, getViewSettings, setViewSettings } = useReaderStore();
   const setPreviewMode = useReaderStore((s) => s.setPreviewMode);
@@ -536,21 +540,36 @@ const FoliateViewer: React.FC<{
       }
       applyMarginAndGap();
 
-      const locKey = `loc-${bookKey.split('-')[0]!}`;
-      const storedLoc = localStorage.getItem(locKey);
-      const lastLocation = storedLoc || config.location;
+      // const locKey = `loc-${bookKey.split('-')[0]!}`;
+      // const storedLoc = localStorage.getItem(locKey);
+      // const lastLocation0 = storedLoc || config.location;
+
+      // If the URL carries ?cfi=... (e.g. opened from a deep link / annotation
+      // export link), use it as the initial location instead of the saved one.
+      // Only applies to the primary book — first id in the route's `ids` —
+      // so parallel views don't all jump to the same CFI.
+      const cfiParam = searchParams?.get('loc');
+      const idsParam =
+        searchParams?.get('ids') ?? window.location.pathname.split('/reader/')[1] ?? '';
+      const primaryId = idsParam.split(BOOK_IDS_SEPARATOR).filter(Boolean)[0]?.trim();
+      const thisId = bookKey.split('-')[0];
+      const overrideLocation = cfiParam && primaryId === thisId 
+        ? decodeURIComponent(cfiParam) 
+        : null;
+
+      const lastLocation = overrideLocation ?? config.location;
       
       if (lastLocation) {
         await view.init({ lastLocation });
-        if (storedLoc) {
+        if (overrideLocation) {
           // Highlight the text located by storedLoc
           try {
             const now = Date.now();
             const highlightLoc: BookNote = {
               id: `read-loc-temp-${now}`,
-              cfi: storedLoc,
+              cfi: overrideLocation,
               type: 'annotation',
-              style: 'highlight',
+              style: 'squiggly',
               color: 'green',
               note: '',
               createdAt: now,
@@ -558,9 +577,9 @@ const FoliateViewer: React.FC<{
             };
             view.addAnnotation(highlightLoc);
           } catch (err) {
-            console.warn('Failed to highlight stored location', { storedLoc, error: err });
+            console.warn('Failed to highlight location', { overrideLocation, error: err });
           }
-          localStorage.removeItem(locKey);
+          // localStorage.removeItem(locKey);
         }
       } else {
         await view.goToFraction(0);
@@ -568,13 +587,12 @@ const FoliateViewer: React.FC<{
       setViewInited(bookKey, true);
 
       // The reader is showing a deep-link target, not the user's actual reading
-      // position. Mark the view as a preview so progress writers (auto-save,
-      // cloud sync, kosync) skip until the user takes a reading action. The
+      // position. Mark the view as a preview so progress writers (auto-save) skip until the user takes a reading action. The
       // flag clears on the first user-initiated relocate (page / scroll) in
       // docRelocateHandler below.
-      // if (overrideLocation) {
-      //   setPreviewMode(bookKey, true);
-      // }
+      if (overrideLocation) {
+        setPreviewMode(bookKey, true);
+      }
     };
 
     openBook();

@@ -46,7 +46,7 @@ interface SharedIntentPayload {
  *
  * Existing consumers:
  *   - `useOpenWithBooks`        — file imports
- *   - `useOpenAnnotationLink`   — annotation deep links
+ *   - `useOpenShareLink`        — share deep links, including annotation deep links
  *
  * Cold-start URLs (`getCurrent()`) are intentionally NOT read here. Cold-
  * start handling is consumer-specific (a launching file goes through the

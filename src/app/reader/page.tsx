@@ -5,6 +5,7 @@ import { useEnv } from '@/context/EnvContext';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAppUrlIngress } from '@/hooks/useAppUrlIngress';
 import { useOpenWithBooks } from '@/hooks/useOpenWithBooks';
+import { useOpenShareLink } from '@/hooks/useOpenShareLink';
 import { useSettingsStore } from '@/store/settingsStore';
 import { tauriHandleSetAlwaysOnTop } from '@/utils/window';
 import { checkForAppUpdates, checkAppReleaseNotes } from '@/helpers/updater';
@@ -18,6 +19,7 @@ export default function ReadPage() {
 
   useAppUrlIngress();
   useOpenWithBooks();
+  useOpenShareLink();
 
   useEffect(() => {
     const doCheckAppUpdates = async () => {

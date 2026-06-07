@@ -35,6 +35,7 @@ import { useUICSS } from '@/hooks/useUICSS';
 import { SelectedFile, useFileSelector } from '@/hooks/useFileSelector';
 import { useAppUrlIngress } from '@/hooks/useAppUrlIngress';
 import { useOpenWithBooks } from '@/hooks/useOpenWithBooks';
+import { useOpenShareLink } from '@/hooks/useOpenShareLink';
 import useShortcuts from '@/hooks/useShortcuts';
 import { useTransferQueue } from '@/hooks/useTransferQueue';
 import { useAppRouter } from '@/hooks/useAppRouter';
@@ -175,6 +176,7 @@ const LibraryPageContent = (
 
   useAppUrlIngress();
   useOpenWithBooks();
+  useOpenShareLink();
   useTransferQueue(libraryLoaded);
 
   const { isDragging } = useDragDropImport();

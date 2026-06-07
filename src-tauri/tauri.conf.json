@@ -158,7 +158,10 @@
       ]
     },
     "deep-link": {
-      "mobile": [{ "host": "readup.cc" }],
+      "mobile": [
+        { "scheme": ["https"], "host": "readup.cc", "appLink": true },
+        { "scheme": ["readup"], "appLink": false }
+      ],
       "desktop": {
         "schemes": ["readup"]
       }
