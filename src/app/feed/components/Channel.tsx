@@ -139,7 +139,7 @@ function ArticleList(props: ListProps) {
       // Navigate to reader with the EPUB
       setTimeout(() => {
         console.log('Navigating to reader with book hash:', book.hash);
-        router.push(`/reader/${book.hash}`);
+        router.push(`/read/${book.hash}`);
       }, 500);
     } catch (error) {
       console.error('Failed to export to EPUB:', error);

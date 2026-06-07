@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, cleanup, fireEvent } from '@testing-library/react';
 
-import ImageViewer from '@/app/reader/components/ImageViewer';
+import ImageViewer from '@/app/read/components/ImageViewer';
 
 vi.mock('@/hooks/useTranslation', () => ({
   useTranslation: () => (s: string) => s,
@@ -13,7 +13,7 @@ vi.mock('@/hooks/useKeyDownActions', () => ({
 }));
 
 // ZoomControls reaches into the theme store and Tauri window APIs; stub it out.
-vi.mock('@/app/reader/components/ZoomControls', () => ({
+vi.mock('@/app/read/components/ZoomControls', () => ({
   __esModule: true,
   default: () => null,
 }));

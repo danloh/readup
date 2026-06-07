@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
 import { EnvProvider } from '@/context/EnvContext';
-import ProofreadPopup from '@/app/reader/components/annotator/ProofreadPopup';
+import ProofreadPopup from '@/app/read/components/annotator/ProofreadPopup';
 
 vi.mock('@/services/environment', async () => {
   const actual = await vi.importActual('@/services/environment');

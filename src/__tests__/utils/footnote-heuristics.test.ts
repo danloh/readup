@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { shouldCheckAsFootnote } from '@/app/reader/utils/footnoteHeuristics';
+import { shouldCheckAsFootnote } from '@/app/read/utils/footnoteHeuristics';
 
 const parseHtml = (html: string) => {
   const doc = new DOMParser().parseFromString(html, 'text/html');

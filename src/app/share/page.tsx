@@ -39,7 +39,7 @@ const buildWebReaderUrl = (bookHash: string, did: string, cfi?: string): string 
   params.set('did', did);
   if (cfi) params.set('loc', cfi);
   const query = did || cfi ? `?${params.toString()}` : '';
-  return `/reader/${bookHash}${query}`; // FIXME
+  return `/read/${bookHash}${query}`; // FIXME
 };
 
 const ReadLanding = () => {

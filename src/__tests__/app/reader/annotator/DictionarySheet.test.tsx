@@ -216,7 +216,7 @@ const buildExactProvider = (storedHeadword: string): DictionaryProvider => {
 // Sheet harness
 // ---------------------------------------------------------------------------
 
-import DictionarySheet from '@/app/reader/components/annotator/DictionarySheet';
+import DictionarySheet from '@/app/read/components/annotator/DictionarySheet';
 
 const renderSheet = (
   props: Partial<{

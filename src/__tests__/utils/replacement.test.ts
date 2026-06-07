@@ -75,8 +75,8 @@ vi.mock('@/store/bookDataStore', () => {
   return { useBookDataStore: fn };
 });
 
-import { proofreadTransformer } from '@/app/reader/transformers/proofread';
-import { TransformContext } from '@/app/reader/transformers/types';
+import { proofreadTransformer } from '@/app/read/transformers/proofread';
+import { TransformContext } from '@/app/read/transformers/types';
 import { ViewSettings, ProofreadRule } from '@/types/book';
 import { validateReplacementRulePattern } from '@/store/proofreadStore';
 

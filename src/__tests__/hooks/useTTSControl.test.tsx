@@ -187,7 +187,7 @@ vi.mock('@/utils/ttsTime', () => ({
   }),
 }));
 
-vi.mock('@/app/reader/hooks/useTTSMediaSession', () => ({
+vi.mock('@/app/read/hooks/useTTSMediaSession', () => ({
   useTTSMediaSession: () => ({
     mediaSessionRef: { current: null },
     unblockAudio: vi.fn(),
@@ -198,7 +198,7 @@ vi.mock('@/app/reader/hooks/useTTSMediaSession', () => ({
 }));
 
 // Imports must come AFTER vi.mock calls so they pick up the mocked modules.
-import { useTTSControl } from '@/app/reader/hooks/useTTSControl';
+import { useTTSControl } from '@/app/read/hooks/useTTSControl';
 import { eventDispatcher } from '@/utils/event';
 
 const Harness = () => {

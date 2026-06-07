@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render } from '@testing-library/react';
-import Ribbon from '@/app/reader/components/Ribbon';
+import Ribbon from '@/app/read/components/Ribbon';
 
 vi.mock('@/store/themeStore', () => ({
   useThemeStore: () => ({ safeAreaInsets: { top: 48, right: 0, bottom: 0, left: 0 } }),

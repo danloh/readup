@@ -89,17 +89,17 @@ beforeEach(() => {
 
 // ── Tests ────────────────────────────────────────────────────────────
 describe('navigateToReader', () => {
-  test('navigates to /reader with ids param for non-web platform', () => {
+  test('navigates to /read with ids param for non-web platform', () => {
     const router = mockRouter();
     navigateToReader(router, ['book1', 'book2']);
 
     expect(router.push).toHaveBeenCalledTimes(1);
     const url = router.push.mock.calls[0]![0] as string;
-    expect(url).toContain('/reader?');
+    expect(url).toContain('/read?');
     expect(url).toContain('ids=book1%2Bbook2');
   });
 
-  test('navigates to /reader/id for web platform (non-PWA)', () => {
+  test('navigates to /read/id for web platform (non-PWA)', () => {
     vi.mocked(isWebAppPlatform).mockReturnValue(true);
     vi.mocked(isPWA).mockReturnValue(false);
 
@@ -107,7 +107,7 @@ describe('navigateToReader', () => {
     navigateToReader(router, ['book1']);
 
     const url = router.push.mock.calls[0]![0] as string;
-    expect(url).toBe('/reader/book1');
+    expect(url).toBe('/read/book1');
   });
 
   test('web platform with PWA uses query param format', () => {
@@ -118,7 +118,7 @@ describe('navigateToReader', () => {
     navigateToReader(router, ['book1']);
 
     const url = router.push.mock.calls[0]![0] as string;
-    expect(url).toContain('/reader?');
+    expect(url).toContain('/read?');
     expect(url).toContain('ids=book1');
   });
 
@@ -147,14 +147,14 @@ describe('navigateToReader', () => {
     navigateToReader(router, ['book1'], 'view=scroll');
 
     const url = router.push.mock.calls[0]![0] as string;
-    expect(url).toBe('/reader/book1?view=scroll');
+    expect(url).toBe('/read/book1?view=scroll');
   });
 
   test('passes navOptions through', () => {
     const router = mockRouter();
     navigateToReader(router, ['book1'], undefined, { scroll: false });
 
-    expect(router.push).toHaveBeenCalledWith(expect.stringContaining('/reader'), { scroll: false });
+    expect(router.push).toHaveBeenCalledWith(expect.stringContaining('/read'), { scroll: false });
   });
 });
 
@@ -260,7 +260,7 @@ describe('showReaderWindow', () => {
     expect(WebviewWindow).toHaveBeenCalled();
     const constructorCall = vi.mocked(WebviewWindow).mock.calls[0]!;
     const url = constructorCall[1]!.url as string;
-    expect(url).toContain('/reader?');
+    expect(url).toContain('/read?');
     expect(url).toContain('ids=book1%2Bbook2');
   });
 

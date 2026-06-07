@@ -2,7 +2,7 @@ import { useRouter } from 'next/router';
 import { AuthProvider } from '@/context/AuthContext';
 import { EnvProvider } from '@/context/EnvContext';
 import { CSPostHogProvider } from '@/context/PHContext';
-import Reader from '@/app/reader/components/Reader';
+import Reader from '@/app/read/components/Reader';
 
 export default function Page() {
   const router = useRouter();

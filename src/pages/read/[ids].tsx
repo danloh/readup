@@ -6,7 +6,7 @@ import { AuthProvider } from '@/context/AuthContext';
 import { EnvProvider, useEnv } from '@/context/EnvContext';
 import { CSPostHogProvider } from '@/context/PHContext';
 import { Book } from '@/types/book';
-import Reader from '@/app/reader/components/Reader';
+import Reader from '@/app/read/components/Reader';
 import Spinner from '@/components/Spinner';
 import { BOOK_IDS_SEPARATOR } from '@/services/constants';
 

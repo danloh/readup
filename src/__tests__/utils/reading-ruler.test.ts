@@ -12,7 +12,7 @@ import {
   snapReadingRulerColumns,
   snapReadingRulerToLines,
   stepReadingRulerPosition,
-} from '@/app/reader/utils/readingRuler';
+} from '@/app/read/utils/readingRuler';
 
 describe('readingRuler utils', () => {
   it('calculates fixed-layout ruler size from the configured line count', () => {

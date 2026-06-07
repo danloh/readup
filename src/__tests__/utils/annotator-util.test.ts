@@ -3,7 +3,7 @@ import {
   getExternalDragHandle,
   removeBookNoteOverlays,
   toParentViewportPoint,
-} from '@/app/reader/utils/annotatorUtil';
+} from '@/app/read/utils/annotatorUtil';
 import { Point } from '@/utils/sel';
 import { BookNote } from '@/types/book';
 import { FoliateView, NOTE_PREFIX } from '@/types/view';

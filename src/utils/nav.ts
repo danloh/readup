@@ -42,7 +42,7 @@ export const showReaderWindow = (appService: AppService, bookIds: string[]) => {
   const ids = bookIds.join(BOOK_IDS_SEPARATOR);
   const params = new URLSearchParams('');
   params.set('ids', ids);
-  const url = `/reader?${params.toString()}`;
+  const url = `/read?${params.toString()}`;
   createReaderWindow(appService, url);
 };
 
@@ -94,11 +94,11 @@ export const navigateToReader = (
 ) => {
   const ids = bookIds.join(BOOK_IDS_SEPARATOR);
   if (isWebAppPlatform() && !isPWA()) {
-    router.push(`/reader/${ids}${queryParams ? `?${queryParams}` : ''}`, navOptions);
+    router.push(`/read/${ids}${queryParams ? `?${queryParams}` : ''}`, navOptions);
   } else {
     const params = new URLSearchParams(queryParams || '');
     params.set('ids', ids);
-    router.push(`/reader?${params.toString()}`, navOptions);
+    router.push(`/read?${params.toString()}`, navOptions);
   }
 };
 

@@ -6,8 +6,8 @@ import { vi } from 'vitest';
 import {
   ProofreadRulesManager,
   setProofreadRulesVisibility,
-} from '@/app/reader/components/ProofreadRules';
-import BookMenu from '@/app/reader/components/sidebar/BookMenu';
+} from '@/app/read/components/ProofreadRules';
+import BookMenu from '@/app/read/components/sidebar/BookMenu';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useReaderStore } from '@/store/readerStore';
 import { useSidebarStore } from '@/store/sidebarStore';

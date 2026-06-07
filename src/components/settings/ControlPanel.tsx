@@ -12,7 +12,7 @@ import { getStyles } from '@/styles/style';
 import { RELOAD_BEFORE_SAVED_TIMEOUT_MS } from '@/services/constants';
 import { getMaxInlineSize } from '@/utils/config';
 import { saveSysSettings, saveViewSettings } from '@/helpers/settings';
-import { annotationToolQuickActions } from '@/app/reader/components/annotator/AnnotationTools';
+import { annotationToolQuickActions } from '@/app/read/components/annotator/AnnotationTools';
 import { SettingsPanelPanelProp } from './SettingsDialog';
 import NumberInput from './NumberInput';
 import { BoxedList, SettingsRow, SettingsSelect, SettingsSwitchRow } from './primitives';

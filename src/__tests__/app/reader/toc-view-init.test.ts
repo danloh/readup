@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import type { TOCItem } from '@/libs/document';
-import { computeExpandedSet, getItemIdentifier } from '@/app/reader/components/sidebar/tocTree';
+import { computeExpandedSet, getItemIdentifier } from '@/app/read/components/sidebar/tocTree';
 
 // Mirrors useFlattenedTOC logic in TOCView.tsx
 const flattenTOC = (items: TOCItem[], expandedItems: Set<string>, depth = 0): TOCItem[] => {

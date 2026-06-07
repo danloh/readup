@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { createWheelGestureDetector, WheelSample } from '@/app/reader/utils/wheelGesture';
+import { createWheelGestureDetector, WheelSample } from '@/app/read/utils/wheelGesture';
 
 const sample = (over: Partial<WheelSample> & Pick<WheelSample, 'timeStamp'>): WheelSample => ({
   deltaX: 0,

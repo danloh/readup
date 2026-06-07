@@ -2,8 +2,8 @@ import React from 'react';
 import { act, cleanup, fireEvent, render, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import ParagraphOverlay from '@/app/reader/components/paragraph/ParagraphOverlay';
-import { useParagraphMode } from '@/app/reader/hooks/useParagraphMode';
+import ParagraphOverlay from '@/app/read/components/paragraph/ParagraphOverlay';
+import { useParagraphMode } from '@/app/read/hooks/useParagraphMode';
 import type { FoliateView } from '@/types/view';
 import { eventDispatcher } from '@/utils/event';
 import {

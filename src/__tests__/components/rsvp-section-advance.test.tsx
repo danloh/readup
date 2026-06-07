@@ -3,7 +3,7 @@
 import { render, act, cleanup } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import RSVPControl from '@/app/reader/components/rsvp/RSVPControl';
+import RSVPControl from '@/app/read/components/rsvp/RSVPControl';
 import { eventDispatcher } from '@/utils/event';
 
 // ---------- Shared mutable test state ----------
@@ -18,14 +18,14 @@ let capturedOnRequestNextPage: (() => Promise<void>) | null = null;
 
 // ---------- Mocks ----------
 
-vi.mock('@/app/reader/components/rsvp/RSVPOverlay', () => ({
+vi.mock('@/app/read/components/rsvp/RSVPOverlay', () => ({
   default: vi.fn(({ onRequestNextPage }: { onRequestNextPage: () => Promise<void> }) => {
     capturedOnRequestNextPage = onRequestNextPage;
     return null;
   }),
 }));
 
-vi.mock('@/app/reader/components/rsvp/RSVPStartDialog', () => ({
+vi.mock('@/app/read/components/rsvp/RSVPStartDialog', () => ({
   default: () => null,
 }));
 

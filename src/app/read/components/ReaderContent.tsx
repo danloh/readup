@@ -64,7 +64,7 @@ const ReaderContent: React.FC<ReaderContentProps> = ({ ids, settings }) => {
     isInitiating.current = true;
 
     const pathname = window.location.pathname;
-    const bookIds = ids || searchParams?.get('ids') || pathname.split('/reader/')[1] || '';
+    const bookIds = ids || searchParams?.get('ids') || pathname.split('/read/')[1] || '';
     const initialIds = bookIds.split(BOOK_IDS_SEPARATOR).filter(Boolean);
     const initialBookKeys = initialIds.map((id) => `${id}-${uniqueId()}`);
     setBookKeys(initialBookKeys);

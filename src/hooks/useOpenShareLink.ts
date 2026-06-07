@@ -37,7 +37,7 @@ let coldStartConsumed = false;
  *   https://readup.cc/share?id={hash}&nid=&did=&loc=...
  *
  * Already-open shortcut: if the target book has a mounted view, jump in
- * place via view.goTo(cfi). router.push to the same /reader path with a
+ * place via view.goTo(cfi). router.push to the same /read path with a
  * different cfi query does NOT re-run the reader's init effect, so
  * navigation alone wouldn't move the view in that case.
  */

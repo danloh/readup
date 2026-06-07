@@ -550,7 +550,7 @@ const FoliateViewer: React.FC<{
       // so parallel views don't all jump to the same CFI.
       const cfiParam = searchParams?.get('loc');
       const idsParam =
-        searchParams?.get('ids') ?? window.location.pathname.split('/reader/')[1] ?? '';
+        searchParams?.get('ids') ?? window.location.pathname.split('/read/')[1] ?? '';
       const primaryId = idsParam.split(BOOK_IDS_SEPARATOR).filter(Boolean)[0]?.trim();
       const thisId = bookKey.split('-')[0];
       const overrideLocation = cfiParam && primaryId === thisId 

@@ -1,6 +1,6 @@
 import { cleanup, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import useBookShortcuts from '@/app/reader/hooks/useBookShortcuts';
+import useBookShortcuts from '@/app/read/hooks/useBookShortcuts';
 import { eventDispatcher } from '@/utils/event';
 
 const shortcutState = {
@@ -107,7 +107,7 @@ vi.mock('@/services/constants', () => ({
   ZOOM_STEP: 10,
 }));
 
-vi.mock('@/app/reader/hooks/useBooksManager', () => ({
+vi.mock('@/app/read/hooks/useBooksManager', () => ({
   default: () => ({
     getNextBookKey: () => 'book-1',
   }),

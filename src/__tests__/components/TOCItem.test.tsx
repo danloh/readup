@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, cleanup } from '@testing-library/react';
 
-import { StaticListRow } from '@/app/reader/components/sidebar/TOCItem';
+import { StaticListRow } from '@/app/read/components/sidebar/TOCItem';
 import { TOCItem } from '@/libs/document';
 
 vi.mock('@/utils/misc', () => ({

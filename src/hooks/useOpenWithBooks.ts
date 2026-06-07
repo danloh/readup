@@ -153,7 +153,7 @@ export function useOpenWithBooks() {
         // and the user would see the spinner hang. The user can close
         // the current book to return to the library, then re-open the
         // new one — same UX as most OS image viewers.
-        if (typeof window !== 'undefined' && window.location.pathname.startsWith('/reader')) {
+        if (typeof window !== 'undefined' && window.location.pathname.startsWith('/read')) {
           console.log('Ignoring Open-with VIEW intent: reader already active');
           return;
         }

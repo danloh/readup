@@ -4,7 +4,7 @@ import {
   createDeferredActionState,
   flushDeferredAction,
   runOrDeferAction,
-} from '@/app/reader/utils/deferredAction';
+} from '@/app/read/utils/deferredAction';
 
 describe('deferredAction', () => {
   test('runs action immediately when shouldDefer is false', () => {

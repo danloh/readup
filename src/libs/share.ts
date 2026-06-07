@@ -25,7 +25,7 @@ export const loadSharedBook = async (
   // When the share landing runs this helper, `libraryLoaded` is false because
   // /share/[bookHash] doesn't mount useLibrary(). We load fresh from disk and only
   // push the result back into the store if the store had already been hydrated
-  // by useLibrary somewhere else (e.g. /library, /reader, /opds). Otherwise we
+  // by useLibrary somewhere else (e.g. /library, /read, /opds). Otherwise we
   // *must not* set libraryLoaded ourselves: useLibrary's init block loads BOTH
   // the library AND `settings.globalReadSettings` in one go, and skips the
   // whole block when libraryLoaded is already true. Setting it prematurely

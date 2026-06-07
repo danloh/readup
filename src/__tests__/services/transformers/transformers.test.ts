@@ -1,7 +1,7 @@
 import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { ViewSettings } from '@/types/book';
-import { TransformContext } from '@/app/reader/transformers/types';
-import { availableTransformers } from '@/app/reader/transformers/transformService';
+import { TransformContext } from '@/app/read/transformers/types';
+import { availableTransformers } from '@/app/read/transformers/transformService';
 
 // --- Mocks ---
 
@@ -65,10 +65,10 @@ afterEach(() => {
 // =============================================================================
 
 describe('footnoteTransformer', () => {
-  let footnoteTransformer: typeof import('@/app/reader/transformers/footnote').footnoteTransformer;
+  let footnoteTransformer: typeof import('@/app/read/transformers/footnote').footnoteTransformer;
 
   beforeEach(async () => {
-    ({ footnoteTransformer } = await import('@/app/reader/transformers/footnote'));
+    ({ footnoteTransformer } = await import('@/app/read/transformers/footnote'));
   });
 
   test('has the correct name', () => {
@@ -154,10 +154,10 @@ describe('footnoteTransformer', () => {
 // =============================================================================
 
 describe('whitespaceTransformer', () => {
-  let whitespaceTransformer: typeof import('@/app/reader/transformers/whitespace').whitespaceTransformer;
+  let whitespaceTransformer: typeof import('@/app/read/transformers/whitespace').whitespaceTransformer;
 
   beforeEach(async () => {
-    ({ whitespaceTransformer } = await import('@/app/reader/transformers/whitespace'));
+    ({ whitespaceTransformer } = await import('@/app/read/transformers/whitespace'));
   });
 
   test('has the correct name', () => {
@@ -281,10 +281,10 @@ describe('whitespaceTransformer', () => {
 // =============================================================================
 
 describe('punctuationTransformer', () => {
-  let punctuationTransformer: typeof import('@/app/reader/transformers/punctuation').punctuationTransformer;
+  let punctuationTransformer: typeof import('@/app/read/transformers/punctuation').punctuationTransformer;
 
   beforeEach(async () => {
-    ({ punctuationTransformer } = await import('@/app/reader/transformers/punctuation'));
+    ({ punctuationTransformer } = await import('@/app/read/transformers/punctuation'));
   });
 
   test('has the correct name', () => {
@@ -523,7 +523,7 @@ describe('punctuationTransformer', () => {
 // =============================================================================
 
 describe('styleTransformer', () => {
-  let styleTransformer: typeof import('@/app/reader/transformers/style').styleTransformer;
+  let styleTransformer: typeof import('@/app/read/transformers/style').styleTransformer;
   let transformStylesheet: ReturnType<typeof vi.fn>;
 
   beforeEach(async () => {
@@ -531,7 +531,7 @@ describe('styleTransformer', () => {
     transformStylesheet = styleMod.transformStylesheet as ReturnType<typeof vi.fn>;
     transformStylesheet.mockClear();
     transformStylesheet.mockResolvedValue('transformed-css');
-    ({ styleTransformer } = await import('@/app/reader/transformers/style'));
+    ({ styleTransformer } = await import('@/app/read/transformers/style'));
   });
 
   test('has the correct name', () => {
@@ -610,10 +610,10 @@ describe('styleTransformer', () => {
 // =============================================================================
 
 describe('sanitizerTransformer', () => {
-  let sanitizerTransformer: typeof import('@/app/reader/transformers/sanitizer').sanitizerTransformer;
+  let sanitizerTransformer: typeof import('@/app/read/transformers/sanitizer').sanitizerTransformer;
 
   beforeEach(async () => {
-    ({ sanitizerTransformer } = await import('@/app/reader/transformers/sanitizer'));
+    ({ sanitizerTransformer } = await import('@/app/read/transformers/sanitizer'));
   });
 
   test('has the correct name', () => {
@@ -682,7 +682,7 @@ describe('sanitizerTransformer', () => {
 // =============================================================================
 
 describe('languageTransformer', () => {
-  let languageTransformer: typeof import('@/app/reader/transformers/language').languageTransformer;
+  let languageTransformer: typeof import('@/app/read/transformers/language').languageTransformer;
   let isSameLang: ReturnType<typeof vi.fn>;
   let isValidLang: ReturnType<typeof vi.fn>;
 
@@ -692,7 +692,7 @@ describe('languageTransformer', () => {
     isValidLang = langMod.isValidLang as ReturnType<typeof vi.fn>;
     isSameLang.mockClear();
     isValidLang.mockClear();
-    ({ languageTransformer } = await import('@/app/reader/transformers/language'));
+    ({ languageTransformer } = await import('@/app/read/transformers/language'));
   });
 
   test('has the correct name', () => {

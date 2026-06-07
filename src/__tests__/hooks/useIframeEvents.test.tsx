@@ -17,7 +17,7 @@ vi.mock('@/utils/event', () => ({
   eventDispatcher: { dispatch: vi.fn() },
 }));
 
-import { useMouseEvent } from '@/app/reader/hooks/useIframeEvents';
+import { useMouseEvent } from '@/app/read/hooks/useIframeEvents';
 
 function dispatchWheelMessage(bookKey: string, deltaY = 100) {
   // useMouseEvent listens on `message`, not `window.postMessage` directly,

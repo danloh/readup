@@ -126,7 +126,7 @@ const StreakPage = () => {
                         </div>
                         <div className='text-xs opacity-65'>
                           {!!r.book && (
-                            <a className="mr-1" title={r.book?.title} href={`/reader/${r.book?.hash}`}>
+                            <a className="mr-1" title={r.book?.title} href={`/read/${r.book?.hash}`}>
                               {r.book?.title.substring(0, 12)}
                             </a>
                           )} • 

@@ -3,7 +3,7 @@
 import { render, cleanup, fireEvent } from '@testing-library/react';
 import { afterEach, beforeAll, describe, expect, test, vi } from 'vitest';
 
-import RSVPOverlay from '@/app/reader/components/rsvp/RSVPOverlay';
+import RSVPOverlay from '@/app/read/components/rsvp/RSVPOverlay';
 import type { RSVPController, RsvpState } from '@/services/rsvp';
 
 beforeAll(() => {

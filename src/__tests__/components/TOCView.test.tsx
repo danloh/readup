@@ -35,7 +35,7 @@ vi.mock('@/utils/event', () => ({
 
 vi.mock('@/utils/misc', () => ({ getContentMd5: (s: string) => s }));
 
-vi.mock('@/app/reader/hooks/useTextTranslation', () => ({
+vi.mock('@/app/read/hooks/useTextTranslation', () => ({
   useTextTranslation: () => {},
 }));
 
@@ -73,7 +73,7 @@ vi.mock('overlayscrollbars-react', () => ({
 }));
 
 // eslint-disable-next-line import/first
-import TOCView from '@/app/reader/components/sidebar/TOCView';
+import TOCView from '@/app/read/components/sidebar/TOCView';
 
 const makeFlatToc = (count: number): TOCItem[] =>
   Array.from({ length: count }, (_, i) => ({
