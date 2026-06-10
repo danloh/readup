@@ -29,7 +29,8 @@ import { navigateToReader } from '@/utils/nav';
 import { Book } from '@/types/book';
 import { findExistingBookForPublication } from '../utils/findExistingBook';
 import { 
-  getFileExtFromPath, isSearchLink, looksLikeXMLContent, MIME, parseMediaType, resolveURL 
+  getFileExtFromPath, isSearchLink, looksLikeXMLContent, MIME, 
+  parseMediaType, parseOPDSXML, resolveURL 
 } from '../utils/opdsUtils';
 import { 
   getProxiedURL, fetchWithAuth, probeAuth, needsProxy, probeFilename 
@@ -212,7 +213,7 @@ export default function BrowserPage() {
         const text = await res.text();
 
         if (looksLikeXMLContent(text)) {
-          const doc = new DOMParser().parseFromString(text, MIME.XML as DOMParserSupportedType);
+          const doc = parseOPDSXML(text);
           const {
             documentElement: { localName },
           } = doc;
