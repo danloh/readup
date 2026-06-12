@@ -152,7 +152,7 @@ const getDarkModeLightBackgroundOverrides = (bg: string) => `
       background-color: ${bg} !important;
     }
     body.theme-dark {
-      background-color: ${bg} !important;
+      background-color: transparent !important;
     }
 `;
 
@@ -491,8 +491,8 @@ const getParagraphLayoutStyles = (
     word-spacing: ${wordSpacing}px ${overrideLayout ? '!important' : ''};
     letter-spacing: ${letterSpacing}px ${overrideLayout ? '!important' : ''};
     text-indent: ${textIndent}em ${overrideLayout ? '!important' : ''};
-    -webkit-hyphens: ${hyphenate ? 'auto' : 'manual'};
-    hyphens: ${hyphenate ? 'auto' : 'manual'};
+    -webkit-hyphens: ${hyphenate ? 'auto' : 'manual'} ${overrideLayout ? '!important' : ''};
+    hyphens: ${hyphenate ? 'auto' : 'manual'} ${overrideLayout ? '!important' : ''};
     -webkit-hyphenate-limit-before: 3;
     -webkit-hyphenate-limit-after: 2;
     -webkit-hyphenate-limit-lines: 2;
@@ -501,8 +501,8 @@ const getParagraphLayoutStyles = (
   }
   li {
     line-height: ${lineSpacing} ${overrideLayout ? '!important' : ''};
-    -webkit-hyphens: ${hyphenate ? 'auto' : 'manual'};
-    hyphens: ${hyphenate ? 'auto' : 'manual'};
+    -webkit-hyphens: ${hyphenate ? 'auto' : 'manual'} ${overrideLayout ? '!important' : ''};
+    hyphens: ${hyphenate ? 'auto' : 'manual'} ${overrideLayout ? '!important' : ''};
   }
   p.aligned-center, blockquote.aligned-center,
   dd.aligned-center, div.aligned-center {

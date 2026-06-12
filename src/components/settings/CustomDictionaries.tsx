@@ -740,6 +740,9 @@ const CustomDictionaries: React.FC<CustomDictionariesProps> = ({ onBack }) => {
         >
           <span
             className={clsx(
+              // eink-inverted keeps the "+" legible on its dark badge (#4454);
+              // without it the badge collapses to a solid black spot in eink.
+              'eink-inverted',
               'flex h-5 w-5 items-center justify-center rounded-full',
               'bg-base-200 text-base-content/60',
               'transition-colors duration-150',
@@ -768,6 +771,9 @@ const CustomDictionaries: React.FC<CustomDictionariesProps> = ({ onBack }) => {
         >
           <span
             className={clsx(
+              // eink-inverted keeps the "+" legible on its dark badge (#4454);
+              // without it the badge collapses to a solid black spot in eink.
+              'eink-inverted',
               'flex h-5 w-5 items-center justify-center rounded-full',
               'bg-base-200 text-base-content/60',
               'transition-colors duration-150',

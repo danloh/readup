@@ -59,10 +59,10 @@ const SectionInfo: React.FC<SectionInfoProps> = ({
         tabIndex={-1}
         onClick={handleNotchClick}
         className={clsx(
-          'notch-area absolute left-0 right-0 top-0 z-10',
-          isScrolled && !isVertical && 'bg-base-100',
+          'notch-area absolute inset-0 z-10',
+          isScrolled && !isVertical && 'notch-masked bg-base-100',
         )}
-        style={{ height: `${topInset}px` }}
+        style={{ clipPath: `inset(0 0 calc(100% - ${topInset}px) 0)`, }}
       />
       <div
         role='none'
