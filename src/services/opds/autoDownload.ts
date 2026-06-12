@@ -2,6 +2,7 @@ import type { Book } from '@/types/book';
 import type { AppService } from '@/types/system';
 import type { OPDSCatalog } from '@/types/opds';
 import { downloadFile } from '@/utils/transfer';
+import { runWithConcurrency } from '@/utils/concurrency';
 import { getFileExtFromMimeType } from '@/libs/document';
 import { needsProxy, getProxiedURL, probeAuth, probeFilename } from '@/app/catalog/utils/opdsReq';
 import { resolveURL, parseMediaType, getFileExtFromPath } from '@/app/catalog/utils/opdsUtils';
@@ -15,6 +16,7 @@ import {
 } from './subscriptionState';
 import { isRetryEligible, DOWNLOAD_CONCURRENCY, MAX_RETRY_ATTEMPTS } from './types';
 import type { PendingItem, SyncResult, OPDSSubscriptionState, FailedEntry } from './types';
+
 
 /**
  * Download a single item and import it into the library.
@@ -87,35 +89,6 @@ async function downloadAndImport(
   if (!book) throw new Error(`importBook returned null for ${item.title}`);
   console.log(`[OPDS] imported "${item.title}"`);
   return book;
-}
-
-/**
- * Run a batch of async tasks with bounded concurrency.
- */
-async function runWithConcurrency<T, R>(
-  items: T[],
-  concurrency: number,
-  fn: (item: T) => Promise<R>,
-): Promise<Array<{ item: T; result: R } | { item: T; error: unknown }>> {
-  const results: Array<{ item: T; result: R } | { item: T; error: unknown }> = [];
-  let index = 0;
-
-  async function worker() {
-    while (index < items.length) {
-      const currentIndex = index++;
-      const item = items[currentIndex]!;
-      try {
-        const result = await fn(item);
-        results[currentIndex] = { item, result };
-      } catch (error) {
-        results[currentIndex] = { item, error };
-      }
-    }
-  }
-
-  const workers = Array.from({ length: Math.min(concurrency, items.length) }, () => worker());
-  await Promise.all(workers);
-  return results;
 }
 
 /**

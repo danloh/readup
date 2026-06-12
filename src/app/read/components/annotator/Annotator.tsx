@@ -7,6 +7,7 @@ import { useEnv } from '@/context/EnvContext';
 import { BookNote, BooknoteGroup, HighlightColor, HighlightStyle } from '@/types/book';
 import { NOTE_PREFIX } from '@/types/view';
 import { NativeTouchEventType } from '@/types/system';
+import { Insets } from '@/types/misc';
 import { getOSPlatform, makeSafeFilename, uniqueId } from '@/utils/misc';
 import { invokeSystemDictionary } from '@/services/dictionaries/systemDictionary';
 import { isSystemDictionaryEnabled } from '@/services/dictionaries/registry';
@@ -63,7 +64,10 @@ import ExportMarkdownDialog from './ExportMarkdownDialog';
 import ExcerptDialog from './ExcerptDialog';
 import DictionarySheet from './DictionarySheet';
 
-const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
+const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
+  bookKey,
+  contentInsets,
+}) => {
   const _ = useTranslation();
   const { envConfig, appService } = useEnv();
   const { 
@@ -244,6 +248,7 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
     handleTouchEnd,
     handlePointerDown,
     handlePointerMove,
+    handleNativeTouchMove,
     handlePointerCancel,
     handlePointerUp,
     handleSelectionchange,
@@ -252,6 +257,7 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
     handleContextmenu,
   } = useTextSelector(
     bookKey,
+    contentInsets,
     setSelection,
     setEditingAnnotation,
     setExternalDragPoint,
@@ -285,6 +291,9 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
         androidTouchEndRef.current = false;
         cancelDeferredAction(deferredQuickActionRef.current);
         handleTouchStart();
+      } else if (ev.type === 'touchmove') {
+        // The Android pointer engagement signal (throttled in MainActivity.kt).
+        handleNativeTouchMove(ev.x, ev.y, doc);
       } else if (ev.type === 'touchend') {
         androidTouchEndRef.current = true;
         handleTouchEnd();
