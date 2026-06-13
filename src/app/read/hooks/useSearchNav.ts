@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from 'react';
 import { useSidebarStore } from '@/store/sidebarStore';
 import { useReaderStore } from '@/store/readerStore';
-import { isCfiInLocation } from '@/utils/cfi';
+import { createCfiLocationMatcher } from '@/utils/cfi';
 import { flattenSearchResults } from '../components/sidebar/SearchResultsNav';
 
 export function useSearchNav(bookKey: string) {
@@ -34,16 +34,20 @@ export function useSearchNav(bookKey: string) {
     return flattenedResults[searchResultIndex]?.sectionLabel || '';
   }, [flattenedResults, searchResultIndex]);
 
-  // Find results on the current page
+  // Find results on the current page.
+  // Uses a batched CFI matcher so the location is collapsed only once per
+  // page turn instead of once per search hit — see createCfiLocationMatcher
+  // in utils/cfi for the why.
   const currentPageResults = useMemo(() => {
     if (!flattenedResults.length || !currentLocation) return { firstIndex: -1, lastIndex: -1 };
 
+    const matches = createCfiLocationMatcher(currentLocation);
     let firstIndex = -1;
     let lastIndex = -1;
 
     for (let i = 0; i < flattenedResults.length; i++) {
       const result = flattenedResults[i];
-      if (result && isCfiInLocation(result.cfi, currentLocation)) {
+      if (result && matches(result.cfi)) {
         if (firstIndex === -1) firstIndex = i;
         lastIndex = i;
       }
