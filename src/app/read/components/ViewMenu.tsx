@@ -16,6 +16,7 @@ import { setAuthDialogVisible } from '@/components/AuthWindow';
 import { useThemeStore } from '@/store/themeStore';
 import { useReaderStore } from '@/store/readerStore';
 import { useBookDataStore } from '@/store/bookDataStore';
+import { useLibraryStore } from '@/store/libraryStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { getStyles } from '@/styles/style';
 import { eventDispatcher } from '@/utils/event';
@@ -121,6 +122,7 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
           timeout: 1000,
           type: 'info',
         });
+        await useLibraryStore.getState().updateBook(envConfig, book);
         bookUploaded = true;
       } catch (uploadError) {
         console.error('Failed to upload book:', uploadError);

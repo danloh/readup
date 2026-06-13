@@ -253,6 +253,10 @@ export class DocumentLoader {
     );
   }
 
+  private isTxt(): boolean {
+    return this.file.type === 'text/plain' || this.file.name.endsWith(`.${EXTS.TXT}`);
+  }
+
   public async open(): Promise<{ book: BookDoc; format: BookFormat }> {
     let book = null;
     let format: BookFormat = 'EPUB';
@@ -260,6 +264,16 @@ export class DocumentLoader {
       throw new Error('File is empty');
     }
     try {
+      // A raw .txt has no binary book format, so the checks below all miss and
+      // `book` stays null. Convert it to EPUB in-memory first (the same
+      // conversion the import path runs) and parse that. The managed library
+      // stores the already-converted EPUB, but the Android "Open with" transient
+      // path points the book at the original .txt, so it reaches us unconverted.
+      if (this.isTxt()) {
+        const { TxtToEpubConverter } = await import('@/utils/txt');
+        const { file: epubFile } = await new TxtToEpubConverter().convert({ file: this.file });
+        return await new DocumentLoader(epubFile).open();
+      }
       if (await this.isZip()) {
         const loader = await this.makeZipLoader();
         const { entries } = loader;
