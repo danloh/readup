@@ -1,7 +1,7 @@
 import clsx from 'clsx';
 import React, { useState, useEffect, useRef } from 'react';
 import { toPng } from 'html-to-image';
-import QRCode from 'qrcode';
+import QrCodeWithLogo from 'qrcode-with-logos'
 
 import { Book } from '@/types/book';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -11,6 +11,7 @@ import { useEnv } from '@/context/EnvContext';
 import { TextSelection } from '@/utils/sel';
 import { getContrastHex, hexToRgba } from '@/styles/themes';
 import { useReaderStore } from '@/store/readerStore';
+import { useLibraryStore } from '@/store/libraryStore';
 import { eventDispatcher } from '@/utils/event';
 import { setAuthDialogVisible } from '@/components/AuthWindow';
 import { getAtpAgent } from '@/services/bsky/auth';
@@ -33,7 +34,7 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
 }) => {
   const _ = useTranslation();
   const { user } = useAuth();
-  const { appService } = useEnv();
+  const { appService, envConfig } = useEnv();
   const { getProgress } = useReaderStore();
   const progress = getProgress(bookKey);
   const [imageUrl, setImageUrl] = useState<string>('');
@@ -314,7 +315,6 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
 
     try {
       // Upload book if toggle is enabled and book hasn't been uploaded yet
-      // FIXME: re-upload sometimes, uploadedAt is not a solid criterion
       if (shouldUploadBook && !book.uploadedAt && appService) {
         setIsUploading(true);
         eventDispatcher.dispatch('toast', {
@@ -329,6 +329,8 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
             timeout: 2000,
             type: 'info',
           });
+          // persist change on book to the store to avoid re-upload
+          await useLibraryStore.getState().updateBook(envConfig, book);
           bookUploaded = true;
         } catch (uploadError) {
           console.error('Failed to upload book:', uploadError);
@@ -353,7 +355,16 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
       }
 
       // Generate QR code URL
-      const qrCodeImageUrl = await QRCode.toDataURL(shareUrl);
+      const qr = new QrCodeWithLogo({
+        content: shareUrl,
+        renderer: 'svg',
+        width: 420,
+        logo: {
+          src: '/favicon.svg'
+        }
+      })
+      const qrSvg = await qr.getSvgString();
+      const qrCodeImageUrl = 'data:image/svg+xml,' + encodeURIComponent(qrSvg); 
 
       // Add QR code to iframe
       let finalImageUrl = imageUrl;

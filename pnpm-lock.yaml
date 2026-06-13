@@ -239,9 +239,9 @@ importers:
       posthog-js:
         specifier: ^1.246.0
         version: 1.369.2
-      qrcode:
-        specifier: ^1.5.4
-        version: 1.5.4
+      qrcode-with-logos:
+        specifier: 1.2.1
+        version: 1.2.1
       react:
         specifier: 19.2.5
         version: 19.2.5
@@ -321,9 +321,6 @@ importers:
       '@types/nunjucks':
         specifier: ^3.2.6
         version: 3.2.6
-      '@types/qrcode':
-        specifier: ^1.5.6
-        version: 1.5.6
       '@types/react':
         specifier: 19.2.14
         version: 19.2.14
@@ -3247,9 +3244,6 @@ packages:
 
   '@types/pako@2.0.4':
     resolution: {integrity: sha512-VWDCbrLeVXJM9fihYodcLiIv0ku+AlOa/TQ1SvYOaBuyrSKgEcro95LJyIsJ4vSo6BXIxOKxiJAat04CmST9Fw==}
-
-  '@types/qrcode@1.5.6':
-    resolution: {integrity: sha512-te7NQcV2BOvdj2b1hCAHzAoMNuj65kNBMz0KBaxM6c3VGBOhU0dURQKOtH8CFNI/dsKkwlv32p26qYQTWoB5bw==}
 
   '@types/react-color@3.0.13':
     resolution: {integrity: sha512-2c/9FZ4ixC5T3JzN0LP5Cke2Mf0MKOP2Eh0NPDPWmuVH3NjPyhEjqNMQpN1Phr5m74egAy+p2lYNAFrX1z9Yrg==}
@@ -7367,6 +7361,10 @@ packages:
 
   pure-rand@6.1.0:
     resolution: {integrity: sha512-bVWawvoZoBYpp6yIoQtQXHZjmz35RSVHnUOTefl8Vcjr8snTPY1wnpSPMWekcFwbxI6gtmT7rSYPFvz71ldiOA==}
+
+  qrcode-with-logos@1.2.1:
+    resolution: {integrity: sha512-02Ub762T3ovtKPyNjjKsCZ/emQDrKgCUOM+DifPvKDy4lMXh/IuPeTLQWHp3jESvX2NXiT1PrVqia25ZXY+FPQ==}
+    engines: {node: '>=16.0.0'}
 
   qrcode@1.5.4:
     resolution: {integrity: sha512-1ca71Zgiu6ORjHqFBDpnSMTR2ReToX4l1Au1VFLyVeBTFavzQnv5JxMFr3ukHVKpSrSA2MCk0lNJSykjUfz7Zg==}
@@ -11736,10 +11734,6 @@ snapshots:
   '@types/nunjucks@3.2.6': {}
 
   '@types/pako@2.0.4': {}
-
-  '@types/qrcode@1.5.6':
-    dependencies:
-      '@types/node': 22.19.17
 
   '@types/react-color@3.0.13(@types/react@19.2.14)':
     dependencies:
@@ -16953,6 +16947,10 @@ snapshots:
   punycode@2.3.1: {}
 
   pure-rand@6.1.0: {}
+
+  qrcode-with-logos@1.2.1:
+    dependencies:
+      qrcode: 1.5.4
 
   qrcode@1.5.4:
     dependencies:
