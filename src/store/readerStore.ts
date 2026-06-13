@@ -24,6 +24,7 @@ import {
 import { useSettingsStore } from './settingsStore';
 import { BookData, useBookDataStore } from './bookDataStore';
 import { useLibraryStore } from './libraryStore';
+import { clearBookProgress, getBookProgress, setBookProgress } from './readerProgressStore';
 
 interface ViewState {
   /* Unique key for each book view */
@@ -34,7 +35,6 @@ interface ViewState {
   loading: boolean;
   inited: boolean;
   error: string | null;
-  progress: BookProgress | null;
   ribbonVisible: boolean;
   ttsEnabled: boolean;
   gridInsets: Insets | null;
@@ -116,6 +116,9 @@ export const useReaderStore = create<ReaderStore>((set, get) => ({
   },
 
   clearViewState: (key: string) => {
+    // Drop the per-book progress entry alongside the view state so the
+    // standalone progress store doesn't leak across opens/closes.
+    clearBookProgress(key);
     set((state) => {
       const viewStates = { ...state.viewStates };
       delete viewStates[key];
@@ -143,7 +146,6 @@ export const useReaderStore = create<ReaderStore>((set, get) => ({
           loading: true,
           inited: false,
           error: null,
-          progress: null,
           ribbonVisible: false,
           ttsEnabled: false,
           gridInsets: null,
@@ -253,7 +255,6 @@ export const useReaderStore = create<ReaderStore>((set, get) => ({
             loading: false,
             inited: false,
             error: null,
-            progress: null,
             ribbonVisible: false,
             ttsEnabled: false,
             gridInsets: null,
@@ -276,7 +277,6 @@ export const useReaderStore = create<ReaderStore>((set, get) => ({
             loading: false,
             inited: false,
             error: 'Failed to load book.',
-            progress: null,
             ribbonVisible: false,
             ttsEnabled: false,
             gridInsets: null,
@@ -320,7 +320,12 @@ export const useReaderStore = create<ReaderStore>((set, get) => ({
       },
     }));
   },
-  getProgress: (key: string) => get().viewStates[key]?.progress || null,
+  // Delegates to the standalone readerProgressStore so that progress reads
+  // do not subscribe the caller to readerStore. Most call sites need a
+  // one-shot read (event handlers, useEffect bodies). Components that
+  // genuinely depend on progress for rendering should subscribe via the
+  // `useBookProgress(key)` hook exported from readerProgressStore instead.
+  getProgress: (key: string) => getBookProgress(key),
   setProgress: (
     key: string,
     location: string,
@@ -329,11 +334,11 @@ export const useReaderStore = create<ReaderStore>((set, get) => ({
     pageinfo: PageInfo,
     timeinfo: TimeInfo,
     range: Range,
-  ) => set((state) => {
+  ) => {
     const id = key.split('-')[0]!;
     const bookData = useBookDataStore.getState().booksData[id];
-    const viewState = state.viewStates[key];
-    if (!viewState || !bookData) return state;
+    const viewState = get().viewStates[key];
+    if (!viewState || !bookData) return;
 
     const pageInfo = bookData.isFixedLayout ? section : pageinfo;
     const progress: [number, number] = [pageInfo.current + 1, pageInfo.total];
@@ -353,44 +358,47 @@ export const useReaderStore = create<ReaderStore>((set, get) => ({
       updateBookProgress(id, progress, newReadingStatus);
     }
 
-    const oldConfig = bookData.config;
-    const newConfig = {
-      ...bookData.config,
-      progress,
+    // Only the primary view persists progress into the shared bookData
+    // config — secondary views in a parallel layout shouldn't overwrite
+    // it. Skip the bookDataStore write entirely when not primary to spare
+    // its subscribers a re-render.
+    if (viewState.isPrimary) {
+      useBookDataStore.setState((state) => {
+        const existing = state.booksData[id];
+        if (!existing) return state;
+        return {
+          booksData: {
+            ...state.booksData,
+            [id]: {
+              ...existing,
+              config: {
+                ...existing.config,
+                progress,
+                location,
+              } as BookConfig,
+            },
+          },
+        };
+      });
+    }
+
+    // Write progress to the standalone store. This is the only setState on
+    // the hot swipe path that the previous implementation routed through
+    // the (much bigger) readerStore — the split here is the whole point of
+    // the refactor: components subscribing to `useReaderStore()` without a
+    // selector will no longer re-render per page turn.
+    setBookProgress(key, {
       location,
-    } as BookConfig;
-
-    useBookDataStore.setState((state) => ({
-      booksData: {
-        ...state.booksData,
-        [id]: {
-          ...bookData,
-          config: viewState.isPrimary ? newConfig : oldConfig,
-        },
-      },
-    }));
-
-    return {
-      viewStates: {
-        ...state.viewStates,
-        [key]: {
-          ...viewState,
-          progress: {
-            ...viewState.progress,
-            location,
-            sectionHref: tocItem?.href,
-            sectionLabel: tocItem?.label,
-            section,
-            pageinfo,
-            timeinfo,
-            index: section.current,
-            range,
-            page: pageInfo.current + 1,
-          } as BookProgress,
-        },
-      },
-    };
-  }),
+      sectionHref: tocItem?.href,
+      sectionLabel: tocItem?.label,
+      section,
+      pageinfo,
+      timeinfo,
+      index: section.current,
+      range,
+      page: pageInfo.current + 1,
+    } as BookProgress);
+  },
   setBookmarkRibbonVisibility: (key: string, visible: boolean) =>
     set((state) => ({
       viewStates: {

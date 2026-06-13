@@ -5,11 +5,12 @@ import { useRouter } from 'next/navigation';
 import type { Insets } from '@/types/misc';
 import { useEnv } from '@/context/EnvContext';
 import { useReaderStore } from '@/store/readerStore';
-import { useTranslation } from '@/hooks/useTranslation';
+import { useBookProgress } from '@/store/readerProgressStore';
 import { useBookDataStore } from '@/store/bookDataStore';
 import { useLibraryStore } from '@/store/libraryStore';
 import ModalPortal from '@/components/ModalPortal';
 import { SIZE_PER_LOC, SIZE_PER_TIME_UNIT } from '@/services/constants';
+import { useTranslation } from '@/hooks/useTranslation';
 
 function formatProgress(
   current: number | undefined,
@@ -47,12 +48,14 @@ const ProgressInfoView: React.FC<PageInfoProps> = ({
   const _ = useTranslation();
   const { appService, envConfig } = useEnv();
   const { updateBook } = useLibraryStore();
-  const { getProgress, getViewSettings, getView } = useReaderStore();
+  const { getViewSettings, getView } = useReaderStore();
   const view = getView(bookKey);
   const { getBookData } = useBookDataStore();
   const viewSettings = getViewSettings(bookKey)!;
   const bookData = getBookData(bookKey); 
-  const progress = getProgress(bookKey);
+  // Reactive: this is the on-screen footer that has to refresh on every
+  // page turn. Reads from readerProgressStore only.
+  const progress = useBookProgress(bookKey);
   
   const showDoubleBorder = viewSettings.vertical && viewSettings.doubleBorder;
   const isVertical = viewSettings.vertical;

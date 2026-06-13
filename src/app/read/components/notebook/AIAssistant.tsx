@@ -13,7 +13,7 @@ import { Loader2Icon, BookOpenIcon } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useBookDataStore } from '@/store/bookDataStore';
-import { useReaderStore } from '@/store/readerStore';
+import { useBookProgress } from '@/store/readerProgressStore';
 import { useAIChatStore } from '@/store/aiChatStore';
 import {
   indexBook,
@@ -236,9 +236,9 @@ const AIAssistant = ({ bookKey }: AIAssistantProps) => {
   const { appService } = useEnv();
   const { settings } = useSettingsStore();
   const { getBookData } = useBookDataStore();
-  const { getProgress } = useReaderStore();
   const bookData = getBookData(bookKey);
-  const progress = getProgress(bookKey);
+  // Reactive: chat context follows the user's current reading position.
+  const progress = useBookProgress(bookKey);
 
   const [isLoading, setIsLoading] = useState(true);
   const [isIndexing, setIsIndexing] = useState(false);

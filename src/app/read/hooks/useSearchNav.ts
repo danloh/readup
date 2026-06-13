@@ -1,18 +1,21 @@
 import { useCallback, useMemo } from 'react';
 import { useSidebarStore } from '@/store/sidebarStore';
 import { useReaderStore } from '@/store/readerStore';
+import { useBookProgress } from '@/store/readerProgressStore';
 import { createCfiLocationMatcher } from '@/utils/cfi';
 import { flattenSearchResults } from '../components/sidebar/SearchResultsNav';
 
 export function useSearchNav(bookKey: string) {
-  const { getView, getProgress } = useReaderStore();
+  const { getView } = useReaderStore();
   const { setSideBarVisible } = useSidebarStore();
   const { getSearchNavState, setSearchResultIndex, clearSearch } = useSidebarStore();
 
   const searchNavState = getSearchNavState(bookKey);
   const { searchTerm, searchResults, searchResultIndex, searchProgress } = searchNavState;
 
-  const progress = getProgress(bookKey);
+  // Reactive: search nav re-derives current-page boundaries when the user
+  // turns the page. Subscribes to readerProgressStore only.
+  const progress = useBookProgress(bookKey);
 
   const currentLocation = useMemo(() => {
     return progress?.location;

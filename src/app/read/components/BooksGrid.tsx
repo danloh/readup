@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useEnv } from '@/context/EnvContext';
 import { Insets } from '@/types/misc';
 import { useReaderStore } from '@/store/readerStore';
+import { useBookProgress } from '@/store/readerProgressStore';
 import { useBookDataStore } from '@/store/bookDataStore';
 import { useThemeStore } from '@/store/themeStore';
 import { getGridTemplate, getInsetEdges } from '@/utils/grid';
@@ -104,7 +105,7 @@ const BookCellInner: React.FC<BookCellProps> = ({
   // (settings toggles, ribbon, init, sync), never on the per-swipe
   // relocate path — so this does NOT reintroduce the commit storm the
   // progress-store split removed.
-  const progress = useReaderStore((s) => s.getProgress(bookKey));
+  const progress = useBookProgress(bookKey);
   const viewState = useReaderStore((s) => s.viewStates[bookKey]);
   const viewSettings = viewState?.viewSettings ?? null;
 

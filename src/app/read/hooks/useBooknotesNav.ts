@@ -2,6 +2,7 @@ import { useCallback, useMemo } from 'react';
 import * as CFI from 'foliate-js/epubcfi.js';
 import { useSidebarStore } from '@/store/sidebarStore';
 import { useReaderStore } from '@/store/readerStore';
+import { useBookProgress } from '@/store/readerProgressStore';
 import { useBookDataStore } from '@/store/bookDataStore';
 import { createCfiLocationMatcher } from '@/utils/cfi';
 import { findTocItemBS } from '@/services/nav';
@@ -9,7 +10,7 @@ import { BookNoteType } from '@/types/book';
 import { TOCItem } from '@/libs/document';
 
 export function useBooknotesNav(bookKey: string, toc: TOCItem[]) {
-  const { getView, getProgress } = useReaderStore();
+  const { getView } = useReaderStore();
   const { getConfig } = useBookDataStore();
   const {
     setSideBarVisible,
@@ -23,7 +24,9 @@ export function useBooknotesNav(bookKey: string, toc: TOCItem[]) {
   const booknotesNavState = getBooknotesNavState(bookKey);
   const { activeBooknoteType, booknoteResults, booknoteIndex } = booknotesNavState;
 
-  const progress = getProgress(bookKey);
+  // Reactive: re-derives current-page boundaries when the user turns
+  // the page. Reads from readerProgressStore only.
+  const progress = useBookProgress(bookKey);
   const currentLocation = progress?.location;
 
   // Get booknotes from config and filter by type

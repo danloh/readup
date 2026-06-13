@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useReaderStore } from '@/store/readerStore';
+import { useBookProgress } from '@/store/readerProgressStore';
 import { useBookDataStore } from '@/store/bookDataStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useThemeStore } from '@/store/themeStore';
@@ -508,8 +509,9 @@ const RSVPControl: React.FC<RSVPControlProps> = ({ bookKey, gridInsets }) => {
     await view.renderer.nextSection?.();
   }, [bookKey, getProgress, getView, removeRsvpHighlight]);
 
-  // Get current chapter info
-  const progress = getProgress(bookKey);
+  // Get current chapter info — reactive subscription so the RSVP overlay's
+  // chapter pointer follows page turns. Reads from readerProgressStore.
+  const progress = useBookProgress(bookKey);
   const bookData = getBookData(bookKey);
   const chapters = bookData?.bookDoc?.toc || [];
   const currentChapterHref = rsvpChapterHrefRef.current ?? progress?.sectionHref ?? null;

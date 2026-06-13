@@ -15,6 +15,7 @@ import { useCustomDictionaryStore } from '@/store/customDictionaryStore';
 import { useBookDataStore } from '@/store/bookDataStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useReaderStore } from '@/store/readerStore';
+import { useBookProgress } from '@/store/readerProgressStore';
 import { useNotebookStore } from '@/store/notebookStore';
 import { useDeviceControlStore } from '@/store/deviceStore';
 import { useThemeStore } from '@/store/themeStore';
@@ -76,13 +77,17 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
   } = useSettingsStore();
   const { isDarkMode } = useThemeStore();
   const { getConfig, saveConfig, getBookData, updateBooknotes } = useBookDataStore();
-  const { getProgress, getView, getViewsById, getViewSettings } = useReaderStore();
+  const { getView, getViewsById, getViewSettings } = useReaderStore();
   const { setNotebookVisible, setNotebookNewAnnotation } = useNotebookStore();
   const { listenToNativeTouchEvents } = useDeviceControlStore();
 
   const osPlatform = getOSPlatform();
   const config = getConfig(bookKey)!;
-  const progress = getProgress(bookKey)!;
+  // Reactive: subscribe to THIS book's progress via the dedicated
+  // progress store. This is the only piece of data we need to react to
+  // per page turn — the `useEffect(..., [progress])` below uses it to
+  // re-apply local-page annotations after each relocate.
+  const progress = useBookProgress(bookKey)!;
   const bookData = getBookData(bookKey)!;
   const view = getView(bookKey);
   const viewSettings = getViewSettings(bookKey)!;

@@ -5,6 +5,7 @@ import { RiArrowLeftDoubleLine, RiArrowRightDoubleLine } from 'react-icons/ri';
 
 import { useEnv } from '@/context/EnvContext';
 import { useReaderStore } from '@/store/readerStore';
+import { useBookProgress } from '@/store/readerProgressStore';
 import { useBookDataStore } from '@/store/bookDataStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { viewPagination } from '../hooks/usePagination';
@@ -21,11 +22,13 @@ const PageNavigationButtons: React.FC<PageNavigationButtonsProps> = ({
   const _ = useTranslation();
   const { appService } = useEnv();
   const { getBookData } = useBookDataStore();
-  const { getView, getProgress, getViewSettings, hoveredBookKey } = useReaderStore();
+  const { getView, getViewSettings, hoveredBookKey } = useReaderStore();
   const bookData = getBookData(bookKey);
   const view = getView(bookKey);
   const viewSettings = getViewSettings(bookKey);
-  const progress = getProgress(bookKey);
+  // Reactive: drives the aria-live "Page N" announcement and the
+  // currentPage label on the buttons. Reads from readerProgressStore.
+  const progress = useBookProgress(bookKey);
   const { section, pageinfo } = progress || {};
   const pageInfo = bookData?.isFixedLayout ? section : pageinfo;
   const currentPage = pageInfo?.current;

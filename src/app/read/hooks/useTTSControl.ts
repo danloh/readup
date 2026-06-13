@@ -3,6 +3,7 @@ import { useEnv } from '@/context/EnvContext';
 import { useThemeStore } from '@/store/themeStore';
 import { useBookDataStore } from '@/store/bookDataStore';
 import { useReaderStore } from '@/store/readerStore';
+import { useBookProgress } from '@/store/readerProgressStore';
 import { useProofreadStore } from '@/store/proofreadStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { TTSController, TTSMark, TTSHighlightOptions, TTSVoicesGroup } from '@/services/tts';
@@ -233,8 +234,10 @@ export const useTTSControl = ({ bookKey, onRequestHidePanel }: UseTTSControlProp
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ttsController, bookKey]);
 
-  // Location tracking — re-highlight when progress changes
-  const progress = getProgress(bookKey);
+  // Location tracking — re-highlight when progress changes.
+  // Reactive subscription via readerProgressStore so the effect below
+  // re-runs on page turns without dragging in the whole readerStore.
+  const progress = useBookProgress(bookKey);
   useEffect(() => {
     const ttsController = ttsControllerRef.current;
     if (!ttsController) return;
