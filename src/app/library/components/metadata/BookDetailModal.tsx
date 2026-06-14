@@ -2,7 +2,7 @@ import clsx from 'clsx';
 import { useEffect, useState } from 'react';
 
 import { Book } from '@/types/book';
-import { formatAuthors, formatTitle, getPrimaryLanguage } from '@/utils/book';
+import { getBookWithUpdatedMetadata } from '@/utils/book';
 import { isWebAppPlatform } from '@/services/environment';
 import { useLibraryStore } from '@/store/libraryStore';
 import { eventDispatcher } from '@/utils/event';
@@ -43,6 +43,11 @@ const BookDetailModal: React.FC<BookDetailModalProps> = ({
   const { updateBook } = useLibraryStore();
   const { clearBookData } = useBookDataStore();
 
+  // The parent owns the `book` prop and does not re-pass it after a metadata
+  // save, so the details view tracks the saved book locally to refresh its
+  // cover/title/author immediately (otherwise it shows the stale prop).
+  const [displayBook, setDisplayBook] = useState<Book>(book);
+
   // Initialize metadata edit hook
   const {
     editedMeta,
@@ -81,6 +86,10 @@ const BookDetailModal: React.FC<BookDetailModalProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [book]);
 
+  useEffect(() => {
+    setDisplayBook(book);
+  }, [book]);
+
   const handleClose = () => {
     setBookMeta(null);
     setEditMode(false);
@@ -97,16 +106,15 @@ const BookDetailModal: React.FC<BookDetailModalProps> = ({
   };
 
   const handleBookMetadataUpdate = async (book: Book, metadata: BookMetadata) => {
-    book.metadata = metadata;
-    book.title = formatTitle(metadata.title);
-    book.author = formatAuthors(metadata.author);
-    book.primaryLanguage = getPrimaryLanguage(metadata.language);
-    book.updatedAt = Date.now();
+    // Build a NEW book object instead of mutating `book` in place. <BookCover>
+    // is memoized and compares fields off the book, so mutating the existing
+    // object (which React holds as the previous snapshot) makes the comparator
+    // see no change and the library cover only refreshes after a full reload.
+    const updatedBook = getBookWithUpdatedMetadata(book, metadata);
     if (metadata.coverImageBlobUrl || metadata.coverImageUrl || metadata.coverImageFile) {
-      book.coverImageUrl = metadata.coverImageBlobUrl || metadata.coverImageUrl;
       try {
         await appService?.updateCoverImage(
-          book,
+          updatedBook,
           metadata.coverImageBlobUrl || metadata.coverImageUrl,
           metadata.coverImageFile,
         );
@@ -124,12 +132,15 @@ const BookDetailModal: React.FC<BookDetailModalProps> = ({
     }
     metadata.coverImageBlobUrl = undefined;
     metadata.coverImageFile = undefined;
-    await updateBook(envConfig, book);
+    await updateBook(envConfig, updatedBook);
   };
 
   const handleSaveMetadata = () => {
     if (editedMeta && handleBookMetadataUpdate) {
       setBookMeta({ ...editedMeta });
+      // Capture the updated book before handleBookMetadataUpdate clears the
+      // temporary cover fields on editedMeta, so the view refreshes its cover.
+      setDisplayBook(getBookWithUpdatedMetadata(book, editedMeta));
       handleBookMetadataUpdate(book, editedMeta);
       setEditMode(false);
     }
@@ -217,7 +228,7 @@ const BookDetailModal: React.FC<BookDetailModalProps> = ({
               />
             ) : (
               <BookDetailView
-                book={book}
+                book={displayBook}
                 metadata={bookMeta}
                 fileSize={fileSize}
                 onEdit={handleEditMetadata}

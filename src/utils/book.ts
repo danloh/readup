@@ -251,6 +251,26 @@ export const getBookDirFromLanguage = (language: string | string[] | undefined) 
   return getDirFromLanguage(lang);
 };
 
+// Immutably apply edited metadata to a book, returning a NEW book object.
+// Callers must not mutate the existing book in place: <BookCover> is memoized
+// and compares fields off the book, so an in-place mutation makes the memo's
+// previous snapshot point to the same object and skips re-rendering the cover.
+export const getBookWithUpdatedMetadata = (book: Book, metadata: BookMetadata): Book => {
+  const updatedBook: Book = {
+    ...book,
+    metadata,
+    title: formatTitle(metadata.title),
+    author: formatAuthors(metadata.author),
+    primaryLanguage: getPrimaryLanguage(metadata.language),
+    updatedAt: Date.now(),
+  };
+  const newCoverImageUrl = metadata.coverImageBlobUrl || metadata.coverImageUrl;
+  if (newCoverImageUrl) {
+    updatedBook.coverImageUrl = newCoverImageUrl;
+  }
+  return updatedBook;
+};
+
 const getTitleForHash = (title: string | LanguageMap) => {
   return typeof title === 'string' ? title : formatLanguageMap(title, true);
 };
