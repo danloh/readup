@@ -64,6 +64,7 @@ import AnnotationRangeEditor from './AnnotationRangeEditor';
 import ExportMarkdownDialog from './ExportMarkdownDialog';
 import ExcerptDialog from './ExcerptDialog';
 import DictionarySheet from './DictionarySheet';
+import SelectionRangeEditor from './SelectionRangeEditor';
 import { buildAnnotationIndex, selectLocationAnnotations } from '../../utils/annotationIndex';
 
 const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
@@ -261,6 +262,7 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
     handleShowPopup,
     handleUpToPopup,
     handleContextmenu,
+    applyProgrammaticSelection,
   } = useTextSelector(
     bookKey,
     contentInsets,
@@ -1347,6 +1349,16 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
             handleDismissPopupAndSelection();
             setProofreadRulesVisibility(true);
           }}
+        />
+      )}
+      {!editingAnnotation && selection?.handlesSuppressed && selection.range && (
+        <SelectionRangeEditor
+          bookKey={bookKey}
+          isVertical={viewSettings.vertical}
+          selection={selection}
+          handleColor={selectedColor}
+          onRangeChange={applyProgrammaticSelection}
+          onStartDrag={handleStartEditAnnotation}
         />
       )}
       {editingAnnotation && editingAnnotation.color && selection && (
