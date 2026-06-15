@@ -198,6 +198,67 @@ const Bookshelf: React.FC<BookshelfProps> = ({
     }
   };
 
+  // const sortedBookshelfItems0 = useMemo(() => {
+  //   const sortOrderMultiplier = sortOrder === 'asc' ? 1 : -1;
+
+  //   // Separate into ungrouped books and groups
+  //   const ungroupedBooks = currentBookshelfItems.filter((item): item is Book => 'format' in item);
+  //   const groups = currentBookshelfItems.filter((item): item is BooksGroup => 'books' in item);
+
+  //   // Sort books within each group
+  //   // For series groups, series index is always ascending; sort direction applies to fallback only
+  //   const sortAscending = sortOrder === 'asc';
+  //   const withinGroupSorter = createWithinGroupSorter(groupBy, sortBy, uiLanguage, sortAscending);
+  //   groups.forEach((group) => {
+  //     group.books.sort(withinGroupSorter);
+  //   });
+
+  //   // Sort ungrouped books - use within-group sorter if we're inside a group
+  //   // (for series, this ensures books are sorted by series index)
+  //   const bookSorter = createBookSorter(sortBy, uiLanguage);
+  //   if (groupId && groupBy !== LibraryGroupByType.Group && groupBy !== LibraryGroupByType.None) {
+  //     ungroupedBooks.sort(withinGroupSorter);
+  //     // When inside a group, books are already sorted correctly — return directly
+  //     // to avoid the merge sort below overriding the within-group sort order
+  //     return ungroupedBooks;
+  //   } else {
+  //     ungroupedBooks.sort((a, b) => bookSorter(a, b) * sortOrderMultiplier);
+  //   }
+
+  //   // Merge groups and ungrouped books, then sort them together
+  //   const allItems: (Book | BooksGroup)[] = [...groups, ...ungroupedBooks];
+  //   const groupSorter = createGroupSorter(sortBy, uiLanguage, groupBy);
+
+  //   allItems.sort((a, b) => {
+  //     const isAGroup = 'books' in a;
+  //     const isBGroup = 'books' in b;
+
+  //     // If both are groups, use group sorter
+  //     if (isAGroup && isBGroup) {
+  //       return groupSorter(a, b) * sortOrderMultiplier;
+  //     }
+
+  //     // If both are books, use book sorter
+  //     if (!isAGroup && !isBGroup) {
+  //       return bookSorter(a, b) * sortOrderMultiplier;
+  //     }
+
+  //     // For series/author groups: compare sort values to interleave properly
+  //     if (isAGroup && !isBGroup) {
+  //       const groupValue = getGroupSortValue(a, sortBy, groupBy);
+  //       const bookValue = getBookSortValue(b, sortBy);
+  //       return compareSortValues(groupValue, bookValue, uiLanguage) * sortOrderMultiplier;
+  //     } else if (!isAGroup && isBGroup) {
+  //       const bookValue = getBookSortValue(a, sortBy);
+  //       const groupValue = getGroupSortValue(b, sortBy, groupBy);
+  //       return compareSortValues(bookValue, groupValue, uiLanguage) * sortOrderMultiplier;
+  //     }
+  //     return 0;
+  //   });
+
+  //   return allItems;
+  // }, [sortOrder, sortBy, groupBy, groupId, uiLanguage, currentBookshelfItems]);
+
   const sortedBookshelfItems = useMemo(() => {
     const sortOrderMultiplier = sortOrder === 'asc' ? 1 : -1;
 
@@ -209,54 +270,56 @@ const Bookshelf: React.FC<BookshelfProps> = ({
     // For series groups, series index is always ascending; sort direction applies to fallback only
     const sortAscending = sortOrder === 'asc';
     const withinGroupSorter = createWithinGroupSorter(groupBy, sortBy, uiLanguage, sortAscending);
-    groups.forEach((group) => {
-      group.books.sort(withinGroupSorter);
-    });
+    const sortedGroups = groups.map((group) => ({
+      ...group,
+      books: [...group.books].sort(withinGroupSorter),
+    }));
 
     // Sort ungrouped books - use within-group sorter if we're inside a group
     // (for series, this ensures books are sorted by series index)
     const bookSorter = createBookSorter(sortBy, uiLanguage);
     if (groupId && groupBy !== LibraryGroupByType.Group && groupBy !== LibraryGroupByType.None) {
-      ungroupedBooks.sort(withinGroupSorter);
+      const sortedUngroupedBooks = [...ungroupedBooks].sort(withinGroupSorter);
       // When inside a group, books are already sorted correctly — return directly
       // to avoid the merge sort below overriding the within-group sort order
-      return ungroupedBooks;
+      return sortedUngroupedBooks;
     } else {
-      ungroupedBooks.sort((a, b) => bookSorter(a, b) * sortOrderMultiplier);
+      // Create a new array to avoid mutating the original
+      const sortedUngroupedBooks = [...ungroupedBooks].sort((a, b) => bookSorter(a, b) * sortOrderMultiplier);
+      
+      // Merge groups and ungrouped books, then sort them together
+      const allItems: (Book | BooksGroup)[] = [...sortedGroups, ...sortedUngroupedBooks];
+      const groupSorter = createGroupSorter(sortBy, uiLanguage, groupBy);
+
+      allItems.sort((a, b) => {
+        const isAGroup = 'books' in a;
+        const isBGroup = 'books' in b;
+
+        // If both are groups, use group sorter
+        if (isAGroup && isBGroup) {
+          return groupSorter(a, b) * sortOrderMultiplier;
+        }
+
+        // If both are books, use book sorter
+        if (!isAGroup && !isBGroup) {
+          return bookSorter(a, b) * sortOrderMultiplier;
+        }
+
+        // For series/author groups: compare sort values to interleave properly
+        if (isAGroup && !isBGroup) {
+          const groupValue = getGroupSortValue(a, sortBy, groupBy);
+          const bookValue = getBookSortValue(b, sortBy);
+          return compareSortValues(groupValue, bookValue, uiLanguage) * sortOrderMultiplier;
+        } else if (!isAGroup && isBGroup) {
+          const bookValue = getBookSortValue(a, sortBy);
+          const groupValue = getGroupSortValue(b, sortBy, groupBy);
+          return compareSortValues(bookValue, groupValue, uiLanguage) * sortOrderMultiplier;
+        }
+        return 0;
+      });
+
+      return allItems;
     }
-
-    // Merge groups and ungrouped books, then sort them together
-    const allItems: (Book | BooksGroup)[] = [...groups, ...ungroupedBooks];
-    const groupSorter = createGroupSorter(sortBy, uiLanguage, groupBy);
-
-    allItems.sort((a, b) => {
-      const isAGroup = 'books' in a;
-      const isBGroup = 'books' in b;
-
-      // If both are groups, use group sorter
-      if (isAGroup && isBGroup) {
-        return groupSorter(a, b) * sortOrderMultiplier;
-      }
-
-      // If both are books, use book sorter
-      if (!isAGroup && !isBGroup) {
-        return bookSorter(a, b) * sortOrderMultiplier;
-      }
-
-      // For series/author groups: compare sort values to interleave properly
-      if (isAGroup && !isBGroup) {
-        const groupValue = getGroupSortValue(a, sortBy, groupBy);
-        const bookValue = getBookSortValue(b, sortBy);
-        return compareSortValues(groupValue, bookValue, uiLanguage) * sortOrderMultiplier;
-      } else if (!isAGroup && isBGroup) {
-        const bookValue = getBookSortValue(a, sortBy);
-        const groupValue = getGroupSortValue(b, sortBy, groupBy);
-        return compareSortValues(bookValue, groupValue, uiLanguage) * sortOrderMultiplier;
-      }
-      return 0;
-    });
-
-    return allItems;
   }, [sortOrder, sortBy, groupBy, groupId, uiLanguage, currentBookshelfItems]);
 
   useEffect(() => {

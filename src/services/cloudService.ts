@@ -24,7 +24,7 @@ import {
   uploadDataFile 
 } from './bsky/atfile';
 
-
+/* Throw error if failed */
 export async function uploadBook(
   fs: FileSystem, 
   book: Book, 

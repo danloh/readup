@@ -9,10 +9,11 @@ import Dialog from '@/components/Dialog';
 import { useAuth } from '@/context/AuthContext';
 import { useEnv } from '@/context/EnvContext';
 import { TextSelection } from '@/utils/sel';
+import { isAuthError } from '@/utils/error';
+import { eventDispatcher } from '@/utils/event';
 import { getContrastHex, hexToRgba } from '@/styles/themes';
 import { useReaderStore } from '@/store/readerStore';
 import { useLibraryStore } from '@/store/libraryStore';
-import { eventDispatcher } from '@/utils/event';
 import { setAuthDialogVisible } from '@/components/AuthWindow';
 import { getAtpAgent } from '@/services/bsky/auth';
 import { postWithImageAndLink } from '@/services/bsky/xpost';
@@ -334,6 +335,19 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
           bookUploaded = true;
         } catch (uploadError) {
           console.error('Failed to upload book:', uploadError);
+          
+          // Check if upload error is auth-related
+          if (isAuthError(uploadError)) {
+            eventDispatcher.dispatch('toast', {
+              message: 'Authentication expired. Please sign in again.',
+              timeout: 2000,
+              type: 'warning',
+            });
+            setAuthDialogVisible(true);
+            onCancel();
+            return;
+          }
+          
           eventDispatcher.dispatch('toast', {
             message: `Failed to upload book: ${uploadError}`,
             timeout: 2000,
@@ -450,6 +464,19 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
       }
     } catch (error) {
       console.error('Error sharing excerpt:', error);
+      
+      // Check if error is auth-related
+      if (isAuthError(error)) {
+        eventDispatcher.dispatch('toast', {
+          message: 'Authentication expired. Please sign in again.',
+          timeout: 2000,
+          type: 'warning',
+        });
+        setAuthDialogVisible(true);
+        onCancel();
+        return;
+      }
+      
       eventDispatcher.dispatch('toast', {
         message: `Error on sharing excerpt: ${error}`,
         timeout: 2000,
