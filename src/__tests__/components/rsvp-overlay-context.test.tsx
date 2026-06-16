@@ -23,6 +23,29 @@ vi.mock('@/store/themeStore', () => ({
   }),
 }));
 
+// Stub the dictionary popup/sheet so the overlay test does not pull in the
+// whole dictionary provider/registry stack — we only assert it opens with the
+// word. The overlay uses the sheet below `sm` and the popup otherwise.
+vi.mock('@/app/read/components/annotator/DictionarySheet', () => ({
+  default: ({ word, onDismiss }: { word: string; onDismiss: () => void }) => (
+    <div data-testid='rsvp-dict-sheet' data-word={word}>
+      <button aria-label='close-dict' onClick={onDismiss}>
+        x
+      </button>
+    </div>
+  ),
+}));
+
+vi.mock('@/app/read/components/annotator/DictionaryPopup', () => ({
+  default: ({ word, onDismiss }: { word: string; onDismiss: () => void }) => (
+    <div data-testid='rsvp-dict-popup' data-word={word}>
+      <button aria-label='close-dict' onClick={onDismiss}>
+        x
+      </button>
+    </div>
+  ),
+}));
+
 const buildState = (overrides: Partial<RsvpState> = {}): RsvpState => ({
   active: true,
   playing: false,
@@ -75,7 +98,7 @@ const buildController = (state: RsvpState) => {
   return controller;
 };
 
-const renderOverlay = (state: RsvpState) => {
+const renderOverlay = (state: RsvpState, fontFamily?: string) => {
   const controller = buildController(state);
   const result = render(
     <RSVPOverlay
@@ -84,6 +107,7 @@ const renderOverlay = (state: RsvpState) => {
       title={'Readup'}
       chapters={[]}
       currentChapterHref={null}
+      fontFamily={fontFamily}
       onClose={vi.fn()}
       onChapterSelect={vi.fn()}
       onRequestNextPage={vi.fn()}
@@ -141,6 +165,30 @@ describe('RSVPOverlay — context panel performance', () => {
     expect(current).not.toBeNull();
     // current word should not be a button (not clickable)
     expect(current!.getAttribute('role')).toBeNull();
+  });
+});
+
+describe('RSVPOverlay — reading font', () => {
+  afterEach(() => cleanup());
+
+  const wordState = () =>
+    buildState({ words: [{ text: 'hello', orpIndex: 1, pauseMultiplier: 1 }], currentIndex: 0 });
+
+  test('applies the reader font family to the word display', () => {
+    const { container } = renderOverlay(wordState(), '"Bitter", "Source Han Serif CN", serif');
+    const word = container.querySelector('.rsvp-word') as HTMLElement;
+    expect(word).not.toBeNull();
+    expect(word.style.fontFamily).toContain('Bitter');
+    // With a reading font supplied, the word no longer uses the monospace fallback.
+    expect(word.classList.contains('font-mono')).toBe(false);
+  });
+
+  test('falls back to the monospace class when no font family is supplied', () => {
+    const { container } = renderOverlay(wordState());
+    const word = container.querySelector('.rsvp-word') as HTMLElement;
+    expect(word).not.toBeNull();
+    expect(word.classList.contains('font-mono')).toBe(true);
+    expect(word.style.fontFamily).toBe('');
   });
 });
 
@@ -289,5 +337,103 @@ describe('RSVPOverlay — CJK reading options', () => {
 
     expect(container.querySelector('.rsvp-word-orp')).not.toBeNull();
     expect(container.querySelector('.rsvp-word-whole')).toBeNull();
+  });
+});
+
+describe('RSVPOverlay — dictionary lookup (#4475)', () => {
+  afterEach(() => {
+    cleanup();
+    vi.restoreAllMocks();
+  });
+
+  const wordsState = () =>
+    buildState({
+      words: Array.from({ length: 10 }, (_, i) => ({
+        text: `w${i}`,
+        orpIndex: 0,
+        pauseMultiplier: 1,
+      })),
+      currentIndex: 5,
+      playing: true,
+    });
+
+  const mockSelection = (text: string, node: Node | null) => {
+    const rect = { left: 20, top: 30, right: 60, bottom: 44, width: 40, height: 14 };
+    const range = {
+      getBoundingClientRect: () => rect,
+      cloneRange() {
+        return range;
+      },
+    };
+    vi.spyOn(window, 'getSelection').mockReturnValue({
+      isCollapsed: text.length === 0,
+      anchorNode: node,
+      rangeCount: 1,
+      toString: () => text,
+      getRangeAt: () => range,
+      removeAllRanges: vi.fn(),
+    } as unknown as Selection);
+  };
+
+  test('the context panel is selectable', () => {
+    const { container } = renderOverlay(wordsState());
+    const panel = container.querySelector('[data-testid="rsvp-context-panel"]') as HTMLElement;
+    expect(panel.className).toContain('select-text');
+  });
+
+  test('selecting text in the context panel reveals a Look up action', () => {
+    const { container } = renderOverlay(wordsState());
+    const panel = container.querySelector('[data-testid="rsvp-context-panel"]') as HTMLElement;
+    mockSelection('serendipity', panel);
+    fireEvent.mouseUp(panel);
+    expect(container.querySelector('[aria-label="Look up"]')).not.toBeNull();
+  });
+
+  test('tapping Look up pauses playback and opens the dictionary with the selected text', () => {
+    const { container, controller } = renderOverlay(wordsState());
+    const panel = container.querySelector('[data-testid="rsvp-context-panel"]') as HTMLElement;
+    mockSelection('serendipity', panel);
+    fireEvent.mouseUp(panel);
+    fireEvent.click(container.querySelector('[aria-label="Look up"]') as HTMLElement);
+
+    expect(controller.pause).toHaveBeenCalled();
+    // jsdom's default viewport is desktop-sized, so the anchored popup is used.
+    const popup = container.querySelector('[data-testid="rsvp-dict-popup"]');
+    expect(popup).not.toBeNull();
+    expect(popup!.getAttribute('data-word')).toBe('serendipity');
+  });
+
+  test('clicking outside the popup dismisses it', () => {
+    const { container } = renderOverlay(wordsState());
+    const panel = container.querySelector('[data-testid="rsvp-context-panel"]') as HTMLElement;
+    mockSelection('serendipity', panel);
+    fireEvent.mouseUp(panel);
+    fireEvent.click(container.querySelector('[aria-label="Look up"]') as HTMLElement);
+    expect(container.querySelector('[data-testid="rsvp-dict-popup"]')).not.toBeNull();
+
+    // The transparent full-screen catcher behind the popup dismisses on click.
+    fireEvent.click(container.querySelector('.overlay') as HTMLElement);
+    expect(container.querySelector('[data-testid="rsvp-dict-popup"]')).toBeNull();
+  });
+
+  test('uses the bottom sheet on small screens', () => {
+    vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(420);
+    vi.spyOn(window, 'innerHeight', 'get').mockReturnValue(720);
+    const { container } = renderOverlay(wordsState());
+    const panel = container.querySelector('[data-testid="rsvp-context-panel"]') as HTMLElement;
+    mockSelection('serendipity', panel);
+    fireEvent.mouseUp(panel);
+    fireEvent.click(container.querySelector('[aria-label="Look up"]') as HTMLElement);
+
+    expect(container.querySelector('[data-testid="rsvp-dict-sheet"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="rsvp-dict-popup"]')).toBeNull();
+  });
+
+  test('an active selection suppresses word-click seeking', () => {
+    const { container, controller } = renderOverlay(wordsState());
+    const panel = container.querySelector('[data-testid="rsvp-context-panel"]') as HTMLElement;
+    mockSelection('w3 w4', panel);
+    fireEvent.click(container.querySelector('[data-rsvp-word-index="3"]') as HTMLElement);
+    expect(controller.seekToIndex).not.toHaveBeenCalled();
   });
 });

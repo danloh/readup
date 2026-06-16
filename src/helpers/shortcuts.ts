@@ -78,6 +78,11 @@ const DEFAULT_SHORTCUTS = {
     description: _('Toggle Paragraph Mode'),
     section: 'General',
   },
+  onStartRSVP: {
+    keys: ['shift+v'],
+    description: _('Speed Reading Mode'),
+    section: 'General',
+  },
   onHighlightSelection: {
     keys: ['ctrl+h', 'cmd+h'],
     description: _('Highlight Selection'),

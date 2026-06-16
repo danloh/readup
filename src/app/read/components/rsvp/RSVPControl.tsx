@@ -17,6 +17,7 @@ import { eventDispatcher } from '@/utils/event';
 import { useTranslation } from '@/hooks/useTranslation';
 import { BookNote, PageInfo } from '@/types/book';
 import { Insets } from '@/types/misc';
+import { getBaseFontFamily } from '@/styles/style';
 import RSVPOverlay from './RSVPOverlay';
 import RSVPStartDialog from './RSVPStartDialog';
 
@@ -111,8 +112,13 @@ const expandRangeToSentence = (range: Range, doc: Document): Range => {
 const RSVPControl: React.FC<RSVPControlProps> = ({ bookKey, gridInsets }) => {
   const _ = useTranslation();
   const { envConfig } = useEnv();
-  const { settings } = useSettingsStore();
-  const { getView, getProgress } = useReaderStore();
+  const { 
+    settings, 
+    setFontLayoutSettingsDialogOpen, 
+    setSettingsDialogBookKey, 
+    setActiveSettingsItemId 
+  } = useSettingsStore();
+  const { getView, getProgress, getViewSettings } = useReaderStore();
   const { getBookData, getConfig, setConfig, saveConfig } = useBookDataStore();
   const { themeCode } = useThemeStore();
 
@@ -180,6 +186,11 @@ const RSVPControl: React.FC<RSVPControlProps> = ({ bookKey, gridInsets }) => {
 
   const handleStart = useCallback(
     (selectionText?: string) => {
+      // RSVP can be started from the menu or the keyboard shortcut (#4473);
+      // ignore a repeat trigger while a session is already active so it does
+      // not re-open the start dialog over the running overlay.
+      if (controllerRef.current?.currentState.active) return;
+      
       const view = getView(bookKey);
       const bookData = getBookData(bookKey);
       const progress = getProgress(bookKey);
@@ -516,6 +527,20 @@ const RSVPControl: React.FC<RSVPControlProps> = ({ bookKey, gridInsets }) => {
   const chapters = bookData?.bookDoc?.toc || [];
   const currentChapterHref = rsvpChapterHrefRef.current ?? progress?.sectionHref ?? null;
 
+  // Mirror the reader's font face/family settings on the RSVP word. The overlay
+  // renders in the top document where the configured (and custom) fonts are
+  // already mounted, so the resolved family resolves the same typeface.
+  const viewSettings = getViewSettings(bookKey);
+  const fontFamily = viewSettings ? getBaseFontFamily(viewSettings) : undefined;
+
+  // Book language drives dictionary provider selection for context lookups (#4475).
+  const dictionaryLang = bookData?.bookDoc?.metadata?.language as string | undefined;
+  const handleManageDictionary = useCallback(() => {
+    setSettingsDialogBookKey(bookKey);
+    setActiveSettingsItemId('settings.language.dictionaries.manage');
+    setFontLayoutSettingsDialogOpen(true);
+  }, [bookKey, setActiveSettingsItemId, setSettingsDialogBookKey, setFontLayoutSettingsDialogOpen]);
+
   // Use portal to render overlay at body level to avoid stacking context issues
   const portalContainer = typeof document !== 'undefined' ? document.body : null;
 
@@ -545,9 +570,12 @@ const RSVPControl: React.FC<RSVPControlProps> = ({ bookKey, gridInsets }) => {
             title={bookData?.book?.title || ''}
             chapters={chapters}
             currentChapterHref={currentChapterHref}
+            fontFamily={fontFamily}
+            lang={dictionaryLang}
             onClose={handleClose}
             onChapterSelect={handleChapterSelect}
             onRequestNextPage={handleRequestNextPage}
+            onManageDictionary={handleManageDictionary}
           />,
           portalContainer,
         )}

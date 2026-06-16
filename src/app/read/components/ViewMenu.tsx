@@ -348,6 +348,7 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
       />
       <MenuItem
         label={_('Speed Reading Mode')}
+        shortcut='Shift+V'
         Icon={BiCheckbox}
         onClick={handleStartRSVP}
         disabled={bookData.isFixedLayout}
