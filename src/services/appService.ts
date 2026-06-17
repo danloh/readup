@@ -9,6 +9,7 @@ import {
   FileSystem,
   OsPlatform,
   ResolvedPath,
+  SaveLibraryBooksOptions,
   SelectDirectoryMode,
 } from '@/types/system';
 import { Book, BookConfig, BookContent, ImportBookOpts, Review, ViewSettings } from '@/types/book';
@@ -267,8 +268,8 @@ export abstract class BaseAppService implements AppService {
     return LibrarySvc.loadLibraryBooks(this.fs, this.generateCoverImageUrl.bind(this));
   }
 
-  async saveLibraryBooks(books: Book[]): Promise<void> {
-    return LibrarySvc.saveLibraryBooks(this.fs, books);
+  async saveLibraryBooks(books: Book[], options?: SaveLibraryBooksOptions): Promise<void> {
+    return LibrarySvc.saveLibraryBooks(this.fs, books, options);
   }
 
   // cloud

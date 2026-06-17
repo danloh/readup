@@ -135,6 +135,14 @@ export const formatTitle = (title: string | LanguageMap) => {
   return typeof title === 'string' ? title : formatLanguageMap(title);
 };
 
+export const formatSeries = (series?: string, seriesIndex?: number) => {
+  const name = series?.trim();
+  if (!name) return '';
+  const hasIndex =
+    typeof seriesIndex === 'number' && Number.isFinite(seriesIndex) && seriesIndex > 0;
+  return hasIndex ? `${name} #${seriesIndex}` : name;
+};
+
 export const formatPublisher = (publisher: string | LanguageMap) => {
   return typeof publisher === 'string' ? publisher : formatLanguageMap(publisher);
 };

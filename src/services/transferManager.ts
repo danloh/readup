@@ -161,6 +161,11 @@ class TransferManager {
     this.persistQueue();
   }
 
+  clearPending(): void {
+    useTransferStore.getState().clearPending();
+    this.persistQueue();
+  }
+
   private async processQueue(): Promise<void> {
     if (this.isProcessing) return;
 

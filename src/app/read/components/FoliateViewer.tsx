@@ -43,7 +43,7 @@ import { layoutWarichu, relayoutWarichu } from '@/utils/warichu';
 import Spinner from '@/components/Spinner';
 import { handleA11yNavigation } from '@/utils/a11y';
 import { transformContent } from '../transformers/transformService';
-import { useLongPressEvent, useMouseEvent, useTouchEvent } from '../hooks/useIframeEvents';
+import { useMouseEvent, useOpenMediaEvent, useTouchEvent } from '../hooks/useIframeEvents';
 import { usePagination, viewPagination } from '../hooks/usePagination';
 import { useFoliateEvents } from '../hooks/useFoliateEvents';
 import { useProgressAutoSave } from '../hooks/useProgressAutoSave';
@@ -335,7 +335,10 @@ const FoliateViewer: React.FC<{
         detail.doc.addEventListener('keyup', handleKeyup.bind(null, bookKey));
         detail.doc.addEventListener('mousedown', handleMousedown.bind(null, bookKey));
         detail.doc.addEventListener('mouseup', handleMouseup.bind(null, bookKey));
-        detail.doc.addEventListener('click', handleClick.bind(null, bookKey, doubleClickDisabled));
+        detail.doc.addEventListener(
+          'click',
+          handleClick.bind(null, bookKey, doubleClickDisabled, !!bookData?.isFixedLayout),
+        );
         detail.doc.addEventListener('wheel', handleWheel.bind(null, bookKey));
         detail.doc.addEventListener('touchstart', handleTouchStart.bind(null, bookKey));
         detail.doc.addEventListener('touchmove', handleTouchMove.bind(null, bookKey));
@@ -500,7 +503,7 @@ const FoliateViewer: React.FC<{
     setCurrentImageIndex(0);
   }, []);
 
-  useLongPressEvent(bookKey, handleImagePress, handleTablePress);
+  useOpenMediaEvent(bookKey, handleImagePress, handleTablePress);
 
   useFoliateEvents(viewRef.current, {
     onLoad: docLoadHandler,

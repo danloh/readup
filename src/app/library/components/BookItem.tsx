@@ -5,7 +5,7 @@ import { LiaInfoCircleSolid } from 'react-icons/lia';
 import { Book } from '@/types/book';
 import { useResponsiveSize } from '@/hooks/useResponsiveSize';
 import { LibraryViewModeType } from '@/types/settings';
-import { formatAuthors, formatDescription } from '@/utils/book';
+import { formatAuthors, formatDescription, formatSeries } from '@/utils/book';
 import { useTranslation } from '@/hooks/useTranslation';
 import BookCover from '@/app/library/components/BookCover';
 import ReadingProgress from './ReadingProgress';
@@ -39,6 +39,8 @@ const BookItem: React.FC<BookItemProps> = ({
       }
     : undefined;
 
+  const seriesText = formatSeries(book.metadata?.series, book.metadata?.seriesIndex);
+
   return (
     <div
       className={clsx(
@@ -68,15 +70,15 @@ const BookItem: React.FC<BookItemProps> = ({
         className={clsx(
           'flex w-full flex-col p-0',
           mode === 'grid' && 'pt-2',
-          mode === 'list' && 'gap-2',
+          mode === 'list' && 'gap-1',
         )}
       >
-        <div className={clsx('min-w-0 flex-1', mode === 'list' && 'flex flex-col gap-2')}>
+        <div className={clsx('min-w-0 flex-1', mode === 'list' && 'flex flex-col gap-1')}>
           <h4
             className={clsx(
               'overflow-hidden text-ellipsis font-semibold',
               mode === 'grid' && 'block whitespace-nowrap text-[0.6em] text-xs',
-              mode === 'list' && 'line-clamp-2 text-base',
+              mode === 'list' && 'line-clamp-1 text-base',
             )}
             title={formatDescription(book.metadata?.description)}
           >
@@ -88,6 +90,9 @@ const BookItem: React.FC<BookItemProps> = ({
             </p>
           )}
         </div>
+        {mode === 'list' && seriesText && (
+          <p className='text-neutral-content line-clamp-1 text-sm'>{seriesText}</p>
+        )}
         {mode === 'list' && (
           <h4 
             className='text-neutral-content line-clamp-1 text-xs' 
