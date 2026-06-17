@@ -119,7 +119,6 @@ const RSVPOverlay: React.FC<RSVPOverlayProps> = ({
   const { themeCode, isDarkMode: _isDarkMode } = useThemeStore();
   const [state, setState] = useState<RsvpState>(controller.currentState);
   const currentWord = controller.currentDisplayWord;
-  const [countdown, setCountdown] = useState<number | null>(controller.currentCountdown);
   const [showChapterDropdown, setShowChapterDropdown] = useState(false);
   const chapterDropdownRef = useRef<HTMLDivElement>(null);
   const [contextCollapsed, setContextCollapsed] = useState(() => {
@@ -184,21 +183,15 @@ const RSVPOverlay: React.FC<RSVPOverlayProps> = ({
       setState(newState);
     };
 
-    const handleCountdownChange = (e: Event) => {
-      setCountdown((e as CustomEvent<number | null>).detail);
-    };
-
     const handleRequestNextPage = () => {
       onRequestNextPage();
     };
 
     controller.addEventListener('rsvp-state-change', handleStateChange);
-    controller.addEventListener('rsvp-countdown-change', handleCountdownChange);
     controller.addEventListener('rsvp-request-next-page', handleRequestNextPage);
 
     return () => {
       controller.removeEventListener('rsvp-state-change', handleStateChange);
-      controller.removeEventListener('rsvp-countdown-change', handleCountdownChange);
       controller.removeEventListener('rsvp-request-next-page', handleRequestNextPage);
     };
   }, [controller, onRequestNextPage]);
@@ -731,18 +724,6 @@ const RSVPOverlay: React.FC<RSVPOverlayProps> = ({
 
             {/* Word section */}
             <div className='flex flex-col items-center justify-center'>
-              {/* Countdown */}
-              {countdown !== null && (
-                <div className='mb-2 flex items-center justify-center'>
-                  <span
-                    className='animate-pulse text-5xl font-bold sm:text-6xl md:text-7xl'
-                    style={{ color: accentColor }}
-                  >
-                    {countdown}
-                  </span>
-                </div>
-              )}
-
               {/* Word display */}
               <div 
                 className={clsx(

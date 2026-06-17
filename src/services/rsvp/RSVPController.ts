@@ -48,9 +48,7 @@ export class RSVPController extends EventTarget {
   };
 
   private playbackTimer: ReturnType<typeof setTimeout> | null = null;
-  private countdownTimer: ReturnType<typeof setInterval> | null = null;
   private pendingStartWordIndex: number | null = null;
-  private countdown: number | null = null;
   private cachedWords: { docIndex: number; doc: Document; words: RsvpWord[] } | null = null;
 
   constructor(view: FoliateView, bookKey: string, primaryLanguage?: string) {
@@ -116,10 +114,6 @@ export class RSVPController extends EventTarget {
     if (parts.length <= 1) return word;
     const partText = parts[this.state.currentPartIndex] ?? word.text;
     return { ...word, text: partText, orpIndex: this.calculateORP(partText) };
-  }
-
-  get currentCountdown(): number | null {
-    return this.countdown;
   }
 
   getPunctuationPauseOptions(): number[] {
@@ -449,14 +443,11 @@ export class RSVPController extends EventTarget {
     };
     this.emitStateChange();
 
-    this.startCountdown(() => {
-      this.scheduleNextWord();
-    });
+    this.scheduleNextWord();
   }
 
   pause(): void {
     this.clearTimer();
-    this.clearCountdown();
     this.state.playing = false;
     this.emitStateChange();
   }
@@ -465,36 +456,7 @@ export class RSVPController extends EventTarget {
     if (!this.state.active) return;
     this.state.playing = true;
     this.emitStateChange();
-    this.startCountdown(() => {
-      this.scheduleNextWord();
-    });
-  }
-
-  private startCountdown(onComplete: () => void): void {
-    this.clearCountdown();
-    let count = 3;
-    this.countdown = count;
-    this.emitCountdownChange();
-
-    this.countdownTimer = setInterval(() => {
-      count--;
-      if (count > 0) {
-        this.countdown = count;
-        this.emitCountdownChange();
-      } else {
-        this.clearCountdown();
-        onComplete();
-      }
-    }, 500);
-  }
-
-  private clearCountdown(): void {
-    if (this.countdownTimer) {
-      clearInterval(this.countdownTimer);
-      this.countdownTimer = null;
-    }
-    this.countdown = null;
-    this.emitCountdownChange();
+    this.scheduleNextWord();
   }
 
   togglePlayPause(): void {
@@ -525,7 +487,6 @@ export class RSVPController extends EventTarget {
     this.dispatchEvent(new CustomEvent('rsvp-stop', { detail: stopPosition }));
 
     this.clearTimer();
-    this.clearCountdown();
     this.state = {
       ...this.state,
       active: false,
@@ -760,9 +721,7 @@ export class RSVPController extends EventTarget {
     if (wasPlaying) {
       this.state.playing = true;
       this.emitStateChange();
-      this.startCountdown(() => {
-        this.scheduleNextWord();
-      });
+      this.scheduleNextWord();
     }
   }
 
@@ -1019,10 +978,6 @@ export class RSVPController extends EventTarget {
 
   private emitStateChange(): void {
     this.dispatchEvent(new CustomEvent('rsvp-state-change', { detail: this.currentState }));
-  }
-
-  private emitCountdownChange(): void {
-    this.dispatchEvent(new CustomEvent('rsvp-countdown-change', { detail: this.countdown }));
   }
 
   shutdown(): void {
