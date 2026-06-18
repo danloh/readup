@@ -12,6 +12,8 @@ import {
   IoAdd,
   IoChevronDown,
   IoSearch,
+  IoVolumeMediumOutline,
+  IoVolumeHigh,
 } from 'react-icons/io5';
 import { IoMdColorPalette } from 'react-icons/io';
 import { TbLetterA, TbLetterASmall } from 'react-icons/tb';
@@ -21,12 +23,15 @@ import { HiMenuAlt2 } from "react-icons/hi";
 import { Insets } from '@/types/misc';
 import { RsvpState, RSVPController, containsCJK } from '@/services/rsvp';
 import { useThemeStore } from '@/store/themeStore';
+import { useSettingsStore } from '@/store/settingsStore';
 import { TOCItem } from '@/libs/document';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Overlay } from '@/components/Overlay';
 import { getPopupPosition, Position } from '@/utils/sel';
 import DictionarySheet from '../annotator/DictionarySheet';
 import DictionaryPopup from '../annotator/DictionaryPopup';
+import { TtsSyncStatus } from './RSVPControl';
+import TTSFollowIndicator from '../tts/TTSFollowIndicator';
 
 interface ContextWordProps {
   text: string;
@@ -70,6 +75,10 @@ const CONTEXT_CHUNK_SIZE = 50;
 const CONTEXT_WINDOW_BEFORE = 200;
 const CONTEXT_WINDOW_AFTER = 1000;
 
+// TTS rate options for the overlay's rate picker (decision 6) — mirrors the
+// 0.5–3.0 range the TTS panel slider clamps to, in 0.25 steps.
+const TTS_RATE_OPTIONS = [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5, 2.75, 3.0];
+
 // Dictionary lookup popup sizing (mirrors the reader's Annotator popup).
 const DICT_POPUP_PADDING = 10;
 const DICT_POPUP_MAX_WIDTH = 480;
@@ -95,6 +104,24 @@ interface RSVPOverlayProps {
   fontFamily?: string;
   /** Book language, used to pick dictionary providers for context lookups. */
   lang?: string;
+  /** Derived TTS-sync status driving the "following audio" indicator (#3235). */
+  ttsSyncStatus?: TtsSyncStatus;
+  /** True when following is paced by the estimator (non-Edge sentence sync). */
+  estimated?: boolean;
+  /** True when TTS audio is engaged (playing/paused) — drives the audio toggle. */
+  ttsActive?: boolean;
+  /** True when TTS is actively playing (vs paused) — drives the transport icon. */
+  ttsPlaying?: boolean;
+  /** Current TTS playback rate, shown selected in the rate picker (decision 6). */
+  ttsRate?: number;
+  /** Toggle TTS audio: start from the current word, or stop when engaged. */
+  onToggleTtsAudio?: () => void;
+  /** Pause/resume TTS — the transport play/pause maps here while read-along is on. */
+  onToggleTtsPlay?: () => void;
+  /** Set the TTS rate (one-shot) when the WPM control is TTS-driven. */
+  onSetTtsRate?: (rate: number) => void;
+  /** Re-engage following after a manual nav decoupled it (indicator action). */
+  onResumeTtsFollow?: () => void;
   onClose: () => void;
   onChapterSelect: (href: string) => void;
   onRequestNextPage: () => void;
@@ -110,6 +137,15 @@ const RSVPOverlay: React.FC<RSVPOverlayProps> = ({
   currentChapterHref,
   fontFamily,
   lang,
+  ttsSyncStatus = 'idle',
+  estimated = false,
+  ttsActive = false,
+  ttsPlaying = false,
+  ttsRate = 1,
+  onToggleTtsAudio,
+  onToggleTtsPlay,
+  onSetTtsRate,
+  onResumeTtsFollow,
   onClose,
   onChapterSelect,
   onRequestNextPage,
@@ -117,8 +153,20 @@ const RSVPOverlay: React.FC<RSVPOverlayProps> = ({
 }) => {
   const _ = useTranslation();
   const { themeCode, isDarkMode: _isDarkMode } = useThemeStore();
+  const isSettingsDialogOpen = useSettingsStore((s) => s.isFontLayoutSettingsDialogOpen);
   const [state, setState] = useState<RsvpState>(controller.currentState);
   const currentWord = controller.currentDisplayWord;
+
+  // The transport (center) play/pause controls TTS while read-along is engaged,
+  // otherwise RSVP's own timer (#3235). A ref keeps the latest closure so the
+  // capture-phase keyboard/tap effects don't need it in their dep arrays.
+  const transportToggleRef = useRef<() => void>(() => {});
+  transportToggleRef.current = () => {
+    if (ttsActive && onToggleTtsPlay) onToggleTtsPlay();
+    else controller.togglePlayPause();
+  };
+  const transportPlaying = ttsActive ? ttsPlaying : state.playing;
+
   const [showChapterDropdown, setShowChapterDropdown] = useState(false);
   const chapterDropdownRef = useRef<HTMLDivElement>(null);
   const [contextCollapsed, setContextCollapsed] = useState(() => {
@@ -204,11 +252,15 @@ const RSVPOverlay: React.FC<RSVPOverlayProps> = ({
       // the dictionary, not the whole RSVP session).
       if (dict) return;
 
+      // Dictionary management (settings dialog) opens OVER RSVP; let it own the
+      // keyboard so its inputs accept space and Escape closes it, not RSVP.
+      if (isSettingsDialogOpen) return;
+
       switch (event.key) {
         case ' ':
           event.preventDefault();
           event.stopPropagation();
-          controller.togglePlayPause();
+          transportToggleRef.current();
           break;
         case 'Escape':
           event.preventDefault();
@@ -249,7 +301,7 @@ const RSVPOverlay: React.FC<RSVPOverlayProps> = ({
     // Use capture phase to handle events before they reach dropdown/select elements
     document.addEventListener('keydown', handleKeyboard, { capture: true });
     return () => document.removeEventListener('keydown', handleKeyboard, { capture: true });
-  }, [state.active, controller, onClose, dict]);
+  }, [state.active, controller, onClose, dict, isSettingsDialogOpen]);
 
   const effectiveChapterHref = currentChapterHref;
 
@@ -391,7 +443,7 @@ const RSVPOverlay: React.FC<RSVPOverlayProps> = ({
       } else if (tapX > screenWidth * 0.75) {
         controller.skipForward(15);
       } else {
-        controller.togglePlayPause();
+        transportToggleRef.current();
       }
     }
   };
@@ -584,6 +636,15 @@ const RSVPOverlay: React.FC<RSVPOverlayProps> = ({
     localStorage.setItem(STORAGE_KEY_ORP_COLOR, color || accentColor);
   }, []);
 
+  // The WPM timer doesn't drive pacing while RSVP follows TTS — the voice does.
+  // Replace the WPM control with an "Audio pace" affordance that opens a TTS
+  // rate picker instead (decision 6, #3235).
+  // 'paused' keeps the WPM "Audio pace" lock too, so pausing doesn't shift layout.
+  const ttsDriven =
+    ttsSyncStatus === 'following' || 
+    ttsSyncStatus === 'syncing' || 
+    ttsSyncStatus === 'paused';
+
   return (
     <div
       data-testid='rsvp-overlay'
@@ -661,6 +722,24 @@ const RSVPOverlay: React.FC<RSVPOverlayProps> = ({
           )}
         </div>
       </div>
+
+      {/* TTS "following audio" status row — slim, below the header and above the
+          context panel (never inside the transport row). Uses the 'plain' variant
+          to match the overlay's own theme-painted surface. idle/unsupported
+          collapse to nothing. */}
+      {(ttsSyncStatus === 'following' ||
+        ttsSyncStatus === 'syncing' ||
+        ttsSyncStatus === 'decoupled' ||
+        ttsSyncStatus === 'paused') && (
+        <div className='flex shrink-0 justify-center px-3 pb-1 md:px-4'>
+          <TTSFollowIndicator
+            status={ttsSyncStatus}
+            estimated={estimated}
+            onResume={onResumeTtsFollow}
+            variant='plain'
+          />
+        </div>
+      )}
 
       {/* Context panel (always visible, collapsible) */}
       <div className='mx-3 overflow-hidden rounded-lg border border-gray-500/20 bg-gray-500/10 md:mx-4 md:rounded-xl'>
@@ -852,15 +931,15 @@ const RSVPOverlay: React.FC<RSVPOverlayProps> = ({
             </button>
 
             <button
-              aria-label={state.playing ? _('Pause') : _('Play')}
+              aria-label={transportPlaying ? _('Pause') : _('Play')}
               className={clsx(
                 'flex h-14 w-14 cursor-pointer items-center justify-center rounded-full border-none bg-gray-500/15 transition-colors hover:bg-gray-500/25 active:scale-95 md:h-16 md:w-16',
-                state.playing ? '' : 'ps-1',
+                transportPlaying ? '' : 'ps-1',
               )}
-              onClick={() => controller.togglePlayPause()}
-              title={state.playing ? _('Pause (Space)') : _('Play (Space)')}
+              onClick={() => transportToggleRef.current()}
+              title={transportPlaying ? _('Pause (Space)') : _('Play (Space)')}
             >
-              {state.playing ? (
+              {transportPlaying ? (
                 <IoPause className='h-7 w-7 md:h-8 md:w-8' />
               ) : (
                 <IoPlay className='h-7 w-7 md:h-8 md:w-8' />
@@ -876,6 +955,53 @@ const RSVPOverlay: React.FC<RSVPOverlayProps> = ({
               <IoPlaySkipForward className='h-5 w-5 md:h-6 md:w-6' />
               <span className='text-xs font-semibold opacity-80'>15</span>
             </button>
+
+            {/* Trailing cluster: audio (TTS) toggle + divider + settings gear.
+              The audio toggle starts TTS from the displayed word (or stops it
+              when engaged) — never a second play triangle (decision 5). Active
+              state uses a filled glyph + eink-bordered surface so it reads in
+              e-ink without relying on color. */}
+            <div className='flex items-center gap-1 ms-2 hidden'>
+              <button
+                aria-label={ttsActive ? _('Pause audio') : _('Play audio')}
+                className={clsx(
+                  'touch-target flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border-none transition-colors active:scale-95',
+                  ttsActive
+                    ? 'eink-bordered bg-[color-mix(in_srgb,var(--rsvp-accent)_18%,transparent)]'
+                    : 'bg-transparent hover:bg-gray-500/20',
+                )}
+                onClick={() => onToggleTtsAudio?.()}
+                title={ttsActive ? _('Pause audio') : _('Play audio')}
+              >
+                {ttsActive ? (
+                  <IoVolumeHigh
+                    className='h-4 w-4 md:h-5 md:w-5'
+                    style={{ color: accentColor }}
+                    aria-hidden='true'
+                  />
+                ) : (
+                  <IoVolumeMediumOutline className='h-4 w-4 md:h-5 md:w-5' aria-hidden='true' />
+                )}
+              </button>
+              {ttsDriven && (
+                <div className='flex items-center'>
+                  <label className='flex cursor-pointer items-center gap-1 text-xs opacity-80'>
+                    <select
+                      className='cursor-pointer rounded p-1 text-xs font-medium'
+                      value={ttsRate}
+                      onChange={(e) => onSetTtsRate?.(parseInt(e.target.value || '1'))}
+                      title={_('TTS Rate')}
+                    >
+                      {TTS_RATE_OPTIONS.map((rate) => (
+                        <option key={rate} value={rate} style={{ color: accentColor }}>
+                          {rate.toFixed(2)}×
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Secondary controls row on mobile, split on desktop */}
@@ -927,7 +1053,7 @@ const RSVPOverlay: React.FC<RSVPOverlayProps> = ({
             </div>
 
             {/* Punctuation pause */}
-            <div className='flex items-center'>
+            <div className='flex items-center hidden'>
               <label className='flex cursor-pointer items-center gap-1 text-xs opacity-80'>
                 <span className='text-xs'><MdOutlineMotionPhotosPause size={18} /></span>
                 <select

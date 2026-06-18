@@ -553,6 +553,30 @@ describe('TTSController', () => {
     });
   });
 
+  describe('tts-position event', () => {
+    test('dispatchSpeakMark emits tts-position with kind sentence, cfi, sectionIndex and sequence', async () => {
+      await controller.initViewTTS(0);
+      mockView.tts = {
+        setMark: vi.fn().mockReturnValue(new Range()),
+        getLastRange: vi.fn(),
+      } as unknown as FoliateView['tts'];
+      vi.mocked(mockView.getCFI).mockReturnValue('cfi-sentence');
+
+      const listener = vi.fn();
+      controller.addEventListener('tts-position', listener);
+
+      controller.dispatchSpeakMark({ offset: 0, name: '0', text: 'hello', language: 'en' });
+
+      expect(listener).toHaveBeenCalledTimes(1);
+      const ev = listener.mock.calls[0]![0] as CustomEvent;
+      expect(ev.detail.kind).toBe('sentence');
+      expect(ev.detail.cfi).toBe('cfi-sentence');
+      // initViewTTS(0) set the TTS section index to 0.
+      expect(ev.detail.sectionIndex).toBe(0);
+      expect(typeof ev.detail.sequence).toBe('number');
+    });
+  });
+
   describe('shutdown', () => {
     test('stops playback and clears tts', async () => {
       const stopSpy = vi.spyOn(controller, 'stop').mockResolvedValue();
