@@ -8,7 +8,8 @@
 
 use futures_util::TryStreamExt;
 use serde::{ser::Serializer, Serialize};
-use tauri::{command, ipc::Channel};
+use tauri::{command, ipc::Channel, AppHandle};
+use tauri_plugin_fs::FsExt;
 use tokio::{
     fs::File,
     io::{AsyncWriteExt, BufWriter},
@@ -80,6 +81,49 @@ pub enum Error {
     ContentLength(String),
     #[error("request failed with status code {0}: {1}")]
     HttpErrorCode(u16, String),
+    #[error("permission denied: path not in filesystem scope: {0}")]
+    Forbidden(String),
+}
+
+/// Reject paths the webview must not be allowed to target: relative paths and
+/// any `..` parent-directory traversal. `fs_scope().is_allowed` is a glob match,
+/// so a `..` segment could otherwise escape an allowed prefix.
+fn has_disallowed_components(file_path: &str) -> bool {
+    let path = std::path::Path::new(file_path);
+    !path.is_absolute()
+        || path
+            .components()
+            .any(|c| matches!(c, std::path::Component::ParentDir))
+}
+
+/// The app's own storage always carries either the data folder or the
+/// app's bundle identifier in its path — the Android sandbox
+/// (`/data/user/0/<identifier>/…`, including the cache dir) and the desktop
+/// identifier dirs (`…/<identifier>/…`). Those paths aren't in the global
+/// `fs_scope()` (their capability patterns are command-scoped), so `is_allowed`
+/// returns false for the app's own files. Accept these segments as a fallback,
+/// the way `dir_scanner::read_dir` does. `..` is already rejected, so foreign
+/// targets (e.g. `~/.ssh/id_rsa`) stay blocked.
+fn is_within_app_storage(file_path: &str, app_identifier: &str) -> bool {
+    file_path.contains("Readup") || file_path.contains(app_identifier)
+}
+
+/// Validate a webview-supplied `file_path` before any `File::create`/`File::open`.
+/// Without this, `download_file`/`upload_file` would write/read arbitrary local
+/// paths (e.g. `~/.ssh/id_rsa`, autostart entries) from any JS running in the
+/// privileged Tauri origin — see GHSA-55vr-pvq5-6fmg. We require an absolute,
+/// traversal-free path that is either granted by the fs scope (persisted dialog
+/// grants for custom/external roots) or lives inside the app's own storage.
+fn ensure_path_allowed(app: &AppHandle, file_path: &str) -> Result<()> {
+    if has_disallowed_components(file_path) {
+        return Err(Error::Forbidden(file_path.to_string()));
+    }
+    if app.fs_scope().is_allowed(std::path::Path::new(file_path))
+        || is_within_app_storage(file_path, &app.config().identifier)
+    {
+        return Ok(());
+    }
+    Err(Error::Forbidden(file_path.to_string()))
 }
 
 impl Serialize for Error {
@@ -100,7 +144,9 @@ pub struct ProgressPayload {
 }
 
 #[command]
+#[allow(clippy::too_many_arguments)] // Tauri command surface mirrors the JS caller's options.
 pub async fn download_file(
+    app: AppHandle,
     url: &str,
     file_path: &str,
     headers: HashMap<String, String>,
@@ -112,6 +158,8 @@ pub async fn download_file(
     use futures::stream::{self, StreamExt};
     use std::cmp::min;
     use tokio::io::AsyncSeekExt;
+
+    ensure_path_allowed(&app, file_path)?;
 
     const PART_SIZE: u64 = 1024 * 1024;
 
@@ -277,12 +325,15 @@ pub async fn download_file(
 
 #[command]
 pub async fn upload_file(
+    app: AppHandle,
     url: &str,
     file_path: &str,
     method: &str,
     headers: HashMap<String, String>,
     on_progress: Channel<ProgressPayload>,
 ) -> Result<String> {
+    ensure_path_allowed(&app, file_path)?;
+
     let file = File::open(file_path).await?;
     let file_len = file.metadata().await.unwrap().len();
 
@@ -327,4 +378,61 @@ fn file_to_body(channel: Channel<ProgressPayload>, file: File, file_len: u64) ->
             });
         }),
     ))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{has_disallowed_components, is_within_app_storage};
+
+    #[test]
+    fn app_storage_fallback_accepts_app_paths() {
+        let id = "cc.readup";
+        // Covers, dictionaries, books, gloss packs — under the `Readup` data dir.
+        assert!(is_within_app_storage(
+            "/data/user/0/cc.readup/Readup/Books/abc/cover.png",
+            id
+        ));
+        assert!(is_within_app_storage(
+            "/data/user/0/cc.readup/Readup/Dictionaries/x/d.mdx",
+            id
+        ));
+        // Cache-dir downloads (e.g. OPDS) carry no `Readup` segment but are still
+        // inside the app sandbox, matched via the bundle identifier.
+        assert!(is_within_app_storage(
+            "/data/user/0/cc.readup/cache/opds-book.epub",
+            id
+        ));
+        // Foreign targets carry neither segment and stay blocked.
+        assert!(!is_within_app_storage("/home/user/.ssh/id_rsa", id));
+        assert!(!is_within_app_storage("/etc/passwd", id));
+    }
+
+    #[test]
+    fn rejects_relative_and_traversal_paths() {
+        // Relative paths can't be reasoned about against an absolute scope.
+        assert!(has_disallowed_components("relative/file.epub"));
+        assert!(has_disallowed_components("file.epub"));
+        // `..` traversal, whether the path is relative or absolute.
+        assert!(has_disallowed_components("foo/../bar"));
+        assert!(has_disallowed_components(
+            "/home/user/Readup/../../.ssh/id_rsa"
+        ));
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn accepts_plain_absolute_paths() {
+        assert!(!has_disallowed_components(
+            "/Users/x/Library/Caches/app/book.epub"
+        ));
+        assert!(!has_disallowed_components("/Users/x/Readup/Books/h.epub"));
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn accepts_plain_absolute_paths_windows() {
+        assert!(!has_disallowed_components(
+            "C:\\Users\\x\\AppData\\Roaming\\Readup\\Books\\h.epub"
+        ));
+    }
 }

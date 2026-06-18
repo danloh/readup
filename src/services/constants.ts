@@ -66,7 +66,7 @@ export const DEFAULT_SYSTEM_SETTINGS: Partial<SystemSettings> = {
   libraryViewMode: 'grid',
   libraryGroupBy: LibraryGroupByType.Group,
   librarySortBy: LibrarySortByType.Updated,
-  librarySortAscending: true,
+  librarySortAscending: false,
   pinCodeEnabled: false,
   aiSettings: DEFAULT_AI_SETTINGS,
   customDictionaries: [],
