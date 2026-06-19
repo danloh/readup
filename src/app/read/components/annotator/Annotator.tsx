@@ -40,7 +40,7 @@ import { writeTextToClipboard } from '@/utils/clipboard';
 import { getIndexFromCfi } from '@/utils/cfi';
 import { useFoliateEvents } from '../../hooks/useFoliateEvents';
 import { useTextSelector } from '../../hooks/useTextSelector';
-import { getHighlightColorHex } from '../../utils/annotatorUtil';
+import { decideAnnotationDraw, getHighlightColorHex, mergeRestyledAnnotation } from '../../utils/annotatorUtil';
 import { 
   beginGesture,
   createDeferredActionState, 
@@ -443,22 +443,28 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
     const detail = (event as CustomEvent).detail;
     const { draw, annotation, doc, range } = detail;
     const { style, color } = annotation as BookNote;
+    const value = (annotation as BookNote & { value?: string }).value;
     const hexColor = getHighlightColorHex(settings, color);
     const einkBgColor = isDarkMode ? '#000000' : '#ffffff';
     const einkFgColor = isDarkMode ? '#ffffff' : '#000000';
       
-    if (annotation.note) {
+    // Choose what to draw from the overlay's `value` (cfi vs NOTE_PREFIX+cfi),
+    // not from `annotation.note`: a unified record (style + note) is added as
+    // two overlays and must draw a highlight for the cfi overlay AND a bubble
+    // for the note overlay. Keying off `note` drew only the bubble (#4511).
+    const kind = decideAnnotationDraw(value, style);
+    if (kind === 'bubble') {
       const { defaultView } = doc;
       const node = range.startContainer;
       const el = node.nodeType === 1 ? node : node.parentElement;
       const { writingMode } = defaultView.getComputedStyle(el);
       draw(Overlayer.bubble, { writingMode });
-    } else if (style === 'highlight') {
+    } else if (kind === 'highlight') {
       draw(Overlayer.highlight, {
         color: isBwEink ? einkBgColor : hexColor,
         vertical: viewSettings.vertical,
       });
-    } else if (['underline', 'squiggly'].includes(style as string)) {
+    } else if (['underline', 'squiggly'].includes(kind as string)) {
       const { defaultView } = doc;
       const node = range.startContainer;
       const el = node.nodeType === 1 ? node : node.parentElement;
@@ -471,7 +477,7 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
       const padding = viewSettings.vertical
         ? (lineHeightValue - fontSizeValue) / 2 - strokeWidth + verticalCompensation
         : (lineHeightValue - fontSizeValue) / 2 - strokeWidth + horizontalCompensation;
-      draw(Overlayer[style as keyof typeof Overlayer], {
+      draw(Overlayer[kind as keyof typeof Overlayer], {
         writingMode,
         color: isBwEink ? einkFgColor : hexColor,
         padding,
@@ -976,15 +982,17 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
         views.forEach((view) => removeGlobalAnnotationOverlays(view, existing));
       }
       if (update) {
-        annotation.id = existing.id;
-        // Carry the existing `global` flag forward — toggling color/style
-        // shouldn't silently demote a global highlight back to single-range.
-        if (existing.global) annotation.global = true;
-        annotations[existingIndex] = annotation;
-        views.forEach((view) => view?.addAnnotation(annotation));
-        if (annotation.global) {
+        // Preserve the note/text/createdAt and the `global` flag of the existing
+        // record so a restyle (color/style change) of a unified annotation
+        // doesn't wipe its note or silently demote a global highlight. The note
+        // bubble overlay (NOTE_PREFIX) isn't torn down above, so it persists; we
+        // only redraw the highlight overlay (value = cfi).
+        const merged = mergeRestyledAnnotation(existing, annotation);
+        annotations[existingIndex] = merged;
+        views.forEach((view) => view?.addAnnotation(merged));
+        if (merged.global) {
           views.forEach((view) => {
-            if (view) expandAllRenderedSections(view, annotation);
+            if (view) expandAllRenderedSections(view, merged);
           });
         }
       } else {

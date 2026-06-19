@@ -1,5 +1,5 @@
 import { HIGHLIGHT_COLOR_HEX } from '@/services/constants';
-import { BookNote, HighlightColor } from '@/types/book';
+import { BookNote, HighlightColor, HighlightStyle } from '@/types/book';
 import { SystemSettings } from '@/types/settings';
 import { FoliateView, NOTE_PREFIX } from '@/types/view';
 import { Point, snapRangeToWords } from '@/utils/sel';
@@ -165,4 +165,51 @@ export function removeBookNoteOverlays(view: FoliateView | null, note: BookNote)
   if (note.note && note.note.trim().length > 0) {
     view.addAnnotation({ ...note, value: `${NOTE_PREFIX}${note.cfi}` }, true);
   }
+}
+
+export type AnnotationDrawKind = 'bubble' | 'highlight' | 'underline' | 'squiggly' | 'none';
+
+/**
+ * Decide what an overlay should draw for an annotation. The bubble vs.
+ * highlight choice keys off the overlay's `value` prefix — NOT `annotation.note`
+ * — so a single unified record draws BOTH its highlight overlay (value = cfi)
+ * and its note bubble (value = `${NOTE_PREFIX}${cfi}`).
+ */
+export function decideAnnotationDraw(
+  value: string | undefined,
+  style: HighlightStyle | undefined,
+): AnnotationDrawKind {
+  if (value?.startsWith(NOTE_PREFIX)) return 'bubble';
+  if (style === 'highlight') return 'highlight';
+  if (style === 'underline' || style === 'squiggly') return style;
+  return 'none';
+}
+
+/**
+ * Index of the live (`!deletedAt`) annotation record at `cfi`, or -1. Used when
+ * adding a note so it attaches to the existing highlight instead of creating a
+ * second record at the same position.
+ */
+export function findAnnotationAtCfi(booknotes: BookNote[], cfi: string): number {
+  return booknotes.findIndex(
+    (note) => note.type === 'annotation' && note.cfi === cfi && !note.deletedAt,
+  );
+}
+
+/**
+ * Merge a freshly-built restyle (`restyled`, carrying the new style/color) onto
+ * an `existing` annotation, preserving the parts a restyle must not lose: the
+ * record id, its note text, the selected text, the original creation time, and
+ * the `global` flag. Without preserving `note`, recoloring a unified annotation
+ * would wipe the note.
+ */
+export function mergeRestyledAnnotation(existing: BookNote, restyled: BookNote): BookNote {
+  return {
+    ...restyled,
+    id: existing.id,
+    createdAt: existing.createdAt,
+    note: existing.note,
+    text: existing.text ?? restyled.text,
+    global: existing.global || restyled.global,
+  };
 }
