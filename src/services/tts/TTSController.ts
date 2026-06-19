@@ -11,6 +11,14 @@ import { TTSUtils } from './TTSUtils';
 import { TTSClient } from './TTSClient';
 import { isValidLang } from '@/utils/lang';
 
+// App-wide monotonic sequence for 'tts-position' events. A fresh TTSController
+// is constructed per `tts-speak`, so a per-instance counter would restart at 0
+// and consumers (paragraph mode, RSVP) holding `lastSequenceSeen` from a prior
+// session would drop the new session's early positions until they exceeded the
+// old count. A module-level counter keeps the sequence strictly increasing
+// across sessions.
+let ttsPositionSequence = 0;
+
 type TTSState =
   | 'stopped'
   | 'playing'
@@ -32,9 +40,6 @@ export class TTSController extends EventTarget {
   #currentSpeakAbortController: AbortController | null = null;
   #currentSpeakPromise: Promise<void> | null = null;
   #ttsSectionIndex: number = -1;
-  // Monotonic counter for the canonical 'tts-position' event so downstream
-  // consumers (paragraph mode, RSVP) can drop out-of-order positions.
-  #positionSequence: number = 0;
 
   state: TTSState = 'stopped';
   ttsLang: string = '';
@@ -571,7 +576,7 @@ export class TTSController extends EventTarget {
           cfi,
           kind,
           sectionIndex: this.#ttsSectionIndex,
-          sequence: ++this.#positionSequence,
+          sequence: ++ttsPositionSequence,
         },
       }),
     );
