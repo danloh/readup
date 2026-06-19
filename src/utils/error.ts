@@ -22,6 +22,7 @@ export const isAuthError = (error: unknown): boolean => {
       errorMessage.includes('unauthorized') ||
       errorMessage.includes('token') ||
       errorMessage.includes('session') ||
+      errorMessage.includes('log') ||
       errorString.includes('401') ||
       errorString.includes('403') ||
       errorString.includes('unauthenticated')

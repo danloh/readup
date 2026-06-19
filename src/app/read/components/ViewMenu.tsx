@@ -1,11 +1,13 @@
 import clsx from 'clsx';
 import React, { useEffect, useState } from 'react';
 import { GrSystem } from "react-icons/gr";
-import { MdZoomOut, MdZoomIn, MdSync, MdSyncProblem } from 'react-icons/md';
+import { MdZoomOut, MdZoomIn, MdSync } from 'react-icons/md';
 import { PiScrollLight, PiBookOpenLight, PiParagraphFill } from "react-icons/pi";
 import { BiCheckboxChecked, BiCheckbox, BiMoon, BiSun } from "react-icons/bi";
 import { IoMdExpand, IoMdShare } from 'react-icons/io';
 import { TbArrowAutofitWidth, TbColumns1, TbColumns2 } from 'react-icons/tb';
+import { CiUser } from 'react-icons/ci';
+import { FaUser } from 'react-icons/fa';
 
 import { MAX_ZOOM_LEVEL, MIN_ZOOM_LEVEL, ZOOM_STEP } from '@/services/constants';
 import { useEnv } from '@/context/EnvContext';
@@ -36,7 +38,7 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
   setIsDropdownOpen,
 }) => {
   const _ = useTranslation();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { envConfig, appService } = useEnv();
   const { getBookData } = useBookDataStore();
   const { getView, getViewSettings, getProgress, setViewSettings } = useReaderStore();
@@ -85,6 +87,15 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
       setIsDropdownOpen?.(false);
     } else {
       eventDispatcher.dispatch('sync-book-config', { bookKey });
+    }
+  };
+
+  const handleAuth = () => {
+    if (!user) {
+      setAuthDialogVisible(true);
+      setIsDropdownOpen?.(false);
+    } else {
+      logout();
     }
   };
 
@@ -380,20 +391,23 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
       )}
       <hr aria-hidden='true' className='border-base-300 my-1' />
       <MenuItem label={_('Share Book')} Icon={IoMdShare} onClick={handleShare} />
-      <hr aria-hidden='true' className='border-base-200 my-1' />
-      <MenuItem
-        label={
-          !user
-            ? _('Sign in to Sync')
-            : lastSyncTime
-              ? _('Synced at {{time}}', {
-                  time: formatLocaleDateTime(lastSyncTime),
-                })
+      <hr aria-hidden='true' className='border-base-300 my-1' />
+      {user && (
+        <MenuItem
+          label={
+            lastSyncTime
+              ? _('Synced at {{time}}', { time: formatLocaleDateTime(lastSyncTime)})
               : _('Never synced')
-        }
-        Icon={user ? MdSync : MdSyncProblem}
-        description={_('Sync annotations, progress...')}
-        onClick={handleSync}
+          }
+          Icon={MdSync}
+          description={_('Sync annotations, progress...')}
+          onClick={handleSync}
+        />
+      )}
+      <MenuItem
+        label={user ? _('Sign Out') : _('Sign In')}
+        Icon={user ? FaUser : CiUser}
+        onClick={handleAuth}
       />
     </Menu>
   );

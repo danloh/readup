@@ -55,9 +55,7 @@ class TransferManager {
     return this.isInitialized && this.appService !== null;
   }
 
-  queueUpload(
-    book: Book, priority: number = 10, syncConfig: boolean = false,
-  ): string | null {
+  queueUpload(book: Book, priority: number = 10, syncConfig: boolean = false): string | null {
     if (!this.isReady()) {
       console.warn('TransferManager not initialized');
       return null;
