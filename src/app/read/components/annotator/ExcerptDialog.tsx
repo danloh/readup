@@ -307,7 +307,7 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
         type: 'warning',
       });
       setAuthDialogVisible(true);
-      onCancel();
+      // onCancel();
       return;
     }
     
@@ -344,7 +344,7 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
               type: 'warning',
             });
             setAuthDialogVisible(true);
-            onCancel();
+            // onCancel();
             return;
           }
           
@@ -473,7 +473,7 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
           type: 'warning',
         });
         setAuthDialogVisible(true);
-        onCancel();
+        // onCancel();
         return;
       }
       
