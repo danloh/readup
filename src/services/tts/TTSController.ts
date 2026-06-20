@@ -594,6 +594,22 @@ export class TTSController extends EventTarget {
     }
   }
 
+  // Re-emit the controller's current position on the canonical 'tts-position'
+  // signal with a fresh (monotonic) sequence. Lets a follower that engages
+  // mid-session (paragraph / RSVP mode entered while TTS is already playing or
+  // paused) sync to the current position without waiting for the next word or
+  // sentence boundary. Mirrors reapplyCurrentHighlight's word-vs-sentence
+  // choice, but dispatches a position instead of drawing a highlight.
+  redispatchPosition() {
+    if (this.#ttsSectionIndex < 0) return;
+    const range = this.view.tts?.getLastRange();
+    if (!range) return;
+    try {
+      const cfi = this.view.getCFI(this.#ttsSectionIndex, range);
+      if (cfi) this.#dispatchPosition(cfi, 'sentence');
+    } catch {}
+  }
+
   error(e: unknown) {
     // AbortError is expected during normal stop/restart cycles (rate change,
     // forward/backward, voice change) — on iOS especially, the in-flight

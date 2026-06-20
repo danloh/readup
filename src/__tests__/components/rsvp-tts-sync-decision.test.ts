@@ -3,7 +3,7 @@ import {
   decideRsvpTtsPosition,
   type RsvpTtsSyncState,
   type RsvpTtsPositionDetail,
-} from '@/app/reader/components/rsvp/RSVPControl';
+} from '@/app/read/components/rsvp/RSVPControl';
 
 const BOOK_KEY = 'hash123-session456';
 

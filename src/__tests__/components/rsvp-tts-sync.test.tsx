@@ -4,7 +4,7 @@ import { createRef } from 'react';
 import { render, act, cleanup } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import RSVPControl, { type RSVPControlHandle } from '@/app/reader/components/rsvp/RSVPControl';
+import RSVPControl, { type RSVPControlHandle } from '@/app/read/components/rsvp/RSVPControl';
 import { eventDispatcher } from '@/utils/event';
 
 // Mounts the real RSVPControl with a mocked RSVPController + stores and asserts
@@ -30,6 +30,7 @@ function makeControllerMock() {
     }),
     startFromCurrentPosition: vi.fn(),
     stop: vi.fn(),
+    pause: vi.fn(),
     loadNextPageContent: vi.fn(),
     setExternallyDriven: vi.fn(),
     stopEstimator: vi.fn(),
@@ -73,6 +74,7 @@ vi.mock('@/store/readerStore', () => {
       monospaceFont: 'Menlo',
       defaultCJKFont: 'Noto',
     }),
+    getViewState: () => null,
   };
   return {
     useReaderStore: <R,>(selector?: (s: typeof state) => R) => (selector ? selector(state) : state),
@@ -362,6 +364,28 @@ describe('RSVPControl — TTS sync wiring (slice 5, #3235)', () => {
         });
       });
       expect(handle.current?.ttsSyncStatus).toBe('idle');
+    });
+
+    test('pauses RSVP (does not keep running) when the TTS session stops', async () => {
+      render(
+        <RSVPControl bookKey={BOOK_KEY} gridInsets={{ top: 0, bottom: 0, left: 0, right: 0 }} />,
+      );
+      await startSession();
+      await act(async () => {
+        await eventDispatcher.dispatch('tts-playback-state', {
+          bookKey: BOOK_KEY,
+          state: 'playing',
+        });
+      });
+      await act(async () => {
+        await eventDispatcher.dispatch('tts-playback-state', {
+          bookKey: BOOK_KEY,
+          state: 'stopped',
+        });
+      });
+      // The driving session ended → RSVP must freeze (pause), not resume its own
+      // auto-advance pacing.
+      expect(controllerMock.pause).toHaveBeenCalled();
     });
 
     test('decoupled on a manual nav while playing', async () => {
