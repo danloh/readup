@@ -42,6 +42,7 @@ import { getIndexFromCfi } from '@/utils/cfi';
 import { layoutWarichu, relayoutWarichu } from '@/utils/warichu';
 import Spinner from '@/components/Spinner';
 import { handleA11yNavigation } from '@/utils/a11y';
+import { getScrollGapAttr } from '@/utils/webtoon';
 import { transformContent } from '../transformers/transformService';
 import { useMouseEvent, useOpenMediaEvent, useTouchEvent } from '../hooks/useIframeEvents';
 import { usePagination, viewPagination } from '../hooks/usePagination';
@@ -591,6 +592,7 @@ const FoliateViewer: React.FC<{
         view.renderer.setAttribute('zoom', viewSettings.zoomMode);
         view.renderer.setAttribute('spread', viewSettings.spreadMode);
         view.renderer.setAttribute('scale-factor', viewSettings.zoomLevel);
+        view.renderer.setAttribute('scroll-gap', getScrollGapAttr(viewSettings.webtoonMode));
       } else {
         view.renderer.setAttribute('max-column-count', maxColumnCount);
         view.renderer.setAttribute('max-inline-size', `${maxInlineSize}px`);
