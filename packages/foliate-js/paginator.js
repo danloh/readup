@@ -347,8 +347,15 @@ export const computeBackgroundSegments = (views, scrollPos, bgSize, inset, conta
 // and the resolved colour otherwise. Shared by scrolled-mode view elements and
 // paginated-mode segments so both modes treat textures identically (#4399).
 export const textureAwareBackground = (resolved, hasTexture) => {
-    const isTransparent = !resolved
-        || /^\s*(transparent|rgba\(0,\s*0,\s*0,\s*0\))/.test(resolved)
+    // A page that paints an image (e.g. a cover set via body `background-image`)
+    // is NOT transparent — it should occlude the texture, not be dropped. The
+    // computed `background` shorthand always serializes the transparent
+    // background-*color* first (`rgba(0, 0, 0, 0) url(...) ...`), so the
+    // colour-prefix check below would otherwise misclassify a cover as
+    // transparent and hide it behind the texture (verified on Android WebView).
+    const hasImage = /\burl\(/i.test(resolved ?? '')
+    const isTransparent = !hasImage && (!resolved
+        || /^\s*(transparent|rgba\(0,\s*0,\s*0,\s*0\))/.test(resolved))
     return hasTexture && isTransparent ? '' : resolved
 }
 
@@ -678,6 +685,10 @@ class View {
                     width: '100%',
                     height: '100%',
                     margin: '0',
+                    // stretch edge-to-edge, ignoring aspect ratio, so the cover
+                    // fills the whole page like Duokan's native full-page render
+                    // (overrides the 'contain' set for all images above)
+                    'object-fit': 'fill',
                 })
                 let ancestor = el.parentElement
                 while (ancestor && ancestor !== doc.body) {
@@ -690,7 +701,7 @@ class View {
                     ancestor = ancestor.parentElement
                 }
                 if (el.localName === 'svg') {
-                    el.setAttribute('preserveAspectRatio', 'xMidYMid meet')
+                    el.setAttribute('preserveAspectRatio', 'none')
                 }
             } else if (pageFullscreen) {
                 // Scrolled mode for a fullscreen-cover doc: undo any absolute
