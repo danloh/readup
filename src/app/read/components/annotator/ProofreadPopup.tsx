@@ -1,7 +1,6 @@
 import clsx from 'clsx';
 import React, { useRef, useState } from 'react';
 import { RiListSettingsLine } from 'react-icons/ri';
-
 import { useEnv } from '@/context/EnvContext';
 import { useReaderStore } from '@/store/readerStore';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -46,6 +45,7 @@ const ProofreadPopup: React.FC<ProofreadPopupProps> = ({
   const [replacementText, setReplacementText] = useState('');
   const [caseSensitive, setCaseSensitive] = useState(true);
   const [wholeWord, setWholeWord] = useState(!isPunctuationOnly(selection?.text || ''));
+  const [isRegex, setIsRegex] = useState(false);
   const [scope, setScope] = useState<ProofreadScope>('selection');
   const [onlyForTTS, setOnlyForTTS] = useState(false);
 
@@ -67,12 +67,14 @@ const ProofreadPopup: React.FC<ProofreadPopupProps> = ({
     const range = selection?.range;
 
     if (range) {
+      // A regex pattern defines its own boundaries, so the whole-word
+      // validation (which inspects the literal selection) doesn't apply.
       const isValidWholeWord = isWholeWord(range, selection?.text || '');
 
-      if (wholeWord && !isValidWholeWord) {
+      if (!isRegex && wholeWord && !isValidWholeWord) {
         eventDispatcher.dispatch('toast', {
           type: 'warning',
-          message: 'Please select a whole word or uncheck the "Whole word" option.',
+          message: _('Please select a whole word or uncheck the "Whole word" option.'),
           timeout: 5000,
         });
         return;
@@ -90,10 +92,10 @@ const ProofreadPopup: React.FC<ProofreadPopupProps> = ({
         replacement: replacementText.trim(),
         cfi: selection.cfi,
         sectionHref: progress?.sectionHref,
-        isRegex: false,
+        isRegex,
         enabled: true,
         caseSensitive,
-        wholeWord: wholeWord,
+        wholeWord: isRegex ? false : wholeWord,
         onlyForTTS: scope !== 'selection' ? onlyForTTS : undefined,
       };
       onConfirm?.(options);
@@ -140,13 +142,13 @@ const ProofreadPopup: React.FC<ProofreadPopupProps> = ({
                 title={_('Proofread Replacement Rules')}
                 className='not-eink:text-gray-400 not-eink:hover:bg-gray-600 not-eink:hover:text-white shrink-0 rounded p-1'
               >
-                <RiListSettingsLine size={15} />
+                <RiListSettingsLine size={16} />
               </button>
             )}
           </div>
 
           <div className='flex items-center justify-between gap-2'>
-            <label htmlFor='replacement-input' className='text-xs'>
+            <label htmlFor='replacement-input' className='font-bold'>
               {_('Replace with:')}
             </label>
             <input
@@ -178,7 +180,7 @@ const ProofreadPopup: React.FC<ProofreadPopupProps> = ({
           </div>
         </div>
 
-        <div className='flex flex-col flex-wrap items-start gap-4 p-4'>
+        <div className='flex flex-wrap items-center gap-4 p-4'>
           <label className='flex cursor-pointer items-center gap-2'>
             <span className='line-clamp-1 text-xs' title={_('Case sensitive:')}>
               {_('Case sensitive:')}
@@ -191,15 +193,33 @@ const ProofreadPopup: React.FC<ProofreadPopupProps> = ({
             />
           </label>
 
-          <label className='flex cursor-pointer items-center gap-2'>
+          <label
+            className={clsx(
+              'flex items-center gap-2',
+              isRegex ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
+            )}
+          >
             <span className='line-clamp-1 text-xs' title={_('Whole word:')}>
               {_('Whole word:')}
             </span>
             <input
               type='checkbox'
+              disabled={isRegex}
               className='toggle toggle-success h-4'
-              checked={wholeWord}
+              checked={isRegex ? false : wholeWord}
               onChange={(e) => setWholeWord(e.target.checked)}
+            />
+          </label>
+
+          <label className='flex cursor-pointer items-center gap-2'>
+            <span className='line-clamp-1 text-xs' title={_('Regex:')}>
+              {_('Regex:')}
+            </span>
+            <input
+              type='checkbox'
+              className='toggle toggle-success h-4'
+              checked={isRegex}
+              onChange={(e) => setIsRegex(e.target.checked)}
             />
           </label>
 
@@ -217,7 +237,7 @@ const ProofreadPopup: React.FC<ProofreadPopupProps> = ({
           </label>
         </div>
         <div className='flex flex-1 items-center justify-between gap-2 p-4'>
-          <label htmlFor='scope-select' className='line-clamp-1 text-xs' title={_('Scope:')}>
+          <label htmlFor='scope-select' className='line-clamp-1' title={_('Scope:')}>
             {_('Scope:')}
           </label>
           <Select

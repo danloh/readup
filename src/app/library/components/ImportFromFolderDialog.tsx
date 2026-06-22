@@ -359,7 +359,7 @@ const ImportFromFolderDialog: React.FC<ImportFromFolderDialogProps> = ({
           </button>
           <button
             type='button'
-            className={clsx('btn btn-primary btn-sm', confirmDisabled && 'btn-disabled')}
+            className={clsx('btn btn-contrast btn-sm', confirmDisabled && 'btn-disabled')}
             disabled={confirmDisabled}
             onClick={handleConfirm}
           >

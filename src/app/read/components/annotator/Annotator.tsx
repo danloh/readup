@@ -70,6 +70,7 @@ import ExcerptDialog from './ExcerptDialog';
 import DictionarySheet from './DictionarySheet';
 import SelectionRangeEditor from './SelectionRangeEditor';
 import { buildAnnotationIndex, selectLocationAnnotations } from '../../utils/annotationIndex';
+import { useRendererInputListeners } from '../../hooks/useRendererInputListeners';
 
 const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
   bookKey,
@@ -301,35 +302,16 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
       handleTouchMove(ev);
     };
 
-    const handleNativeTouch = (event: CustomEvent) => {
-      const ev = event.detail as NativeTouchEventType;
-      if (ev.type === 'touchstart') {
-        androidTouchEndRef.current = false;
-        beginGesture(deferredQuickActionRef.current);
-        handleTouchStart();
-      } else if (ev.type === 'touchmove') {
-        // The Android pointer engagement signal (throttled in MainActivity.kt).
-        handleNativeTouchMove(ev.x, ev.y, doc);
-      } else if (ev.type === 'touchend') {
-        androidTouchEndRef.current = true;
-        handleTouchEnd();
-        handlePointerUp(doc, index);
-        flushDeferredAction(deferredQuickActionRef.current);
-      }
-    };
-
-    if (appService?.isAndroidApp) {
-      listenToNativeTouchEvents();
-      eventDispatcher.on('native-touch', handleNativeTouch);
-    }
-
     // Attach generic selection listeners for all formats, including PDF.
     // For PDF we only guarantee Copy & Translate; highlight/annotate may be limited by CFI support.
-    view?.renderer?.addEventListener('scroll', handleScroll);
-    // Reposition popups on scroll to keep them in view
-    view?.renderer?.addEventListener('scroll', () => {
-      repositionPopups();
-    });
+    //
+    // The renderer `scroll` listener and the Android `native-touch` bridge are
+    // NOT attached here: onLoad fires for every (pre)loaded section, but those
+    // listeners live on the renderer / global dispatcher, which outlive sections.
+    // Attaching them per load leaked one set per chapter and degraded paragraph
+    // mode over a long session. They are registered once per view via
+    // useRendererInputListeners below. Popup repositioning on scroll is already
+    // handled by the dedicated effect further down.
     const opts = { passive: false };
     detail.doc?.addEventListener('touchstart', handleTouchStart, opts);
     detail.doc?.addEventListener('touchmove', handleTouchmove, opts);
@@ -540,6 +522,41 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
   };
 
   useFoliateEvents(view, { onLoad, onCreateOverlay, onDrawAnnotation, onShowAnnotation });
+
+  // Android native-touch handler (the per-gesture engagement signal bridged from
+  // MainActivity.kt). Registered once per view by useRendererInputListeners; it
+  // resolves the CURRENT primary section's doc/index at fire time rather than
+  // capturing them at load time, because foliate also fires `load` for preloaded
+  // neighbour sections, whose doc/index would be off-screen.
+  const handleNativeTouch = (ev: NativeTouchEventType) => {
+    const contents = view?.renderer?.getContents?.() ?? [];
+    const content = contents.find((c) => c.index === view?.renderer?.primaryIndex) ?? contents[0];
+    const doc = content?.doc;
+    const index = content?.index;
+    if (!doc || index === undefined) return;
+    if (ev.type === 'touchstart') {
+      androidTouchEndRef.current = false;
+      beginGesture(deferredQuickActionRef.current);
+      handleTouchStart();
+    } else if (ev.type === 'touchmove') {
+      handleNativeTouchMove(ev.x, ev.y, doc);
+    } else if (ev.type === 'touchend') {
+      androidTouchEndRef.current = true;
+      handleTouchEnd();
+      handlePointerUp(doc, index);
+      flushDeferredAction(deferredQuickActionRef.current);
+    }
+  };
+
+  // Register the renderer `scroll` listener and (on Android) the `native-touch`
+  // bridge once per view, with cleanup — see the hook for why attaching these in
+  // onLoad leaked listeners and degraded paragraph mode over a long session.
+  useRendererInputListeners(view, {
+    onRendererScroll: handleScroll,
+    onNativeTouch: handleNativeTouch,
+    enableNativeTouch: !!appService?.isAndroidApp,
+    listenToNativeTouchEvents,
+  });
 
   useEffect(() => {
     handleShowPopup(showingPopup);
@@ -1123,7 +1140,12 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
   };
 
   const handleProofread = () => {
-    if (!selection || !selection.text) return;
+    // With no active selection the shortcut (Ctrl/Cmd+P) has nothing to turn
+    // into a rule, so reuse it to open the replacement-rules manager instead.
+    if (!selection || !selection.text) {
+      setProofreadRulesVisibility(true);
+      return;
+    }
     setShowAnnotPopup(false);
     setShowProofreadPopup(true);
 
