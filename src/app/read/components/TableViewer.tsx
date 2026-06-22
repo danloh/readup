@@ -66,6 +66,7 @@ const TableViewer: React.FC<TableViewerProps> = ({ gridInsets, html, isDarkMode,
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     e.stopPropagation();
+
     // Escape is handled by useKeyDownActions (also covers Android Back key).
 
     const isCtrlOrCmd = e.ctrlKey || e.metaKey;
@@ -182,7 +183,7 @@ const TableViewer: React.FC<TableViewerProps> = ({ gridInsets, html, isDarkMode,
       <div
         role='button'
         tabIndex={0}
-        className='absolute inset-0 bg-black/50 backdrop-blur-md'
+        className='table-viewer-overlay absolute inset-0 not-eink:bg-black/50 eink:bg-base-100 not-eink:backdrop-blur-md'
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             onClose();

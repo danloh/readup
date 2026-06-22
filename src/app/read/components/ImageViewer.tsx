@@ -1,8 +1,11 @@
 import clsx from 'clsx';
 import React, { useState, useRef, useEffect } from 'react';
 import { IoChevronBack, IoChevronForward } from 'react-icons/io5';
+import { useEnv } from '@/context/EnvContext';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useKeyDownActions } from '@/hooks/useKeyDownActions';
+import { eventDispatcher } from '@/utils/event';
+import { dataUrlToBytes, imageExtensionFromMime } from '@/utils/image';
 import { Insets } from '@/types/misc';
 import ZoomControls from './ZoomControls';
 
@@ -27,6 +30,9 @@ const ImageViewer: React.FC<ImageViewerProps> = ({
   gridInsets,
 }) => {
   const _ = useTranslation();
+  const { appService } = useEnv();
+  // On Android the button saves straight to the photo gallery
+  const saveToGallery = appService?.isAndroidApp ?? false;
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
@@ -324,6 +330,49 @@ const ImageViewer: React.FC<ImageViewerProps> = ({
     hideZoomLabelAfterDelay();
   };
 
+  // Save the currently viewed image to the device. `appService.saveFile`
+  // routes to the native/web Share sheet where available and falls back to a
+  // save dialog / browser download otherwise.
+  const handleSaveImage = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (!src || !appService) return;
+    // Anchor the macOS / iPad share popover to the button rect (mirrors the
+    // annotation export flow); ignored on platforms that don't use it.
+    const rect = e.currentTarget.getBoundingClientRect();
+    const sharePos = {
+      x: rect.left + rect.width / 2,
+      y: rect.top,
+      preferredEdge: 'bottom' as const,
+    };
+    try {
+      const { bytes, mimeType } = dataUrlToBytes(decodeURIComponent(src));
+      const filename = `image.${imageExtensionFromMime(mimeType)}`;
+      let saved = false;
+      if (saveToGallery) {
+        saved = await appService.saveImageToGallery(
+          filename,
+          bytes.buffer as ArrayBuffer,
+          mimeType,
+        );
+      } else {
+        saved = await appService.saveFile(filename, bytes.buffer as ArrayBuffer, {
+          share: false,
+          mimeType,
+          sharePos,
+        });
+      }
+      eventDispatcher.dispatch('toast', {
+        type: saved ? 'info' : 'error',
+        message: saved ? _('Image saved to gallery') : _('Failed to save the image'),
+      });
+    } catch (error) {
+      console.error('Failed to save image:', error);
+      eventDispatcher.dispatch('toast', {
+        type: 'error',
+        message: _('Failed to save the image'),
+      });
+    }
+  };
+
   const onDoubleClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -390,7 +439,7 @@ const ImageViewer: React.FC<ImageViewerProps> = ({
       <div
         role='button'
         tabIndex={0}
-        className='not-eink:bg-black/50 eink:bg-base-100 not-eink:backdrop-blur-md absolute inset-0'
+        className='image-viewer-overlay not-eink:bg-black/50 eink:bg-base-100 not-eink:backdrop-blur-md absolute inset-0'
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             onClose();
@@ -400,6 +449,7 @@ const ImageViewer: React.FC<ImageViewerProps> = ({
       <ZoomControls
         gridInsets={gridInsets}
         onClose={onClose}
+        onSave={handleSaveImage}
         onZoomIn={handleZoomIn}
         onZoomOut={handleZoomOut}
         onReset={handleReset}

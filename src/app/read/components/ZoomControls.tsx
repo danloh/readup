@@ -1,5 +1,11 @@
 import React from 'react';
-import { IoClose, IoExpand, IoAdd, IoRemove } from 'react-icons/io5';
+import {
+  IoClose,
+  IoExpand,
+  IoAdd,
+  IoRemove,
+  IoDownloadOutline,
+} from 'react-icons/io5';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useThemeStore } from '@/store/themeStore';
 import { Insets } from '@/types/misc';
@@ -7,6 +13,7 @@ import { Insets } from '@/types/misc';
 interface ZoomControlsProps {
   gridInsets: Insets;
   onClose: () => void;
+  onSave?: (e: React.MouseEvent<HTMLButtonElement>) => void;
   onZoomIn: () => void;
   onZoomOut: () => void;
   onReset: () => void;
@@ -15,6 +22,7 @@ interface ZoomControlsProps {
 const ZoomControls: React.FC<ZoomControlsProps> = ({
   gridInsets,
   onClose,
+  onSave,
   onZoomIn,
   onZoomOut,
   onReset,
@@ -38,6 +46,17 @@ const ZoomControls: React.FC<ZoomControlsProps> = ({
       >
         <IoClose className='h-6 w-6' />
       </button>
+
+      {onSave && (
+        <button
+          onClick={onSave}
+          className='eink-bordered flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-black/50 transition-colors hover:bg-black/70'
+          aria-label={_('Save Image')}
+          title={_('Save Image')}
+        >
+          <IoDownloadOutline className='h-6 w-6' />
+        </button>
+      )}
 
       <button
         onClick={onZoomIn}

@@ -141,6 +141,9 @@ export interface AppService {
       sharePos?: { x: number; y: number; preferredEdge?: 'top' | 'bottom' | 'left' | 'right' };
     },
   ): Promise<boolean>;
+  // Save an image into the system photo gallery (Android MediaStore). Returns
+  // false on platforms without a gallery (web/desktop) or on failure.
+  saveImageToGallery(filename: string, content: ArrayBuffer, mimeType: string): Promise<boolean>;
   /**
    * Best-effort: extend the Tauri `fs_scope` and `asset_protocol_scope`
    * to cover the given paths. No-op on web. Used after a directory or
