@@ -29,7 +29,7 @@ export async function loadLibraryBooks(
 
   await processInBatches(books, COVER_CONCURRENCY, async (book) => {
     book.coverImageUrl = await generateCoverImageUrl(book);
-    book.updatedAt = Date.now();
+    book.updatedAt = book.updatedAt || Date.now();
   });
 
   return books;

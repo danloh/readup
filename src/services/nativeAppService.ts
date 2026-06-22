@@ -736,7 +736,7 @@ export class NativeAppService extends BaseAppService {
         srcPath,
         fileName: filename,
         mimeType,
-        albumName: 'Readest',
+        albumName: 'Readup',
       });
       return res.success;
     } catch (error) {

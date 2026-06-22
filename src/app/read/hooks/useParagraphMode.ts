@@ -3,17 +3,17 @@ import { useReaderStore } from '@/store/readerStore';
 import { useBookDataStore } from '@/store/bookDataStore';
 import { useEnv } from '@/context/EnvContext';
 import { FoliateView } from '@/types/view';
-import { saveViewSettings } from '@/helpers/settings';
 import { eventDispatcher } from '@/utils/event';
+import { saveViewSettings } from '@/helpers/settings';
 import { ParagraphIterator } from '@/utils/paragraph';
 import { getParagraphPresentation } from '@/utils/paragraphPresentation';
-import { isRangeLike } from '@/utils/range';
 import { DEFAULT_PARAGRAPH_MODE_CONFIG } from '@/services/constants';
-import { 
-  buildParagraphTtsSpeakDetail, 
-  computeParagraphHighlightOffsets, 
-  decideParagraphTtsHighlight 
-} from '../components/paragraph/paragraphTts';
+import { isRangeLike } from '@/utils/range';
+import {
+  buildParagraphTtsSpeakDetail,
+  computeParagraphHighlightOffsets,
+  decideParagraphTtsHighlight,
+} from '@/app/read/components/paragraph/paragraphTts';
 
 interface UseParagraphModeProps {
   bookKey: string;
@@ -67,7 +67,6 @@ export const useParagraphMode = ({ bookKey, viewRef }: UseParagraphModeProps) =>
     paragraphCfi: string;
     docIndex: number;
   } | null>(null);
-
   // TTS-sync (one-way follower): TTS is the clock, paragraph mode follows it.
   const followingTtsRef = useRef(false);
   const lastSequenceSeenRef = useRef(-Infinity);
@@ -91,7 +90,6 @@ export const useParagraphMode = ({ bookKey, viewRef }: UseParagraphModeProps) =>
   // mode is still on); only a full stop clears it. Drives the bar's audio toggle.
   const ttsActiveRef = useRef(false);
   const refreshTtsSyncStatusRef = useRef<(() => void) | null>(null);
-
   bookKeyRef.current = bookKey;
 
   const [paragraphState, setParagraphState] = useState<ParagraphState>({
@@ -129,8 +127,7 @@ export const useParagraphMode = ({ bookKey, viewRef }: UseParagraphModeProps) =>
   // pulling refreshTtsSyncStatus into its (widely-depended-on) deps array.
   refreshTtsSyncStatusRef.current = refreshTtsSyncStatus;
 
-  const paragraphConfig = 
-    getViewSettings(bookKey)?.paragraphMode ?? DEFAULT_PARAGRAPH_MODE_CONFIG;
+  const paragraphConfig = getViewSettings(bookKey)?.paragraphMode ?? DEFAULT_PARAGRAPH_MODE_CONFIG;
 
   const getPrimaryContent = useCallback(() => {
     const view = viewRef.current;
@@ -208,10 +205,14 @@ export const useParagraphMode = ({ bookKey, viewRef }: UseParagraphModeProps) =>
         const isSameDoc = progressRange?.startContainer?.ownerDocument === doc;
         const lastParagraph = lastParagraphRef.current;
 
-        const resolveRangeFromLocation = (): Range | null => {
-          if (!progressLocation) return null;
+        // Resolve a CFI against the CURRENT document. A CFI is document-instance
+        // independent, so this survives the section iframe being recreated when
+        // paragraph mode toggles — unlike a stored Range, which is bound to the
+        // document it was created in.
+        const resolveRangeFromCfi = (cfi?: string | null): Range | null => {
+          if (!cfi) return null;
           try {
-            const resolved = view.resolveCFI(progressLocation);
+            const resolved = view.resolveCFI(cfi);
             if (!resolved || resolved.index !== docIndex) return null;
             const anchor = resolved.anchor(doc);
             // Realm-safe: iframe-realm Range fails top-realm `instanceof Range`.
@@ -231,26 +232,22 @@ export const useParagraphMode = ({ bookKey, viewRef }: UseParagraphModeProps) =>
           if (!lastParagraph || !progressLocation) return null;
           if (lastParagraph.progressLocation !== progressLocation) return null;
           if (lastParagraph.docIndex !== docIndex) return null;
-          try {
-            const resolved = view.resolveCFI(lastParagraph.paragraphCfi);
-            if (!resolved || resolved.index !== docIndex) return null;
-            const anchor = resolved.anchor(doc);
-            // Realm-safe: iframe-realm Range fails top-realm `instanceof Range`.
-            if (isRangeLike(anchor)) return anchor;
-            if (anchor) {
-              const range = doc.createRange();
-              range.selectNodeContents(anchor);
-              return range;
-            }
-          } catch {
-            return null;
-          }
-          return null;
+          return resolveRangeFromCfi(lastParagraph.paragraphCfi);
         };
 
+        // Resume from the freshest current position. The view's live lastLocation
+        // CFI is set synchronously by foliate on every relocate; the readerStore
+        // progress is rAF-debounced and can lag, which sent resume to a stale page
+        // (the chapter start) and let repeated enter/exit walk further back (#4717).
+        // The view's live lastLocation CFI is foliate-generated and well-formed,
+        // so it's the most reliable resume target. The stored last-paragraph CFI
+        // is `view.getCFI` of a paragraph block range, which can come out malformed
+        // and resolve to an empty range — so it must NOT take priority (#4717).
         const targetRange =
+          resolveRangeFromCfi(view.lastLocation?.cfi) ??
           resolveRangeFromLastParagraph() ??
-          (isSameDoc ? progressRange : resolveRangeFromLocation());
+          (isSameDoc ? progressRange : null) ??
+          resolveRangeFromCfi(progressLocation);
 
         if (targetRange && iteratorRef.current) {
           try {
@@ -281,7 +278,6 @@ export const useParagraphMode = ({ bookKey, viewRef }: UseParagraphModeProps) =>
           applySyncCfiRef.current?.(pending.cfi, action !== 'skip');
           refreshTtsSyncStatusRef.current?.();
         }
-        
         return true;
       } finally {
         isProcessingRef.current = false;
@@ -293,48 +289,59 @@ export const useParagraphMode = ({ bookKey, viewRef }: UseParagraphModeProps) =>
     return initPromise;
   }, [getPrimaryContent, viewRef, getProgress, updateStateFromIterator]);
 
-  const focusCurrentParagraph = useCallback(async () => {
-    const view = viewRef.current;
-    const iterator = iteratorRef.current;
-    if (!view || !iterator) return;
+  // `align` scrolls the underlying view so the focused paragraph sits at the page
+  // top. Pass `false` when entering/resuming paragraph mode: the focused paragraph
+  // is already on screen, and scrolling to its start rewinds the reading position
+  // whenever that paragraph began on an earlier page — repeated enter/exit would
+  // then walk back to the chapter start (#4717). Navigation passes `true` so the
+  // view follows to off-screen paragraphs.
+  const focusCurrentParagraph = useCallback(
+    async (align = true) => {
+      const view = viewRef.current;
+      const iterator = iteratorRef.current;
+      if (!view || !iterator) return;
 
-    const range = iterator.current();
-    if (!range) return;
+      const range = iterator.current();
+      if (!range) return;
 
-    await new Promise((r) => requestAnimationFrame(r));
+      await new Promise((r) => requestAnimationFrame(r));
 
-    if (focusResetTimerRef.current) {
-      clearTimeout(focusResetTimerRef.current);
-    }
+      if (focusResetTimerRef.current) {
+        clearTimeout(focusResetTimerRef.current);
+      }
 
-    const presentation = getParagraphPresentation(
-      range.startContainer.ownerDocument,
-      range,
-      getViewSettings(bookKeyRef.current),
-    );
+      const presentation = getParagraphPresentation(
+        range.startContainer.ownerDocument,
+        range,
+        getViewSettings(bookKeyRef.current),
+      );
 
-    isFocusingRef.current = true;
-    const docIndex = currentDocIndexRef.current;
-    const renderer = view.renderer as FoliateView['renderer'] & {
-      goTo?: (target: { index: number; anchor: Range }) => Promise<void>;
-    };
-    if (docIndex !== undefined && renderer.goTo) {
-      renderer.goTo({ index: docIndex, anchor: range });
-    } else {
-      view.renderer.scrollToAnchor?.(range);
-    }
-    focusResetTimerRef.current = setTimeout(() => {
-      isFocusingRef.current = false;
-    }, 200);
+      if (align) {
+        isFocusingRef.current = true;
+        const docIndex = currentDocIndexRef.current;
+        const renderer = view.renderer as FoliateView['renderer'] & {
+          goTo?: (target: { index: number; anchor: Range }) => Promise<void>;
+        };
+        if (docIndex !== undefined && renderer.goTo) {
+          renderer.goTo({ index: docIndex, anchor: range });
+        } else {
+          view.renderer.scrollToAnchor?.(range);
+        }
+        focusResetTimerRef.current = setTimeout(() => {
+          isFocusingRef.current = false;
+        }, 200);
+      }
 
-    eventDispatcher.dispatch('paragraph-focus', {
-      bookKey: bookKeyRef.current,
-      range,
-      index: iterator.currentIndex,
-      total: iterator.length,
-      presentation,
-    });
-  }, [getViewSettings, viewRef]);
+      eventDispatcher.dispatch('paragraph-focus', {
+        bookKey: bookKeyRef.current,
+        range,
+        index: iterator.currentIndex,
+        total: iterator.length,
+        presentation,
+      });
+    },
+    [getViewSettings, viewRef],
+  );
 
   // Sync-focus path for TTS following. Moves focus to `index` and scrolls/emits
   // exactly like focusCurrentParagraph but WITHOUT arming isFocusingRef. The
@@ -644,7 +651,8 @@ export const useParagraphMode = ({ bookKey, viewRef }: UseParagraphModeProps) =>
 
         const success = await initIterator();
         if (success) {
-          await focusCurrentParagraph();
+          // Resume: don't scroll the underlying view (would rewind, #4717).
+          await focusCurrentParagraph(false);
         }
       } else {
         setViewSettings(bookKeyRef.current, { ...settings, paragraphMode: newConfig });
@@ -665,7 +673,9 @@ export const useParagraphMode = ({ bookKey, viewRef }: UseParagraphModeProps) =>
                 docIndex,
               };
             }
-            view.renderer.scrollToAnchor?.(range);
+            // Don't scroll to the paragraph on exit: navigation already moved the
+            // view to the focused paragraph, and re-anchoring to its start rewinds
+            // the reading position when it began on an earlier page (#4717).
           }
         }
         eventDispatcher.dispatch('paragraph-mode-disabled', { bookKey: bookKeyRef.current });
@@ -694,7 +704,8 @@ export const useParagraphMode = ({ bookKey, viewRef }: UseParagraphModeProps) =>
       const init = async () => {
         const success = await initIterator();
         if (success) {
-          await focusCurrentParagraph();
+          // Resume on open: don't scroll the underlying view (would rewind, #4717).
+          await focusCurrentParagraph(false);
         }
       };
       const timer = setTimeout(init, 100);
