@@ -47,7 +47,8 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
   const [shouldUploadBook, setShouldUploadBook] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
-  const [attachQr, setAttachQr] = useState(true);
+  const [toAttachQr, setToAttachQr] = useState(true);
+  const [qrAttached, setQrAttached] = useState(false);
   const [customHashtags, setCustomHashtags] = useState<string>('');
 
   // Style customization state
@@ -393,8 +394,8 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
 
       // Add QR code to iframe
       let finalImageUrl = imageUrl;
-      const iframe = attachQr && bookUploaded ? iframeRef.current : undefined;
-      if (iframe && iframe.contentDocument) {
+      const iframe = toAttachQr && bookUploaded ? iframeRef.current : undefined;
+      if (iframe && iframe.contentDocument && !qrAttached) {
         const iframeBody = iframe.contentDocument.body;
         const qrSection = iframe.contentDocument.createElement('div');
         qrSection.className = 'qr-code';
@@ -444,6 +445,7 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
 
         // Use the new image with QR code for sharing
         finalImageUrl = dataUrlWithQR;
+        setQrAttached(true);
       }
 
       const agent = await getAtpAgent();
@@ -670,8 +672,8 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
           <label className='flex items-center gap-3 cursor-pointer'>
             <input
               type='checkbox'
-              checked={attachQr}
-              onChange={(e) => setAttachQr(e.target.checked)}
+              checked={toAttachQr}
+              onChange={(e) => setToAttachQr(e.target.checked)}
               className='checkbox checkbox-xs'
               disabled={isRendering}
             />

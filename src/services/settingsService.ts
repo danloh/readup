@@ -19,7 +19,7 @@ import {
   DEFAULT_SCREEN_CONFIG,
   DEFAULT_TRANSLATOR_CONFIG,
   SETTINGS_FILENAME,
-  //DEFAULT_MOBILE_SYSTEM_SETTINGS,
+  DEFAULT_MOBILE_SYSTEM_SETTINGS,
   DEFAULT_ANNOTATOR_CONFIG,
   DEFAULT_EINK_VIEW_SETTINGS,
   DEFAULT_VIEW_SETTINGS_CONFIG,
@@ -54,7 +54,7 @@ export function getDefaultViewSettings(ctx: Context): ViewSettings {
 export async function loadSettings(ctx: Context): Promise<SystemSettings> {
   const defaultSettings: SystemSettings = {
     ...DEFAULT_SYSTEM_SETTINGS,
-    // ...(ctx.isMobile ? DEFAULT_MOBILE_SYSTEM_SETTINGS : {}),
+    ...(ctx.isMobile ? DEFAULT_MOBILE_SYSTEM_SETTINGS : {}),
     version: SYSTEM_SETTINGS_VERSION,
     localBooksDir: await ctx.fs.getPrefix('Books'),
     globalReadSettings: {
@@ -77,7 +77,7 @@ export async function loadSettings(ctx: Context): Promise<SystemSettings> {
   }
   settings = {
     ...DEFAULT_SYSTEM_SETTINGS,
-    //...(ctx.isMobile ? DEFAULT_MOBILE_SYSTEM_SETTINGS : {}),
+    ...(ctx.isMobile ? DEFAULT_MOBILE_SYSTEM_SETTINGS : {}),
     ...settings,
   };
   settings.globalReadSettings = {

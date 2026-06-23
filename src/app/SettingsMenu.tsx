@@ -270,7 +270,7 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
         />
       )}
 
-      {isTauriAppPlatform() && !appService?.isMobile && (
+      {isTauriAppPlatform() && (
         <MenuItem
           label={_('Auto Import on File Open')}
           Icon={isAutoImportBooksOnOpen ? MdCheckBox : MdCheckBoxOutlineBlank}
