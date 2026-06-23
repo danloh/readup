@@ -55,10 +55,10 @@ function makeControllerMock() {
   };
 }
 
-vi.mock('@/app/reader/components/rsvp/RSVPOverlay', () => ({
+vi.mock('@/app/read/components/rsvp/RSVPOverlay', () => ({
   default: () => null,
 }));
-vi.mock('@/app/reader/components/rsvp/RSVPStartDialog', () => ({ default: () => null }));
+vi.mock('@/app/read/components/rsvp/RSVPStartDialog', () => ({ default: () => null }));
 vi.mock('@/hooks/useTranslation', () => ({ useTranslation: () => (s: string) => s }));
 vi.mock('@/context/EnvContext', () => ({ useEnv: () => ({ envConfig: {} }) }));
 

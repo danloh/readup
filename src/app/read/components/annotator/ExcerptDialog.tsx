@@ -36,8 +36,9 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
   const _ = useTranslation();
   const { user } = useAuth();
   const { appService, envConfig } = useEnv();
-  const { getProgress } = useReaderStore();
+  const { getProgress, getViewSettings } = useReaderStore();
   const progress = getProgress(bookKey);
+  const viewSettings = getViewSettings(bookKey);
   const [imageUrl, setImageUrl] = useState<string>('');
   const [isRendering, setIsRendering] = useState(false);
   const [showContentPreview, setShowContentPreview] = useState(false);
@@ -71,10 +72,16 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
 
     const lang = localStorage?.getItem('i18nextLng') || navigator?.language;
 
+    // Apply book's writing mode (vertical, RTL)
+    const writingMode = viewSettings?.writingMode || 'auto';
+    const isVertical = viewSettings?.vertical;
+    const isRTL = viewSettings?.rtl;
+    const direction = isRTL ? 'rtl' : 'ltr';
+
     // Complete HTML document with responsive styling
     const htmlContent = `
       <!DOCTYPE html>
-      <html>
+      <html dir="${direction}">
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -118,6 +125,8 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
             margin-bottom: 32px;
             padding-bottom: 16px;
             border-bottom: 2px solid ${hexToRgba(getContrastHex(styles.backgroundColor), 0.3)};
+            ${isVertical ? `writing-mode: ${writingMode};` : ''}
+            ${isRTL ? `direction: rtl;` : ''}
           }
           
           .book-title {
@@ -137,7 +146,7 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
             margin: 4px 0;
             overflow: hidden;
             display: -webkit-box;
-            -webkit-box-orient: vertical;
+            -webkit-box-orient: ${isVertical ? 'horizontal' : 'vertical'};
             -webkit-line-clamp: 1;
           }
           
@@ -146,6 +155,8 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
             line-height: ${styles.lineHeight};
             color: ${styles.fontColor};
             letter-spacing: -0.3px;
+            ${isVertical ? `writing-mode: ${writingMode};` : ''}
+            ${isRTL ? `direction: rtl;` : ''}
           }
 
           .qr-code {
