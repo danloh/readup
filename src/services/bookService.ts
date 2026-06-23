@@ -680,17 +680,25 @@ export async function exportBook(
 export async function deleteBook(
   fs: FileSystem,
   book: Book, 
-  deleteAction: DeleteAction
+  deleteAction: DeleteAction,
+  purge?: boolean,
 ): Promise<void> {
   console.log('Deleting book with action:', deleteAction, book.title);
   if (deleteAction === 'local' || deleteAction === 'both') {
-    const localDeleteFps = [getLocalBookFilename(book), getCoverFilename(book)];
-    for (const fp of localDeleteFps) {
-      if (await fs.exists(fp, 'Books')) {
-        await fs.removeFile(fp, 'Books');
+    // Purge erases the entire app-generated Books/<hash>/ directory
+    if (purge) {
+      const dir = getDir(book);
+      if (await fs.exists(dir, 'Books')) {
+        await fs.removeDir(dir, 'Books', true);
+      }
+    } else {
+      const localDeleteFps = [getLocalBookFilename(book), getCoverFilename(book)];
+      for (const fp of localDeleteFps) {
+        if (await fs.exists(fp, 'Books')) {
+          await fs.removeFile(fp, 'Books');
+        }
       }
     }
-    
     book.deletedAt = Date.now();
     book.downloadedAt = null;
     book.coverDownloadedAt = null;

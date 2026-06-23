@@ -164,9 +164,9 @@ const BookDetailModal: React.FC<BookDetailModalProps> = ({
     setShowDeleteAlert(true);
   };
 
-  const handleBookDelete = async (book: Book) => {
+  const handleBookDelete = async (book: Book, purge?: boolean) => {
     try {
-      await appService?.deleteBook(book, 'local');
+      await appService?.deleteBook(book, 'local', purge);
       await updateBook(envConfig, book);
       clearBookData(book.hash);
 
@@ -185,10 +185,10 @@ const BookDetailModal: React.FC<BookDetailModalProps> = ({
     }
   };
   
-  const confirmDeleteAction = async () => {
+  const confirmDeleteAction = async (purge?: boolean) => {
     handleClose();
     setShowDeleteAlert(false);
-    await handleBookDelete(book);
+    await handleBookDelete(book, purge);
   };
 
   const cancelDeleteAction = () => {
@@ -268,6 +268,7 @@ const BookDetailModal: React.FC<BookDetailModalProps> = ({
               message={_('Are you sure to delete the selected book?')}
               onCancel={cancelDeleteAction}
               onConfirm={confirmDeleteAction}
+              checkMsg={'Purge the book data?'}
             />
           </div>
         )}

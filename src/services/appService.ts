@@ -224,8 +224,8 @@ export abstract class BaseAppService implements AppService {
     });
   }
 
-  async deleteBook(book: Book, deleteAction: DeleteAction): Promise<void> {
-    return BookSvc.deleteBook(this.fs, book, deleteAction);
+  async deleteBook(book: Book, deleteAction: DeleteAction, purge?: boolean): Promise<void> {
+    return BookSvc.deleteBook(this.fs, book, deleteAction, purge);
   }
 
   async exportBook(book: Book): Promise<boolean> {
