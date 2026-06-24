@@ -3,7 +3,7 @@
 import clsx from 'clsx';
 import { useCallback, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { ImFeed } from "react-icons/im";
+import { MdRssFeed } from "react-icons/md";
 import { BiLibrary } from 'react-icons/bi';
 import { SiProgress } from "react-icons/si";
 import { GrCatalog } from 'react-icons/gr';
@@ -102,7 +102,7 @@ export const NavTab: React.FC<{activeTab: string}> = ({ activeTab }) => {
                   className={clsx('mx-auto', tab === activeTab && 'text-success')} 
                 />
               ) : tab === 'feed' ? (
-                <ImFeed 
+                <MdRssFeed 
                   size={18} 
                   className={clsx('mx-auto', tab === activeTab && 'text-success')} 
                 />

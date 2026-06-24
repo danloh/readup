@@ -255,6 +255,7 @@ const getColorStyles = (
     img {
       ${invertImgColor ? 'filter: invert(100%);' : ''}
       ${overrideColor ? 'mix-blend-mode: multiply;' : ''}
+      ${isDarkMode && overrideColor ? 'filter: grayscale(100%) contrast(1.2) brightness(1.2);' : ''}
     }
     svg, img {
       ${overrideColor ? `background-color: transparent !important;` : ''};

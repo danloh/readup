@@ -488,6 +488,15 @@ foliate-fxl {
   transition: none !important;
 }
 
+/* Hide the horizontal scrollbar on the virtualized OPDS group carousels. */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 [data-eink='true'] [class*='shadow-'] {
   box-shadow: none !important;
 }

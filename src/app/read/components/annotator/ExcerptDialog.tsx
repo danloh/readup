@@ -380,24 +380,21 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
           : `https://readup.cc/read/${book.hash}?did=${user.did}`;
       }
 
-      // Generate QR code URL
-      const qr = new QrCodeWithLogo({
-        content: shareUrl,
-        renderer: 'svg',
-        width: 420,
-        logo: {
-          src: '/favicon.svg'
-        }
-      })
-      const qrSvg = await qr.getSvgString();
-      const qrCodeImageUrl = 'data:image/svg+xml,' + encodeURIComponent(qrSvg); 
-
       // Add QR code to iframe
       let finalImageUrl = imageUrl;
       const iframe = toAttachQr && bookUploaded ? iframeRef.current : undefined;
       if (iframe && iframe.contentDocument && !qrAttached) {
         const iframeBody = iframe.contentDocument.body;
         const qrSection = iframe.contentDocument.createElement('div');
+        // Generate QR code URL
+        const qr = new QrCodeWithLogo({
+          content: shareUrl,
+          renderer: 'svg',
+          width: 420,
+          logo: { src: '/favicon.svg' }
+        })
+        const qrSvg = await qr.getSvgString();
+        const qrCodeImageUrl = 'data:image/svg+xml,' + encodeURIComponent(qrSvg);
         qrSection.className = 'qr-code';
         qrSection.innerHTML = `<img src="${qrCodeImageUrl}" /><span>Readup.cc</span>`;
         iframeBody.appendChild(qrSection);
@@ -511,6 +508,12 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
       <div className='flex flex-col gap-4 max-h-[80vh] px-2 overflow-y-auto'>
         {/* Style Customization Options */}
         <div className='border-b border-base-300 pb-2'>
+          {(isUploading || isSharing) && (
+            <div className='flex items-center justify-center gap-2'>
+              <span className='loading loading-spinner loading-sm'></span>
+              <span className='text-success'>{_('Processing...')}</span>
+            </div>
+          )}
           <h3 className='text-sm font-semibold text-base-content mb-3'>
             {_('Custom Theme')}
           </h3>
