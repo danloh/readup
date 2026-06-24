@@ -43,12 +43,12 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const { getConfig, setConfig, saveConfig } = useBookDataStore();
   const { getView, getProgress, getViewSettings } = useReaderStore();
   const { setActiveBooknoteType } = useSidebarStore();
-  const { setSearchTerm, setSearchResults, setSearchProgress } = useSidebarStore();
+  const { setSearchTerm, setSearchResults, setSearchProgress, setSearchError } = useSidebarStore();
   const { getSearchNavState, getSearchStatus, setSearchStatus } = useSidebarStore();
   const viewSettings = getViewSettings(bookKey);
   const searchNavState = getSearchNavState(bookKey);
 
-  const { searchTerm } = searchNavState;
+  const { searchTerm, searchError } = searchNavState;
   const queuedSearchTerm = useRef('');
   const inputRef = useRef<HTMLInputElement>(null);
   const inputFocusedRef = useRef(false);
@@ -99,9 +99,10 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const getSearchCacheKey = useCallback((term: string, config: BookSearchConfig) => {
     const configStr = JSON.stringify({
       scope: config.scope,
+      mode: config.mode,
       matchCase: config.matchCase,
-      matchWholeWords: config.matchWholeWords,
       matchDiacritics: config.matchDiacritics,
+      nearbyWords: config.nearbyWords,
     });
     return md5(`${term}-${configStr}`);
   }, []);
@@ -163,6 +164,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const bookData = getBookData(bookKey)!;
   const progress = getProgress(bookKey)!;
   const primaryLang = bookData.book?.primaryLanguage || 'en';
+  const searchMode = (config.searchConfig as BookSearchConfig).mode;
 
   const iconSize12 = useResponsiveSize(12);
   const iconSize16 = useResponsiveSize(16);
@@ -214,11 +216,14 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
   const handleSearchConfigChange = (searchConfig: BookSearchConfig) => {
     setConfig(bookKey, { searchConfig: { ...searchConfig } });
-    saveConfig(envConfig, bookKey, config, settings);
+    // setConfig is synchronous, so getConfig now returns the merged config to persist.
+    saveConfig(envConfig, bookKey, getConfig(bookKey)!, settings);
     handleSearchTermChange(searchTerm);
   };
 
   const exceedMinSearchTermLength = (searchTerm: string) => {
+    // Regex patterns can be a single character (e.g. \d), so bypass the gate.
+    if (searchMode === 'regex') return searchTerm.length >= 1;
     const minLength = isCJKStr(searchTerm)
       ? MINIMUM_SEARCH_TERM_LENGTH_CJK
       : MINIMUM_SEARCH_TERM_LENGTH_DEFAULT;
@@ -229,7 +234,11 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const handleSearch = useCallback(
     async (term: string) => {
       console.log('searching for:', term);
-      const searchConfig = config.searchConfig as BookSearchConfig;
+      // Read the latest config from the store, not the render closure: an option
+      // change (e.g. "within N words") calls setConfig then triggers this search
+      // synchronously, before this callback is recreated — so the closure's
+      // `config` is stale by one change. getConfig reflects the just-set value.
+      const searchConfig = getConfig(bookKey)!.searchConfig as BookSearchConfig;
       const cachedResults = await getSearchCache(term, searchConfig);
       if (cachedResults) {
         setSearchResults(bookKey, cachedResults);
@@ -242,6 +251,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
       // Reset progress at start of search
       setSearchProgress(bookKey, 0);
       setSearchStatus(bookKey, 'searching');
+      setSearchError(bookKey, null);
 
       const { section } = progress;
       const index = searchConfig.scope === 'section' ? section.current : undefined;
@@ -258,44 +268,60 @@ const SearchBar: React.FC<SearchBarProps> = ({
       let lastProgressLogTime = 0;
 
       const processResults = async () => {
-        for await (const result of generator) {
-          if (getSearchStatus(bookKey) === 'terminated') {
-            console.log('search terminated');
-            return;
-          }
-          if (typeof result === 'string') {
-            if (result === 'done') {
-              setSearchStatus(bookKey, 'completed');
-              setSearchResults(bookKey, [...results]);
-              setSearchProgress(bookKey, 1);
-              setActiveBooknoteType(bookKey, null); // to close booknotes nav bar
-              if (results.length > 0) {
-                addToHistory(term);
-                await saveSearchCache(term, searchConfig, results);
-              }
-              console.log('search done');
+        try {
+          for await (const result of generator) {
+            if (getSearchStatus(bookKey) === 'terminated') {
+              console.log('search terminated');
+              return;
             }
-          } else {
-            if (result.progress) {
-              setSearchProgress(bookKey, result.progress);
-              const now = Date.now();
-              if (now - lastProgressLogTime >= 1000) {
-                console.log('search progress:', result.progress);
-                lastProgressLogTime = now;
-              }
-              if (queuedSearchTerm.current !== term) {
-                console.log('search term changed, resetting search');
-                resetSearch();
-                return;
+            if (typeof result === 'string') {
+              if (result === 'done') {
+                setSearchStatus(bookKey, 'completed');
+                setSearchResults(bookKey, [...results]);
+                setSearchProgress(bookKey, 1);
+                setActiveBooknoteType(bookKey, null); // to close booknotes nav bar
+                if (results.length > 0) {
+                  addToHistory(term);
+                  await saveSearchCache(term, searchConfig, results);
+                }
+                console.log('search done');
               }
             } else {
-              results.push(result);
-              setSearchResults(bookKey, [...results]);
-              setActiveBooknoteType(bookKey, null); // to close booknotes nav bar
+              if (result.progress) {
+                setSearchProgress(bookKey, result.progress);
+                const now = Date.now();
+                if (now - lastProgressLogTime >= 1000) {
+                  console.log('search progress:', result.progress);
+                  lastProgressLogTime = now;
+                }
+                if (queuedSearchTerm.current !== term) {
+                  console.log('search term changed, resetting search');
+                  resetSearch();
+                  return;
+                }
+              } else {
+                results.push(result);
+                setSearchResults(bookKey, [...results]);
+                setActiveBooknoteType(bookKey, null); // to close booknotes nav bar
+              }
             }
-          }
 
-          await new Promise((resolve) => setTimeout(resolve, 0));
+            await new Promise((resolve) => setTimeout(resolve, 0));
+          }
+        } catch (err) {
+          const code = (err as { code?: string }).code;
+          const message =
+            code === 'INVALID_REGEX'
+              ? _('Invalid regular expression')
+              : code === 'NEARBY_NEEDS_TWO_WORDS'
+                ? _('Enter at least two words')
+                : _('Search failed');
+          if (!code) console.error('search failed:', err);
+          setSearchError(bookKey, message);
+          setSearchResults(bookKey, []);
+          setSearchStatus(bookKey, 'completed');
+          setSearchProgress(bookKey, 1);
+          setActiveBooknoteType(bookKey, null); // to close booknotes nav bar
         }
       };
 
@@ -304,9 +330,11 @@ const SearchBar: React.FC<SearchBarProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       progress,
-      config.searchConfig,
+      bookKey,
+      getConfig,
       setSearchResults,
       setSearchProgress,
+      setSearchError,
       addToHistory,
       getSearchCache,
       saveSearchCache,
@@ -344,7 +372,13 @@ const SearchBar: React.FC<SearchBarProps> = ({
           value={searchTerm}
           spellCheck={false}
           onChange={handleInputChange}
-          placeholder={`${_('Search')}...`}
+          placeholder={
+            searchMode === 'regex'
+              ? _('Search with regex')
+              : searchMode === 'nearby-words'
+                ? _('Words to find near each other')
+                : _('Search...')
+          }
           className='search-input w-full bg-transparent p-2 pr-0 ps-10 font-sans text-sm font-light focus:outline-none'
         />
 
@@ -385,6 +419,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
           </Dropdown>
         </div>
       </div>
+
+      {searchError && <div className='text-error px-2 text-xs'>{searchError}</div>}
 
       {searchHistory.length > 0 && !searchTerm && (
         <div className='relative flex'>

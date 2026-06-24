@@ -14,7 +14,6 @@ const globalViewSettings = {
 const defaultSearchConfig = {
   scope: 'book',
   matchCase: false,
-  matchWholeWords: false,
   matchDiacritics: false,
 } as BookSearchConfig;
 

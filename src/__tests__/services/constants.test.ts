@@ -577,7 +577,6 @@ describe('services/constants', () => {
       expect(typeof DEFAULT_BOOK_SEARCH_CONFIG).toBe('object');
       expect(typeof DEFAULT_BOOK_SEARCH_CONFIG.scope).toBe('string');
       expect(typeof DEFAULT_BOOK_SEARCH_CONFIG.matchCase).toBe('boolean');
-      expect(typeof DEFAULT_BOOK_SEARCH_CONFIG.matchWholeWords).toBe('boolean');
       expect(typeof DEFAULT_BOOK_SEARCH_CONFIG.matchDiacritics).toBe('boolean');
     });
   });

@@ -335,11 +335,15 @@ export interface BookProgress {
   page: number;
 }
 
+export type SearchMode = 'contains' | 'whole-words' | 'regex' | 'nearby-words';
+
 export interface BookSearchConfig {
   scope: 'book' | 'section';
+  mode: SearchMode;
   matchCase: boolean;
-  matchWholeWords: boolean;
   matchDiacritics: boolean;
+  // nearby-words: maximum number of words separating the matched words
+  nearbyWords?: number;
   index?: number;
   query?: string;
   acceptNode?: (node: Node) => number;
@@ -351,10 +355,14 @@ export interface SearchExcerpt {
   pre: string;
   match: string;
   post: string;
+  // nearby-words: the cluster window split into matched (emphasized) words and gaps
+  segments?: { text: string; emphasized: boolean }[];
 }
 
 export interface BookSearchMatch {
   cfi: string;
+  // nearby-words: per-word CFIs to highlight (>= 2); absent for single-span matches
+  cfis?: string[];
   excerpt: SearchExcerpt;
 }
 

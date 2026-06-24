@@ -303,11 +303,14 @@ export const DEFAULT_SCREEN_CONFIG: ScreenConfig = {
   screenOrientation: 'auto',
 };
 
+export const DEFAULT_NEARBY_WORDS = 10;
+
 export const DEFAULT_BOOK_SEARCH_CONFIG: BookSearchConfig = {
   scope: 'book',
+  mode: 'contains',
   matchCase: false,
-  matchWholeWords: false,
   matchDiacritics: false,
+  nearbyWords: 10,
 };
 
 export const SYSTEM_SETTINGS_VERSION = 1;
