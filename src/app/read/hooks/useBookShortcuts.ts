@@ -14,9 +14,10 @@ import { MAX_ZOOM_LEVEL, MIN_ZOOM_LEVEL, ZOOM_STEP } from '@/services/constants'
 import { useCommandPalette } from '@/components/command-palette';
 import { setShortcutsDialogVisible } from '@/components/KeyboardShortcutsHelp';
 import useShortcuts from '@/hooks/useShortcuts';
+import { getReadingRulerMoveDirection, isReadingRulerMoveKey } from '../utils/readingRuler';
 import { viewPagination } from './usePagination';
 import useBooksManager from './useBooksManager';
-import { getReadingRulerMoveDirection, isReadingRulerMoveKey } from '../utils/readingRuler';
+import { getReadingAreaRect, keyboardTurnDirection } from './useAutoPageTurn';
 
 interface UseBookShortcutsProps {
   sideBarBookKey: string | null;
@@ -81,8 +82,19 @@ const useBookShortcuts = ({ sideBarBookKey, bookKeys }: UseBookShortcutsProps) =
     const isNative = event instanceof KeyboardEvent;
     const src: KeyModifiers | undefined = isNative ? event : event?.data;
     if (!src?.key) return false;
-    const contents = getView(sideBarBookKey)?.renderer?.getContents?.() ?? [];
-    return extendSelectionFromContents(contents, src, isNative);
+    const view = getView(sideBarBookKey ?? '');
+    const contents = view?.renderer?.getContents?.() ?? [];
+    const extended = extendSelectionFromContents(contents, src, isNative);
+    // Keyboard turn-on-cross (#4741): when the extended selection's focus leaves
+    // the visible page in paginated mode, turn the page so the growing selection
+    // stays in view. Only for keys we extended ourselves (the native parent
+    // path); the focused-iframe path lets the browser scroll the focus in.
+    if (extended && isNative && !getViewSettings(sideBarBookKey ?? '')?.scrolled) {
+      const dir = keyboardTurnDirection(contents, getReadingAreaRect(sideBarBookKey ?? ''));
+      if (dir === 'next') view?.next();
+      else if (dir === 'prev') view?.prev();
+    }
+    return extended;
   };
 
   const goLeft = () => {

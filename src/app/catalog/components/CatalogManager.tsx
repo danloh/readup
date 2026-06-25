@@ -25,7 +25,7 @@ import { eventDispatcher } from '@/utils/event';
 import { 
   deleteSubscriptionState, loadSubscriptionState, OPDSSubscriptionState 
 } from '@/services/opds';
-import { validateOPDSURL } from '../utils/opdsUtils';
+import { getUnaddedPopularCatalogs, validateOPDSURL } from '../utils/opdsUtils';
 import {
   formatOPDSCustomHeadersInput,
   hasOPDSCustomHeaders,
@@ -97,7 +97,9 @@ export function CatalogManager({ closeDialog }: CMProps) {
   const [headerError, setHeaderError] = useState('');
   const [proxyConsentError, setProxyConsentError] = useState('');
   const [isValidating, setIsValidating] = useState(false);
-  const popularCatalogs = appService?.distChannel !== 'appstore' ? POPULAR_CATALOGS : [];
+  const popularCatalogs = appService?.distChannel !== 'appstore' 
+    ? getUnaddedPopularCatalogs(POPULAR_CATALOGS, catalogs)
+    : [];
 
   const [subscriptionStates, setSubscriptionStates] = useState<
     Record<string, OPDSSubscriptionState>
@@ -487,53 +489,46 @@ export function CatalogManager({ closeDialog }: CMProps) {
       <section className={clsx('text-base', popularCatalogs.length === 0 && 'hidden')}>
         <SectionTitle className='mb-3'>{_('Popular Catalogs')}</SectionTitle>
         <div className='grid grid-cols-1 gap-3 sm:grid-cols-2'>
-          {popularCatalogs
-            .filter((catalog) => !catalog.disabled)
-            .map((catalog) => {
-              const isAdded = catalogs.some((c) => c.url === catalog.url);
-              return (
-                <div
-                  key={catalog.id}
-                  className='card eink-bordered bg-base-100 border-base-200 flex flex-col border'
-                >
-                  <div className='flex flex-1 flex-col gap-2.5 p-4'>
-                    <h4>
-                      <button
-                        type='button'
-                        onClick={() => handleOpenCatalog(catalog)}
-                        className='flex w-full min-w-0 items-center gap-1.5 rounded-sm text-start text-sm font-semibold transition-colors duration-150 hover:underline focus-visible:underline focus-visible:outline-none'
-                      >
-                        {catalog.icon && <span className='flex-shrink-0'>{catalog.icon}</span>}
-                        <span className='truncate'>{catalog.name}</span>
-                      </button>
-                    </h4>
-                    {catalog.description && (
-                      <p className='text-base-content/70 line-clamp-2 text-xs leading-relaxed'>
-                        {catalog.description}
-                      </p>
-                    )}
-                    <div className='border-base-200 mt-auto flex items-center justify-end gap-1 border-t pt-3'>
-                      {!isAdded && (
-                        <button
-                          onClick={() => handleAddPopularCatalog(catalog)}
-                          className='hover:bg-base-200 focus-visible:ring-base-content/15 inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2'
-                        >
-                          <IoAdd className='h-4 w-4' />
-                          {_('Add')}
-                        </button>
-                      )}
-                      <button
-                        onClick={() => handleOpenCatalog(catalog)}
-                        className='hover:bg-base-200 focus-visible:ring-base-content/15 inline-flex items-center gap-0.5 rounded-md px-2 py-1 text-xs font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2'
-                      >
-                        {_('Browse')}
-                        <MdChevronRight className='h-4 w-4' />
-                      </button>
-                    </div>
-                  </div>
+          {popularCatalogs.map((catalog) => (
+            <div
+              key={catalog.id}
+              className='card eink-bordered bg-base-100 border-base-200 flex flex-col border'
+            >
+              <div className='flex flex-1 flex-col gap-2.5 p-4'>
+                <h4>
+                  <button
+                    type='button'
+                    onClick={() => handleOpenCatalog(catalog)}
+                    className='flex w-full min-w-0 items-center gap-1.5 rounded-sm text-start text-sm font-semibold transition-colors duration-150 hover:underline focus-visible:underline focus-visible:outline-none'
+                  >
+                    {catalog.icon && <span className='flex-shrink-0'>{catalog.icon}</span>}
+                    <span className='truncate'>{catalog.name}</span>
+                  </button>
+                </h4>
+                {catalog.description && (
+                  <p className='text-base-content/70 line-clamp-2 text-xs leading-relaxed'>
+                    {catalog.description}
+                  </p>
+                )}
+                <div className='border-base-200 mt-auto flex items-center justify-end gap-1 border-t pt-3'>
+                  <button
+                    onClick={() => handleAddPopularCatalog(catalog)}
+                    className='hover:bg-base-200 focus-visible:ring-base-content/15 inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2'
+                  >
+                    <IoAdd className='h-4 w-4' />
+                    {_('Add')}
+                  </button>
+                  <button
+                    onClick={() => handleOpenCatalog(catalog)}
+                    className='hover:bg-base-200 focus-visible:ring-base-content/15 inline-flex items-center gap-0.5 rounded-md px-2 py-1 text-xs font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2'
+                  >
+                    {_('Browse')}
+                    <MdChevronRight className='h-4 w-4' />
+                  </button>
                 </div>
-              );
-            })}
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
