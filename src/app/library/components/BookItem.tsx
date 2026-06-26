@@ -47,7 +47,7 @@ const BookItem: React.FC<BookItemProps> = ({
         'book-item flex',
         mode === 'list' ? 'library-list-item' : 'library-grid-item',
         mode === 'grid' && 'h-full flex-col justify-end',
-        mode === 'list' && 'h-28 flex-row gap-4 overflow-hidden',
+        mode === 'list' && 'min-h-28 flex-row gap-4 overflow-hidden',
       )}
     >
       <div
