@@ -5,12 +5,14 @@ import { useEnv } from '@/context/EnvContext';
 import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useReaderStore } from '@/store/readerStore';
-import { BookNote, BooknoteGroup, NoteExportConfig } from '@/types/book';
+import { useSettingsStore } from '@/store/settingsStore';
+import { BooknoteGroup, HighlightColor, HighlightStyle, NoteExportConfig } from '@/types/book';
 import { DEFAULT_NOTE_EXPORT_CONFIG } from '@/services/constants';
 import { saveViewSettings } from '@/helpers/settings';
 import { formatBlockQuote, renderNoteTemplate } from '@/utils/note';
 import { ShareLinkType, buildShareAppUrl, buildShareUrl, buildShareWebUrl } from '@/utils/deeplink';
 import Dialog from '@/components/Dialog';
+import { filterExportGroups, getHighlightColorHex } from '../../utils/annotatorUtil';
 
 interface ExportMarkdownDialogProps {
   bookKey: string;
@@ -18,7 +20,6 @@ interface ExportMarkdownDialogProps {
   bookHash: string;
   bookTitle: string;
   bookAuthor: string;
-  booknotes: BookNote[];
   booknoteGroups: { [href: string]: BooknoteGroup };
   onCancel: () => void;
   onExport: (
@@ -34,13 +35,13 @@ const ExportMarkdownDialog: React.FC<ExportMarkdownDialogProps> = ({
   bookHash,
   bookTitle,
   bookAuthor,
-  booknotes,
   booknoteGroups,
   onCancel,
   onExport,
 }) => {
   const _ = useTranslation();
   const { envConfig } = useEnv();
+  const { settings } = useSettingsStore();
   const { user } = useAuth();
   const { getViewSettings } = useReaderStore();
   const viewSettings = getViewSettings(bookKey);
@@ -55,6 +56,10 @@ const ExportMarkdownDialog: React.FC<ExportMarkdownDialogProps> = ({
       // platform-aware default (app in the native app, web on the web).
       linkType: noteExportConfig.linkType ?? DEFAULT_NOTE_EXPORT_CONFIG.linkType,
       customTemplate: noteExportConfig.customTemplate || defaultTemplate,
+      // Configs persisted before color/style filtering existed have no
+      // exclusion arrays; default to exporting everything.
+      excludedColors: noteExportConfig.excludedColors ?? [],
+      excludedStyles: noteExportConfig.excludedStyles ?? [],
     };
   });
 
@@ -83,13 +88,62 @@ const ExportMarkdownDialog: React.FC<ExportMarkdownDialogProps> = ({
       .trim();
   };
 
+  // Apply the color/style filter once; both the default formatter and the custom
+  // template render the filtered groups, and the same metadata drives the filter UI.
+  const {
+    groups: filteredGroups,
+    distinctColors,
+    distinctStyles,
+    applyColorFilter,
+    applyStyleFilter,
+  } = useMemo(
+    () =>
+      filterExportGroups(
+        Object.values(booknoteGroups).sort((a, b) => a.id - b.id),
+        {
+          excludedColors: exportConfig.excludedColors,
+          excludedStyles: exportConfig.excludedStyles,
+        },
+      ),
+    [booknoteGroups, exportConfig.excludedColors, exportConfig.excludedStyles],
+  );
+
+  const filteredNotesCount = useMemo(
+    () => filteredGroups.reduce((count, group) => count + group.booknotes.length, 0),
+    [filteredGroups],
+  );
+
+  const toggleExcludedColor = (color: HighlightColor) => {
+    setExportConfig((prev) => ({
+      ...prev,
+      excludedColors: prev.excludedColors.includes(color)
+        ? prev.excludedColors.filter((c) => c !== color)
+        : [...prev.excludedColors, color],
+    }));
+  };
+
+  const toggleExcludedStyle = (style: HighlightStyle) => {
+    setExportConfig((prev) => ({
+      ...prev,
+      excludedStyles: prev.excludedStyles.includes(style)
+        ? prev.excludedStyles.filter((s) => s !== style)
+        : [...prev.excludedStyles, style],
+    }));
+  };
+
+  // Mirror HighlightOptions: user label, else translated default name, else the raw hex.
+  const resolveColorLabel = (color: HighlightColor): string => {
+    if (!color.startsWith('#')) return _(color);
+    return color;
+  };
+
   // Generate markdown preview based on current format settings
   const markdownPreview = useMemo(() => {
     let output = '';
 
     if (exportConfig.useCustomTemplate) {
       // Prepare data for template rendering
-      const sortedGroups = Object.values(booknoteGroups).sort((a, b) => a.id - b.id);
+      const sortedGroups = filteredGroups;
 
       const templateData = {
         title: bookTitle,
@@ -125,7 +179,7 @@ const ExportMarkdownDialog: React.FC<ExportMarkdownDialogProps> = ({
       output = renderNoteTemplate(exportConfig.customTemplate, templateData);
     } else {
       // Default formatting (non-template mode)
-      const sortedGroups = Object.values(booknoteGroups).sort((a, b) => a.id - b.id);
+      const sortedGroups = filteredGroups;
 
       const lines: string[] = [];
 
@@ -215,7 +269,7 @@ const ExportMarkdownDialog: React.FC<ExportMarkdownDialogProps> = ({
     }
 
     return output;
-  }, [exportConfig, booknoteGroups, bookTitle, bookAuthor, bookHash, _]);
+  }, [exportConfig, filteredGroups, bookTitle, bookAuthor, bookHash, _]);
 
   // Convert markdown to HTML for preview
   const htmlPreview = useMemo(() => {
@@ -257,7 +311,7 @@ const ExportMarkdownDialog: React.FC<ExportMarkdownDialogProps> = ({
       <div className='flex flex-col gap-4'>
         {/* Format Options */}
         <div className='space-y-3'>
-          <h3 className='font-bold'>{_('Format Options')}</h3>
+          <h3 className='font-bold text-accent'>{_('Format Options')}</h3>
 
           <div
             className={clsx(
@@ -383,16 +437,73 @@ const ExportMarkdownDialog: React.FC<ExportMarkdownDialogProps> = ({
           </div>
         </div>
 
+        {/* Filter by color / style */}
+        {(applyColorFilter || applyStyleFilter) && (
+          <div className='space-y-3'>
+            <h3 className='font-bold text-accent'>{_('Filter Annotations')}</h3>
+
+            {applyColorFilter && (
+              <div className='space-y-2'>
+                <span className='text-sm font-medium'>{_('Colors')}</span>
+                <div className='flex flex-wrap gap-x-6 gap-y-2'>
+                  {distinctColors.map((color) => {
+                    const included = !exportConfig.excludedColors.includes(color);
+                    const hex = getHighlightColorHex(settings, color) ?? color;
+                    const label = resolveColorLabel(color);
+                    return (
+                      <label key={color} className='flex cursor-pointer items-center gap-2'>
+                        <input
+                          type='checkbox'
+                          checked={included}
+                          onChange={() => toggleExcludedColor(color)}
+                          className='checkbox checkbox-xs'
+                        />
+                        <span
+                          className='border-base-content/20 h-3 w-3 shrink-0 rounded-full border'
+                          style={{ backgroundColor: hex }}
+                        />
+                        <span className='text-sm'>{label}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {applyStyleFilter && (
+              <div className='space-y-2'>
+                <span className='text-sm font-medium'>{_('Styles')}</span>
+                <div className='flex flex-wrap gap-x-6 gap-y-2'>
+                  {distinctStyles.map((style) => {
+                    const included = !exportConfig.excludedStyles.includes(style);
+                    return (
+                      <label key={style} className='flex cursor-pointer items-center gap-2'>
+                        <input
+                          type='checkbox'
+                          checked={included}
+                          onChange={() => toggleExcludedStyle(style)}
+                          className='checkbox checkbox-xs'
+                        />
+                        <span className='text-sm'>{_(style)}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Advanced Options */}
         <div className='space-y-3'>
           <label className='flex cursor-pointer items-center gap-2'>
+            <h3 className='font-bold text-accent'>{_('Use Custom Template')}</h3>
             <input
               type='checkbox'
               checked={exportConfig.useCustomTemplate}
               onChange={() => handleToggle('useCustomTemplate')}
-              className='checkbox checkbox-xs'
+              className='toggle toggle-success h-4'
             />
-            <span className='text-sm font-medium'>{_('Use Custom Template')}</span>
           </label>
 
           {exportConfig.useCustomTemplate && (
@@ -608,7 +719,7 @@ const ExportMarkdownDialog: React.FC<ExportMarkdownDialogProps> = ({
         {/* Preview */}
         <div className='space-y-2'>
           <div className='flex items-center justify-between'>
-            <h3 className='font-bold'>{_('Preview')}</h3>
+            <h3 className='font-bold text-accent'>{_('Preview')}</h3>
             <label className='flex cursor-pointer items-center gap-2'>
               <input
                 type='checkbox'
@@ -673,7 +784,7 @@ const ExportMarkdownDialog: React.FC<ExportMarkdownDialogProps> = ({
             <button
               onClick={handleExport}
               className='btn btn-primary btn-sm'
-              disabled={booknotes.length === 0}
+              disabled={filteredNotesCount === 0}
             >
               {_('Export')}
             </button>

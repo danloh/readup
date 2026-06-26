@@ -121,7 +121,6 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
   const [showExcerptDialog, setShowExcerptDialog] = useState(false);
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [exportData, setExportData] = useState<{
-    booknotes: BookNote[];
     booknoteGroups: { [href: string]: BooknoteGroup };
   } | null>(null);
 
@@ -1263,7 +1262,7 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
       });
     });
 
-    setExportData({ booknotes, booknoteGroups });
+    setExportData({ booknoteGroups });
     setShowExportDialog(true);
   };
 
@@ -1512,7 +1511,6 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
           bookHash={bookData.book.hash}
           bookTitle={bookData.book.title}
           bookAuthor={bookData.book.author || ''}
-          booknotes={exportData.booknotes}
           booknoteGroups={exportData.booknoteGroups}
           onCancel={handleCancelExport}
           onExport={handleConfirmExport}

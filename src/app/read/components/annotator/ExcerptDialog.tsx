@@ -481,6 +481,7 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
         const color = settings.globalReadSettings.highlightStyles[style];
         const cfi = selection.cfi;
         if (cfi) {
+          console.log('Excerpt and highlight: ', cfi);
           const annotation: BookNote = {
             id: uniqueId(),
             type: 'annotation',
@@ -557,9 +558,7 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
               <span className='text-success'>{_('Processing...')}</span>
             </div>
           )}
-          <h3 className='text-sm font-semibold text-base-content mb-3'>
-            {_('Custom Theme')}
-          </h3>
+          <h3 className='font-bold text-accent mb-2'>{_('Custom Theme')}</h3>
           <div className='flex flex-wrap items-center justify-start gap-2'>
             {/* Background Color */}
             <div className='flex items-center gap-2'>
@@ -620,9 +619,7 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
 
         {/* Image Preview */}
         <div className='space-y-2'>
-          <h3 className='text-sm font-semibold text-base-content'>
-            {_('Preview')}
-          </h3>
+          <h3 className='font-bold text-accent mb-2'>{_('Preview')}</h3>
           {isRendering ? (
             <div className='flex items-center justify-center h-[300px]'>
               <div className='flex flex-col items-center gap-3'>

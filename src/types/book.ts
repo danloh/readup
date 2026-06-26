@@ -8,6 +8,7 @@ export type BookFormat =
 export type BookNoteType = 'bookmark' | 'annotation' | 'excerpt';
 export type HighlightStyle = 'highlight' | 'underline' | 'squiggly';
 export type HighlightColor = 'red' | 'yellow' | 'green' | 'blue' | 'violet';
+export const DEFAULT_HIGHLIGHT_COLORS = ['red', 'yellow', 'green', 'blue', 'violet'] as const;
 export type ReadingRulerColor = 'transparent' | 'yellow' | 'green' | 'blue' | 'rose';
 export const FIXED_LAYOUT_FORMATS: Set<BookFormat> = new Set(['PDF', 'CBZ']);
 
@@ -291,6 +292,11 @@ export interface NoteExportConfig {
   useCustomTemplate: boolean;
   customTemplate: string;
   exportAsPlainText: boolean;
+  // Highlight colors/styles to omit from the export. Empty arrays export
+  // everything; storing exclusions keeps colors/styles added later included
+  // by default (#4801).
+  excludedColors: HighlightColor[];
+  excludedStyles: HighlightStyle[];
 }
 
 export interface AnnotatorConfig {
