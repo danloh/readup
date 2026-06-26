@@ -145,6 +145,36 @@ export function buildRangeFromPoints(
 }
 
 /**
+ * The "Annotate" action eagerly creates an empty highlight as the anchor for the
+ * note the user is about to type, so the selection stays visible while the editor
+ * is open. If the user cancels without saving, that placeholder must be torn down
+ * so it doesn't leak into the booknotes list (#4791).
+ *
+ * Tombstones the live annotation identified by `placeholderId` in `booknotes`
+ * (mutating in place, matching the surrounding highlight handlers) and returns it
+ * so the caller can remove its overlay. Returns null — leaving `booknotes`
+ * untouched — when there's nothing to clean up: no live annotation with that id,
+ * or the record already carries note text (the user saved, so it's real now).
+ */
+export function removeEmptyAnnotationPlaceholder(
+  booknotes: BookNote[],
+  placeholderId: string,
+  now: number,
+): BookNote | null {
+  const index = booknotes.findIndex(
+    (note) =>
+      note.id === placeholderId &&
+      note.type === 'annotation' &&
+      !note.deletedAt &&
+      !note.note?.trim(),
+  );
+  if (index === -1) return null;
+  const placeholder = booknotes[index]!;
+  booknotes[index] = { ...placeholder, deletedAt: now };
+  return placeholder;
+}
+
+/**
  * Remove any overlays drawn for a BookNote from the given view.
  *
  * A single BookNote can have up to two overlays attached:

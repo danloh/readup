@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { toPng } from 'html-to-image';
 import QrCodeWithLogo from 'qrcode-with-logos'
 
-import { Book } from '@/types/book';
+import { Book, BookNote } from '@/types/book';
 import { useTranslation } from '@/hooks/useTranslation';
 import Dialog from '@/components/Dialog';
 import { useAuth } from '@/context/AuthContext';
@@ -11,7 +11,10 @@ import { useEnv } from '@/context/EnvContext';
 import { TextSelection } from '@/utils/sel';
 import { isAuthError } from '@/utils/error';
 import { eventDispatcher } from '@/utils/event';
+import { uniqueId } from '@/utils/misc';
 import { getContrastHex, hexToRgba } from '@/styles/themes';
+import { useSettingsStore } from '@/store/settingsStore';
+import { useBookDataStore } from '@/store/bookDataStore';
 import { useReaderStore } from '@/store/readerStore';
 import { useLibraryStore } from '@/store/libraryStore';
 import { setAuthDialogVisible } from '@/components/AuthWindow';
@@ -36,7 +39,9 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
   const _ = useTranslation();
   const { user } = useAuth();
   const { appService, envConfig } = useEnv();
-  const { getProgress, getViewSettings } = useReaderStore();
+  const { settings } = useSettingsStore(); 
+  const { getProgress, getViewSettings, getView } = useReaderStore();
+  const { getConfig, saveConfig, updateBooknotes } = useBookDataStore();
   const progress = getProgress(bookKey);
   const viewSettings = getViewSettings(bookKey);
   const [imageUrl, setImageUrl] = useState<string>('');
@@ -470,6 +475,44 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
           timeout: 2000,
           type: 'info',
         });
+        
+        // also highlight the excerpted selection 
+        const style = 'highlight';
+        const color = settings.globalReadSettings.highlightStyles[style];
+        const cfi = selection.cfi;
+        if (cfi) {
+          const annotation: BookNote = {
+            id: uniqueId(),
+            type: 'annotation',
+            cfi,
+            style,
+            color,
+            text: selection.text,
+            note: '',
+            page: progress?.page,
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          };
+
+          const config = getConfig(bookKey)!;
+          const { booknotes: annotations = [] } = config;
+          const existingIdx = annotations.findIndex(
+            (annotation) =>
+              annotation.cfi === cfi &&
+              annotation.type === 'annotation' &&
+              annotation.style &&
+              !annotation.deletedAt,
+          );
+          if (existingIdx === -1) {
+            annotations.push(annotation);
+            const view = getView(bookKey);
+            view?.addAnnotation(annotation);
+            const updatedConfig = updateBooknotes(bookKey, annotations);
+            if (updatedConfig) {
+              saveConfig(envConfig, bookKey, updatedConfig, settings);
+            }
+          }
+        }
         onCancel();
       }
     } catch (error) {

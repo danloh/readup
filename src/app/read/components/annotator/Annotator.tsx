@@ -84,7 +84,8 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
   const { isDarkMode } = useThemeStore();
   const { getConfig, saveConfig, getBookData, updateBooknotes } = useBookDataStore();
   const { getView, getViewsById, getViewSettings } = useReaderStore();
-  const { setNotebookVisible, setNotebookNewAnnotation } = useNotebookStore();
+  const { setNotebookVisible, setNotebookNewAnnotation, setNotebookNewHighlightId } =
+    useNotebookStore();
   const { listenToNativeTouchEvents } = useDeviceControlStore();
 
   const osPlatform = getOSPlatform();
@@ -965,13 +966,13 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
     }
   };
 
-  const handleHighlight = (update = false, highlightStyle?: HighlightStyle) => {
+  const handleHighlight = (update = false, highlightStyle?: HighlightStyle): BookNote | null => {
     // console.log("click highlight", update);
-    if (!selection || !selection.text) return;
+    if (!selection || !selection.text) return null;
     setHighlightOptionsVisible(true);
     const { booknotes: annotations = [] } = config;
     const cfi = view?.getCFI(selection.index, selection.range);
-    if (!cfi) return;
+    if (!cfi) return null;
     const style = highlightStyle || settings.globalReadSettings.highlightStyle;
     const color = settings.globalReadSettings.highlightStyles[style];
     setSelectedStyle(style);
@@ -988,6 +989,9 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
       createdAt: Date.now(),
       updatedAt: Date.now(),
     };
+    // Only a brand-new highlight is a placeholder the cancel flow may remove;
+    // restyling/toggling an existing one must never tear down the user's record.
+    let created: BookNote | null = null;
     const existingIndex = annotations.findIndex(
       (annotation) =>
         annotation.cfi === cfi &&
@@ -1027,12 +1031,15 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
       annotations.push(annotation);
       views.forEach((view) => view?.addAnnotation(annotation));
       setSelection({ ...selection, cfi, annotated: true });
+      created = annotation;
     }
 
     const updatedConfig = updateBooknotes(bookKey, annotations);
     if (updatedConfig) {
       saveConfig(envConfig, bookKey, updatedConfig, settings);
     }
+
+    return created;
   };
 
   /**
@@ -1076,9 +1083,13 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
     if (!selection || !selection.text) return;
     const { sectionHref: href } = progress;
     selection.href = href;
-    handleHighlight(true);
+    const created = handleHighlight(true);
     setNotebookVisible(true);
     setNotebookNewAnnotation(selection);
+    // Remember the eagerly-created highlight so the notebook can remove it if the
+    // note is never saved. A restyle of an existing highlight returns null — that
+    // record predates this flow and must survive a cancel (#4791).
+    setNotebookNewHighlightId(created?.id ?? null);
     handleDismissPopup();
   };
 

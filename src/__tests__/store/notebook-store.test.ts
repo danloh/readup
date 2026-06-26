@@ -9,6 +9,7 @@ beforeEach(() => {
     isNotebookVisible: false,
     isNotebookPinned: false,
     notebookActiveTab: 'notes',
+    notebookNewHighlightId: null,
     notebookNewAnnotation: null,
     notebookEditAnnotation: null,
     notebookAnnotationDrafts: {},
@@ -105,6 +106,20 @@ describe('notebookStore', () => {
 
     test('defaults to notes', () => {
       expect(useNotebookStore.getState().notebookActiveTab).toBe('notes');
+    });
+  });
+
+  // ── New highlight placeholder id ───────────────────────────────
+  describe('setNotebookNewHighlightId', () => {
+    test('tracks the placeholder highlight id', () => {
+      useNotebookStore.getState().setNotebookNewHighlightId('hl-1');
+      expect(useNotebookStore.getState().notebookNewHighlightId).toBe('hl-1');
+    });
+
+    test('clears the placeholder highlight id when set to null', () => {
+      useNotebookStore.getState().setNotebookNewHighlightId('hl-1');
+      useNotebookStore.getState().setNotebookNewHighlightId(null);
+      expect(useNotebookStore.getState().notebookNewHighlightId).toBeNull();
     });
   });
 
@@ -216,6 +231,7 @@ describe('notebookStore', () => {
       expect(state.isNotebookPinned).toBe(false);
       expect(state.notebookActiveTab).toBe('notes');
       expect(state.notebookNewAnnotation).toBeNull();
+      expect(state.notebookNewHighlightId).toBeNull();
       expect(state.notebookEditAnnotation).toBeNull();
       expect(state.notebookAnnotationDrafts).toEqual({});
     });
