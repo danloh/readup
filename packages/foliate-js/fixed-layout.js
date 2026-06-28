@@ -73,8 +73,7 @@ export const scrollGapToCss = (value) => {
 // the reader. Prioritising the nearest page and bounding concurrency keeps a
 // fast fling from kicking off a full-resolution canvas render for every page it
 // flies past — that thrashes the main thread and spikes WebView memory
-// (#4795), the same pressure the PDF range-read throttle guards against
-// (#3470).
+// (#4795), the same pressure the PDF range-read throttle guards against (#3470).
 export const planScrollModePages = ({
     pages, currentIndex, maxLoaded, maxConcurrent, loadingCount,
 }) => {
@@ -96,6 +95,20 @@ export const planScrollModePages = ({
 
     return { load, evict }
 }
+
+// Live CSS transform for a scroll-mode pinch gesture. Scroll mode has no single
+// spread frame to scale, so the whole scroll container is scaled for immediate
+// visual feedback while the fingers move (instead of only re-rendering on
+// release). The scale is anchored at the centre of the viewport (in the
+// container's coordinate space); the post-pinch re-render then scrolls the
+// centre page back to the rect it occupied in this preview (see
+// #restorePinchAnchor), so the committed zoom lands without a jump.
+export const computeScrollPinchTransform = ({
+    ratio, scrollLeft, scrollTop, viewportWidth, viewportHeight,
+}) => ({
+    transform: `scale(${ratio})`,
+    transformOrigin: `${scrollLeft + viewportWidth / 2}px ${scrollTop + viewportHeight / 2}px`,
+})
 
 // Scroll offsets to apply to the host (`overflow:auto`) after rendering a
 // paginated page. Horizontal is always re-centered so the page sits in the
@@ -177,6 +190,40 @@ export class FixedLayout extends HTMLElement {
     #scrollLoadingCount = 0
     #scrollIdleTimer = null
     #scrollCurrentIndex = -1
+    // True while the host is actively scrolling. Pages load interactive only
+    // when idle so a page that finishes loading mid-scroll can't flip its iframe
+    // interactive and let its own pointer handlers hijack the native scroll.
+    #scrolling = false
+    // True while a pinch gesture is live. Suppresses page load/eviction so the
+    // placeholder layout (and thus scrollTop) can't drift mid-pinch, which would
+    // make the live preview and the committed zoom land in different places.
+    #pinching = false
+    // On-screen rect of the page under the viewport centre, captured from the
+    // live (still-transformed) preview at pinch end ({ index, top, left }). The
+    // commit re-render scrolls that page back to this exact rect, so the zoom
+    // lands where the preview showed it. Using the real getBoundingClientRect
+    // (not fraction maths) sidesteps gap/page-boundary and header-offset errors.
+    #pinchAnchor = null
+    #captureCenterPageRect() {
+        const cy = this.getBoundingClientRect().top + this.clientHeight / 2
+        for (const page of this.#scrollPages) {
+            const rect = page.el.getBoundingClientRect()
+            if (rect.top <= cy && rect.bottom > cy) {
+                return { index: page.index, top: rect.top, left: rect.left }
+            }
+        }
+        return null
+    }
+    // Scroll so the captured page sits back at its pre-commit on-screen rect.
+    #restorePinchAnchor(anchor) {
+        const page = this.#scrollPages.find(p => p.index === anchor.index)
+        if (!page) return
+        const rect = page.el.getBoundingClientRect()
+        const maxTop = Math.max(0, this.scrollHeight - this.clientHeight)
+        const maxLeft = Math.max(0, this.scrollWidth - this.clientWidth)
+        this.scrollTop = clamp(this.scrollTop + (rect.top - anchor.top), 0, maxTop)
+        this.scrollLeft = clamp(this.scrollLeft + (rect.left - anchor.left), 0, maxLeft)
+    }
     #getScrollModePageMetrics() {
         return this.#scrollPages.map(page => ({
             index: page.index,
@@ -225,13 +272,28 @@ export class FixedLayout extends HTMLElement {
         :host([flow="scrolled"]) {
             display: block;
             overflow-y: auto;
-            overflow-x: hidden;
+            /* auto (not hidden) so a zoomed page wider than the viewport can be
+               panned horizontally; collapses to no scrollbar when pages fit. */
+            overflow-x: auto;
+            /* Keep one-finger pan (native scroll) but reserve two-finger
+               gestures for JS so a pinch is delivered instead of triggering the
+               browser's own pinch-zoom or being swallowed by the scroller. */
+            touch-action: pan-x pan-y;
+        }
+        :host([flow="scrolled"]) .scroll-page {
+            touch-action: pan-x pan-y;
         }
         :host([flow="scrolled"]) .scroll-container {
             display: flex;
             flex-direction: column;
             align-items: center;
             min-height: 100%;
+            /* Grow to the widest (zoomed) page so the host can scroll across its
+               full width, but stay at least viewport-wide so unzoomed pages stay
+               centered. Without max-content the centered overflow is unreachable
+               (the flexbox centered-overflow scroll trap). */
+            width: max-content;
+            min-width: 100%;
             background-color: var(--scroll-bg-color);
             background-opacity: var(--scroll-bg-opacity);
         }
@@ -239,7 +301,11 @@ export class FixedLayout extends HTMLElement {
             position: relative;
             flex-shrink: 0;
             overflow: hidden;
-            margin: var(--scroll-page-gap, 4px) 0;
+            /* Scale the gap with the zoom so the committed layout matches the
+               pinch preview, whose transform scales the whole container (gaps
+               included). Without this the gap snaps back to a fixed px on
+               release and the pages shift. */
+            margin: calc(var(--scroll-page-gap, 4px) * var(--scroll-zoom, 1)) 0;
         }
         :host([flow="scrolled"]) .scroll-page iframe {
             pointer-events: none;
@@ -467,6 +533,21 @@ export class FixedLayout extends HTMLElement {
             this.#isOverflowX = leftWidth + rightWidth > containerWidth
             this.#isOverflowY = Math.max(leftHeight, rightHeight) > containerHeight
         }
+        // A pinch commit overrides the default re-centring above: scroll the
+        // spread back to the on-screen rect it occupied in the live preview so
+        // the zoom doesn't jump (matters most when the page was scrolled within
+        // an overflowing zoom). See pinchEnd.
+        if (this.#pinchAnchor) {
+            const frame = this.#center ?? this.#left ?? this.#right
+            if (frame?.element) {
+                const b = frame.element.getBoundingClientRect()
+                const maxTop = Math.max(0, this.scrollHeight - this.clientHeight)
+                const maxLeft = Math.max(0, this.scrollWidth - this.clientWidth)
+                this.scrollTop = clamp(this.scrollTop + (b.top - this.#pinchAnchor.top), 0, maxTop)
+                this.scrollLeft = clamp(this.scrollLeft + (b.left - this.#pinchAnchor.left), 0, maxLeft)
+            }
+            this.#pinchAnchor = null
+        }
         return renderPromises
     }
     async #showSpread({ left, right, center, side, spreadIndex }) {
@@ -606,6 +687,9 @@ export class FixedLayout extends HTMLElement {
     // honouring the concurrency and in-memory caps. Re-run whenever visibility or
     // load state changes so a finished load immediately pulls in the next page.
     #scheduleScrollPages() {
+        // While pinching, loading/evicting pages would resize placeholders and
+        // drift the scroll position, breaking the preview-to-commit alignment.
+        if (this.#pinching) return
         const currentIndex = this.#getScrollIndex()
         const { load, evict } = planScrollModePages({
             pages: this.#scrollPages,
@@ -618,10 +702,18 @@ export class FixedLayout extends HTMLElement {
         for (const index of load) this.#loadScrollPage(this.#scrollPages[index])
     }
     #handleScrollEvent = () => {
-        // Disable iframe interaction during scroll for native smooth scrolling
+        // Drop iframe interaction while the host is actively scrolling so the
+        // scroll stays native-smooth (the iframe's own pointer handlers can't
+        // hijack it), then restore it on settle so text selection, taps, and
+        // same-page pinch work again. (Cross-page pinch is intentionally not
+        // supported in this mode: a gesture spanning two page iframes can't be
+        // owned by one document — keeping the iframes interactive is the
+        // trade-off for native selection.)
+        this.#scrolling = true
         this.#setScrollIframeInteraction(false)
         if (this.#scrollIdleTimer) clearTimeout(this.#scrollIdleTimer)
         this.#scrollIdleTimer = setTimeout(() => {
+            this.#scrolling = false
             this.#setScrollIframeInteraction(true)
             // Report location only after scroll settles to avoid
             // expensive React re-renders on every frame
@@ -769,6 +861,14 @@ export class FixedLayout extends HTMLElement {
             this.#renderScrollPage(pageData)
             this.#restoreScrollModeAnchor(scrollAnchor)
 
+            // Make the page interactive right away when idle so text selection
+            // and taps work without first scrolling. While scrolling, leave it
+            // inert (the scroll-settle handler turns it back on) so its pointer
+            // handlers can't hijack the native scroll.
+            if (!this.#scrolling && !this.#pinching && frame.iframe) {
+                frame.iframe.style.pointerEvents = 'auto'
+            }
+
             // Create overlayer
             const doc = frame.iframe.contentDocument
             if (doc) {
@@ -825,7 +925,14 @@ export class FixedLayout extends HTMLElement {
     #renderScrollMode() {
         const { width: hostWidth } = this.getBoundingClientRect()
         if (!hostWidth) return
-        const scrollAnchor = this.#captureScrollModeAnchor()
+        // Scale the inter-page gap with the zoom so the committed layout matches
+        // the pinch preview (which scales the whole container, gaps included).
+        this.style.setProperty('--scroll-zoom', String(this.#scaleFactor))
+        // A pinch commit restores the viewport-centre anchor (both axes) so the
+        // zoom lands exactly where the live preview showed it; every other
+        // re-render keeps the reader's vertical position via the top anchor.
+        const pinchAnchor = this.#pinchAnchor
+        const scrollAnchor = pinchAnchor ? null : this.#captureScrollModeAnchor()
         for (const page of this.#scrollPages) {
             const scale = (hostWidth / page.vpWidth) * this.#scaleFactor
             page.el.style.width = `${page.vpWidth * scale}px`
@@ -834,7 +941,12 @@ export class FixedLayout extends HTMLElement {
                 this.#renderScrollPage(page)
             }
         }
-        this.#restoreScrollModeAnchor(scrollAnchor)
+        if (pinchAnchor) {
+            this.#restorePinchAnchor(pinchAnchor)
+            this.#pinchAnchor = null
+        } else {
+            this.#restoreScrollModeAnchor(scrollAnchor)
+        }
     }
     #renderScrollPage(pageData) {
         const { width: hostWidth } = this.getBoundingClientRect()
@@ -1338,6 +1450,26 @@ export class FixedLayout extends HTMLElement {
             })
     }
     pinchZoom(ratio) {
+        // Scroll mode: scale the whole scroll container so the zoom tracks the
+        // fingers live, anchored at the viewport centre. Suppress paging and
+        // snapshot the centre anchor on the first move so the layout stays still
+        // and the commit lands exactly where the preview shows.
+        if (this.#scrollMode) {
+            if (this.#scrollContainer) {
+                // Suppress paging so the layout can't drift mid-pinch.
+                this.#pinching = true
+                const { transform, transformOrigin } = computeScrollPinchTransform({
+                    ratio,
+                    scrollLeft: this.scrollLeft,
+                    scrollTop: this.scrollTop,
+                    viewportWidth: this.clientWidth,
+                    viewportHeight: this.clientHeight,
+                })
+                this.#scrollContainer.style.transformOrigin = transformOrigin
+                this.#scrollContainer.style.transform = transform
+            }
+            return
+        }
         const frames = this.#center
             ? [this.#center]
             : [this.#left, this.#right]
@@ -1348,6 +1480,27 @@ export class FixedLayout extends HTMLElement {
         }
     }
     pinchEnd() {
+        if (this.#scrollMode) {
+            // Snapshot the centre page's on-screen rect from the still-scaled
+            // preview, then drop the transform and resume paging. The committed
+            // zoom (scale-factor) re-renders the pages and #renderScrollMode
+            // scrolls that page back to this rect, so the zoom doesn't jump.
+            this.#pinching = false
+            if (this.#scrollContainer) {
+                this.#pinchAnchor = this.#captureCenterPageRect()
+                this.#scrollContainer.style.removeProperty('transform')
+                this.#scrollContainer.style.removeProperty('transform-origin')
+            }
+            return
+        }
+        // Paginated: snapshot the spread's on-screen rect from the still-scaled
+        // preview so the committed zoom (#render) can scroll it back to the same
+        // spot instead of re-centring and jumping.
+        const shown = this.#center ?? this.#left ?? this.#right
+        if (shown?.element) {
+            const b = shown.element.getBoundingClientRect()
+            this.#pinchAnchor = { top: b.top, left: b.left }
+        }
         for (const frame of [this.#center, this.#left, this.#right]) {
             if (!frame?.element) continue
             frame.element.style.removeProperty('transform')
