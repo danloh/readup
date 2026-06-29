@@ -9,6 +9,44 @@ import { eventDispatcher } from '@/utils/event';
 import { walkTextNodes } from '@/utils/walk';
 import { debounce } from '@/utils/debounce';
 import { getLocale } from '@/utils/misc';
+import { getDirFromLanguage } from '@/utils/rtl';
+
+export const createTranslationTargetNode = ({
+  translatedText,
+  lang,
+  targetBlockClassName,
+  hidden,
+  widthLineBreak,
+}: {
+  translatedText: string;
+  lang: string;
+  targetBlockClassName: string;
+  hidden: boolean;
+  widthLineBreak: boolean;
+}) => {
+  const wrapper = document.createElement('font');
+  wrapper.className = `translation-target ${hidden ? 'hidden' : ''}`;
+  wrapper.setAttribute('translation-element-mark', '1');
+  wrapper.setAttribute('lang', lang);
+  // Set the base direction from the target language so justified RTL text
+  // (e.g. Arabic) aligns to the start (right) instead of inheriting the
+  // source document's LTR direction.
+  wrapper.setAttribute('dir', getDirFromLanguage(lang));
+  if (widthLineBreak) {
+    wrapper.appendChild(document.createElement('br'));
+  }
+
+  const blockWrapper = document.createElement('font');
+  blockWrapper.className = `translation-target ${targetBlockClassName}`;
+
+  const inner = document.createElement('font');
+  inner.className = 'translation-target target-inner target-inner-theme-none';
+  inner.textContent = translatedText;
+
+  blockWrapper.appendChild(inner);
+  wrapper.appendChild(blockWrapper);
+  return wrapper;
+};
 
 export function useTextTranslation(
   bookKey: string,
@@ -17,7 +55,8 @@ export function useTextTranslation(
   targetBlockClassName = 'translation-target-block',
 ) {
   const _ = useTranslation();
-  const { getViewSettings, setIsLoading } = useReaderStore();
+  const getViewSettings = useReaderStore((s) => s.getViewSettings);
+  const setIsLoading = useReaderStore((s) => s.setIsLoading);
   const viewSettings = getViewSettings(bookKey);
   // Reactive: triggers translate-in-range on every page turn so the
   // visible viewport's translations refresh. Reads from
@@ -259,23 +298,13 @@ export function useTextTranslation(
       const translatedText = translated[0];
       if (!translatedText || text === translatedText) return;
 
-      const wrapper = document.createElement('font');
-      wrapper.className = `translation-target ${!enabled.current ? 'hidden' : ''}`;
-      wrapper.setAttribute('translation-element-mark', '1');
-      wrapper.setAttribute('lang', targetLang || getLocale());
-      if (widthLineBreak) {
-        wrapper.appendChild(document.createElement('br'));
-      }
-
-      const blockWrapper = document.createElement('font');
-      blockWrapper.className = `translation-target ${targetBlockClassName}`;
-
-      const inner = document.createElement('font');
-      inner.className = 'translation-target target-inner target-inner-theme-none';
-      inner.textContent = translatedText;
-
-      blockWrapper.appendChild(inner);
-      wrapper.appendChild(blockWrapper);
+      const wrapper = createTranslationTargetNode({
+        translatedText,
+        lang: targetLang || getLocale(),
+        targetBlockClassName,
+        hidden: !enabled.current,
+        widthLineBreak,
+      });
 
       if (el.querySelector('.translation-target')) {
         return;
