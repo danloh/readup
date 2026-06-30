@@ -22,7 +22,7 @@ webdriver = ["tauri-plugin-webdriver"]
 devtools = ["tauri/devtools"]
 
 [build-dependencies]
-tauri-build = { version = "2.6.2", features = [] }
+tauri-build = { version = "2.6.3", features = [] }
 
 [dependencies]
 futures = "0.3.32"
@@ -37,12 +37,12 @@ read-progress-stream = "1.0.0"
 reqwest = { version = "0.12.28", default-features = false, features = ["json", "stream"] }
 rss = { version = "2.0", features = ["serde"] }
 atom_syndication = "0.12"
-bytes = "1.11.1"
-chrono = "0.4.44"
+bytes = "1"
+chrono = "0.4.45"
 walkdir = "2"
 # FIXME: remove the devtools feature in production
-tauri = { version = "2.11.2", features = [ "protocol-asset", "devtools"] }
-tauri-build = "2.6.2"
+tauri = { version = "2.11.3", features = [ "protocol-asset", "devtools"] }
+tauri-build = "2.6.3"
 tauri-plugin-clipboard-manager = "2"
 tauri-plugin-log = "2.8.0"
 tauri-plugin-fs = "2.5.1"

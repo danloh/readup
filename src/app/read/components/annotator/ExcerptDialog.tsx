@@ -467,7 +467,7 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
         imageData: finalImageUrl || imageUrl,
         altText: selection.text,
         url: shareUrl,
-        linkTitle: bookUploaded ? 'Read the Book' : undefined
+        linkTitle: bookUploaded ? 'Read the Book on Readup' : undefined
       });
       if (resp.success) {
         eventDispatcher.dispatch('toast', {
