@@ -1,15 +1,21 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { useEnv } from '@/context/EnvContext';
 import { useNotebookStore } from '@/store/notebookStore';
+import { useLibraryStore } from '@/store/libraryStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useResponsiveSize } from '@/hooks/useResponsiveSize';
+import useShortcuts from '@/hooks/useShortcuts';
 import { TextSelection } from '@/utils/sel';
 import { md5Fingerprint } from '@/utils/md5';
+import { eventDispatcher } from '@/utils/event';
+import { isAuthError } from '@/utils/error';
 import { Book, BookNote } from '@/types/book';
-import useShortcuts from '@/hooks/useShortcuts';
 import TextEditor, { TextEditorRef } from '@/components/TextEditor';
 import TextButton from '@/components/TextButton';
+import { setAuthDialogVisible } from '@/components/AuthWindow';
 import { getAtpAgent } from '@/services/bsky/auth';
-import { postText } from '@/services/bsky/xpost';
+import { postWithExternalLink } from '@/services/bsky/xpost';
 
 interface NoteEditorProps {
   onSave: (selection: TextSelection, note: string, url?: string) => void;
@@ -19,6 +25,8 @@ interface NoteEditorProps {
 
 const NoteEditor: React.FC<NoteEditorProps> = ({ onSave, onEdit, book }) => {
   const _ = useTranslation();
+  const { user } = useAuth();
+  const { appService, envConfig } = useEnv();
   const {
     notebookNewAnnotation,
     notebookEditAnnotation,
@@ -77,18 +85,85 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ onSave, onEdit, book }) => {
       // Post to Bluesky if enabled
       if (crossPostToBluesky) {
         try {
-          const annotationText = getAnnotationText();
-          const bookTitle = book?.title ? `\n\n ---${book?.title}` : '';
-          const blueskyText = annotationText 
-            ? `${annotationText}\n\n${currentValue} --- ${bookTitle}`
-            : `${currentValue} --- ${bookTitle}`;
-          
           const agent = await getAtpAgent();
-          // FIXME: how to handle the length limit? 
-          const response = await postText(agent, blueskyText);
+          const annotationText = getAnnotationText();
+          const annotation = notebookNewAnnotation || notebookEditAnnotation;
+          
+          // Generate thumbnail image from selection text using quote-image
+          let thumbBlob: Blob | undefined = undefined;
+          if (annotationText && book) {
+            try {
+              await import('foliate-js/quote-image.js');
+              const quoteImage = document.createElement('foliate-quoteimage');
+              // Append to DOM temporarily to use the custom element
+              console.log('quote image', quoteImage);
+              document.body.appendChild(quoteImage);
+              
+              thumbBlob = await (quoteImage as any).getBlob({
+                text: annotationText,
+                title: book.title,
+                author: book.author,
+              });
+              
+              document.body.removeChild(quoteImage);
+            } catch (error) {
+              console.warn('⚠ Failed to generate quote image:', error);
+            }
+          }
+
+          // Ensure book is uploaded to PDS before building share URL
+          let shareUrl = 'https://readup.cc';
+          let bookUploaded = !!book?.uploadedAt;
+
+          if (!bookUploaded && book && appService) {
+            try {
+              await appService.uploadBook(book, false);
+              // persist change on book to the store to avoid re-upload
+              await useLibraryStore.getState().updateBook(envConfig, book);
+              bookUploaded = true;
+            } catch (uploadError) {
+              if (isAuthError(uploadError)) {
+                eventDispatcher.dispatch('toast', {
+                  message: 'Authentication expired. Please sign in.',
+                  timeout: 2000,
+                  type: 'warning',
+                });
+                setAuthDialogVisible(true);
+                // fallback to base URL
+                bookUploaded = false;
+              } else {
+                console.error('Failed to upload book:', uploadError);
+              }
+            }
+          }
+
+          // Build share URL with book hash, user DID, and CFI (only if uploaded)
+          if (bookUploaded && book?.hash && user?.did && annotation?.cfi) {
+            shareUrl = `https://readup.cc/read/${book.hash}?did=${user.did}&loc=${encodeURIComponent(annotation.cfi)}`;
+          } else if (bookUploaded && book?.hash && user?.did) {
+            shareUrl = `https://readup.cc/read/${book.hash}?did=${user.did}`;
+          }
+
+          // Post with external link and thumbnail image
+          const response = await postWithExternalLink(agent, {
+            text: `${currentValue} #booksky #readsky`,
+            url: shareUrl,
+            title: book?.title || 'A highlight from a book',
+            description: annotationText || currentValue,
+            thumb: thumbBlob,
+          });
+
           crosspostUrl = response.data?.uri;
-          console.log('✅ Note cross-posted to Bluesky:', crosspostUrl);
+          console.log('✅ Cross-posted to Bluesky:', crosspostUrl);
         } catch (error) {
+          if (isAuthError(error)) {
+            eventDispatcher.dispatch('toast', {
+              message: 'Authentication expired. Please sign in.',
+              timeout: 2000,
+              type: 'warning',
+            });
+            setAuthDialogVisible(true);
+          }
           console.error('❌ Failed to cross-post to Bluesky:', error);
         }
       }

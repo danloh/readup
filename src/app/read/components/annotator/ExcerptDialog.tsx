@@ -356,7 +356,7 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
           // Check if upload error is auth-related
           if (isAuthError(uploadError)) {
             eventDispatcher.dispatch('toast', {
-              message: 'Authentication expired. Please sign in again.',
+              message: 'Authentication expired. Please sign in.',
               timeout: 2000,
               type: 'warning',
             });
