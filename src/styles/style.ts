@@ -456,6 +456,12 @@ const getPageLayoutStyles = (
   }
   img.has-text-siblings {
     ${vertical ? 'width: 1em;' : 'height: 1em;'}
+  }
+  /* Baseline is only default: applyImageStyle adds this class when the
+     book leaves vertical-align at its initial value, so an author-set value
+     (e.g. a CJK glyph-substitution image nudged with vertical-align: -0.15em)
+     keeps winning. See #4866. */
+  img.has-text-siblings-baseline {
     vertical-align: baseline;
   }
   :is(div) > img.has-text-siblings[style*="object-fit"] {
@@ -1085,7 +1091,8 @@ export const applyScrollbarStyle = (document: Document, hideScrollbar: boolean) 
   }
 };
 
-export const applyImageStyle = (document: Document) => {
+// to del
+export const applyImageStyle0 = (document: Document) => {
   document.querySelectorAll('img').forEach((img) => {
     const widthAttr = img.getAttribute('width');
     if (widthAttr && (widthAttr.endsWith('%') || widthAttr.endsWith('vw'))) {
@@ -1117,6 +1124,69 @@ export const applyImageStyle = (document: Document) => {
       img.classList.add('has-text-siblings');
     }
   });
+  document.querySelectorAll('hr').forEach((hr) => {
+    const computedStyle = window.getComputedStyle(hr);
+    if (computedStyle.backgroundImage && computedStyle.backgroundImage !== 'none') {
+      hr.classList.add('background-img');
+    }
+  });
+};
+
+export const applyImageStyle = (document: Document) => {
+  const win = document.defaultView ?? window;
+  // Two-phase (read then write): reading getComputedStyle after a class/style
+  // write forces a style recalc, so gather every decision first and apply the
+  // mutations afterwards (same reasoning as keepTextAlignment's split).
+  const plans = Array.from(document.querySelectorAll('img')).map((img) => {
+    const widthAttr = img.getAttribute('width');
+    const percentWidth =
+      widthAttr && (widthAttr.endsWith('%') || widthAttr.endsWith('vw'))
+        ? parseFloat(widthAttr)
+        : NaN;
+    const heightAttr = img.getAttribute('height');
+    const percentHeight =
+      heightAttr && (heightAttr.endsWith('%') || heightAttr.endsWith('vh'))
+        ? parseFloat(heightAttr)
+        : NaN;
+
+    let inlineWithText = false;
+    let keepBaseline = false;
+    const parent = img.parentNode;
+    if (parent && parent.nodeType === Node.ELEMENT_NODE) {
+      const childNodes = Array.from(parent.childNodes);
+      const hasTextSiblings = childNodes.some(
+        (node) => node.nodeType === Node.TEXT_NODE && node.textContent?.trim(),
+      );
+      const isInline = childNodes.every(
+        (node) => node.nodeType !== Node.ELEMENT_NODE || (node as Element).tagName !== 'BR',
+      );
+      inlineWithText = hasTextSiblings && isInline;
+      if (inlineWithText) {
+        // Only supply baseline default when the book leaves
+        // vertical-align at its initial value; an author-set value (e.g. a CJK
+        // glyph-substitution image nudged with `vertical-align: -0.15em`) must
+        // win. Empty string covers environments that report unset props as ''.
+        const valign = win.getComputedStyle(img).verticalAlign;
+        keepBaseline = valign === '' || valign === 'baseline';
+      }
+    }
+    return { img, percentWidth, percentHeight, inlineWithText, keepBaseline };
+  });
+
+  for (const { img, percentWidth, percentHeight, inlineWithText, keepBaseline } of plans) {
+    if (!isNaN(percentWidth)) {
+      img.style.width = `${(percentWidth / 100) * window.innerWidth}px`;
+      img.removeAttribute('width');
+    }
+    if (!isNaN(percentHeight)) {
+      img.style.height = `${(percentHeight / 100) * window.innerHeight}px`;
+      img.removeAttribute('height');
+    }
+    if (inlineWithText) {
+      img.classList.add('has-text-siblings');
+      if (keepBaseline) img.classList.add('has-text-siblings-baseline');
+    }
+  }
   document.querySelectorAll('hr').forEach((hr) => {
     const computedStyle = window.getComputedStyle(hr);
     if (computedStyle.backgroundImage && computedStyle.backgroundImage !== 'none') {
