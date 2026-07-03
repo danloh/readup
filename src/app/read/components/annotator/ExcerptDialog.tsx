@@ -6,6 +6,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import Dialog from '@/components/Dialog';
 import { useAuth } from '@/context/AuthContext';
 import { useEnv } from '@/context/EnvContext';
+import { formatAuthors, formatTitle } from '@/utils/book';
 import { TextSelection } from '@/utils/sel';
 import { isAuthError } from '@/utils/error';
 import { eventDispatcher } from '@/utils/event';
@@ -360,7 +361,7 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
       }
 
       const resp = await postWithImageAndLink(agent, {
-        text: `Excerpt from book: ${book.title} ${allHashtags}`,
+        text: `📚💙 ${formatTitle(book.title)} © ${formatAuthors(book.author || book.metadata?.author || '')} ${allHashtags}`,
         imageData: finalImageBlob,
         altText: selection.text,
         url: shareUrl,
