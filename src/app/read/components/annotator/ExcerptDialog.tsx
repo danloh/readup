@@ -250,7 +250,7 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
 
         const objectUrl = URL.createObjectURL(finalBlob);
         previewUrlRef.current = objectUrl;
-        setQuoteImageBlob(finalBlob);
+        setQuoteImageBlob(blob);
         setImageUrl(objectUrl);
       } catch (error) {
         console.error('Failed to generate excerpt image:', error);

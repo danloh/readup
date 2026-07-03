@@ -113,10 +113,13 @@ customElements.define('foliate-quoteimage', class extends HTMLElement {
         metaEl.style.fontColor = opts.titleColor
         const titleEl = this.#root.querySelector('#title')
         titleEl.style.fontSize = `${opts.fontSize}px`
+        titleEl.style.fontColor = opts.titleColor
         const authorEl = this.#root.querySelector('#author')
         authorEl.style.fontSize = `${opts.fontSize * 0.8}px`
+        authorEl.style.fontColor = opts.titleColor
         const progressEl = this.#root.querySelector('#progress')
         progressEl.style.fontSize = `${opts.fontSize * 0.8}px`
+        progressEl.style.fontColor = opts.titleColor
 
         console.log('main html-0', mainEl)
 
