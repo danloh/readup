@@ -134,7 +134,11 @@ const ProgressInfoView: React.FC<PageInfoProps> = ({
       }
     >
       <div
-        className={clsx('flex items-center justify-center gap-1', isVertical ? 'h-full' : 'w-full')}
+        className={clsx(
+          'flex items-center justify-center gap-1', 
+          isVertical ? 'h-full' : 'w-full',
+          !isEink && 'text-white/75 mix-blend-difference',
+        )}
         style={isVertical ? {} : { height: `${viewSettings.marginBottomPx}px` }}
       >
         <span className='remaining-info-label text-start truncate'>{remainingInfo}</span>
