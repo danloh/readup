@@ -17,8 +17,10 @@ const createReaderWindow = (appService: AppService, url: string) => {
     center: true,
     resizable: true,
     title: appService.isMacOSApp ? '' : 'Readup',
-    decorations: appService.isMacOSApp ? true : false,
-    transparent: appService.isMacOSApp ? false : true,
+    decorations: !!appService.isMacOSApp,
+    // Linux stays opaque: a transparent WebKitGTK window turns invisible when
+    // its web process is busy (#3682). macOS uses native decorations instead.
+    transparent: !appService.isMacOSApp && !appService.isLinuxApp,
     shadow: appService.isMacOSApp ? undefined : true,
     titleBarStyle: appService.isMacOSApp ? 'overlay' : undefined,
     // Enum ScrollBarStyle is exported as type by tauri, so it cannot be used directly.
@@ -74,7 +76,9 @@ export const ensureMainLibraryWindow = async (appService: AppService) => {
     resizable: true,
     title: appService.isMacOSApp ? '' : 'Readup',
     decorations: !!appService.isMacOSApp,
-    transparent: !appService.isMacOSApp,
+    // Linux stays opaque: a transparent WebKitGTK window turns invisible when
+    // its web process is busy (#3682). macOS uses native decorations instead.
+    transparent: !appService.isMacOSApp && !appService.isLinuxApp,
     shadow: appService.isMacOSApp ? undefined : true,
     titleBarStyle: appService.isMacOSApp ? 'overlay' : undefined,
     scrollBarStyle: (appService.osPlatform === 'windows'
