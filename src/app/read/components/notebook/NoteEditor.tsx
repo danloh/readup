@@ -39,6 +39,7 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ onSave, onEdit, book }) => {
   const editorRef = useRef<TextEditorRef>(null);
   const [note, setNote] = useState('');
   const [crossPostToBluesky, setCrossPostToBluesky] = useState(false);
+  const [isCrossPost, setIsCrossPost] = useState(false);
   const separatorWidth = useResponsiveSize(3);
 
   useEffect(() => {
@@ -85,6 +86,7 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ onSave, onEdit, book }) => {
       // Post to Bluesky if enabled
       if (crossPostToBluesky) {
         try {
+          setIsCrossPost(true);
           const agent = await getAtpAgent();
           const annotationText = getAnnotationText();
           const annotation = notebookNewAnnotation || notebookEditAnnotation;
@@ -96,7 +98,7 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ onSave, onEdit, book }) => {
               await import('foliate-js/quote-image.js');
               const quoteImage = document.createElement('foliate-quoteimage');
               // Append to DOM temporarily to use the custom element
-              console.log('quote image', quoteImage);
+              // console.log('quote image', quoteImage);
               document.body.appendChild(quoteImage);
               
               thumbBlob = await (quoteImage as any).getBlob({
@@ -129,11 +131,10 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ onSave, onEdit, book }) => {
                   type: 'warning',
                 });
                 setAuthDialogVisible(true);
-                // fallback to base URL
-                bookUploaded = false;
-              } else {
-                console.error('Failed to upload book:', uploadError);
               }
+              console.error('Failed to upload book:', uploadError);
+              // fallback to base URL
+              bookUploaded = false;
             }
           }
 
@@ -154,7 +155,14 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ onSave, onEdit, book }) => {
           });
 
           crosspostUrl = response.data?.uri;
-          console.log('✅ Cross-posted to Bluesky:', crosspostUrl);
+          if (response.success) {
+            eventDispatcher.dispatch('toast', {
+              message: 'Success to Cross-posted to ATmosphere',
+              timeout: 2000,
+              type: 'info',
+            });
+            console.log('✅ Cross-posted to Bluesky:', crosspostUrl);
+          }
         } catch (error) {
           if (isAuthError(error)) {
             eventDispatcher.dispatch('toast', {
@@ -165,6 +173,8 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ onSave, onEdit, book }) => {
             setAuthDialogVisible(true);
           }
           console.error('❌ Failed to cross-post to Bluesky:', error);
+        } finally {
+          setIsCrossPost(false);
         }
       }
 
@@ -243,9 +253,11 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ onSave, onEdit, book }) => {
       </div>
 
       <div className='flex justify-end space-x-3 p-2' dir='ltr'>
-        <TextButton onClick={handleEscape}>{_('Cancel')}</TextButton>
-        <TextButton onClick={handleSaveNote} disabled={!canSave}>
-          {_('Save')}
+        <TextButton onClick={handleEscape} disabled={isCrossPost}>
+          {_('Cancel')}
+        </TextButton>
+        <TextButton onClick={handleSaveNote} disabled={!canSave || isCrossPost}>
+          {isCrossPost ? _('Processing') : _('Save')}
         </TextButton>
       </div>
     </div>

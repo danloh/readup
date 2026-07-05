@@ -361,7 +361,7 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
       }
 
       const resp = await postWithImageAndLink(agent, {
-        text: `📚💙 ${formatTitle(book.title)} © ${formatAuthors(book.author || book.metadata?.author || '')} ${allHashtags}`,
+        text: `#BookExcerpt 📚💙 ${formatTitle(book.title)} © ${formatAuthors(book.author || book.metadata?.author || '')} ${allHashtags}`,
         imageData: finalImageBlob,
         altText: selection.text,
         url: shareUrl,
