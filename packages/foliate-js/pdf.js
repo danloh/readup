@@ -12,7 +12,7 @@ const fetchText = async url => await (await fetch(url)).text()
 // the text layer's positions are percentages of the `--total-scale-factor`-sized
 // container and are not. Left uncorrected the glyphs render `fontScale`x larger
 // than the ones baked into the canvas, so selection and highlight rectangles
-// overshoot the text into the blank margins and sit too low (readest #4480).
+// overshoot the text into the blank margins and sit too low ( #4480).
 // Measure the scale here so render() can divide it back out of the glyph-size
 // lever only. offsetHeight of a 100px/line-height-1 box reflects the OS font
 // scaling but not devicePixelRatio or CSS transforms, so it isolates it.
