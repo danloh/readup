@@ -71,11 +71,11 @@ export function useTransferQueue(libraryLoaded = true, delayInit = 0) {
   }, []);
 
   const clearCompleted = useCallback(() => {
-    useTransferStore.getState().clearCompleted();
+    transferManager.clearCompleted();
   }, []);
 
   const clearFailed = useCallback(() => {
-    useTransferStore.getState().clearFailed();
+    transferManager.clearFailed();
   }, []);
 
   const clearPending = useCallback(() => {
@@ -83,7 +83,7 @@ export function useTransferQueue(libraryLoaded = true, delayInit = 0) {
   }, []);
 
   const clearAll = useCallback(() => {
-    useTransferStore.getState().clearAll();
+    transferManager.clearAll();
   }, []);
 
   const getTransferProgress = useCallback((bookHash: string, type: TransferType) => {
