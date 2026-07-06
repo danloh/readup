@@ -2,7 +2,7 @@ import { FileSystem, BaseDir, AppPlatform, ResolvedPath, FileItem } from '@/type
 import { getOSPlatform, isValidURL } from '@/utils/misc';
 import { RemoteFile } from '@/utils/file';
 import { isSafariBrowser } from '@/utils/ua';
-import { isPWA } from './environment';
+// import { isPWA } from './environment';
 import { BaseAppService } from './appService';
 import { LOCAL_BOOKS_SUBDIR, DATA_SUBDIR, LOCAL_DICTIONARIES_SUBDIR } from './constants';
 
@@ -276,7 +276,7 @@ export class WebAppService extends BaseAppService {
   fs = indexedDBFileSystem;
   override isMobile = ['android', 'ios'].includes(getOSPlatform());
   override appPlatform = 'web' as AppPlatform;
-  override hasSafeAreaInset = isPWA();
+  override hasSafeAreaInset = false; // isPWA(); // FIXME just try
   override supportsCanvasContext2DFilter = !isSafariBrowser();
 
   override async init() {
