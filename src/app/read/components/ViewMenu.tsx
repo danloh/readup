@@ -420,13 +420,13 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
       <hr aria-hidden='true' className='border-base-300 my-1' />
       {user && (
         <MenuItem
-          label={
-            lastSyncTime
-              ? _('Synced at {{time}}', { time: formatLocaleDateTime(lastSyncTime)})
-              : _('Never synced')
-          }
+          label={_('Sync To PDS')}
           Icon={MdSync}
-          description={_('Sync annotations, progress...')}
+          description={
+            _('Sync annotations, progress... | ') + 
+            lastSyncTime
+              ? _('At {{time}}', { time: formatLocaleDateTime(lastSyncTime)})
+              : _('Never synced')}
           onClick={handleSync}
         />
       )}

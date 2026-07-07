@@ -4,6 +4,7 @@ import { Insets } from '@/types/misc';
 import { useEnv } from '@/context/EnvContext';
 import { useThemeStore } from '@/store/themeStore';
 import { useReaderStore } from '@/store/readerStore';
+import { useBookDataStore } from '@/store/bookDataStore';
 import { eventDispatcher } from '@/utils/event';
 
 interface SectionInfoProps {
@@ -34,6 +35,8 @@ const SectionInfo: React.FC<SectionInfoProps> = ({
   const { appService } = useEnv();
   const { hoveredBookKey, getView, getViewSettings, setHoveredBookKey } = useReaderStore();
   const { systemUIVisible, statusBarHeight } = useThemeStore();
+  const getBookData = useBookDataStore((s) => s.getBookData);
+  const bookData = getBookData(bookKey);
   const viewSettings = getViewSettings(bookKey)!;
   const topInset = Math.max(
     gridInsets.top,
@@ -70,13 +73,11 @@ const SectionInfo: React.FC<SectionInfoProps> = ({
         onClick={handleSectionClick}
         className={clsx(
           'sectioninfo absolute flex items-center overflow-hidden font-sans',
-          // A light-mode PDF stays white under a dark theme, so the themed
-          // neutral-content title was unreadable on the page (#4901). Blend the
-          // text against whatever is actually behind it (page or margin) so it
-          // stays legible on any background. text-white/75 matches the previous
-          // neutral-content brightness over the dark theme, so nothing changes
-          // for reflowable books. E-ink keeps its plain base-content text.
-          isEink ? 'text-sm font-normal' : 'text-white/75 mix-blend-difference text-xs font-light',
+          isEink
+            ? 'text-sm font-normal'
+            : bookData?.isFixedLayout
+              ? 'text-white/75 mix-blend-difference text-xs font-light'
+              : 'text-base-content text-xs font-light',
           isVertical ? 'writing-vertical-rl max-h-[85%]' : 'top-0',
         )}
         style={

@@ -137,7 +137,9 @@ const ProgressInfoView: React.FC<PageInfoProps> = ({
         className={clsx(
           'flex items-center justify-center gap-1', 
           isVertical ? 'h-full' : 'w-full',
-          !isEink && 'text-white/75 mix-blend-difference',
+          bookData?.isFixedLayout && !isEink
+            ? 'text-white/75 mix-blend-difference'
+            : 'text-base-content',
         )}
         style={isVertical ? {} : { height: `${viewSettings.marginBottomPx}px` }}
       >

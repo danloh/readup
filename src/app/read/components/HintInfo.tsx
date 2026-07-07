@@ -60,8 +60,6 @@ const HintInfo: React.FC<SectionInfoProps> = ({
     };
   }, [hintMessage]);
 
-  if (!hintMessage) return null;
-
   return (
     <>
       <div
@@ -97,8 +95,8 @@ const HintInfo: React.FC<SectionInfoProps> = ({
       >
         <h2
           className={clsx(
-            'text-center font-sans',
-            isEink ? 'text-sm font-normal' : 'text-white/75 mix-blend-difference text-xs font-light',
+            'text-center font-sans line-clamp-1',
+            isEink ? 'text-sm font-normal' : 'text-base-content text-xs font-light',
           )}
         >
           {hintMessage || ''}
