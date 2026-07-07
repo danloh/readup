@@ -61,6 +61,8 @@ export abstract class BaseAppService implements AppService {
   canCustomizeRootDir = false;
   canReadExternalDir = false;
   supportsCanvasContext2DFilter = true;
+  supportsViewTransitionsAPI = false;
+  supportsViewTransitionGroup = false;
   distChannel = 'readup' as DistChannel;
   storefrontRegionCode: string | null = null; // TODO
   isOnlineCatalogsAccessible = false; // TODO

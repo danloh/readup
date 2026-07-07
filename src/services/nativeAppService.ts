@@ -34,8 +34,11 @@ import { getOSPlatform, isContentURI, isFileURI, isValidURL } from '@/utils/misc
 import { getDirPath, getFilename } from '@/utils/path';
 import { copyURIToPath, saveImageToGallery } from '@/utils/bridge';
 import { NativeFile, RemoteFile } from '@/utils/file';
+import { detectViewTransitionGroup, detectViewTransitionsAPI } from '@/utils/viewTransition';
 import { BaseAppService } from './appService';
-import { LOCAL_BOOKS_SUBDIR, SETTINGS_FILENAME, DATA_SUBDIR, LOCAL_DICTIONARIES_SUBDIR, } from './constants';
+import { 
+  LOCAL_BOOKS_SUBDIR, SETTINGS_FILENAME, DATA_SUBDIR, LOCAL_DICTIONARIES_SUBDIR
+} from './constants';
 
 declare global {
   interface Window {
@@ -528,6 +531,11 @@ export class NativeAppService extends BaseAppService {
   // See: https://github.com/tauri-apps/tauri/issues/3716
   override canCustomizeRootDir = DIST_CHANNEL !== 'appstore';
   override canReadExternalDir = DIST_CHANNEL !== 'appstore' && DIST_CHANNEL !== 'playstore';
+  // WebKitGTK on Linux crashes when a View Transition snapshots the window,
+  // so both capabilities are unavailable there regardless of what the engine
+  // reports; every other webview is gated on the real feature probe.
+  override supportsViewTransitionsAPI = OS_TYPE !== 'linux' && detectViewTransitionsAPI();
+  override supportsViewTransitionGroup = OS_TYPE !== 'linux' && detectViewTransitionGroup();
   override distChannel = DIST_CHANNEL;
   private execDir?: string = undefined;
   private customRootDir?: string = undefined;

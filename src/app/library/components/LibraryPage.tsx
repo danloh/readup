@@ -2,7 +2,7 @@ import clsx from 'clsx';
 import * as React from 'react';
 import { useState, useRef, useEffect, Suspense, useCallback } from 'react';
 import { getCurrentWebview } from '@tauri-apps/api/webview';
-import { ReadonlyURLSearchParams, useRouter, useSearchParams } from 'next/navigation';
+import { ReadonlyURLSearchParams, useSearchParams } from 'next/navigation';
 import { MdChevronRight } from 'react-icons/md';
 import { LiaInfoCircleSolid } from 'react-icons/lia';
 import { 
@@ -96,8 +96,6 @@ const LibraryPageContent = (
   { searchParams }: { searchParams: ReadonlyURLSearchParams | null }
 ) => {
   const router = useAppRouter();
-  // Opening the reader is a heavy render that overruns the View Transition
-  const readerRouter = useRouter();
   const { envConfig, appService } = useEnv();
   const { user } = useAuth();
   const {
@@ -420,10 +418,10 @@ const LibraryPageContent = (
       const bookIds = pendingNavigationBookIds;
       setPendingNavigationBookIds(null);
       if (bookIds.length > 0) {
-        navigateToReader(readerRouter, bookIds);
+        navigateToReader(router, bookIds);
       }
     }
-  }, [pendingNavigationBookIds, appService, router, readerRouter]);
+  }, [pendingNavigationBookIds, appService, router, router]);
 
   useEffect(() => {
     if (isInitiating.current) return;

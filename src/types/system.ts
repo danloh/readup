@@ -104,6 +104,8 @@ export interface AppService {
   canCustomizeRootDir: boolean;
   canReadExternalDir: boolean;
   supportsCanvasContext2DFilter: boolean;
+  supportsViewTransitionsAPI: boolean;
+  supportsViewTransitionGroup: boolean;
   distChannel: DistChannel;
 
   init(): Promise<void>;

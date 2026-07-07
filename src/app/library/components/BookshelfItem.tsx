@@ -1,6 +1,5 @@
 import clsx from 'clsx';
 import { useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 import { Menu, MenuItem } from '@tauri-apps/api/menu';
 import { revealItemInDir } from '@tauri-apps/plugin-opener';
 
@@ -10,6 +9,7 @@ import { useLibraryStore } from '@/store/libraryStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useLongPress } from '@/hooks/useLongPress';
+import { useAppRouter } from '@/hooks/useAppRouter';
 import { getOSPlatform } from '@/utils/misc';
 import { throttle } from '@/utils/throttle';
 import { eventDispatcher } from '@/utils/event';
@@ -102,8 +102,7 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
   handleLibraryNavigation,
 }) => {
   const _ = useTranslation();
-  // Open the reader with the plain router, NOT the View Transition router:
-  const router = useRouter();
+  const router = useAppRouter();
   const { envConfig, appService } = useEnv();
   const { settings } = useSettingsStore();
   const { updateBook } = useLibraryStore();

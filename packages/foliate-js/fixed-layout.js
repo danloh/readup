@@ -73,7 +73,7 @@ export const scrollGapToCss = (value) => {
 // the reader. Prioritising the nearest page and bounding concurrency keeps a
 // fast fling from kicking off a full-resolution canvas render for every page it
 // flies past — that thrashes the main thread and spikes WebView memory
-// (#4795), the same pressure the PDF range-read throttle guards against (#3470).
+// #4795), the same pressure the PDF range-read throttle guards against (#3470).
 export const planScrollModePages = ({
     pages, currentIndex, maxLoaded, maxConcurrent, loadingCount,
 }) => {
@@ -140,6 +140,26 @@ export const computeSpreadSpineOverlap = ({
     if (center || portrait || leftBlank || rightBlank) return 0
     return -1 / (devicePixelRatio || 1)
 }
+
+// Inline margins for the two pages of a spread. In landscape both pages are
+// shown and pushed together at the spine: the left page hugs the right edge
+// (`margin-inline-start: auto`) and the right page hugs the left edge
+// (`margin-inline-end: auto`), so the pair sits centred. In portrait only one
+// page of the spread is shown; a one-sided auto margin would strand that lone
+// page in one half of the viewport whenever it is narrower than the viewport
+// (#4984), so both margins are auto to centre it. Both inline margins are
+// always set explicitly (the opposite side cleared to '') so a re-render after
+// an orientation change fully overwrites the previous layout's margins — frames
+// are re-styled in place, not recreated, on rotation.
+export const computeSpreadInlineMargins = (portrait) => portrait
+    ? {
+        left: { marginInlineStart: 'auto', marginInlineEnd: 'auto' },
+        right: { marginInlineStart: 'auto', marginInlineEnd: 'auto' },
+    }
+    : {
+        left: { marginInlineStart: 'auto', marginInlineEnd: '' },
+        right: { marginInlineStart: '', marginInlineEnd: 'auto' },
+    }
 
 // Align the SVG overlayer's coord system with the iframe's unscaled content.
 // When the iframe is visually scaled via CSS transform (non-PDF path),
@@ -561,9 +581,13 @@ export class FixedLayout extends HTMLElement {
                 rightBlank: Boolean(right.blank),
                 devicePixelRatio: window.devicePixelRatio || 1,
             })
-            const leftDimensions = transform({frame: left, styles: { marginInlineStart: 'auto' }})
+            // In portrait only the target page is shown; centre it instead of
+            // hugging the spine, which would strand it in one half of the
+            // viewport (#4984).
+            const margins = computeSpreadInlineMargins(portrait)
+            const leftDimensions = transform({frame: left, styles: margins.left})
             const rightDimensions = transform({frame: right, styles: {
-                marginInlineEnd: 'auto',
+                ...margins.right,
                 transform: overlapX ? `translateX(${overlapX}px)` : 'none',
             }})
             if (!leftDimensions || !rightDimensions) return renderPromises

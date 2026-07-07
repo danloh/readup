@@ -45,7 +45,7 @@ export const NavTab: React.FC<{activeTab: string}> = ({ activeTab }) => {
   const router = useRouter();
   const { appService } = useEnv();
   const { safeAreaInsets: insets } = useThemeStore();
-  // const { systemUIVisible, statusBarHeight } = useThemeStore();
+  const { systemUIVisible, statusBarHeight } = useThemeStore();
   const { isFontLayoutSettingsDialogOpen } = useSettingsStore();
   
   const headerRef = useRef<HTMLDivElement>(null);
@@ -70,7 +70,7 @@ export const NavTab: React.FC<{activeTab: string}> = ({ activeTab }) => {
       )}
       style={{
         marginTop: appService?.hasSafeAreaInset
-          ? `max(${insets.top}px, 0px)` // FIXME, just try
+          ? `max(${insets.top}px, ${systemUIVisible ? statusBarHeight : 0}px)`
           : '0px',
       }}
     >

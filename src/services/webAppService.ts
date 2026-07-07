@@ -2,6 +2,7 @@ import { FileSystem, BaseDir, AppPlatform, ResolvedPath, FileItem } from '@/type
 import { getOSPlatform, isValidURL } from '@/utils/misc';
 import { RemoteFile } from '@/utils/file';
 import { isSafariBrowser } from '@/utils/ua';
+import { detectViewTransitionGroup, detectViewTransitionsAPI } from '@/utils/viewTransition';
 import { isPWA } from './environment';
 import { BaseAppService } from './appService';
 import { LOCAL_BOOKS_SUBDIR, DATA_SUBDIR, LOCAL_DICTIONARIES_SUBDIR } from './constants';
@@ -278,6 +279,8 @@ export class WebAppService extends BaseAppService {
   override appPlatform = 'web' as AppPlatform;
   override hasSafeAreaInset = isPWA(); 
   override supportsCanvasContext2DFilter = !isSafariBrowser();
+  override supportsViewTransitionsAPI = detectViewTransitionsAPI();
+  override supportsViewTransitionGroup = detectViewTransitionGroup();
 
   override async init() {
     await this.loadSettings();
