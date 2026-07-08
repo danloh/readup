@@ -171,7 +171,12 @@ export interface AppService {
     books: Book[],
   ): Promise<Book | null>;
   deleteBook(book: Book, deleteAction: DeleteAction, purge?: boolean): Promise<void>;
-  uploadBook(book: Book, syncConfig?: boolean, onProgress?: ProgressHandler): Promise<void>;
+  uploadBook(
+    book: Book, 
+    syncConfig?: boolean, 
+    onlyConfig?: boolean, 
+    onProgress?: ProgressHandler
+  ): Promise<void>;
   listPdsBooks(): Promise<[Book[], Book[]]>;
   downloadBook(
     book: Book,

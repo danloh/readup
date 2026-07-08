@@ -311,8 +311,13 @@ export abstract class BaseAppService implements AppService {
   }
 
   // cloud
-  async uploadBook(book: Book, syncConfig = false, onProgress?: ProgressHandler): Promise<void> {
-    return CloudSvc.uploadBook(this.fs, book, syncConfig, onProgress);
+  async uploadBook(
+    book: Book, 
+    syncConfig = false, 
+    onlyConfig = false, 
+    onProgress?: ProgressHandler
+  ): Promise<void> {
+    return CloudSvc.uploadBook(this.fs, book, syncConfig, onlyConfig, onProgress);
   }
 
   async listPdsBooks(): Promise<[Book[], Book[]]> {

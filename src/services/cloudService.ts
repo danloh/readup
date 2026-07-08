@@ -29,18 +29,19 @@ export async function uploadBook(
   fs: FileSystem, 
   book: Book, 
   syncConfig = false, 
+  onlyConfig = false,
   onProgress?: ProgressHandler
 ): Promise<void> {
-  const coverfp = getCoverFilename(book);
-  const coverExist = await fs.exists(coverfp, 'Books');
+  const coverfp = !onlyConfig ? getCoverFilename(book) : '';
+  const coverExist = coverfp ? await fs.exists(coverfp, 'Books') : false;
   const coverFile = coverExist ? await fs.openFile(coverfp, 'Books') : undefined;
 
-  const bookfp = getLocalBookFilename(book);
-  let bookFileExist = await fs.exists(bookfp, 'Books');
+  const bookfp = !onlyConfig ? getLocalBookFilename(book) : '';
+  let bookFileExist = bookfp ? await fs.exists(bookfp, 'Books') : false;
   let bookFile: File | undefined = undefined;
   if (bookFileExist) {
     bookFile = await fs.openFile(bookfp, 'Books');
-  } else if (!bookFileExist && book.url) {
+  } else if (!onlyConfig && book.url) {
     // download the book from the URL
     bookFile = await fs.openFile(book.url, 'None');
     await fs.writeFile(bookfp, 'Books', await bookFile.arrayBuffer());
@@ -74,7 +75,8 @@ export async function uploadBook(
 
   // upload and create a book record on PDS
   const res: UploadBookResult = 
-    await uploadBookFile(book, bookFile, coverFile, configFile, handleProgress);
+    await uploadBookFile(book, bookFile, coverFile, configFile, handleProgress, onlyConfig);
+  
   // close files
   const cf = coverFile as ClosableFile;
   if (cf && cf.close) {

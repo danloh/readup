@@ -135,29 +135,43 @@ export async function uploadBookFile(
   coverFile?: File,
   configFile?: File,
   onProgress?: ProgressHandler,
+  onlyConfig?: boolean,
 ): Promise<UploadBookResult> {
   const usr = await refreshSession();
   // Initialize agent
   const agent = new AtpAgent({ service: `https://${usr.host}` });
   await agent.resumeSession(usr as AtpSessionData);
-  
-  // console.log("Agent: ", agent);
-  // upload cover
-  // const coverBlob = coverFile ? await uploadFile(coverFile, agent) : undefined;
-  const coverBlob = coverFile ? await xhrUploadFile(coverFile, usr, onProgress) : undefined;
-
-  // upload book doc
-  // const bookBlob = bookFile ? await uploadFile(bookFile, agent) : undefined;
-  const bookBlob = bookFile ? await xhrUploadFile(bookFile, usr, onProgress) : undefined;
-
-  // upload book config
-  const configBlob = configFile ? await xhrUploadFile(configFile, usr, onProgress) : undefined;
 
   // Get DID
   const did = agent.session?.did;
   if (!did) {
     throw new Error("Could not determine DID from session");
   }
+  
+  // console.log("Agent: ", agent);
+  // upload cover
+  // const coverBlob = coverFile && !onlyConfig ? await uploadFile(coverFile, agent) : undefined;
+  const coverBlob = coverFile && !onlyConfig 
+    ? await xhrUploadFile(coverFile, usr, onProgress) 
+    : undefined;
+
+  // upload book doc
+  // const bookBlob = bookFile && !onlyConfig ? await uploadFile(bookFile, agent) : undefined;
+  const bookBlob = bookFile && !onlyConfig 
+    ? await xhrUploadFile(bookFile, usr, onProgress) 
+    : undefined;
+
+  // upload book config
+  const configBlob = configFile ? await xhrUploadFile(configFile, usr, onProgress) : undefined;
+
+  // onlyConfig is true, means being uploaded before, so no need to override the book doc,
+  // we need to get the rBook record first, 
+  // then override config doc, then update the rBook record
+  const oldBookRecord = onlyConfig ? await getPublicBookRecord(book.hash, did) : undefined;
+  console.log('old book record: ', oldBookRecord);
+
+  // a guard to prevent from overriding existing config in PDS with nothing
+  const cfgBlob = configBlob || oldBookRecord?.config;
 
   // Build the record with proper typing
   // The blob from uploadBlob already has the correct structure
@@ -170,8 +184,7 @@ export async function uploadBookFile(
     author: book.author,
     createdAt: book.createdAt,
     updatedAt: book.updatedAt,
-    // file size in bytes
-    fileSize: book.fileSize,
+    fileSize: book.fileSize, // file size in bytes
     primaryLanguage: book.primaryLanguage,
     metadata: book.metadata,
     metaHash: book.metaHash,
@@ -182,9 +195,9 @@ export async function uploadBookFile(
     $type: RBOOK_COLLECTION,
     name: book.title,
     bookmeta,
-    coverblob: coverBlob,
-    docblob: bookBlob,
-    config: configBlob,
+    coverblob: coverBlob || oldBookRecord?.coverblob,
+    docblob: bookBlob || oldBookRecord?.docblob,
+    config: cfgBlob, 
     checksum: book.hash,
     createdAt: new Date().toISOString(),
   };

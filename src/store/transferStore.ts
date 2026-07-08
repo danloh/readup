@@ -24,6 +24,7 @@ export interface TransferItem {
   priority: number; // Lower = higher priority
   isBackground: boolean;
   syncConfig?: boolean; // if upload config file
+  onlyConfig?: boolean; // if upload config file only
   book?: Book;  // for temp
 }
 
@@ -45,6 +46,7 @@ interface TransferState {
     priority?: number,
     isBackground?: boolean,
     syncConfig?: boolean,
+    onlyConfig?: boolean,
   ) => string;
   removeTransfer: (transferId: string) => void;
   updateTransferProgress: (
@@ -101,7 +103,13 @@ export const useTransferStore = create<TransferState>((set, get) => ({
   setIsTransferQueueOpen: (isOpen) => set({ isTransferQueueOpen: isOpen }),
 
   addTransfer: (
-    bookHash, bookTitle, type, priority = 10, isBackground = false, syncConfig = false,
+    bookHash, 
+    bookTitle, 
+    type, 
+    priority = 10, 
+    isBackground = false, 
+    syncConfig = false,
+    onlyConfig = false,
   ) => {
     const id = generateTransferId();
     const transfer: TransferItem = {
@@ -120,6 +128,7 @@ export const useTransferStore = create<TransferState>((set, get) => ({
       priority,
       isBackground,
       syncConfig,
+      onlyConfig,
     };
 
     set((state) => ({

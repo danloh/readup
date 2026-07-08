@@ -41,7 +41,9 @@ export const useProgressAutoSave = (bookKey: string) => {
       console.log("Sync book config", bookKey);
       const book = getBookData(bookKey)?.book;
       if (!book) return;
-      transferManager.queueUpload(book, 1, true);
+      // TODO, FIXME the consistency issue between local and PDS? 
+      const onlyConfig = !!book.uploadedAt || !!book.configSyncedAt; 
+      transferManager.queueUpload(book, 1, true, onlyConfig);
     }, [bookKey]
   );
 

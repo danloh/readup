@@ -55,7 +55,12 @@ class TransferManager {
     return this.isInitialized && this.appService !== null;
   }
 
-  queueUpload(book: Book, priority: number = 10, syncConfig: boolean = false): string | null {
+  queueUpload(
+    book: Book, 
+    priority: number = 10, 
+    syncConfig: boolean = false,
+    onlyConfig: boolean = false,
+  ): string | null {
     if (!this.isReady()) {
       console.warn('TransferManager not initialized');
       return null;
@@ -70,7 +75,7 @@ class TransferManager {
     }
 
     const transferId = 
-      store.addTransfer(book.hash, book.title, 'upload', priority, false, syncConfig);
+      store.addTransfer(book.hash, book.title, 'upload', priority, false, syncConfig, onlyConfig);
     this.persistQueue();
     this.processQueue();
     return transferId;
@@ -261,7 +266,8 @@ class TransferManager {
       if (transfer.type === 'upload') {
         console.log("transfer: to upload");
         const syncConfig = transfer.syncConfig || false;
-        await this.appService.uploadBook(book, syncConfig, progressHandler);
+        const onlyConfig = transfer.onlyConfig || false;
+        await this.appService.uploadBook(book, syncConfig, onlyConfig, progressHandler);
         console.log("transfer: uploaded");
         book.uploadedAt = Date.now();
         await this.updateBook(book);
