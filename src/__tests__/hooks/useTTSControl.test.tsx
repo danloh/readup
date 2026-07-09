@@ -332,6 +332,10 @@ describe('useTTSControl handleHighlightMark cross-section navigation', () => {
     mockView.renderer.goTo.mockClear();
     mockView.goTo.mockClear();
     mockView.resolveCFI.mockReset();
+    // Reset renderer state a test may override (a throwing assertion can skip
+    // an inline restore, leaking into later tests).
+    mockView.renderer.getContents = () => [{ index: 0, doc: document as unknown as Document }];
+    mockView.renderer.scrolled = false;
     mockViewSettings.ttsLocation = null;
   });
 
@@ -388,5 +392,41 @@ describe('useTTSControl handleHighlightMark cross-section navigation', () => {
 
     expect(mockView.renderer.scrollToAnchor).toHaveBeenCalledTimes(1);
     expect(mockView.goTo).not.toHaveBeenCalled();
+  });
+
+  it('does not throw when the renderer has no loaded contents', async () => {
+    const handler = await setupAndCaptureHighlightHandler();
+    // getContents() can be empty mid-relocate (section still loading / view
+    // torn down); the mark handler must not destructure `doc` off undefined.
+    mockView.renderer.getContents = () => [];
+    mockView.resolveCFI.mockReturnValue({ index: 0, anchor: () => new Range() });
+
+    expect(() => {
+      handler(new CustomEvent('tts-highlight-mark', { detail: { cfi: 'epubcfi(/6/4!/4/2)' } }));
+    }).not.toThrow();
+  });
+
+  it('bails without scrolling when the cfi resolves to a null range', async () => {
+    const handler = await setupAndCaptureHighlightHandler();
+    // In-section (index 0 == primaryIndex 0) so the follow-scroll path runs,
+    // but the anchor cannot resolve to a range in the doc.
+    mockView.resolveCFI.mockReturnValue({ index: 0, anchor: () => null });
+
+    expect(() => {
+      handler(new CustomEvent('tts-highlight-mark', { detail: { cfi: 'epubcfi(/6/4!/4/2)' } }));
+    }).not.toThrow();
+    // A null range must never reach scrollToAnchor (foliate reads
+    // range.startContainer inside it.
+    expect(mockView.renderer.scrollToAnchor).not.toHaveBeenCalled();
+  });
+
+  it('does not throw in scrolled mode when the range is null', async () => {
+    const handler = await setupAndCaptureHighlightHandler();
+    mockView.renderer.scrolled = true;
+    mockView.resolveCFI.mockReturnValue({ index: 0, anchor: () => null });
+
+    expect(() => {
+      handler(new CustomEvent('tts-highlight-mark', { detail: { cfi: 'epubcfi(/6/4!/4/2)' } }));
+    }).not.toThrow();
   });
 });

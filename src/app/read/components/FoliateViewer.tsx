@@ -669,7 +669,12 @@ const FoliateViewer: React.FC<{
   }, []);
 
   const applyMarginAndGap = () => {
-    const viewSettings = getViewSettings(bookKey)!;
+    // Invoked from effects/observers that can fire after the book is torn down,
+    // when getViewSettings(bookKey) returns null. The `!` assertion hid that, so
+    // the reads below (getViewInsets, viewSettings.showHeader) crashed on null.
+    // Bail: there is no view left to lay out.
+    const viewSettings = getViewSettings(bookKey);
+    if (!viewSettings) return;
     const bookData = getBookData(bookKey);
     const viewInsets = getViewInsets(viewSettings);
     const showDoubleBorder = viewSettings.vertical && viewSettings.doubleBorder;

@@ -222,9 +222,15 @@ export const useTTSControl = ({ bookKey, onRequestHidePanel }: UseTTSControlProp
 
       const hlContents = view.renderer.getContents();
       const hlPrimaryIdx = view.renderer.primaryIndex;
-      const { doc, index: viewSectionIndex } = (
-        hlContents.find((x) => x.index === hlPrimaryIdx) ?? hlContents[0]
-      ) as { doc: Document; index?: number; };
+      // getContents() is empty when the mark fires mid-relocate (the section is
+      // still loading, or the view was torn down). Bail instead of destructuring
+      // `doc` off undefined .
+      const hlContent = hlContents.find((x) => x.index === hlPrimaryIdx) ?? hlContents[0];
+      if (!hlContent) return;
+      const { doc, index: viewSectionIndex } = hlContent as {
+        doc: Document;
+        index?: number;
+      };
 
       const { anchor, index: ttsSectionIndex } = view.resolveCFI(cfi);
       if (viewSectionIndex !== ttsSectionIndex) {
@@ -253,6 +259,10 @@ export const useTTSControl = ({ bookKey, onRequestHidePanel }: UseTTSControlProp
       }
 
       const range = anchor(doc);
+      // The cfi may not resolve to a range in this doc (stale/cross-realm doc,
+      // detached node). A null range would crash scrollToAnchor (foliate reads
+      // range.startContainer) or getBoundingClientRect below.
+      if (!range) return;
       if (!view.renderer.scrolled) {
         view.renderer.scrollToAnchor?.(range);
       } else {

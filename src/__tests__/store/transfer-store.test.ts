@@ -76,6 +76,17 @@ describe('transferStore', () => {
       useTransferStore.getState().updateTransferProgress('nope', 10, 10, 100, 5);
       expect(useTransferStore.getState().transfers).toEqual(before);
     });
+
+    test('a speed-only change is a no-op (transferSpeed is time-derived)', () => {
+      const id = useTransferStore.getState().addTransfer('h', 'B', 'upload');
+      useTransferStore.getState().updateTransferProgress(id, 50, 500, 1000, 100);
+      const before = useTransferStore.getState().transfers;
+      // transferSpeed is recomputed from wall-clock time on every emission, so it
+      // almost always differs; a speed-only delta (same progress + bytes) must
+      // not allocate a new state, or the no-op guard never fires.
+      useTransferStore.getState().updateTransferProgress(id, 50, 500, 1000, 173);
+      expect(useTransferStore.getState().transfers).toBe(before);
+    });
   });
 
   // ── setTransferStatus ────────────────────────────────────────────
