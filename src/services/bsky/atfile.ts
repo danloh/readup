@@ -167,10 +167,11 @@ export async function uploadBookFile(
   // onlyConfig is true, means being uploaded before, so no need to override the book doc,
   // we need to get the rBook record first, 
   // then override config doc, then update the rBook record
-  const oldBookRecord = onlyConfig ? await getPublicBookRecord(book.hash, did) : undefined;
+  const oldBookRecord = onlyConfig ? await getBookRecord(book.hash, did) : undefined;
   console.log('old book record: ', oldBookRecord);
 
   // a guard to prevent from overriding existing config in PDS with nothing
+  // FIXME: merge config data in local and PDS
   const cfgBlob = configBlob || oldBookRecord?.config;
 
   // Build the record with proper typing
@@ -477,9 +478,10 @@ export async function listBookRecords(limit = 100): Promise<RbookRecordItem[]> {
  * @returns A promise that resolves to the record data
  * @throws {Error} If the record is not found or retrieval fails
  */
-export async function getPublicBookRecord(rkey: string, did: string): Promise<AtBook.RBook> {
+export async function getBookRecord(rkey: string, did: string): Promise<AtBook.RBook> {
   // Create an unauthenticated agent
-  const agent = new AtpAgent({ service: "https://public.api.bsky.app" });
+  const serv = await resolveDid(did);
+  const agent = new AtpAgent({ service: serv });
 
   try {
     const recordResponse = await agent.com.atproto.repo.getRecord({

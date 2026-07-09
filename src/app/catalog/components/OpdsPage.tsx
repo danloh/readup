@@ -521,7 +521,7 @@ export default function BrowserPage() {
         throw e;
       }
     },
-    [user, state.baseURL, appService, libraryLoaded],
+    [user, state.baseURL, appService, libraryLoaded, settings.autoUpload],
   );
 
   const handleStream = useCallback(
