@@ -220,7 +220,9 @@ export async function downloadBook(
   }
   if (needDownConfig && configBlob) {
     const configDst = `${localBooksDir}/${getConfigFilename(book)}`;
-    await appService.writeFile(configDst, 'None', await configBlob.arrayBuffer());
+    const cfgTxt = await configBlob.text();
+    // console.log('config', cfgTxt);
+    await appService.writeFile(configDst, 'None', cfgTxt);
     configDownloaded = await fs.exists(configDst, 'None');
   }
 

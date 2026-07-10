@@ -1,10 +1,11 @@
 //  Upload, list, and manage files on AT Protocol PDS
 
 import { AtpAgent, AtpSessionData, BlobRef } from "@atproto/api";
+import { Book, BookConfig } from "@/types/book";
+import { ProgressHandler, webDownload } from "@/utils/transfer";
+import { mergeBookConfig } from "@/utils/merge";
 import type { AtBook, AtData } from "./types";
 import { refreshSession, resolveDid, User } from "./auth";
-import { Book } from "@/types/book";
-import { ProgressHandler, webDownload } from "@/utils/transfer";
 
 // Create record according to lexicon
 const RBOOK_COLLECTION = "cc.readup.rbook";
@@ -162,17 +163,47 @@ export async function uploadBookFile(
     : undefined;
 
   // upload book config
-  const configBlob = configFile ? await xhrUploadFile(configFile, usr, onProgress) : undefined;
+  let configBlob = undefined;
+  let pdsBookRecord = undefined;
+  if (configFile) {
+    let cfgFile =  configFile;
+    const newCfg = await configFile.text();
+    const newCfgJson = JSON.parse(newCfg) as BookConfig;
+    const pdsRecord = await getBookRecord(book.hash, did);
+    console.log('pds book record: ', pdsRecord);
+    pdsBookRecord = pdsRecord;
+    const pdsCfgBlob = pdsRecord?.config;
 
-  // onlyConfig is true, means being uploaded before, so no need to override the book doc,
-  // we need to get the rBook record first, 
-  // then override config doc, then update the rBook record
-  const oldBookRecord = onlyConfig ? await getBookRecord(book.hash, did) : undefined;
-  console.log('old book record: ', oldBookRecord);
+    // merge config file in PDS and local
+    // 1- get from pds; 2- merge; 3- re-upload
+    let pdsConfigCid = undefined;
+    if (!pdsCfgBlob || typeof pdsCfgBlob !== "object" || !("ref" in pdsCfgBlob)) {
+      console.error("No config blob found in record");
+    } else {
+      const configRef = pdsCfgBlob.ref;
+      pdsConfigCid = typeof configRef === "object" && configRef && "$link" in configRef
+        ? configRef.$link as string
+        : configRef as string;
+    }
 
-  // a guard to prevent from overriding existing config in PDS with nothing
-  // FIXME: merge config data in local and PDS
-  const cfgBlob = configBlob || oldBookRecord?.config;
+    const configUrl = pdsConfigCid
+      ? `${agent.serviceUrl}/xrpc/com.atproto.sync.getBlob?did=${did}&cid=${pdsConfigCid}`
+      : undefined;
+    const pdsCfgData = configUrl 
+      ? (await webDownload(configUrl, onProgress)).blob 
+      : undefined;
+
+    let mergedCfg = newCfgJson;
+    if (pdsCfgData) {
+      const pdsCfgTxt = await pdsCfgData.text();
+      const pdsCfgJson = JSON.parse(pdsCfgTxt) as BookConfig;
+      mergedCfg = mergeBookConfig(newCfgJson, pdsCfgJson).config;
+      const cfgString = JSON.stringify(mergedCfg, null, 2);
+      cfgFile = new File([cfgString], 'config.json', { type: "application/json" });
+    }
+    
+    configBlob = await xhrUploadFile(cfgFile, usr, onProgress) || pdsCfgBlob;
+  }
 
   // Build the record with proper typing
   // The blob from uploadBlob already has the correct structure
@@ -196,9 +227,9 @@ export async function uploadBookFile(
     $type: RBOOK_COLLECTION,
     name: book.title,
     bookmeta,
-    coverblob: coverBlob || oldBookRecord?.coverblob,
-    docblob: bookBlob || oldBookRecord?.docblob,
-    config: cfgBlob, 
+    coverblob: coverBlob || pdsBookRecord?.coverblob,
+    docblob: bookBlob || pdsBookRecord?.docblob,
+    config: configBlob, 
     checksum: book.hash,
     createdAt: new Date().toISOString(),
   };

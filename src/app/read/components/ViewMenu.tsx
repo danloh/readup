@@ -87,10 +87,11 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
   const handleSync = () => {
     if (!user) {
       setAuthDialogVisible(true);
-      setIsDropdownOpen?.(false);
     } else {
+      // FIXME: consistency issue 
       eventDispatcher.dispatch('sync-book-config', { bookKey });
     }
+    setIsDropdownOpen?.(false);
   };
 
   const handleAuth = () => {
@@ -423,9 +424,8 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
           label={_('Sync To PDS')}
           Icon={MdSync}
           description={
-            _('Sync annotations, progress... | ') + 
             lastSyncTime
-              ? _('At {{time}}', { time: formatLocaleDateTime(lastSyncTime)})
+              ? _('{{time}}', { time: formatLocaleDateTime(lastSyncTime)})
               : _('Never synced')}
           onClick={handleSync}
         />
