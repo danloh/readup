@@ -3,6 +3,7 @@ import type { AppService } from '@/types/system';
 import type { OPDSCatalog } from '@/types/opds';
 import { downloadFile } from '@/utils/transfer';
 import { runWithConcurrency } from '@/utils/concurrency';
+import { uniqueId } from '@/utils/misc';
 import { getFileExtFromMimeType } from '@/libs/document';
 import { needsProxy, getProxiedURL, probeAuth, probeFilename } from '@/app/catalog/utils/opdsReq';
 import { resolveURL, parseMediaType, getFileExtFromPath } from '@/app/catalog/utils/opdsUtils';
@@ -62,9 +63,7 @@ async function downloadAndImport(
   // Use the last non-empty path segment as the base; falling back to the
   // entry id avoids producing 200+ char filenames from deep URLs and keeps
   // us comfortably under the ~255-byte filesystem limit.
-  const lastSegment = pathname.split('/').filter(Boolean).pop() ?? '';
-  const sanitized = (lastSegment || item.entryId).replaceAll(/[/\\:*?"<>|]/g, '_').slice(0, 200);
-  const basename = sanitized || 'opds-download';
+  const basename = uniqueId();
   const filename = ext ? `${basename}.${ext}` : basename;
   let dstFilePath = await appService.resolveFilePath(filename, 'Cache');
 

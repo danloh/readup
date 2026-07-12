@@ -26,6 +26,7 @@ import { transferManager } from '@/services/transferManager';
 import { ImportError } from '@/services/errors';
 import { buildPseStreamFileName } from '@/services/opds/pseStream';
 import { navigateToReader } from '@/utils/nav';
+import { uniqueId } from '@/utils/misc';
 import { Book } from '@/types/book';
 import { findExistingBookForPublication } from '../utils/findExistingBook';
 import { 
@@ -477,7 +478,7 @@ export default function BrowserPage() {
 
           const pathname = decodeURIComponent(new URL(url).pathname);
           const ext = getFileExtFromMimeType(parsed?.mediaType) || getFileExtFromPath(pathname);
-          const basename = pathname.replaceAll('/', '_');
+          const basename = uniqueId();
           const filename = ext ? `${basename}.${ext}` : basename;
           let dstFilePath = await appService?.resolveFilePath(filename, 'Cache');
           console.log('Downloading to:', url, dstFilePath);
