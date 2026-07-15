@@ -31,7 +31,7 @@ import { Book } from '@/types/book';
 import { findExistingBookForPublication } from '../utils/findExistingBook';
 import { 
   expandOPDSSearchTemplate,
-  getFileExtFromPath, isSearchLink, looksLikeXMLContent, MIME, 
+  getFileExtFromPath, getSafeDOMParserMimeType, isSearchLink, looksLikeXMLContent, MIME, 
   parseMediaType, parseOPDSXML, resolveURL 
 } from '../utils/opdsUtils';
 import { 
@@ -272,7 +272,7 @@ export default function BrowserPage() {
           } else {
             const contentType = res.headers.get('Content-Type') ?? MIME.HTML;
             const type = parseMediaType(contentType)?.mediaType ?? MIME.HTML;
-            const htmlDoc = new DOMParser().parseFromString(text, type as DOMParserSupportedType);
+            const htmlDoc = new DOMParser().parseFromString(text, getSafeDOMParserMimeType(type));
 
             if (!htmlDoc.head) {
               router.back();

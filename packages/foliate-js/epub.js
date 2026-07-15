@@ -92,16 +92,28 @@ const childGetter = (doc, ns) => {
     }
 }
 
+// Zip entry names are raw, so a resolved href has to be fully decoded to match
+// one. `decodeURI()` can't do it: by spec it preserves the reserved set
+// (`; / ? : @ & = + $ , #`), leaving an entry named `a&b.html` unreachable
+// behind its manifest href `a%26b.html`. Decode as a component instead, keeping
+// only `/` and `#` encoded, which would otherwise turn into a path or fragment
+// separator. Malformed escapes (a bare `%` in a name) decode to themselves.
+const decodeURIPath = path => {
+    try {
+        return decodeURIComponent(path.replace(/%(2f|23)/gi, '%25$1'))
+    } catch {
+        return path
+    }
+}
+
 const resolveURL = (url, relativeTo) => {
     try {
-        // replace %2c in the url with a comma, this might be introduced by calibre
-        url = url.replace(/%2c/gi, ',').replace(/%3a/gi, ':')
-        if (relativeTo.includes(':') && !relativeTo.startsWith('OEBPS')) return new URL(url, relativeTo)
+        if (isExternal(relativeTo)) return new URL(url, relativeTo)
         // the base needs to be a valid URL, so set a base URL and then remove it
         const root = 'https://invalid.invalid/'
         const obj = new URL(url, root + relativeTo)
         obj.search = ''
-        return decodeURI(obj.href.replace(root, ''))
+        return decodeURIPath(obj.href.replace(root, ''))
     } catch(e) {
         console.warn(e)
         return url
@@ -170,6 +182,47 @@ const getPropertyURL = (value, prefixes) => {
     const reference = b ? b : a
     const baseURL = prefixes.get(prefix)
     return baseURL ? baseURL + reference : null
+}
+
+// See the call site in getMetadata() for the two calibre encodings this reads.
+const getCalibreUserMetadata = (metaEls, legacyMeta) => {
+    // calibre's to_json wraps non-JSON types; only datetime appears in columns
+    const fromJSON = x => x?.__class__ === 'datetime.datetime' ? x.__value__ : x
+    const isEmpty = (value, datatype) => value == null || value === ''
+        || Array.isArray(value) && !value.length
+        // calibre can't distinguish these from unset, and neither can we
+        || datatype === 'datetime' && String(value).startsWith('0101-01-01')
+        || datatype === 'rating' && !value
+    const columns = []
+    const add = (key, fm) => {
+        if (!key?.startsWith('#') || typeof fm !== 'object' || !fm) return
+        const datatype = fm.datatype ?? 'text'
+        const value = fromJSON(fm['#value#'])
+        if (isEmpty(value, datatype)) return
+        const extra = fromJSON(fm['#extra#'])
+        const label = key.slice(1)
+        columns.push({
+            label,
+            name: typeof fm.name === 'string' && fm.name ? fm.name : label,
+            datatype, value,
+            ...extra != null ? { extra } : {},
+        })
+    }
+    for (const el of metaEls ?? []) {
+        if (el.getAttribute('property')?.toLowerCase() !== 'calibre:user_metadata') continue
+        try {
+            for (const [key, fm] of Object.entries(JSON.parse(getElementText(el))))
+                add(key, fm)
+        } catch {}
+    }
+    if (!columns.length)
+        for (const [name, content] of Object.entries(legacyMeta ?? {})) {
+            if (!name.startsWith('calibre:user_metadata:')) continue
+            try {
+                add(name.slice('calibre:user_metadata:'.length), JSON.parse(content))
+            } catch {}
+        }
+    return columns.length ? columns : null
 }
 
 const getMetadata = opf => {
@@ -307,6 +360,19 @@ const getMetadata = opf => {
     tidy(metadata)
     if (metadata.altIdentifier === metadata.identifier)
         delete metadata.altIdentifier
+    // Calibre embeds its custom columns ("user metadata") when polishing or
+    // sending books. Two encodings (see calibre's opf2.py/opf3.py):
+    //   OPF 2: <meta name="calibre:user_metadata:#label" content="{json}"/> per column
+    //   OPF 3: a single <meta property="calibre:user_metadata"> whose text is
+    //          a JSON dict of all columns keyed by "#label"; calibre prefers
+    //          this form over the legacy metas when both are present
+    // The column value lives in `#value#` (series index in `#extra#`);
+    // datetimes are wrapped as {"__class__": "datetime.datetime",
+    // "__value__": <ISO>} with 0101-01-01 meaning unset. Embedded files carry
+    // every column of the library, so empty values are dropped here. Must run
+    // after tidy(), which would otherwise collapse single-element value arrays.
+    const calibreColumns = getCalibreUserMetadata(els.meta, legacyMeta)
+    if (calibreColumns) metadata.calibreColumns = calibreColumns
 
     const rendition = {}
     const media = {}
