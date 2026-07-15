@@ -51,7 +51,6 @@ import { useProgressAutoSave } from '../hooks/useProgressAutoSave';
 import { useTextTranslation } from '../hooks/useTextTranslation';
 import useReadingTracker from '../hooks/useReadingTracker';
 import {
-  addLongPressListeners,
   handleKeydown,
   handleKeyup,
   handleMousedown,
@@ -345,7 +344,6 @@ const FoliateViewer: React.FC<{
         detail.doc.addEventListener('touchstart', handleTouchStart.bind(null, bookKey));
         detail.doc.addEventListener('touchmove', handleTouchMove.bind(null, bookKey));
         detail.doc.addEventListener('touchend', handleTouchEnd.bind(null, bookKey));
-        addLongPressListeners(bookKey, detail.doc);
       }
     }
   };
