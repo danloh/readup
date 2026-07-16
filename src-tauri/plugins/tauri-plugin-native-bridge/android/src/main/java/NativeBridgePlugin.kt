@@ -419,8 +419,10 @@ class NativeBridgePlugin(private val activity: Activity): Plugin(activity) {
 
                     val itemUri = resolver.insert(collection, values)
                     if (itemUri == null) {
+                        val error = "MediaStore rejected $displayName ($mimeType) in $album"
+                        Log.e("NativeBridge", error)
                         r.put("success", false)
-                        r.put("error", "Failed to create MediaStore entry")
+                        r.put("error", error)
                         return@withContext r
                     }
 
@@ -441,8 +443,12 @@ class NativeBridgePlugin(private val activity: Activity): Plugin(activity) {
                     r.put("success", true)
                     r.put("uri", itemUri.toString())
                 } catch (e: Exception) {
+                    // OEM MediaStore implementations diverge on what they accept, so
+                    // the exception is the only thing that identifies a device-specific
+                    // failure from a bug report.
+                    Log.e("NativeBridge", "Failed to save image to gallery", e)
                     r.put("success", false)
-                    r.put("error", e.message)
+                    r.put("error", "${e.javaClass.simpleName}: ${e.message}")
                 }
                 r
             }

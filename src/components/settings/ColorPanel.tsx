@@ -130,7 +130,7 @@ const ColorPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset
           light: generateLightPalette(customTheme.colors.light),
           dark: generateDarkPalette(customTheme.colors.dark),
         },
-        isCustomizale: true,
+        isCustomizable: true,
       })),
     );
   }, [settings]);
@@ -280,7 +280,7 @@ const ColorPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset
           <div data-setting-id='settings.color.themeColor'>
             <SectionTitle className='mb-2'>{_('Theme Color')}</SectionTitle>
             <div className='grid grid-cols-3 gap-4'>
-              {themes.concat(customThemes).map(({ name, label, colors, isCustomizale }) => (
+              {themes.concat(customThemes).map(({ name, label, colors, isCustomizable }) => (
                 <button
                   key={name}
                   tabIndex={0}
@@ -316,7 +316,7 @@ const ColorPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset
                     <MdRadioButtonUnchecked size={iconSize24} />
                   )}
                   <span className='max-w-full truncate'>{_(label)}</span>
-                  {isCustomizale && themeColor === name && (
+                  {isCustomizable && themeColor === name && (
                     <button onClick={() => handleEditTheme(name)}>
                       <CgColorPicker size={iconSize16} className='absolute right-2 top-2' />
                     </button>
