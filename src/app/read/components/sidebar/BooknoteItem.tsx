@@ -2,7 +2,7 @@ import clsx from 'clsx';
 import dayjs from 'dayjs';
 import React, { useMemo, useRef, useState } from 'react';
 import { marked } from 'marked';
-import { MdDelete, MdEdit } from 'react-icons/md';
+import { MdContentCopy, MdDelete, MdEdit } from 'react-icons/md';
 
 import { useEnv } from '@/context/EnvContext';
 import { BookNote, HighlightColor } from '@/types/book';
@@ -14,6 +14,10 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useResponsiveSize } from '@/hooks/useResponsiveSize';
 import { eventDispatcher } from '@/utils/event';
 import { isCfiInLocation } from '@/utils/cfi';
+import { writeTextToClipboard } from '@/utils/clipboard';
+import { buildAnnotationCopyMarkdown } from '@/utils/note';
+import { buildShareUrl } from '@/utils/deeplink';
+import { DEFAULT_NOTE_EXPORT_CONFIG } from '@/services/constants';
 import TextButton from '@/components/TextButton';
 import TextEditor, { TextEditorRef } from '@/components/TextEditor';
 import { removeBookNoteOverlays } from '../../utils/annotatorUtil';
@@ -30,7 +34,7 @@ const BooknoteItem: React.FC<BooknoteItemProps> = ({ bookKey, item, isNearest, o
   const { envConfig } = useEnv();
   const { settings } = useSettingsStore();
   const { getConfig, saveConfig, updateBooknotes } = useBookDataStore();
-  const { getProgress, getView, getViewsById } = useReaderStore();
+  const { getProgress, getView, getViewsById, getViewSettings } = useReaderStore();
   const { setNotebookEditAnnotation, setNotebookVisible } = useNotebookStore();
 
   const globalReadSettings = settings.globalReadSettings;
@@ -89,6 +93,30 @@ const BooknoteItem: React.FC<BooknoteItemProps> = ({ bookKey, item, isNearest, o
     if (updatedConfig) {
       saveConfig(envConfig, bookKey, updatedConfig, settings);
     }
+  };
+
+  const handleCopyLink = () => {
+    const bookHash = item.bookHash || bookKey.split('-')[0]!;
+    const linkType =
+      getViewSettings(bookKey)?.noteExportConfig?.linkType ?? DEFAULT_NOTE_EXPORT_CONFIG.linkType;
+    const url = buildShareUrl({ bookHash, noteId: item.id, cfi: item.cfi }, linkType);
+    const linkLabel = item.page
+      ? _('Page: {{number}}', { number: item.page })
+      : _('Open in Readup');
+    const markdown = buildAnnotationCopyMarkdown({
+      text: item.text,
+      note: item.note,
+      noteLabel: _('Note'),
+      url,
+      linkLabel,
+    });
+    void writeTextToClipboard(markdown);
+    eventDispatcher.dispatch('toast', {
+      type: 'info',
+      message: _('Copied to clipboard'),
+      className: 'whitespace-nowrap',
+      timeout: 2000,
+    });
   };
 
   const editNote = (note: BookNote) => {
@@ -267,6 +295,14 @@ const BooknoteItem: React.FC<BooknoteItemProps> = ({ bookKey, item, isNearest, o
                 <MdEdit size={size18} />
               </button>
             )}
+
+            <button
+              onClick={handleCopyLink}
+              className='btn btn-ghost btn-xs text-base-content p-0 opacity-0 transition duration-300 ease-in-out hover:bg-transparent group-focus-within:opacity-100 group-hover:opacity-100'
+              aria-label={_('Copy')}
+            >
+              <MdContentCopy size={size18} />
+            </button>
 
             <button
               onClick={deleteNote.bind(null, item)}

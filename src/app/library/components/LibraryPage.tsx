@@ -116,7 +116,7 @@ const LibraryPageContent = (
   const { safeAreaInsets: insets } = useThemeStore();
   const { settings, setSettings } = useSettingsStore();
   const { setFontLayoutSettingsDialogOpen } = useSettingsStore();
-  const { isTransferQueueOpen } = useTransferStore();
+  const isTransferQueueOpen = useTransferStore((state) => state.isTransferQueueOpen);
   const [loading, setLoading] = useState(false);
   const isInitiating = useRef(false);
   // Seed from the library store: if we already have books in memory (the

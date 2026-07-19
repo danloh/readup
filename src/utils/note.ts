@@ -229,6 +229,34 @@ export function formatBlockQuote(text: string): string {
     .join('\n');
 }
 
+/**
+ * Builds the markdown for copying a single annotation (highlight/note) together
+ * with a deep link back to its position, ready to paste into note apps like
+ * Obsidian. Mirrors the default markdown-export layout: a block-quoted highlight,
+ * an optional bold note line, and an italic link line. Empty blocks are omitted;
+ * the link line is always present. Label strings are passed in already translated
+ * to keep this helper i18n-agnostic.
+ */
+export function buildAnnotationCopyMarkdown({
+  text,
+  note,
+  noteLabel,
+  url,
+  linkLabel,
+}: {
+  text?: string;
+  note?: string;
+  noteLabel: string;
+  url: string;
+  linkLabel: string;
+}): string {
+  const blocks: string[] = [];
+  if (text) blocks.push(formatBlockQuote(text));
+  if (note) blocks.push(`**${noteLabel}**: ${note}`);
+  blocks.push(`*[${linkLabel}](${url})*`);
+  return blocks.join('\n\n');
+}
+
 // Add 'blockquote' filter (prefix every line with > for markdown block quotes)
 env.addFilter('blockquote', (value: string) => {
   if (!value || typeof value !== 'string') return '';
