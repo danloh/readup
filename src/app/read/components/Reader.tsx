@@ -45,7 +45,7 @@ const Reader: React.FC<{ ids?: string; }> = ({ ids }) => {
   const { libraryLoaded } = useLibrary();
 
   useTheme({ systemUIVisible: settings.alwaysShowStatusBar, appThemeColor: 'base-100' });
-  useScreenWakeLock(settings.screenWakeLock);
+  useScreenWakeLock(settings.screenWakeLock, appService?.hasWindow);
   useTransferQueue(libraryLoaded, 5000);
 
   useEffect(() => {
