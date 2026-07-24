@@ -554,7 +554,13 @@ pub fn run() {
 
         #[cfg(not(target_os = "macos"))]
         {
-            win_builder.build().unwrap();
+            // On Windows/Linux the window is built with `.visible(false)` above
+            // (originally so `tauri-plugin-window-state` could restore its saved
+            // geometry before the first paint without a flash/jump). That plugin
+            // was removed, so nothing was left to ever show the window again,
+            // leaving it permanently hidden after launch. Show it explicitly now.
+            let window = win_builder.build().unwrap();
+            let _ = window.show();
         }
         // let win = win_builder.build().unwrap();
         // win.open_devtools();
