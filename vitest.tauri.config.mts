@@ -7,6 +7,23 @@ export default defineConfig({
   resolve: {
     conditions: ['development'],
   },
+  optimizeDeps: {
+    include: [
+      '@tauri-apps/plugin-fs',
+      '@tauri-apps/plugin-http',
+      '@tauri-apps/api/path',
+      '@tauri-apps/api/core',
+      '@zip.js/zip.js',
+      'franc-min',
+      'iso-639-2',
+      'iso-639-3',
+      'js-md5',
+      'uuid',
+    ],
+    exclude: [
+      '@pdfjs/pdf.min.mjs',
+    ],
+  },
   test: {
     include: ['src/**/*.tauri.test.ts'],
     testTimeout: 30000,

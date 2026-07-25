@@ -18,6 +18,9 @@ mod macos;
 mod dir;
 mod file;
 mod feed;
+mod epub_parser;
+mod mobi_parser;
+mod parser_common;
 
 use std::path::PathBuf;
 use tauri::{AppHandle, Manager};
@@ -304,6 +307,11 @@ pub fn run() {
             feed::fetch_feed,
             get_environment_variable,
             get_executable_dir,
+            epub_parser::parse_epub_metadata,
+            epub_parser::extract_epub_cover_full,
+            epub_parser::parse_epub_full,
+            mobi_parser::parse_mobi_metadata,
+            mobi_parser::extract_mobi_cover_full,
             #[cfg(desktop)]
             is_updater_disabled,
             allow_paths_in_scopes,

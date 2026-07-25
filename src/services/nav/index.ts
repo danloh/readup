@@ -1,4 +1,5 @@
-// import { ConvertChineseVariant } from '@/types/book';
+//import { ConvertChineseVariant } from '@/types/book';
+//import { initSimpleCC, runSimpleCC } from '@/utils/simplecc';
 import { BookDoc, SectionFragment, TOCItem } from '@/libs/document';
 import { runWithConcurrency } from '@/utils/concurrency';
 import {
