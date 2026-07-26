@@ -103,58 +103,37 @@ describe('EdgeTTSClient', () => {
       expect(voices.map((v) => v.id)).toContain('en-US-AriaNeural');
     });
 
-    test('wss failure falls back to https when controller is authenticated', async () => {
-      const mockController = {
-        isAuthenticated: true,
-        dispatchEvent: vi.fn(),
-      } as unknown as TTSController;
-      const c = new EdgeTTSClient(mockController);
-
-      // First call (wss protocol) fails, second call (https fallback) succeeds
+    // Edge TTS requires no authentication: it's a direct websocket call to
+    // Microsoft's public consumer speech endpoint. A single failure (transient
+    // network blip) shouldn't permanently disable it, so init() retries once
+    // before giving up.
+    test('retries once and succeeds when the first attempt fails', async () => {
       let callCount = 0;
       createBehavior = () => {
         callCount++;
-        if (callCount === 1) return Promise.reject(new Error('wss failed'));
+        if (callCount === 1) return Promise.reject(new Error('network error'));
         return Promise.resolve(undefined);
       };
 
-      const result = await c.init();
+      const result = await client.init();
       expect(result).toBe(true);
-      expect(c.initialized).toBe(true);
-      // Two calls: initial wss attempt + https fallback
+      expect(client.initialized).toBe(true);
       expect(callCount).toBe(2);
     });
 
-    test('wss failure dispatches tts-need-auth when not authenticated', async () => {
-      const dispatchEvent = vi.fn();
-      const mockController = {
-        isAuthenticated: false,
-        dispatchEvent,
-      } as unknown as TTSController;
-      const c = new EdgeTTSClient(mockController);
+    test('sets initialized to false when all attempts fail', async () => {
+      createBehavior = () => Promise.reject(new Error('network error'));
 
-      createBehavior = () => Promise.reject(new Error('wss failed'));
-
-      const result = await c.init();
+      const result = await client.init();
       expect(result).toBe(false);
-      expect(dispatchEvent).toHaveBeenCalledWith(
-        expect.objectContaining({ type: 'tts-need-auth' }),
-      );
+      expect(client.initialized).toBe(false);
     });
 
-    test('https failure sets initialized to false', async () => {
-      const mockController = {
-        isAuthenticated: true,
-        dispatchEvent: vi.fn(),
-      } as unknown as TTSController;
-      const c = new EdgeTTSClient(mockController);
-
-      // Both wss and https always fail
-      createBehavior = () => Promise.reject(new Error('failed'));
-
+    test('does not require a controller to initialize', async () => {
+      const c = new EdgeTTSClient();
       const result = await c.init();
-      expect(result).toBe(false);
-      expect(c.initialized).toBe(false);
+      expect(result).toBe(true);
+      expect(c.initialized).toBe(true);
     });
   });
 

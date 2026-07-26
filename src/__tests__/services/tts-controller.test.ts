@@ -187,11 +187,6 @@ describe('TTSController', () => {
       expect(controller.appService).toBe(mockAppService);
     });
 
-    // test('sets isAuthenticated', () => {
-    //   expect(controller.isAuthenticated).toBe(false);
-    //   const authed = new TTSController(mockAppService, mockView, true);
-    //   expect(authed.isAuthenticated).toBe(true);
-    // });
 
     test('defaults ttsRate to 1.0', () => {
       expect(controller.ttsRate).toBe(1.0);
@@ -278,6 +273,34 @@ describe('TTSController', () => {
       await c.init();
       expect(c.ttsNativeClient!.init).toHaveBeenCalled();
       expect(c.ttsNativeClient!.getAllVoices).toHaveBeenCalled();
+    });
+
+    test('prefers native client by default on Android (native app)', async () => {
+      const androidService = createMockAppService(true);
+      const c = new TTSController(androidService, mockView);
+      await c.init();
+      expect(c.ttsClient.name).toBe('native');
+    });
+
+    test('prefers native client by default on iOS (native app)', async () => {
+      const iosService = createMockAppService(false, true);
+      const c = new TTSController(iosService, mockView);
+      await c.init();
+      expect(c.ttsClient.name).toBe('native');
+    });
+
+    test('an explicit user preference still overrides the native default on Android', async () => {
+      const androidService = createMockAppService(true);
+      const c = new TTSController(androidService, mockView);
+      vi.mocked(TTSUtils.getPreferredClient).mockReturnValue('edge');
+      await c.init();
+      expect(c.ttsClient.name).toBe('edge');
+    });
+
+    test('uses edge client by default on the web platform (no native client)', async () => {
+      await controller.init();
+      expect(controller.ttsNativeClient).toBeNull();
+      expect(controller.ttsClient.name).toBe('edge');
     });
   });
 

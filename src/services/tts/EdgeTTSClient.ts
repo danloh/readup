@@ -35,20 +35,30 @@ export class EdgeTTSClient implements TTSClient {
 
   async init() {
     this.#voices = EdgeSpeechTTS.voices;
-    try {
-      await this.#edgeTTS.create({
-        lang: 'en',
-        text: 'test',
-        voice: 'en-US-AriaNeural',
-        rate: 1.0,
-        pitch: 1.0,
-      });
-      this.initialized = true;
-    } catch {
-      this.initialized = false;
-    }
+    this.initialized = await this.#tryConnect();
     return this.initialized;
   }
+
+  // Edge TTS's websocket handshake fails intermittently (transient network
+  // blips, momentary rate limiting, etc). No authentication is required to
+  // use it, so on failure we simply retry a couple of times before giving up.
+  #tryConnect = async (maxAttempts = 2): Promise<boolean> => {
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        await this.#edgeTTS.create({
+          lang: 'en',
+          text: 'test',
+          voice: 'en-US-AriaNeural',
+          rate: 1.0,
+          pitch: 1.0,
+        });
+        return true;
+      } catch (err) {
+        console.warn(`Edge TTS init attempt ${attempt}/${maxAttempts} failed`, err);
+      }
+    }
+    return false;
+  };
 
   getPayload = (lang: string, text: string, voiceId: string) => {
     return { lang, text, voice: voiceId, rate: 1.0, pitch: this.#pitch } as EdgeTTSPayload;

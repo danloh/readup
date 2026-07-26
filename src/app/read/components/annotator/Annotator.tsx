@@ -1353,7 +1353,7 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
           tooltipText: _(label),
           Icon,
           onClick: handleSpeakText,
-          visible: false,
+          visible: true, // disable TTS false
         };
       case 'proofread':
         return {

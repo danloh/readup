@@ -52,7 +52,7 @@ export class TTSController extends EventTarget {
   ttsEdgeVoices: TTSVoice[] = [];
   ttsNativeVoices: TTSVoice[] = [];
   ttsTargetLang: string = '';
-  options: TTSHighlightOptions = { style: 'highlight', color: 'green' };
+  options: TTSHighlightOptions = { style: 'highlight', color: 'gray' };
 
   constructor(
     appService: AppService | null,
@@ -76,7 +76,7 @@ export class TTSController extends EventTarget {
   }
 
   async init() {
-    const availableClients = [];
+    const availableClients: TTSClient[] = [];
     if (await this.ttsEdgeClient.init()) {
       availableClients.push(this.ttsEdgeClient);
     }
@@ -88,6 +88,15 @@ export class TTSController extends EventTarget {
       availableClients.push(this.ttsWebClient);
     }
     this.ttsClient = availableClients[0] || this.ttsWebClient;
+    // On native mobile apps (Android/iOS), prefer the OS-native TTS engine by
+    // default: it works fully offline and doesn't depend on reaching
+    // Microsoft's Edge TTS service, which can be slow, rate-limited, or
+    // blocked on some networks. Edge TTS remains the default everywhere else
+    // (web platform, and desktop/Tauri targets that have no native client).
+    const isNativeApp = this.appService?.isAndroidApp || this.appService?.isIOSApp;
+    if (isNativeApp && this.ttsNativeClient && availableClients.includes(this.ttsNativeClient)) {
+      this.ttsClient = this.ttsNativeClient;
+    }
     const preferredClientName = TTSUtils.getPreferredClient();
     if (preferredClientName) {
       const preferredClient = availableClients.find(

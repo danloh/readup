@@ -285,6 +285,47 @@ export const useTTSControl = ({ bookKey, onRequestHidePanel }: UseTTSControlProp
       }
     };
 
+    // Word-level counterpart to handleHighlightMark, fired for engines that
+    // expose per-word boundary timing (e.g. Edge TTS). Words land far more
+    // frequently than sentence marks, so unlike handleHighlightMark this never
+    // drives cross-section navigation (the sentence-level mark already owns
+    // that) — it only scrolls the current word into view when it has moved
+    // outside the range the reader can currently see.
+    const handleHighlightWord = (e: Event) => {
+      const { cfi } = (e as CustomEvent<{ cfi: string }>).detail;
+      const view = getView(bookKey);
+      const progress = getProgress(bookKey);
+      if (!cfi || !view || !progress) return;
+      if (!followingTTSLocationRef.current) return;
+
+      const wContents = view.renderer.getContents();
+      const wPrimaryIdx = view.renderer.primaryIndex;
+      const wContent = wContents.find((x) => x.index === wPrimaryIdx) ?? wContents[0];
+      if (!wContent) return;
+      const { doc } = wContent as { doc: Document };
+
+      if (wContents.some(({ doc }) => (doc.getSelection()?.toString().length ?? 0) > 0)) {
+        return;
+      }
+
+      const { anchor } = view.resolveCFI(cfi);
+      const range = anchor(doc);
+      if (!range) return;
+
+      const visibleRange = progress.range;
+      if (visibleRange) {
+        // Skip the scroll only when the word range is already fully contained
+        // within the currently visible range (i.e. neither starts after it
+        // ends, nor ends before it starts).
+        const startsAfterVisibleEnd =
+          range.compareBoundaryPoints(Range.START_TO_END, visibleRange) > 0;
+        const endsBeforeVisibleStart =
+          range.compareBoundaryPoints(Range.END_TO_START, visibleRange) < 0;
+        if (!startsAfterVisibleEnd && !endsBeforeVisibleStart) return;
+      }
+      view.renderer.scrollToAnchor?.(range);
+    };
+
     // Republish the controller's canonical position signal onto the app-wide
     // bus so paragraph mode + RSVP can follow TTS without touching the
     // controller. This MUST be its own listener: handleHighlightMark /
@@ -302,11 +343,13 @@ export const useTTSControl = ({ bookKey, onRequestHidePanel }: UseTTSControlProp
     ttsController.addEventListener('tts-need-auth', handleNeedAuth);
     ttsController.addEventListener('tts-speak-mark', handleSpeakMark);
     ttsController.addEventListener('tts-highlight-mark', handleHighlightMark);
+    ttsController.addEventListener('tts-highlight-word', handleHighlightWord);
     ttsController.addEventListener('tts-position', handlePosition);
     return () => {
       ttsController.removeEventListener('tts-need-auth', handleNeedAuth);
       ttsController.removeEventListener('tts-speak-mark', handleSpeakMark);
       ttsController.removeEventListener('tts-highlight-mark', handleHighlightMark);
+      ttsController.removeEventListener('tts-highlight-word', handleHighlightWord);
       ttsController.removeEventListener('tts-position', handlePosition);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

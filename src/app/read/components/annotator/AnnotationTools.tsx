@@ -95,7 +95,7 @@ export const annotationToolButtons = createAnnotationToolButtons([
     label: _('Audio'),
     tooltip: _('Read text aloud after selection'),
     Icon: FaHeadphones,
-    quickAction: false,
+    quickAction: false, // disable TTS false
   },
   {
     type: 'proofread',
