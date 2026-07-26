@@ -4,3 +4,4 @@ pub mod os_version;
 pub mod safari_auth;
 pub mod traffic_light;
 pub mod system_dictionary;
+pub mod window;
