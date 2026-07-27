@@ -372,9 +372,15 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
       )}
       
       <MenuItem
-        label={isScrolledMode ? _('Scrolled Mode') : _('Page Mode')}
+        label={_('Page Mode')}
         shortcut='Shift+J'
-        Icon={isScrolledMode ? PiScrollLight : PiBookOpenLight}
+        Icon={!isScrolledMode ? PiBookOpenLight: BiCheckbox}
+        onClick={toggleScrolledMode}
+      />
+      <MenuItem
+        label={_('Scrolled Mode')}
+        shortcut='Shift+J'
+        Icon={isScrolledMode ? PiScrollLight : BiCheckbox }
         onClick={toggleScrolledMode}
       />
       <MenuItem

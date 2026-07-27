@@ -968,7 +968,7 @@ const RSVPOverlay: React.FC<RSVPOverlayProps> = ({
               The audio toggle starts TTS from the displayed word (or stops it
               when engaged) — never a second play triangle (decision 5). Active
               state uses a filled glyph + eink-bordered surface so it reads in
-              e-ink without relying on color. */}
+              e-ink without relying on color.  disable TTS*/}
             <div className='flex items-center gap-1 ms-2 hidden'>
               <button
                 aria-label={ttsActive ? _('Pause audio') : _('Play audio')}

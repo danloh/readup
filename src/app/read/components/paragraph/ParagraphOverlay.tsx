@@ -24,7 +24,6 @@ const TTS_HIGHLIGHT_NAME = 'readup-tts-paragraph';
 
 interface ParagraphOverlayProps {
   bookKey: string;
-  dimOpacity: number;
   viewSettings?: ViewSettings;
   gridInsets?: Insets;
   /** Derived TTS-sync status driving the "following audio" indicator (#3235). */
@@ -129,7 +128,6 @@ const SectionTransitionIndicator: React.FC<{
 
 const ParagraphOverlay: React.FC<ParagraphOverlayProps> = ({
   bookKey,
-  dimOpacity,
   viewSettings,
   gridInsets = { top: 0, right: 0, bottom: 0, left: 0 },
   ttsSyncStatus = 'idle',
@@ -212,13 +210,7 @@ const ParagraphOverlay: React.FC<ParagraphOverlayProps> = ({
       marginInline: 'auto',
     } as React.CSSProperties;
   }, [appService?.hasSafeAreaInset, gridInsets.bottom, gridInsets.top, layoutContext.vertical]);
-  const surfaceStyle = useMemo(
-    () =>
-      ({
-        backgroundColor: 'oklch(var(--b1) / 0.14)',
-      }) as React.CSSProperties,
-    [],
-  );
+  
   // `::highlight()` declaration matching the user's TTS highlight color/style so
   // the in-paragraph word/sentence highlight looks like normal mode (#3235).
   const ttsHighlightCss = useMemo(
@@ -550,6 +542,10 @@ const ParagraphOverlay: React.FC<ParagraphOverlayProps> = ({
       className={clsx(
         'fixed inset-0 z-40',
         'flex flex-col items-center justify-center',
+        // Solid page color, not a translucent blur of the book behind it — the
+        // blurred backdrop read as foreign chrome next to the rest of the app
+        // (#5275), and without the blur any translucency leaks ghost text.
+        'bg-base-100',
         // The dialog is focused programmatically (so it receives keys); it is not
         // a tab stop, so suppress the focus ring that would otherwise outline the
         // whole viewport.
@@ -558,9 +554,6 @@ const ParagraphOverlay: React.FC<ParagraphOverlayProps> = ({
         isOverlayMounted ? 'opacity-100' : 'opacity-0',
       )}
       style={{
-        backgroundColor: `oklch(var(--b1) / ${Math.min(dimOpacity + 0.4, 0.92)})`,
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
         paddingTop: appService?.hasSafeAreaInset ? `${gridInsets.top}px` : undefined,
         paddingBottom: appService?.hasSafeAreaInset ? `${gridInsets.bottom * 0.33}px` : undefined,
       }}
@@ -618,12 +611,12 @@ const ParagraphOverlay: React.FC<ParagraphOverlayProps> = ({
         {activeParagraph ? (
           <div
             className={clsx(
-              'relative rounded-[2rem]',
+              'relative',
               layoutContext.vertical
                 ? 'inline-flex items-center justify-center self-center overflow-visible'
                 : 'w-full overflow-auto',
             )}
-            style={{ ...frameStyle, ...surfaceStyle }}
+            style={frameStyle}
           >
             <AnimatedParagraph
               key={activeParagraph.id}

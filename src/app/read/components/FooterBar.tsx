@@ -326,7 +326,7 @@ const FooterBar: React.FC<FooterBarProps> = ({
           <TranslationToggler bookKey={bookKey} />
           <div
             className={clsx(
-              'flex items-center justify-center', // disable TTS hidden
+              'flex items-center justify-center hidden', // disable TTS hidden
               viewState?.ttsEnabled && 'gap-x-1 bg-base-300 rounded-sm',
             )}
           >

@@ -67,6 +67,9 @@
           "path": "$TEMP/**/*"
         },
         {
+          "path": "$APPCACHE"
+        },
+        {
           "path": "$APPCACHE/**/*"
         },
         {
