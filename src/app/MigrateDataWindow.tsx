@@ -119,8 +119,7 @@ export const MigrateDataWindow = () => {
         }
         const localDocumentDir = await documentDir();
         setAndroidNewDirs([
-          // For Google Play version we won't request permission to access root of /sdcard
-          ...(appService?.distChannel === 'playstore' ? [] : sdcardDirs),
+          ...sdcardDirs,
           { path: localDocumentDir, label: '/sdcard/APPDATA/Documents' },
         ]);
       }

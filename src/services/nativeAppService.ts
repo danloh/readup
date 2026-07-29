@@ -531,7 +531,7 @@ export class NativeAppService extends BaseAppService {
   // CustomizeRootDir has a blocker on macOS App Store builds due to Security Scoped Resource restrictions.
   // See: https://github.com/tauri-apps/tauri/issues/3716
   override canCustomizeRootDir = DIST_CHANNEL !== 'appstore';
-  override canReadExternalDir = DIST_CHANNEL !== 'appstore' && DIST_CHANNEL !== 'playstore';
+  override canReadExternalDir = DIST_CHANNEL !== 'appstore';
   // WebKitGTK on Linux crashes when a View Transition snapshots the window,
   // so both capabilities are unavailable there regardless of what the engine
   // reports; every other webview is gated on the real feature probe.
