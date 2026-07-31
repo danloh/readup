@@ -21,6 +21,7 @@ mod feed;
 mod epub_parser;
 mod mobi_parser;
 mod parser_common;
+mod range_file;
 
 use std::path::PathBuf;
 use tauri::{AppHandle, Manager};
@@ -334,7 +335,11 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_sharekit::init())
         .plugin(tauri_plugin_native_bridge::init())
-        .plugin(tauri_plugin_native_tts::init());
+        .plugin(tauri_plugin_native_tts::init())
+        // Serves local file byte-ranges to `RemoteFile` via `?path=&start=&end=`
+        // (range-in-URL, not a `Range` header) so Android's WebView doesn't
+        // re-apply the offset. Scope-gated by `asset_protocol_scope`.
+        .register_asynchronous_uri_scheme_protocol(range_file::SCHEME, range_file::handle);
 
     #[cfg(desktop)]
     let builder = builder.plugin(tauri_plugin_single_instance::init(|app, argv, cwd| {
