@@ -105,7 +105,7 @@ const ViewMenu: React.FC<ViewMenuProps> = ({ setIsDropdownOpen }) => {
         <MenuItem
           key={option.value}
           label={option.label}
-          buttonClass='h-8'
+          buttonClass='min-h-8 !py-1'
           Icon={viewMode === option.value ? MdCheck : undefined}
           onClick={() => handleSetViewMode(option.value as LibraryViewModeType)}
         />
@@ -113,7 +113,7 @@ const ViewMenu: React.FC<ViewMenuProps> = ({ setIsDropdownOpen }) => {
       <hr aria-hidden='true' className='border-base-200 my-1' />
       <MenuItem
         label={_('Group by...')}
-        buttonClass='h-8'
+        buttonClass='min-h-8 !py-1'
         labelClass='text-sm sm:text-xs'
         disabled
       />
@@ -121,7 +121,7 @@ const ViewMenu: React.FC<ViewMenuProps> = ({ setIsDropdownOpen }) => {
         <MenuItem
           key={option.value}
           label={option.label}
-          buttonClass='h-8'
+          buttonClass='min-h-8 !py-1'
           Icon={groupBy === option.value ? MdCheck : undefined}
           onClick={() => handleSetGroupBy(option.value as LibraryGroupByType)}
         />
@@ -129,7 +129,7 @@ const ViewMenu: React.FC<ViewMenuProps> = ({ setIsDropdownOpen }) => {
       <hr aria-hidden='true' className='border-primary/50 my-1' />
       <MenuItem
         label={_('Sort by...')}
-        buttonClass='h-8'
+        buttonClass='min-h-8 !py-1'
         labelClass='text-sm sm:text-xs'
         disabled
       />
@@ -137,7 +137,7 @@ const ViewMenu: React.FC<ViewMenuProps> = ({ setIsDropdownOpen }) => {
         <MenuItem
           key={option.value}
           label={option.label}
-          buttonClass='h-8'
+          buttonClass='min-h-8 !py-1'
           Icon={sortBy === option.value ? MdCheck : undefined}
           onClick={() => handleSetSortBy(option.value as LibrarySortByType)}
         />
@@ -147,7 +147,7 @@ const ViewMenu: React.FC<ViewMenuProps> = ({ setIsDropdownOpen }) => {
         <MenuItem
           key={option.value.toString()}
           label={option.label}
-          buttonClass='h-8'
+          buttonClass='min-h-8 !py-1'
           Icon={isAscending === option.value ? MdCheck : undefined}
           onClick={() => handleSetSortAscending(option.value)}
         />

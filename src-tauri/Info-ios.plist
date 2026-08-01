@@ -43,6 +43,8 @@
     </array>
     <key>LSSupportsOpeningDocumentsInPlace</key>
     <true/>
+    <key>NSPhotoLibraryAddUsageDescription</key>
+    <string>Readup needs access to save images from your books to your photo library.</string>
     <key>CFBundleURLTypes</key>
     <array>
       <dict>
