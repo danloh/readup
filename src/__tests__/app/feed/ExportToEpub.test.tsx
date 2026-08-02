@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { FeedEpubService, STARRED_ARTICLES_EPUB_NAME } from '@/app/feed/epub/feedEpubService';
+import * as articleToEpub from '@/app/feed/epub/articleToEpub';
 import type { ArticleType } from '@/app/feed/components/dataAgent';
 import type { Book } from '@/types/book';
 
@@ -142,6 +143,29 @@ describe('FeedEpubService.createOrUpdateEpub', () => {
       );
 
       expect(result.book.title).toBe(customName);
+    });
+
+    it('should reuse the existing EPUB when there are no changes', async () => {
+      const existingBook: Book = { ...mockBook, title: 'My Feed' };
+      mockBooks.push(existingBook);
+
+      mockAppService.readFile.mockResolvedValueOnce(
+        JSON.stringify({
+          version: 1,
+          articleIds: mockArticles.map(article => article.link),
+        })
+      );
+
+      const result = await FeedEpubService.createOrUpdateEpub(
+        mockArticles,
+        mockAppService,
+        mockBooks,
+        'My Feed'
+      );
+
+      expect(result.created).toBe(false);
+      expect(result.book.hash).toBe(existingBook.hash);
+      expect(mockAppService.importBook).not.toHaveBeenCalled();
     });
 
     it('should save manifest to file after creation', async () => {
@@ -348,6 +372,19 @@ describe('FeedEpubService.createOrUpdateEpub', () => {
       mockAppService.loadBookConfig.mockResolvedValueOnce({
         booknotes: oldNotes,
       });
+
+      vi.mocked(articleToEpub.detectArticleChanges).mockReturnValueOnce({
+        added: ['https://example.com/2'],
+        removed: [],
+        reordered: false,
+      });
+
+      mockAppService.readFile.mockResolvedValueOnce(
+        JSON.stringify({
+          version: 1,
+          articleIds: ['https://example.com/1'],
+        })
+      );
 
       const result = await FeedEpubService.createOrUpdateEpub(
         mockArticles,

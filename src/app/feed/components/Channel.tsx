@@ -45,19 +45,20 @@ export function Channel(props: Props) {
         <b className='text-info' >{entries.length}</b>
         <b className='font-bold'>{channel?.title || (isStarChannel ? '⭐' : '')}</b>
       </div>
-      <ArticleList articles={entries} isInStar={isStarChannel} onPlayAudio={onPlayAudio} />
+      <ArticleList articles={entries} channel={channel} isInStar={isStarChannel} onPlayAudio={onPlayAudio} />
     </div>
   );
 }
 
 type ListProps = {
   articles: ArticleType[];
+  channel?: FeedType | null;
   isInStar?: boolean;
   onPlayAudio?: (article: ArticleType) => void;
 };
 
 function ArticleList(props: ListProps) {
-  const { articles, isInStar, onPlayAudio } = props;
+  const { articles, channel, isInStar, onPlayAudio } = props;
   const { envConfig } = useEnv();
   const _ = useTranslation();
   const router = useRouter();
@@ -66,6 +67,10 @@ function ArticleList(props: ListProps) {
   const [epubName, setEpubName] = useState(STARRED_ARTICLES_EPUB_NAME);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [articleToEdit, setArticleToEdit] = useState<ArticleType | null>(null);
+
+  useEffect(() => {
+    setEpubName(channel?.title || STARRED_ARTICLES_EPUB_NAME);
+  }, [channel?.title]);
 
   const sortedArticles = articles.length >= 2 
     ? articles.sort((n1, n2) => {
@@ -85,6 +90,7 @@ function ArticleList(props: ListProps) {
 
   const handleExportToEpub = useCallback(async () => {
     const articlesToExport = selectedTags.length > 0 ? filteredArticles : sortedArticles;
+
     
     if (articlesToExport.length === 0) {
       eventDispatcher.dispatch('toast', {
@@ -109,10 +115,28 @@ function ArticleList(props: ListProps) {
       const appService = await envConfig.getAppService();
       const library = await appService.loadLibraryBooks();
 
-      console.log('Starting EPUB export with', articlesToExport.length, 'articles', { epubName });
+      const articlesWithContent = await Promise.all(
+        articlesToExport.map(async (article) => {
+          if (!article.content?.trim() && isWebAppPlatform() && article.link) {
+            try {
+              const fullArticle = await dataAgent.fetchArticle(article.link);
+              return {
+                ...article,
+                ...fullArticle,
+                content: fullArticle.content || article.content,
+              };
+            } catch (error) {
+              console.warn('Failed to load article content for EPUB export:', article.link, error);
+            }
+          }
+          return article;
+        })
+      );
+
+      console.log('Starting EPUB export with', articlesWithContent.length, 'articles', { epubName });
 
       const { book, migrationWarnings } = await FeedEpubService.createOrUpdateEpub(
-        articlesToExport,
+        articlesWithContent,
         appService,
         library,
         epubName.trim()
@@ -156,14 +180,15 @@ function ArticleList(props: ListProps) {
 
   return (
     <div className='flex flex-col'>
-      {isInStar && sortedArticles.length > 0 && (
+      {sortedArticles.length > 0 && (
         <>
-          {/* Tag Filter */}
-          <TagFilter
-            articles={sortedArticles}
-            selectedTags={selectedTags}
-            onTagsChange={setSelectedTags}
-          />
+          {isInStar && (
+            <TagFilter
+              articles={sortedArticles}
+              selectedTags={selectedTags}
+              onTagsChange={setSelectedTags}
+            />
+          )}
           
           {/* Export EPUB section */}
           <div className='p-2 bg-base-200 border-b'>

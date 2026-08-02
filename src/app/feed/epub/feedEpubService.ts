@@ -83,6 +83,14 @@ export class FeedEpubService {
       const changeInfo = detectArticleChanges(oldManifest, articles);
       console.log('Changed:', { changeInfo });
 
+      if (!changeInfo.added.length && !changeInfo.removed.length && !changeInfo.reordered) {
+        return {
+          book: existingBook,
+          created: false,
+          migrationWarnings: [],
+        };
+      }
+
       // Always attempt append-only: append any new articles and leave existing ones untouched.
       // If there are removals or reordering, 
       // warn the user that the EPUB will grow and include stale entries.
