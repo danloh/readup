@@ -181,10 +181,7 @@
       }
     },
     "updater": {
-      "pubkey": "",
-      "endpoints": [
-        ""
-      ]
+      "active": false
     }
   }
 }
