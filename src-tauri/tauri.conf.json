@@ -140,7 +140,7 @@
         "role": "Viewer"
       }
     ],
-    "createUpdaterArtifacts": true
+    "createUpdaterArtifacts": false
   },
   "plugins": {
     "fs": {
@@ -180,6 +180,9 @@
         "schemes": ["readup"]
       }
     },
+    "sharekit": {
+      "active": false 
+    }, 
     "updater": {
       "active": false
     }
