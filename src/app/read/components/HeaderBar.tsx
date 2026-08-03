@@ -130,7 +130,11 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
   return (
     <div
       className={clsx(
-        'left-0 top-0 w-full',
+        // pointer-events-none: the wrapper is as tall as its safe-area
+        // padding, so on notch devices its box covers the top inset strip and
+        // swallowed long presses on text rendered there (#5429) — children
+        // that take input restore pointer-events themselves.
+        'pointer-events-none left-0 top-0 w-full',
         isHeaderVisible && 'bg-base-100',
         window.innerWidth < 640 ? 'fixed z-20' : 'absolute',
       )}
@@ -142,7 +146,12 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
       <div
         role='none'
         tabIndex={-1}
-        className={clsx('absolute top-0 z-10 h-10 w-full', pointerInDoc && 'pointer-events-none')}
+        className={clsx(
+          'absolute top-0 z-10 h-10 w-full', 
+          (appService?.isMobile || window.innerWidth < 640 || pointerInDoc) 
+            ? 'pointer-events-none' 
+            : 'pointer-events-auto',
+        )}
         onClick={() => setHoveredBookKey(bookKey)}
         onMouseEnter={() => !appService?.isMobile && setHoveredBookKey(bookKey)}
         onTouchStart={() => !appService?.isMobile && setHoveredBookKey(bookKey)}

@@ -33,7 +33,7 @@ const Button: React.FC<ButtonProps> = ({
     >
       <button
         className={clsx(
-          'btn btn-ghost h-8 min-h-8 w-8 p-0',
+          'touch-target btn btn-ghost h-8 min-h-8 w-8 p-0',
           appService?.isMobileApp && 'hover:bg-transparent',
           disabled && 'btn-disabled !bg-transparent opacity-50',
           className,

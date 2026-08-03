@@ -64,15 +64,15 @@ const HintInfo: React.FC<SectionInfoProps> = ({
     <>
       <div
         className={clsx(
-          'absolute left-0 right-0 top-0 z-10',
-          hintMessage ? 'bg-base-100' : 'bg-transparent',
+          'pointer-events-none absolute left-0 right-0 top-0 z-10',
+          hintMessage ? '' : 'bg-transparent',
         )}
         style={{ height: `${topInset}px` }}
       />
       <div
         className={clsx(
-          'hintinfo absolute flex items-center justify-end overflow-hidden ps-2',
-          hintMessage ? 'bg-base-100' : 'bg-transparent',
+          'hintinfo pointer-events-none absolute flex items-center justify-end overflow-hidden ps-2',
+          hintMessage ? '' : 'bg-transparent',
           isVertical ? 'writing-vertical-rl' : 'top-0 h-[44px]',
           isScrolled
             ? isVertical ? 'h-full' : 'w-full'

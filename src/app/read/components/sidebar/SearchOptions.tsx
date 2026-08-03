@@ -35,7 +35,7 @@ const Option: React.FC<OptionProps> = ({ label, isActive, onClick, disabled, cap
       <span style={{ minWidth: `${useDefaultIconSize()}px` }}>
         {isActive && <MdCheck className='text-base-content' />}
       </span>
-      <span className='ml-2'>{label}</span>
+      <span className='ml-2 whitespace-nowrap'>{label}</span>
     </div>
     {caption && <span className='text-base-content/50 ml-2 text-xs'>{caption}</span>}
   </button>
@@ -72,7 +72,8 @@ const SearchOptions: React.FC<SearchOptionsProps> = ({
   return (
     <div
       className={clsx(
-        'search-options dropdown-content border-base-200 z-20 w-56 border shadow-2xl',
+        'search-options dropdown-content border-base-200 z-20 border shadow-2xl',
+        'max-h-[calc(100vh-96px)] overflow-y-auto',
         isEink ? 'bordercolor-content border-base-content !bg-base-100 border' : '',
         menuClassName,
       )}
