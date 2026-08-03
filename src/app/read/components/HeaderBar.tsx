@@ -14,6 +14,7 @@ import { useTrafficLightStore } from '@/store/trafficLightStore';
 import { useTrafficLight } from '@/hooks/useTrafficLight';
 import { useResponsiveSize } from '@/hooks/useResponsiveSize';
 import { useTranslation } from '@/hooks/useTranslation';
+import { getHeaderTriggerHeight } from '@/utils/insets';
 import WindowButtons from '@/components/WindowButtons';
 import Dropdown from '@/components/Dropdown';
 import Logo from '@/components/Logo';
@@ -122,6 +123,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
   const isHeaderCompact = headerWidth > 0 && headerWidth < 350;
   const insets = window.innerWidth < 640 ? screenInsets : gridInsets;
   const isHeaderVisible = hoveredBookKey === bookKey || isDropdownOpen;
+  const triggerHeight = viewSettings ? getHeaderTriggerHeight(gridInsets.top, viewSettings) : 0;
   const trafficLightInHeader =
     appService?.hasTrafficLight && !trafficLightInFullscreen && !isSideBarVisible && isTopLeft;
   const windowButtonVisible =
@@ -147,11 +149,12 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
         role='none'
         tabIndex={-1}
         className={clsx(
-          'absolute top-0 z-10 h-10 w-full', 
+          'absolute top-0 z-10 w-full', 
           (appService?.isMobile || window.innerWidth < 640 || pointerInDoc) 
             ? 'pointer-events-none' 
             : 'pointer-events-auto',
         )}
+        style={{ height: `${triggerHeight}px` }}
         onClick={() => setHoveredBookKey(bookKey)}
         onMouseEnter={() => !appService?.isMobile && setHoveredBookKey(bookKey)}
         onTouchStart={() => !appService?.isMobile && setHoveredBookKey(bookKey)}
