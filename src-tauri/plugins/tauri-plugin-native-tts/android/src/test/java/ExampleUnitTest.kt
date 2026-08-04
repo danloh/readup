@@ -1,4 +1,4 @@
-package cc.readup.native-tts
+package cc.readup.native_tts
 
 import org.junit.Test
 

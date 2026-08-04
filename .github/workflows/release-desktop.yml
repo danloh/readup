@@ -26,7 +26,7 @@ jobs:
             target: x86_64-pc-windows-msvc
             args: --bundles nsis,msi
           - name: macos-x64
-            os: macos-11
+            os: macos-26
             arch: x86_64
             target: x86_64-apple-darwin
           - name: macos-arm

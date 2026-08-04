@@ -2,10 +2,12 @@ import clsx from 'clsx';
 import React, { useEffect, useState } from 'react';
 import { GrSystem } from "react-icons/gr";
 import { MdZoomOut, MdZoomIn, MdSync } from 'react-icons/md';
-import { PiScrollLight, PiBookOpenLight, PiParagraphFill } from "react-icons/pi";
+import { PiParagraphFill } from "react-icons/pi";
 import { BiCheckboxChecked, BiCheckbox, BiMoon, BiSun } from "react-icons/bi";
 import { IoMdExpand, IoMdShare } from 'react-icons/io';
-import { TbArrowAutofitWidth, TbColumns1, TbColumns2 } from 'react-icons/tb';
+import { 
+  TbArrowAutofitWidth, TbCarouselHorizontal, TbCarouselVertical, TbColumns1, TbColumns2 
+} from 'react-icons/tb';
 import { CiUser } from 'react-icons/ci';
 import { FaUser } from 'react-icons/fa';
 
@@ -48,6 +50,9 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
 
   const { themeMode, setThemeMode } = useThemeStore();
   const [isScrolledMode, setScrolledMode] = useState(viewSettings!.scrolled);
+  const [scrolledDirection, setScrolledDirection] = useState(
+    viewSettings!.scrolledDirection ?? 'vertical',
+  );
   const [webtoonMode, setWebtoonMode] = useState(viewSettings!.webtoonMode ?? false);
   const [isParagraphMode, setParagraphMode] = useState(
     viewSettings?.paragraphMode?.enabled ?? false,
@@ -189,6 +194,15 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
   }, [isScrolledMode]);
 
   useEffect(() => {
+    if (scrolledDirection === (viewSettings.scrolledDirection ?? 'vertical')) return;
+    viewSettings.scrolledDirection = scrolledDirection;
+    getView(bookKey)?.renderer.setAttribute('scroll-direction', scrolledDirection);
+    setViewSettings(bookKey, viewSettings);
+    saveViewSettings(envConfig, bookKey, 'scrolledDirection', scrolledDirection, true, false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scrolledDirection]);
+
+  useEffect(() => {
     if (webtoonMode === viewSettings.webtoonMode) return;
     viewSettings.webtoonMode = webtoonMode;
     getView(bookKey)?.renderer.setAttribute('scroll-gap', getScrollGapAttr(webtoonMode));
@@ -198,6 +212,7 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
       // scrolled / zoomLevel effects rather than duplicating their renderer wiring.
       if (!isScrolledMode) setScrolledMode(true);
       if (zoomLevel !== 100) setZoomLevel(100);
+      if (scrolledDirection !== 'vertical') setScrolledDirection('vertical');
       saveViewSettings(envConfig, bookKey, 'scrolled', true, false, false);
     }
     setViewSettings(bookKey, viewSettings);
@@ -309,24 +324,58 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
               className={clsx('my-2 flex items-center justify-between rounded-md')}
             >
               <button
-                onClick={setSpreadMode.bind(null, 'none')}
                 title={_('Single Page')}
+                onClick={() => {
+                  setSpreadMode('none');
+                  if (isScrolledMode) setScrolledMode(false);
+                }}
                 className={clsx(
                   'hover:bg-base-300 text-base-content rounded-full p-2',
-                  spreadMode === 'none' && 'bg-base-300/75',
+                  !isScrolledMode && spreadMode === 'none' && 'bg-base-300/75',
                 )}
               >
                 <TbColumns1 />
               </button>
               <button
-                onClick={setSpreadMode.bind(null, 'auto')}
                 title={_('Auto Spread')}
+                onClick={() => {
+                  setSpreadMode('auto');
+                  if (isScrolledMode) setScrolledMode(false);
+                }}
                 className={clsx(
                   'hover:bg-base-300 text-base-content rounded-full p-2',
-                  spreadMode === 'auto' && 'bg-base-300/75',
+                  !isScrolledMode && spreadMode === 'auto' && 'bg-base-300/75',
                 )}
               >
                 <TbColumns2 />
+              </button>
+              <div className='bg-base-300 mx-2 h-6 w-[1px]' />
+              <button
+                title={_('Vertical Scrolling')}
+                onClick={() => {
+                  setScrolledDirection('vertical');
+                  if (!isScrolledMode) setScrolledMode(true);
+                }}
+                className={clsx(
+                  'hover:bg-base-300 text-base-content rounded-full p-2',
+                  isScrolledMode && scrolledDirection === 'vertical' && 'bg-base-300/75',
+                )}
+              >
+                <TbCarouselVertical />
+              </button>
+              <button
+                title={_('Horizontal Scrolling')}
+                onClick={() => {
+                  if (webtoonMode) setWebtoonMode(false);
+                  setScrolledDirection('horizontal');
+                  if (!isScrolledMode) setScrolledMode(true);
+                }}
+                className={clsx(
+                  'hover:bg-base-300 text-base-content rounded-full p-2',
+                  isScrolledMode && scrolledDirection === 'horizontal' && 'bg-base-300/75',
+                )}
+              >
+                <TbCarouselHorizontal />
               </button>
               <div className='bg-base-300 mx-2 h-6 w-[1px]' />
               <button
@@ -367,18 +416,14 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
         </>
       )}
       
-      <MenuItem
-        label={_('Page Mode')}
-        shortcut='Shift+J'
-        Icon={!isScrolledMode ? PiBookOpenLight: BiCheckbox}
-        onClick={toggleScrolledMode}
-      />
-      <MenuItem
-        label={_('Scrolled Mode')}
-        shortcut='Shift+J'
-        Icon={isScrolledMode ? PiScrollLight : BiCheckbox }
-        onClick={toggleScrolledMode}
-      />
+      {!bookData.isFixedLayout && (
+        <MenuItem
+          label={_('Scrolled Mode')}
+          shortcut='Shift+J'
+          Icon={isScrolledMode ? BiCheckboxChecked : BiCheckbox}
+          onClick={toggleScrolledMode}
+        />
+      )}
       <MenuItem
         label={_('Paragraph Mode')}
         shortcut='Shift+P'
