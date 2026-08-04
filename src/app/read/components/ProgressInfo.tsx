@@ -98,7 +98,7 @@ const ProgressInfoView: React.FC<PageInfoProps> = ({
     <div
       role='presentation'
       className={clsx(
-        'progressinfo absolute bottom-0 flex items-center justify-between font-sans',
+        'progressinfo pointer-events-none absolute bottom-0 z-10 flex items-center justify-between font-sans',
         isEink ? 'text-sm font-normal' : 'text-neutral-content text-xs font-extralight',
         isVertical ? 'writing-vertical-rl' : 'w-full',
       )}

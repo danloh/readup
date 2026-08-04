@@ -331,12 +331,12 @@ export interface ViewSettings
 
 export interface BookProgress {
   location: string;
-  // sectionId: number;
   sectionHref: string;
   sectionLabel: string;
   section: PageInfo;
   pageinfo: PageInfo;
   timeinfo: TimeInfo;
+  fraction: number;
   index: number;
   range: Range;
   page: number;
