@@ -25,15 +25,15 @@ jobs:
             os: windows-latest
             target: x86_64-pc-windows-msvc
             args: --bundles nsis,msi
+          - name: macos-x64
+            os: macos-11
+            arch: x86_64
+            target: x86_64-apple-darwin
           - name: macos-arm
             os: macos-latest
+            arch: aarch64
             target: aarch64-apple-darwin
-            args: --bundles dmg
-          - name: macos-x64
-            os: macos-latest
-            target: x86_64-apple-darwin
-            args: --bundles dmg
-
+          
     steps:
       - uses: actions/checkout@v6
 
@@ -76,8 +76,8 @@ jobs:
         with:
           projectPath: .
           args: ${{ matrix.args }}
-          tagName: app-v__VERSION__
-          releaseName: 'App v__VERSION__'
+          tagName: Readup-v__VERSION__
+          releaseName: 'Readup v__VERSION__'
           releaseBody: 'See the assets to download this version and install.'
           releaseDraft: true
           prerelease: false
