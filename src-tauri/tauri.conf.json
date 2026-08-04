@@ -180,9 +180,6 @@
         "schemes": ["readup"]
       }
     },
-    "sharekit": {
-      "active": false 
-    }, 
     "updater": {
       "active": false
     }
