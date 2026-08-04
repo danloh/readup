@@ -62,6 +62,7 @@ import {
   handleTouchEnd,
 } from '../utils/iframeEventHandlers';
 import { TransformContext } from '../transformers/types';
+import { collectDocumentImages, DocumentImage } from '../utils/documentImages';
 import { ParagraphControl } from './paragraph';
 import { RSVPControl } from './rsvp';
 import TableViewer from './TableViewer';
@@ -408,49 +409,27 @@ const FoliateViewer: React.FC<{
   const touchHandlers = useTouchEvent(bookKey);
 
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  // The description of the image on screen, kept next to `selectedImage` so the
+  // two can never drift apart (the pressed image may be missing from the list).
+  const [selectedImageAlt, setSelectedImageAlt] = useState<string>('');
   const [selectedTableHtml, setSelectedTableHtml] = useState<string | null>(null);
-  const [imageList, setImageList] = useState<{ src: string; cfi: string | null }[]>([]);
+  const [imageList, setImageList] = useState<DocumentImage[]>([]);
   const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
 
   const handleImagePress = useCallback(async (src: string) => {
     try {
       // Get all images from the current document
-      const docs = viewRef.current?.renderer.getContents();
-      const allImages: { src: string; cfi: string | null }[] = [];
-
-      docs?.forEach(({ doc, index }) => {
-        const elements = doc.querySelectorAll('img, svg');
-        elements.forEach((el) => {
-          if (index === undefined) return;
-          if (el.localName === 'img') {
-            const img = el as HTMLImageElement;
-            if (img.src && img.parentNode) {
-              const range = doc.createRange();
-              range.selectNodeContents(img);
-              const cfi = viewRef.current?.getCFI(index, range) || null;
-              allImages.push({ src: img.src, cfi });
-            }
-          } else if (el.localName === 'svg') {
-            const svg = el as unknown as SVGSVGElement;
-            const svgImage = svg.querySelector('image');
-            const href =
-              svgImage?.getAttribute('href') ||
-              svgImage?.getAttributeNS('http://www.w3.org/1999/xlink', 'href');
-            if (href) {
-              const range = doc.createRange();
-              range.selectNodeContents(svg);
-              const cfi = viewRef.current?.getCFI(index, range) || null;
-              allImages.push({ src: href, cfi });
-            }
-          }
-        });
-      });
+      const allImages = collectDocumentImages(
+        viewRef.current?.renderer.getContents() ?? [],
+        (index, range) => viewRef.current?.getCFI(index, range) || null,
+      );
 
       // Find the index of the pressed image
       const index = allImages.findIndex((img) => img.src === src);
 
       setImageList(allImages);
       setCurrentImageIndex(index >= 0 ? index : 0);
+      setSelectedImageAlt(index >= 0 ? allImages[index]!.alt : '');
 
       const dataUrl = await convertBlobUrlToDataUrl(src);
       setSelectedImage(dataUrl);
@@ -468,9 +447,10 @@ const FoliateViewer: React.FC<{
       const newIndex = currentImageIndex - 1;
       setCurrentImageIndex(newIndex);
       try {
-        const { src, cfi } = imageList[newIndex]!;
+        const { src, cfi, alt } = imageList[newIndex]!;
         const dataUrl = await convertBlobUrlToDataUrl(src);
         setSelectedImage(dataUrl);
+        setSelectedImageAlt(alt);
         if (cfi && viewRef.current) {
           viewRef.current?.goTo(cfi);
         }
@@ -485,9 +465,10 @@ const FoliateViewer: React.FC<{
       const newIndex = currentImageIndex + 1;
       setCurrentImageIndex(newIndex);
       try {
-        const { src, cfi } = imageList[newIndex]!;
+        const { src, cfi, alt } = imageList[newIndex]!;
         const dataUrl = await convertBlobUrlToDataUrl(src);
         setSelectedImage(dataUrl);
+        setSelectedImageAlt(alt);
         if (cfi && viewRef.current) {
           viewRef.current?.goTo(cfi);
         }
@@ -499,6 +480,7 @@ const FoliateViewer: React.FC<{
 
   const handleCloseImage = useCallback(() => {
     setSelectedImage(null);
+    setSelectedImageAlt('');
     setImageList([]);
     setCurrentImageIndex(0);
   }, []);
@@ -782,6 +764,7 @@ const FoliateViewer: React.FC<{
         <ImageViewer
           gridInsets={gridInsets}
           src={selectedImage}
+          caption={selectedImageAlt}
           onClose={handleCloseImage}
           onPrevious={currentImageIndex > 0 ? handlePreviousImage : undefined}
           onNext={currentImageIndex < imageList.length - 1 ? handleNextImage : undefined}
