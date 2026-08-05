@@ -69,7 +69,7 @@ const SectionInfo: React.FC<SectionInfoProps> = ({
         onClick={handleNotchClick}
         className={clsx(
           'notch-area absolute inset-0 z-10',
-          isScrolled && !isVertical && 'notch-masked bg-base-100',
+          isScrolled && !isVertical && !bookData?.isFixedLayout && 'notch-masked bg-base-100',
         )}
         style={{  clipPath: `inset(0 0 calc(100% - ${maskHeight}px) 0)` }}
       />
