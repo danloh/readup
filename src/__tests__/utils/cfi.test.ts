@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { isCfiInLocation, findNearestCfi, getCfiSpinePrefix, createCfiLocationMatcher } from '@/utils/cfi';
+import {
+  isCfiInLocation,
+  findNearestCfi,
+  isMalformedLocationCfi,
+  createCfiLocationMatcher,
+  getCfiSpinePrefix,
+} from '@/utils/cfi';
 
 describe('isCfiInLocation', () => {
   it('should return true when cfi path starts with location path', () => {
@@ -63,6 +69,27 @@ describe('findNearestCfi', () => {
   it('should return null for null/undefined location', () => {
     expect(findNearestCfi(sortedCfis, null)).toBeNull();
     expect(findNearestCfi(sortedCfis, undefined)).toBeNull();
+  });
+
+  // A booknote synced from a row whose `cfi` column is SQL NULL arrives as a
+  // literal `null` despite BookNote.cfi being typed `string`. It reaches here
+  // through BooknoteView's `nearestCfi` useMemo, so an unguarded CFI.compare
+  // throws during render and takes the whole app down to the error boundary.
+  it('should skip null/empty entries instead of throwing', () => {
+    const withHoles = [
+      'epubcfi(/6/4!/4/2:0)',
+      null as unknown as string,
+      'epubcfi(/6/6!/4/4:0)',
+      undefined as unknown as string,
+      'epubcfi(/6/10!/4/6:0)',
+    ];
+    expect(() => findNearestCfi(withHoles, 'epubcfi(/6/6!/4/6:0)')).not.toThrow();
+    expect(findNearestCfi(withHoles, 'epubcfi(/6/6!/4/6:0)')).toBe('epubcfi(/6/6!/4/4:0)');
+  });
+
+  it('should return null when every entry is invalid', () => {
+    const allNull = [null, null] as unknown as string[];
+    expect(findNearestCfi(allNull, 'epubcfi(/6/6!/4/4:0)')).toBeNull();
   });
 });
 
@@ -134,5 +161,27 @@ describe('getCfiSpinePrefix', () => {
   it('returns null for non-CFI strings', () => {
     expect(getCfiSpinePrefix('not a cfi')).toBeNull();
     expect(getCfiSpinePrefix('/6/24')).toBeNull();
+  });
+});
+
+describe('isMalformedLocationCfi', () => {
+  it('flags an empty-start range CFI', () => {
+    // Produced by the cfi-inert skip-link bug: the visible-range start anchored
+    // on the injected a11y skip-link, foliate dropped that inert step, and the
+    // range start went empty (the `,,`). Resolving it spans the whole section
+    // and jumps to the wrong end, so the location must be discarded.
+    expect(isMalformedLocationCfi('epubcfi(/6/24!/4,,/20/1:58)')).toBe(true);
+  });
+
+  it('flags an empty-end range CFI', () => {
+    expect(isMalformedLocationCfi('epubcfi(/6/24!/4,/18/1:0,)')).toBe(true);
+  });
+
+  it('does not flag a well-formed range CFI', () => {
+    expect(isMalformedLocationCfi('epubcfi(/6/6!/4/4/54,/1:4,/1:15)')).toBe(false);
+  });
+
+  it('does not flag a point CFI', () => {
+    expect(isMalformedLocationCfi('epubcfi(/6/24!/4/20/1:58)')).toBe(false);
   });
 });
