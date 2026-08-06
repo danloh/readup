@@ -174,6 +174,10 @@ const BookDetailView: React.FC<BookDetailViewProps> = ({
             <p className='text-neutral-content text-sm'>{formatBytes(fileSize) || _('Unknown')}</p>
           </div>
           <div className='overflow-hidden pe-1 text-end sm:text-start'>
+            <span className='font-bold'>{_('Pages')}</span>
+            <p className='text-neutral-content text-sm'>{book.progress?.[1] || _('Unknown')}</p>
+          </div>
+          <div className='overflow-hidden pe-1 text-end sm:text-start'>
             <span className='font-bold'>{_('Updated')}</span>
             <p className='text-neutral-content text-sm'>{formatDate(book.updatedAt) || ''}</p>
           </div>
