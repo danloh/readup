@@ -17,7 +17,7 @@ jobs:
       release_version: ${{ steps.get-release-notes.outputs.release_version }}
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: setup node
         uses: actions/setup-node@v6
       - name: get version
@@ -124,7 +124,7 @@ jobs:
     runs-on: ${{ matrix.config.os }}
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: initialize git submodules
         run: git submodule update --init --recursive
@@ -257,7 +257,7 @@ jobs:
         if: matrix.config.release == 'linux'
         run: cargo install tauri-cli --git https://github.com/tauri-apps/tauri --rev 162626969b382d52faebdf6c7264460bd9a47d1f --force
 
-      - uses: tauri-apps/tauri-action@v0
+      - uses: tauri-apps/tauri-action@v1
         if: matrix.config.release != 'android'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
