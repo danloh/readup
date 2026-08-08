@@ -7,6 +7,8 @@ import { useReaderStore } from '@/store/readerStore';
 import { useBookProgress } from '@/store/readerProgressStore';
 import { useBookDataStore } from '@/store/bookDataStore';
 import { useThemeStore } from '@/store/themeStore';
+import { useSidebarStore } from '@/store/sidebarStore';
+import { tauriSetWindowTitle } from '@/utils/window';
 import { getGridTemplate, getInsetEdges } from '@/utils/grid';
 import { useTranslation } from '@/hooks/useTranslation';
 import FoliateViewer from './FoliateViewer';
@@ -263,6 +265,8 @@ const BookCell = React.memo(BookCellInner);
 const BooksGrid: React.FC<BooksGridProps> = ({ bookKeys, onCloseBook, onGoToLibrary }) => {
   const _ = useTranslation();
   const { appService } = useEnv();
+  const getBookData = useBookDataStore((s) => s.getBookData);
+  const sideBarBookKey = useSidebarStore((s) => s.sideBarBookKey);
   // Per-field selectors — see store/readerProgressStore.ts header. The grid
   // only re-renders on hoveredBookKey changes (header/footer toggle);
   // setGridInsets is a stable action ref.
@@ -272,6 +276,20 @@ const BooksGrid: React.FC<BooksGridProps> = ({ bookKeys, onCloseBook, onGoToLibr
   const { safeAreaInsets: screenInsets } = useThemeStore();
   const aspectRatio = window.innerWidth / window.innerHeight;
   const gridTemplate = getGridTemplate(bookKeys.length, aspectRatio);
+
+  useEffect(() => {
+    if (!sideBarBookKey) return;
+    const bookData = getBookData(sideBarBookKey);
+    if (!bookData || !bookData.book) return;
+    document.title = bookData.book.title;
+    // The OS window title is invisible but is what Alt+Tab and screen readers
+    // announce, so name the book there too — otherwise every window is just
+    // "Readup" and blind users cannot tell them apart.
+    if (appService?.hasWindow) {
+      tauriSetWindowTitle(bookData.book.title);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sideBarBookKey, appService?.hasWindow]);
 
   // Memoize the per-book grid insets array — its identity is the input
   // to BookCell.gridInsets, and BookCell is React.memo'd. As long as

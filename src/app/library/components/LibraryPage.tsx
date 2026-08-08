@@ -42,6 +42,7 @@ import { useAppRouter } from '@/hooks/useAppRouter';
 import { useKeyDownActions } from '@/hooks/useKeyDownActions';
 import { selectDirectory } from '@/utils/bridge';
 import { requestStoragePermission } from '@/utils/permission';
+import { tauriSetWindowTitle } from '@/utils/window';
 import DropIndicator from '@/components/DropIndicator';
 import ModalPortal from '@/components/ModalPortal';
 import Spinner from '@/components/Spinner';
@@ -330,6 +331,14 @@ const LibraryPageContent = (
       eventDispatcher.off('import-book-directory', handleImportBookDirectory);
     };
   }, [handleImportBookFiles, handleImportBookDirectory]);
+
+  // Drop the book name the reader put in the window title, so a window back on
+  // the library does not keep announcing a book that is no longer open.
+  useEffect(() => {
+    if (appService?.hasWindow) {
+      tauriSetWindowTitle();
+    }
+  }, [appService?.hasWindow]);
 
   useEffect(() => {
     if (appService?.hasWindow) {
