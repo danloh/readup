@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import React from 'react';
-import { FaCheckCircle } from 'react-icons/fa';
+import { FaCheck } from 'react-icons/fa';
 import { MdLibraryAddCheck } from 'react-icons/md';
 
 import { HighlightColor, HighlightStyle } from '@/types/book';
@@ -193,14 +193,15 @@ const HighlightOptions: React.FC<HighlightOptionsProps> = ({
               style={{
                 width: size16,
                 height: size16,
-                backgroundColor: selectedColor !== color ? customColors[color] : 'transparent',
+                backgroundColor: isBwEink ? einkFgColor : customColors[color] || color,
               }}
-              className='rounded-full p-0'
+              className='flex items-center justify-center rounded-full p-0'
             >
               {selectedColor === color && (
-                <FaCheckCircle
+                <FaCheck
                   size={size16}
-                  style={{ fill: isBwEink ? einkFgColor : customColors[color] }}
+                  className='text-base-content'
+                  style={isBwEink ? { color: einkBgColor } : undefined}
                 />
               )}
             </button>
