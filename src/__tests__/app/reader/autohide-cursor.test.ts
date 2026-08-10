@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeAll, beforeEach, afterEach, vi } from 'vitest';
 
 // Pins the foliate-js CursorAutohider contract the reader wiring relies on
-// (readest#5178): the `autohide-cursor` attribute on <foliate-view> arms a
+// (#5178): the `autohide-cursor` attribute on <foliate-view> arms a
 // 1s idle timer that hides the cursor; mousemove events with unchanged
 // screen coordinates (the synthetic ones browsers fire when content scrolls
 // or pages turn under a stationary pointer) must not reveal it.
