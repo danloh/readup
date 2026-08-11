@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 
 import { useEnv } from '@/context/EnvContext';
+import { useBookDataStore } from '@/store/bookDataStore';
 import { useReaderStore } from '@/store/readerStore';
 import { useThemeStore } from '@/store/themeStore';
 import { useSettingsStore } from '@/store/settingsStore';
@@ -8,6 +9,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useResetViewSettings } from '@/hooks/useResetSettings';
 import { useKeyDownActions } from '@/hooks/useKeyDownActions';
 import { RELOAD_BEFORE_SAVED_TIMEOUT_MS,TRANSLATOR_LANGS } from '@/services/constants';
+import { isTranslationAvailable } from '@/services/translators/utils';
 import { getLangOptions, LangSelect } from '@/components/Select';
 import { getTranslators } from '@/services/translators';
 import { saveViewSettings } from '@/helpers/settings';
@@ -27,6 +29,7 @@ const LangPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
   const { getViewSettings, setViewSettings, recreateViewer } = useReaderStore();
   const { settings, activeSettingsItemId, setActiveSettingsItemId } = useSettingsStore();
   const { setUILang } = useThemeStore();
+  const { getBookData } = useBookDataStore();
   const viewSettings = getViewSettings(bookKey) || settings.globalViewSettings;
 
   const [translationEnabled, setTranslationEnabled] = useState(viewSettings.translationEnabled);
@@ -35,6 +38,16 @@ const LangPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
   const [showTranslateSource, setShowTranslateSource] = useState(viewSettings.showTranslateSource);
   const [ttsReadAloudText, setTtsReadAloudText] = useState(viewSettings.ttsReadAloudText);
   const [showCustomDictionaries, setShowCustomDictionaries] = useState(false);
+
+  // Translation is unavailable for PDFs and for books already in the target
+  // language (issue #5600). The reader toolbar's toggler has always refused
+  // those; ungated here, turning it on for a PDF translated the text layer
+  // paragraph by paragraph and drained the daily AI translation quota. An
+  // already-on book keeps the switch live so it can be turned back off.
+  const translationAvailable = isTranslationAvailable(
+    getBookData(bookKey)?.book,
+    translateTargetLang,
+  );
 
   // Android Back / Esc: when the Manage Dictionaries sub-page is open,
   // intercept and step back to the language list instead of letting
@@ -182,9 +195,12 @@ const LangPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
       <BoxedList title={_('Translation')} data-setting-id='settings.language.translationEnabled'>
         <SettingsSwitchRow
           label={_('Enable Translation')}
+          description={
+            bookKey && !translationAvailable ? _('Not available for this book.') : undefined
+          }
           checked={translationEnabled}
           onChange={() => setTranslationEnabled(!translationEnabled)}
-          disabled={!bookKey}
+          disabled={!bookKey || (!translationAvailable && !translationEnabled)}
         />
         <SettingsSwitchRow
           label={_('Show Source Text')}

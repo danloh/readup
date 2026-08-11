@@ -1,6 +1,6 @@
 import { fetch as tauriFetch } from '@tauri-apps/plugin-http';
 import { SystemSettings } from '@/types/settings';
-import { FileSystem, AppPlatform, BaseDir, DeleteAction } from '@/types/system';
+import { FileSystem, AppPlatform, BaseDir, DeleteAction, OsPlatform } from '@/types/system';
 import {
   Book,
   BookConfig,
@@ -41,9 +41,10 @@ import { deleteRecord } from './bsky/atfile';
 import { isPseStreamFileName, openPseStreamBook, parsePseStreamFileName } from './opds/pseStream';
 import { resolveBookContentSource } from './bookContent';
 
-export function buildBookLookupIndex(books: Book[]): BookLookupIndex {
+export function buildBookLookupIndex(books: Book[], osPlatform?: OsPlatform): BookLookupIndex {
   const byHash = new Map<string, Book>();
   const byMetaKey = new Map<string, Book[]>();
+  const byFilePath = new Map<string, Book>();
   for (const book of books) {
     byHash.set(book.hash, book);
     if (book.metaHash && !book.deletedAt) {
@@ -52,8 +53,38 @@ export function buildBookLookupIndex(books: Book[]): BookLookupIndex {
       if (list) list.push(book);
       else byMetaKey.set(key, [book]);
     }
+    // In-place books carry the absolute source path on `filePath` (set by
+    // importBook below). Indexing them here lets a re-import of the exact
+    // same file short-circuit before touching disk or computing partialMD5.
+    // Skip URL-backed entries (remote books) and tombstoned ones.
+    if (book.filePath && !isValidURL(book.filePath) && !book.deletedAt) {
+      const key = normalizeFilePathForIndex(book.filePath, osPlatform);
+      if (key) byFilePath.set(key, book);
+    }
   }
-  return { byHash, byMetaKey };
+  return { byHash, byMetaKey, byFilePath };
+}
+
+/**
+ * Normalize an absolute file path into a stable map key for `byFilePath`.
+ *
+ * Mirrors the same rules `ingestService.shouldImportInPlace` uses to compare
+ * paths against the user's in-place roots so both sides agree on whether a
+ * given source file matches a previously-indexed book:
+ *   - Backslashes are normalized to `/`.
+ *   - Trailing slashes are stripped.
+ *   - On case-insensitive filesystems (macOS / iOS / Windows) the key is
+ *     lowercased. Linux / Android keep the original casing.
+ *
+ * Returns an empty string for non-string / falsy input so callers can do a
+ * `if (key) map.set(key, …)` guard without an extra null check.
+ */
+export function normalizeFilePathForIndex(path: string, osPlatform?: OsPlatform): string {
+  if (!path) return '';
+  const caseInsensitive =
+    osPlatform === 'macos' || osPlatform === 'ios' || osPlatform === 'windows';
+  const n = path.replace(/\\/g, '/').replace(/\/+$/, '');
+  return caseInsensitive ? n.toLowerCase() : n;
 }
 
 export interface CoverContext {
@@ -247,6 +278,10 @@ export async function importBook(
 
   let loadedBook: BookDoc | undefined;
   let fileobj: File | undefined;
+  // TXT conversion replaces `fileobj` with a plain in-memory EPUB File. Track
+  // the opened RemoteFile/NativeFile so we can close it right after convert
+  // (and still in outer `finally` for non-TXT ClosableFile paths).
+  let openedSource: ClosableFile | undefined;
 
   try {
     let format: BookFormat;
@@ -273,9 +308,25 @@ export async function importBook(
           fileobj = file;
           filename = file.name;
         }
+        const maybeClosable = fileobj as ClosableFile;
+        if (typeof maybeClosable.close === 'function') {
+          openedSource = maybeClosable;
+        }
         if (/\.txt$/i.test(filename)) {
           const txt2epub = new TxtToEpubConverter();
-          ({ file: fileobj } = await txt2epub.convert({ file: fileobj }));
+          try {
+            ({ file: fileobj } = await txt2epub.convert({ file: fileobj }));
+          } finally {
+            // Convert consumes the source; release RemoteFile/NativeFile
+            // immediately so DocumentLoader / cover / write do not keep the
+            // path handle pinned. Outer `finally` stays an idempotent net.
+            if (openedSource?.close) {
+              try {
+                await openedSource.close();
+              } catch {}
+            }
+            openedSource = undefined;
+          }
         }
         if (!fileobj || fileobj.size === 0) {
           throw new Error('Invalid or empty book file');
@@ -484,14 +535,27 @@ export async function importBook(
     // Never overwrite the config file only when it's not existed
     if (!existingBook) {
       await saveBookConfigFn(book, INIT_BOOK_CONFIG);
-      books.push(book);
-      if (lookupIndex) {
-        lookupIndex.byHash.set(book.hash, book);
-        if (book.metaHash) {
-          const key = `${book.metaHash}:${book.format}`;
-          const list = lookupIndex.byMetaKey.get(key);
-          if (list) list.push(book);
-          else lookupIndex.byMetaKey.set(key, [book]);
+      // Concurrent imports of identical bytes (the folder-import pool) both
+      // read `byHash` right after hashing but only write it here, after the
+      // createDir/writeFile/cover awaits — so both miss and both would push a
+      // row (#5601). Re-check synchronously after the last await and adopt
+      // the winner's row instead; the winner already wrote the same
+      // Books/<hash>/ files, ours were idempotent rewrites.
+      const raced = lookupIndex
+        ? lookupIndex.byHash.get(book.hash)
+        : books.find((b) => b.hash === book.hash);
+      if (raced) {
+        existingBook = raced;
+      } else {
+        books.push(book);
+        if (lookupIndex) {
+          lookupIndex.byHash.set(book.hash, book);
+          if (book.metaHash) {
+            const key = `${book.metaHash}:${book.format}`;
+            const list = lookupIndex.byMetaKey.get(key);
+            if (list) list.push(book);
+            else lookupIndex.byMetaKey.set(key, [book]);
+          }
         }
       }
     } else if (metaHashMatch && oldBookDir && oldBookDir !== getDir(book)) {
@@ -554,10 +618,12 @@ export async function importBook(
     } catch (error) {
       console.warn('Error destroying book document:', error);
     }
-    const f = fileobj as ClosableFile | undefined;
-    if (f?.close) {
+    // Prefer `openedSource` only: after TXT convert we clear it once the source
+    // is released early. Falling back to `fileobj` would double-close when
+    // convert failed and `fileobj` is still the original ClosableFile.
+    if (openedSource?.close) {
       try {
-        await f.close();
+        await openedSource.close();
       } catch {}
     }
   }

@@ -43,6 +43,8 @@ import { useKeyDownActions } from '@/hooks/useKeyDownActions';
 import { selectDirectory } from '@/utils/bridge';
 import { requestStoragePermission } from '@/utils/permission';
 import { tauriSetWindowTitle } from '@/utils/window';
+import { createSerialRunner, runWithConcurrency } from '@/utils/concurrency';
+import { createThrottledCheckpoint } from '@/utils/checkpoint';
 import DropIndicator from '@/components/DropIndicator';
 import ModalPortal from '@/components/ModalPortal';
 import Spinner from '@/components/Spinner';
@@ -62,6 +64,18 @@ import TransferQueuePanel from './TransferQueuePanel';
 import GroupHeader from './GroupHeader';
 import { BackupWindow } from './BackupWindow';
 import ImportFromFolderDialog, { ImportFromFolderResult } from './ImportFromFolderDialog';
+
+const IMPORT_CONCURRENCY = 4;
+// How often the library index is persisted during a long import (#5601). A
+// crash/kill mid-run loses at most this much work instead of the entire run;
+// keep it long enough that the full-library serialization stays a rounding
+// error next to the per-file parse/copy work.
+const IMPORT_CHECKPOINT_INTERVAL_MS = 15 * 1000;
+// One import run at a time, app-wide: the manual Import-from-Folder flow and
+// the watched-folder auto-scan must not interleave — each builds a lookup
+// index over the same live library array, so overlapping runs re-import the
+// same files as duplicate rows (#5601).
+const enqueueImportRun = createSerialRunner();
 
 /**
  * Key used to persist the last directory the user imported books from.
@@ -491,10 +505,23 @@ const LibraryPageContent = (
     // searchParams is used to tigger parsing OPEN_WITH_FILES
   }, [searchParams]);
 
-  const importBooks = async (files: SelectedFile[], groupId?: string) => {
+  const importBooks = (
+    files: SelectedFile[],
+    groupId?: string,
+  ): Promise<{ failedPaths: string[] }> =>
+    // Whole runs are serialized (see enqueueImportRun); the lookup index is
+    // built inside the run so a queued run sees everything the previous one
+    // imported.
+    enqueueImportRun(() => importBooksRun(files, groupId));
+
+  const importBooksRun = async (
+    files: SelectedFile[],
+    groupId?: string,
+  ): Promise<{ failedPaths: string[] }> => {
     setLoading(true);
     const failedImports: Array<{ filename: string; errorMessage: string }> = [];
     const successfulImports: string[] = [];
+    const failedPaths: string[] = [];
     
     const { library } = useLibraryStore.getState();
     // Build the lookup index ONCE per import batch so each book lookup is
@@ -540,6 +567,7 @@ const LibraryPageContent = (
         return book;
       } catch (error) {
         const filename = typeof file === 'string' ? file : file.name;
+        if (typeof file === 'string') failedPaths.push(file);
         const baseFilename = getFilename(filename);
         const errorMessage = error instanceof Error 
           ? _(getImportErrorMessage(error.message)) 
@@ -550,22 +578,33 @@ const LibraryPageContent = (
       }
     };
 
-    const concurrency = 4;
-    for (let i = 0; i < files.length; i += concurrency) {
-      const batch = files.slice(i, i + concurrency);
-      const importedBooks = (await Promise.all(batch.map(processFile))).filter((book) => !!book);
-      // Update store state per batch (so the UI can render imported books
-      // incrementally) but defer disk persistence until the entire batch is
-      // done — saving library.json once per batch of 4 books was the dominant
-      // cost for large imports.
-      await updateBooks(envConfig, importedBooks, { skipSave: true });
-    }
+    // Periodically persist the library index while the run is in flight so a
+    // crash/kill mid-import (#5601: WebKit resource exhaustion during bulk
+    // TXT folder import) loses at most one interval of work instead of the
+    // whole run — the book dirs are written per file, and index rows that
+    // never reach disk are what re-imports and duplicate rows are made of.
+    // Saving per book would bring back the "library.json save dominates large
+    // imports" cost, hence the throttle.
+    const checkpoint = createThrottledCheckpoint(async () => {
+      const currentLibrary = useLibraryStore.getState().library;
+      const currentAppService = await envConfig.getAppService();
+      await currentAppService.saveLibraryBooks(currentLibrary);
+    }, IMPORT_CHECKPOINT_INTERVAL_MS);
 
-    // Persist the full library once after every file in the batch is done.
+    // A true worker pool (not the old barrier batches of 4): a slow file no
+    // longer stalls three finished siblings, and each completed book streams
+    // into the store immediately so the shelf renders incrementally.
+    await runWithConcurrency(files, IMPORT_CONCURRENCY, async (selectedFile) => {
+      const book = await processFile(selectedFile);
+      if (book) {
+        await updateBooks(envConfig, [book], { skipSave: true });
+        checkpoint.touch();
+      }
+    });
+
+    // Persist whatever the last checkpoint hasn't covered.
     if (successfulImports.length > 0) {
-      const finalLibrary = useLibraryStore.getState().library;
-      const finalAppService = await envConfig.getAppService();
-      await finalAppService.saveLibraryBooks(finalLibrary);
+      await checkpoint.flush();
     }
 
     if (failedImports.length > 0) {
@@ -591,6 +630,7 @@ const LibraryPageContent = (
     }
 
     setLoading(false);
+    return { failedPaths };
   };
 
   const handleImportBooksFromFiles = async () => {
