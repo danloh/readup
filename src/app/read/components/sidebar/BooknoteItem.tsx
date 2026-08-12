@@ -1,7 +1,6 @@
 import clsx from 'clsx';
 import dayjs from 'dayjs';
 import React, { useMemo, useRef, useState } from 'react';
-import { marked } from 'marked';
 import { MdContentCopy, MdDelete, MdEdit } from 'react-icons/md';
 
 import { useEnv } from '@/context/EnvContext';
@@ -12,6 +11,7 @@ import { useNotebookStore } from '@/store/notebookStore';
 import { useBookDataStore } from '@/store/bookDataStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useResponsiveSize } from '@/hooks/useResponsiveSize';
+import { mdWithMath } from '@/utils/md';
 import { eventDispatcher } from '@/utils/event';
 import { isCfiInLocation } from '@/utils/cfi';
 import { writeTextToClipboard } from '@/utils/clipboard';
@@ -21,6 +21,7 @@ import { DEFAULT_NOTE_EXPORT_CONFIG } from '@/services/constants';
 import TextButton from '@/components/TextButton';
 import TextEditor, { TextEditorRef } from '@/components/TextEditor';
 import { removeBookNoteOverlays } from '../../utils/annotatorUtil';
+
 
 interface BooknoteItemProps {
   bookKey: string;
@@ -61,7 +62,7 @@ const BooknoteItem: React.FC<BooknoteItemProps> = ({ bookKey, item, isNearest, o
   // marked.parse is heavy when called on every list scroll re-render across
   // hundreds of items. Cache by note text — note edits change item.note and
   // bust the cache automatically.
-  const noteHtml = useMemo(() => (note ? marked.parse(note) : ''), [note]);
+  const noteHtml = useMemo(() => (note ? mdWithMath.parse(note) : ''), [note]);
 
   // dayjs().fromNow() reformats every render; cache per createdAt.
   const createdAtLabel = useMemo(() => dayjs(item.createdAt).fromNow(), [item.createdAt]);

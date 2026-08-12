@@ -1,4 +1,5 @@
 import { Marked } from 'marked';
+import markedKatex from 'marked-katex-extension';
 import markedFootnote from 'marked-footnote';
 
 import type { BookDoc, SectionItem } from '@/libs/document';
@@ -11,6 +12,22 @@ import {
 } from './mdFootnotes';
 import { frontmatterToMetadata, parseFrontmatter } from './mdFrontmatter';
 import { sanitizeHtml } from './sanitize';
+
+// A scoped parser: `.use()` mutates in place, and the export dialog still
+// parses with the shared `marked` singleton. Mirrored in
+// __tests__/utils/md-note.test.ts — keep the options there in sync.
+export const mdWithMath = new Marked({ gfm: true }).use(
+  markedKatex({
+    // Bad math renders red inline with the error on hover instead of throwing.
+    throwOnError: false,
+    // The default emits MathML + HTML and needs katex.min.css to hide one; no
+    // KaTeX stylesheet is loaded here, so equations would render twice.
+    output: 'mathml',
+    // The default needs a space before the opening `$`, so `word\n$x$` renders
+    // as plain text with no error. Cost: `$5 and $10` is math (`\$` escapes).
+    nonStandard: true,
+  }),
+);
 
 // Render a standalone Markdown (.md) file into an in-memory foliate-js book at
 // runtime (no EPUB conversion). The document is split into one section per

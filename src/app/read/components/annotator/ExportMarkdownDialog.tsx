@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import React, { useState, useMemo, useEffect } from 'react';
-import { marked } from 'marked';
+
 import { useEnv } from '@/context/EnvContext';
 import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -10,6 +10,7 @@ import { BooknoteGroup, HighlightColor, HighlightStyle, NoteExportConfig } from 
 import { DEFAULT_NOTE_EXPORT_CONFIG } from '@/services/constants';
 import { saveViewSettings } from '@/helpers/settings';
 import { formatBlockQuote, renderNoteTemplate } from '@/utils/note';
+import { mdWithMath } from '@/utils/md';
 import { ShareLinkType, buildShareAppUrl, buildShareUrl, buildShareWebUrl } from '@/utils/deeplink';
 import Dialog from '@/components/Dialog';
 import { filterExportGroups, getHighlightColorHex } from '../../utils/annotatorUtil';
@@ -274,7 +275,7 @@ const ExportMarkdownDialog: React.FC<ExportMarkdownDialogProps> = ({
   // Convert markdown to HTML for preview
   const htmlPreview = useMemo(() => {
     if (!markdownPreview) return '';
-    const html = marked.parse(markdownPreview) as string;
+    const html = mdWithMath.parse(markdownPreview) as string;
     return html.replace(/<a href=/g, '<a target="_blank" rel="noopener noreferrer" href=');
   }, [markdownPreview]);
 

@@ -2,12 +2,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { marked } from 'marked';
 
 import { useEnv } from '@/context/EnvContext';
 import { Book, Review } from '@/types/book';
 import { formatAuthors, formatTitle } from '@/utils/book';
 import { useTranslation } from '@/hooks/useTranslation';
+import { mdWithMath } from '@/utils/md';
 
 const WritePage = () => {
   const _ = useTranslation();
@@ -146,7 +146,7 @@ const WritePage = () => {
         {mode === 'preview' && (
           <div 
             className='flex-1 prose max-w-none w-full mt-1 p-2 rounded-md bg-base-100 overflow-y-auto'
-            dangerouslySetInnerHTML={{ __html: marked.parse(text) }}
+            dangerouslySetInnerHTML={{ __html: mdWithMath.parse(text) }}
           />
         )}
       </div>

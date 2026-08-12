@@ -4,7 +4,6 @@ import clsx from 'clsx';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { MdError } from 'react-icons/md';
-import { marked } from 'marked';
 
 import { useTheme } from '@/hooks/useTheme';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -14,6 +13,7 @@ import { Review } from '@/types/book';
 import { formatDateTime } from '@/utils/book';
 import HeatMap, { ActivityRecord } from '@/app/streak/components/HeatMap';
 import { UsageDay } from '@/services/usageService';
+import { mdWithMath } from '@/utils/md';
 
 const PublicProfilePage = () => {
   const _ = useTranslation();
@@ -208,7 +208,7 @@ const PublicProfilePage = () => {
                             expanded ? 'h-full' : 'max-h-[200px] overflow-auto'
                           )}
                           dir='auto'
-                          dangerouslySetInnerHTML={{ __html: marked.parse(r.text) }}
+                          dangerouslySetInnerHTML={{ __html: mdWithMath.parse(r.text) }}
                         />
                         <div
                           className='mt-1 text-center cursor-pointer'

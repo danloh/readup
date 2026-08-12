@@ -4,7 +4,6 @@ import clsx from 'clsx';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { MdDelete, MdEdit } from 'react-icons/md';
-import { marked } from 'marked';
 
 import { useEnv } from '@/context/EnvContext';
 import { useTheme } from '@/hooks/useTheme';
@@ -12,6 +11,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { loadUsage, UsageDay, UsageRecord } from '@/services/usageService';
 import { Review } from '@/types/book';
 import { formatDateTime } from '@/utils/book';
+import { mdWithMath } from '@/utils/md';
 import UserInfo from './UserInfo';
 import HeatMap, { ActivityRecord } from './HeatMap';
 
@@ -139,7 +139,7 @@ const StreakPage = () => {
                             expanded ? 'h-full' : 'max-h-[200px] overflow-auto'
                           )}
                           dir='auto'
-                          dangerouslySetInnerHTML={{__html: marked.parse(r.text)}}
+                          dangerouslySetInnerHTML={{__html: mdWithMath.parse(r.text)}}
                         />
                         <div className='mt-1 text-center' onClick={() => setExpanded(prev => !prev)}>
                           -·-·-

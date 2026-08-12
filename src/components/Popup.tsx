@@ -148,10 +148,15 @@ const Popup = ({
 
   return (
     <div>
-      <div
-        className={clsx('popup-triangle-outer text-base-300 absolute z-50', triangleClassName)}
-        style={outerTriangleStyles}
-      />
+      {trianglePosition && (
+        <div
+          className={clsx(
+            'popup-triangle-outer text-base-content/20 absolute z-50',
+            triangleHidden ? 'invisible' : 'not-eink:drop-shadow-xl visible',
+          )}
+          style={outerTriangleStyles}
+        />
+      )}
       <div
         id='popup-container'
         ref={containerRef}
@@ -173,14 +178,15 @@ const Popup = ({
       >
         {children}
       </div>
-      <div
-        className={clsx(
-          'popup-triangle-inner text-base-300 absolute',
-          triangleHidden ? 'z-10' : 'z-50',
-          triangleClassName,
-        )}
-        style={innerTriangleStyles}
-      />
+      {trianglePosition && (
+        <div
+          className={clsx(
+            'popup-triangle-inner text-base-300 theme-dark:text-base-100 absolute z-50',
+            triangleHidden ? 'invisible' : 'visible',
+          )}
+          style={innerTriangleStyles}
+        />
+      )}
     </div>
   );
 };
