@@ -56,7 +56,6 @@ const Popup = ({
   trianglePosition,
   children,
   className = '',
-  triangleClassName = '',
   additionalStyle = {},
   isOpen = true,
   onDismiss,
@@ -70,7 +69,6 @@ const Popup = ({
   trianglePosition?: Position;
   children: React.ReactNode;
   className?: string;
-  triangleClassName?: string;
   additionalStyle?: React.CSSProperties;
   onDismiss?: () => void;
 }) => {
