@@ -23,7 +23,7 @@ const Alert: React.FC<{
   };
 
   return (
-    <div className={clsx('z-[130] flex justify-center px-4')}>
+     <div className='z-[130] flex w-full justify-center px-4'>
       <div
         ref={divRef}
         role='alert'

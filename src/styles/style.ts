@@ -296,8 +296,7 @@ const getColorStyles = (
       table-layout: fixed;
     }
     td, th {
-      word-break: break-word;
-      overflow-wrap: anywhere;
+      overflow-wrap: break-word;
     }
     /* code */
     body.theme-dark code {

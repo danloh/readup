@@ -38,6 +38,11 @@ const debounce = (f, wait, immediate) => {
     }
 }
 
+// How long a continuous run of scrolled-mode scroll events may last before a
+// relocate is forced mid-scroll, so reading progress keeps updating while the
+// scrolling never pauses (#5635).
+const SCROLL_RELOCATE_MAX_WAIT = 1000
+
 // Transforms ALL children of the container so multi-view layouts
 // animate as a unified whole. Extra elements (e.g. background) are
 // also transformed so they slide in sync with the content.
@@ -87,6 +92,24 @@ const cssAnimateScroll = (element, scrollProp, startValue, endValue, duration, e
 
         // Apply final scroll position
         element[scrollProp] = endValue
+        // Translating the children shrank the container's scrollable overflow
+        // by the animated distance, and WebKit (iOS 18) still reports that
+        // shrunken extent when the transforms are cleared in this same task —
+        // so the assignment above is clamped. Mid-book the clamp lands far
+        // beyond the target and is invisible; on the last page of the book,
+        // where the target *is* the maximum scroll offset, it lands a full page
+        // short and the page visibly snaps back (#5663).
+        if (Math.abs(element[scrollProp] - endValue) > 0.5) {
+            // Forcing a layout here is not enough — the extent it reports is
+            // restored, but the scroll clamp still uses the stale one for the
+            // rest of the task. The next frame is past the compositor's
+            // animation teardown, so re-apply there.
+            requestAnimationFrame(() => {
+                element[scrollProp] = endValue
+                resolve()
+            })
+            return
+        }
         resolve()
     }
 
@@ -1275,6 +1298,7 @@ export class Paginator extends HTMLElement {
     #touchScrolled
     #lastVisibleRange
     #scrollLocked = false
+    #subpixelOffset = 0
     #isAnimating = false
     // Generation counter for slideTurnAnimation: a newer vertical page turn
     // bumps it so an in-flight two-phase slide stops touching the DOM.
@@ -1456,13 +1480,20 @@ export class Paginator extends HTMLElement {
         this.#footer = this.#root.getElementById('footer')
 
         this.#observer.observe(this.#container)
+        const scrolledScrollRelocate = () => {
+            // Skip entirely while stabilizing — preserve #justAnchored
+            // so the first post-stabilization fire still sees it.
+            if (this.#stabilizing) return
+            if (this.#justAnchored) this.#justAnchored = false
+            else this.#afterScroll('scroll')
+        }
+        // Start time of the current unbroken run of scroll events, for the
+        // periodic mid-scroll relocate below; null when no run is in progress.
+        let scrollBurstStart = null
         const debouncedScroll = debounce(() => {
+            scrollBurstStart = null
             if (this.scrolled && !this.#isAnimating) {
-                // Skip entirely while stabilizing — preserve #justAnchored
-                // so the first post-stabilization fire still sees it.
-                if (this.#stabilizing) return
-                if (this.#justAnchored) this.#justAnchored = false
-                else this.#afterScroll('scroll')
+                scrolledScrollRelocate()
                 // Backward preloading is handled eagerly in the (non-debounced)
                 // scroll listener below, mirroring the forward buffer.
             } else if (!this.scrolled) {
@@ -1529,6 +1560,23 @@ export class Paginator extends HTMLElement {
                                 })
                         }
                     }
+                }
+            }
+            // A scroll that never pauses — the Auto Scroll reading mode, a
+            // held scroll key — resets the trailing debounce forever, so the
+            // scrolled-mode relocate (and with it reading progress) would only
+            // fire once the scrolling stopped (#5635). Relocate at most
+            // once per SCROLL_RELOCATE_MAX_WAIT while the run of scroll events
+            // lasts; the debounced call still reports the final position and
+            // ends the run. Skipped during a finger drag for the same reason
+            // preloading is: the measurement drops frames mid-swipe, and the
+            // release settles through the debounce anyway (#4785).
+            if (this.scrolled && !this.#isAnimating && !this.#touchScrolled) {
+                const now = Date.now()
+                if (scrollBurstStart == null) scrollBurstStart = now
+                else if (now - scrollBurstStart >= SCROLL_RELOCATE_MAX_WAIT) {
+                    scrollBurstStart = now
+                    scrolledScrollRelocate()
                 }
             }
             debouncedScroll()
@@ -2095,6 +2143,31 @@ export class Paginator extends HTMLElement {
     }
     set containerPosition(newVal) {
         this.#container[this.scrollProp] = newVal
+    }
+    // Scroll offsets quantize to whole CSS pixels in both Blink and WebKit
+    // (`scrollTop = 100.5` reads back 100 or 101), so a slow continuous scroll
+    // such as Auto Scroll advances in visible one-pixel steps: at 5px/s that is
+    // one jump every 200ms. The whole pixels stay in the scroll position, which
+    // everything else reads; this carries only the sub-pixel remainder, as a
+    // composited transform on the scrollport itself.
+    //
+    // The transform goes on #container rather than its children on purpose: a
+    // transform on the children shifts their border boxes and shrinks the
+    // container's scrollable overflow, which desynchronizes the scroll math
+    // (#5663). Transforming the scrollport moves it as a whole and
+    // leaves its scrollable overflow untouched.
+    get subpixelOffset() {
+        return this.#subpixelOffset
+    }
+    set subpixelOffset(offset) {
+        const value = Number.isFinite(offset) ? offset : 0
+        if (value === this.#subpixelOffset) return
+        this.#subpixelOffset = value
+        // Scrolling forward by `value` moves the content back by the same
+        // amount. Vertical writing pages along the inline axis in scrolled mode.
+        const axis = this.scrollProp === 'scrollLeft' ? 'X' : 'Y'
+        this.#container.style.transform = value
+            ? `translate${axis}(${-value}px) translateZ(0)` : ''
     }
     get scrollLocked() {
         return this.#scrollLocked
