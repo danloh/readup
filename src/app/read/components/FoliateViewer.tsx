@@ -269,7 +269,8 @@ const FoliateViewer: React.FC<{
       viewSettings.vertical =
         writingDir?.vertical || viewSettings.writingMode.includes('vertical') || false;
       viewSettings.rtl =
-        writingDir?.rtl ||
+        writingDir?.rtl || 
+        bookDoc.dir === 'rtl' || 
         getDirFromUILanguage() === 'rtl' ||
         viewSettings.writingMode.includes('rl') ||
         false;

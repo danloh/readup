@@ -44,7 +44,9 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
   const { user, logout } = useAuth();
   const { envConfig, appService } = useEnv();
   const { getBookData } = useBookDataStore();
-  const { getView, getViewSettings, getProgress, setViewSettings } = useReaderStore();
+  const { 
+    getView, getViewSettings, getProgress, setViewSettings, recreateViewer 
+  } = useReaderStore();
   const bookData = getBookData(bookKey)!;
   const viewSettings = getViewSettings(bookKey)!;
 
@@ -66,6 +68,7 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
     viewSettings!.invertImgColor,
   );
   const [applyThemeToPDF, setApplyThemeToPDF] = useState(viewSettings!.applyThemeToPDF!);
+  const [rtlSpread, setRtlSpread] = useState(bookData?.bookDoc?.dir === 'rtl');
 
   const zoomIn = () => setZoomLevel((prev) => Math.min(prev + ZOOM_STEP, MAX_ZOOM_LEVEL));
   const zoomOut = () => setZoomLevel((prev) => Math.max(prev - ZOOM_STEP, MIN_ZOOM_LEVEL));
@@ -271,6 +274,22 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [keepCoverSpread]);
 
+  useEffect(() => {
+    const bookDoc = bookData?.bookDoc;
+    if (!bookDoc || rtlSpread === (bookDoc.dir === 'rtl')) return;
+    // Writing mode is per-book only (no global fallback), and horizontal-rl is
+    // what flips both the spread order and the page progression, so the toggle
+    // rides the same setting the Layout panel edits instead of a new one.
+    const writingMode = rtlSpread ? 'horizontal-rl' : 'horizontal-tb';
+    viewSettings.vertical = false;
+    saveViewSettings(envConfig, bookKey, 'writingMode', writingMode, true).then(() => {
+      const view = getView(bookKey);
+      if (view) view.book.dir = rtlSpread ? 'rtl' : 'ltr';
+      recreateViewer(envConfig, bookKey);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rtlSpread]);
+
   const lastSyncTime = bookData.book?.configSyncedAt || 0;
 
   return (
@@ -405,6 +424,11 @@ const ViewMenu: React.FC<ViewMenuProps> = ({
               Icon={keepCoverSpread ? BiCheckboxChecked : BiCheckbox}
               onClick={() => setKeepCoverSpread(!keepCoverSpread)}
               disabled={spreadMode === 'none'}
+            />
+            <MenuItem
+              label={_('Right-to-Left Pages')}
+              Icon={rtlSpread ? BiCheckboxChecked : BiCheckbox}
+              onClick={() => setRtlSpread(!rtlSpread)}
             />
             <MenuItem 
               label={_('Webtoon Mode')} 

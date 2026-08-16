@@ -27,7 +27,7 @@ interface UseBookShortcutsProps {
 const useBookShortcuts = ({ sideBarBookKey, bookKeys }: UseBookShortcutsProps) => {
   const { getView, getViewState, getViewSettings, setViewSettings } = useReaderStore();
   const { toggleSideBar, setSideBarBookKey } = useSidebarStore();
-  const { setFontLayoutSettingsDialogOpen } = useSettingsStore();
+  const { setFontLayoutSettingsDialogOpen, setSettingsDialogBookKey } = useSettingsStore();
   const { getBookData } = useBookDataStore();
   const { toggleNotebook } = useNotebookStore();
   const { getNextBookKey } = useBooksManager();
@@ -392,7 +392,10 @@ const useBookShortcuts = ({ sideBarBookKey, bookKeys }: UseBookShortcutsProps) =
       // Listed first so an active selection intercepts Shift+←/→ before the
       // page-navigation actions below can turn the page (#4728).
       onAdjustTextSelection: adjustTextSelection,
-      onOpenFontLayoutSettings: () => setFontLayoutSettingsDialogOpen(true),
+      onOpenFontLayoutSettings: () => {
+        if (sideBarBookKey) setSettingsDialogBookKey(sideBarBookKey);
+        setFontLayoutSettingsDialogOpen(true);
+      }, 
       onShowSearchBar: showSearchBar,
       onToggleFullscreen: toggleFullscreen,
       onToggleTTS: toggleTTS,
