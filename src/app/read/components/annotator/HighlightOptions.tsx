@@ -200,7 +200,7 @@ const HighlightOptions: React.FC<HighlightOptionsProps> = ({
               {selectedColor === color && (
                 <FaCheck
                   size={size16}
-                  className='text-base-content'
+                  className={clsx(!isBwEink && 'text-base-content')}
                   style={isBwEink ? { color: einkBgColor } : undefined}
                 />
               )}

@@ -3,6 +3,7 @@ import {
   decideAnnotationDraw,
   filterExportGroups,
   findAnnotationAtCfi,
+  getAnnotationOverlayColor,
   mergeRestyledAnnotation,
   removeEmptyAnnotationPlaceholder,
 } from '@/app/read/utils/annotatorUtil';
@@ -254,5 +255,64 @@ describe('filterExportGroups', () => {
     const result = filterExportGroups(groups, { excludedColors: [], excludedStyles: [] });
     expect(result.distinctColors).toEqual(['red', 'blue', 'yellow']);
     expect(result.distinctStyles).toEqual(['highlight', 'underline', 'squiggly']);
+  });
+});
+
+/**
+ * B&W e-ink composites highlight overlays with `mix-blend-mode: difference` at
+ * full opacity (useTheme.ts), so the fill is an inversion mask, not a paint
+ * color. Difference is `|backdrop - source|`, which makes black its identity
+ * element: a black mask leaves the page pixel-for-pixel unchanged and the
+ * highlight simply does not exist. Masking with the theme background therefore
+ * erased every highlight in dark mode, and because overlays keep the fill they
+ * were drawn with, switching back to light stayed broken until reload (#5667).
+ *
+ * Underline and squiggly are stroked without a blend mode, so they still take
+ * the theme ink.
+ */
+describe('getAnnotationOverlayColor', () => {
+  const LIGHT_EINK = { isBwEink: true, isDarkMode: false };
+  const DARK_EINK = { isBwEink: true, isDarkMode: true };
+  const PAGE = [255, 255, 255];
+  const INK = [0, 0, 0];
+
+  const toRgb = (hex: string) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  // How the compositor resolves `mix-blend-mode: difference` per channel.
+  const difference = (backdrop: number[], source: number[]) =>
+    backdrop.map((channel, i) => Math.abs(channel - source[i]!));
+
+  it('masks the highlight with one theme-independent color', () => {
+    expect(getAnnotationOverlayColor('highlight', '#fef08a', DARK_EINK)).toBe(
+      getAnnotationOverlayColor('highlight', '#fef08a', LIGHT_EINK),
+    );
+  });
+
+  it('swaps page and ink on a light e-ink page', () => {
+    const mask = toRgb(getAnnotationOverlayColor('highlight', '#fef08a', LIGHT_EINK));
+
+    expect(difference(PAGE, mask)).toEqual(INK);
+    expect(difference(INK, mask)).toEqual(PAGE);
+  });
+
+  it('swaps page and ink on a dark e-ink page', () => {
+    const mask = toRgb(getAnnotationOverlayColor('highlight', '#fef08a', DARK_EINK));
+
+    // The dark page paints ink where light paints page, so the same mask has
+    // to invert both. A mask of `#000000` returned the backdrop untouched.
+    expect(difference(INK, mask)).toEqual(PAGE);
+    expect(difference(PAGE, mask)).toEqual(INK);
+  });
+
+  it('strokes the unblended styles in the theme ink', () => {
+    expect(getAnnotationOverlayColor('underline', '#fef08a', LIGHT_EINK)).toBe('#000000');
+    expect(getAnnotationOverlayColor('squiggly', '#fef08a', DARK_EINK)).toBe('#ffffff');
+  });
+
+  it('passes the annotation color through off B&W e-ink', () => {
+    for (const style of ['highlight', 'underline', 'squiggly'] as const) {
+      expect(
+        getAnnotationOverlayColor(style, '#fef08a', { isBwEink: false, isDarkMode: true }),
+      ).toBe('#fef08a');
+    }
   });
 });

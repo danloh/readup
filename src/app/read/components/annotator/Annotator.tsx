@@ -40,7 +40,9 @@ import { writeTextToClipboard } from '@/utils/clipboard';
 import { getIndexFromCfi } from '@/utils/cfi';
 import { useFoliateEvents } from '../../hooks/useFoliateEvents';
 import { useTextSelector } from '../../hooks/useTextSelector';
-import { decideAnnotationDraw, getHighlightColorHex, mergeRestyledAnnotation } from '../../utils/annotatorUtil';
+import { 
+  decideAnnotationDraw, getAnnotationOverlayColor, getHighlightColorHex, mergeRestyledAnnotation 
+} from '../../utils/annotatorUtil';
 import { 
   beginGesture,
   createDeferredActionState, 
@@ -430,8 +432,6 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
     const { style, color } = annotation as BookNote;
     const value = (annotation as BookNote & { value?: string }).value;
     const hexColor = getHighlightColorHex(settings, color);
-    const einkBgColor = isDarkMode ? '#000000' : '#ffffff';
-    const einkFgColor = isDarkMode ? '#ffffff' : '#000000';
       
     // Choose what to draw from the overlay's `value` (cfi vs NOTE_PREFIX+cfi),
     // not from `annotation.note`: a unified record (style + note) is added as
@@ -446,7 +446,7 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
       draw(Overlayer.bubble, { writingMode });
     } else if (kind === 'highlight') {
       draw(Overlayer.highlight, {
-        color: isBwEink ? einkBgColor : hexColor,
+        color: getAnnotationOverlayColor('highlight', hexColor, { isBwEink, isDarkMode }),
         vertical: viewSettings.vertical,
       });
     } else if (['underline', 'squiggly'].includes(kind as string)) {
@@ -464,7 +464,7 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
         : (lineHeightValue - fontSizeValue) / 2 - strokeWidth + horizontalCompensation;
       draw(Overlayer[kind as keyof typeof Overlayer], {
         writingMode,
-        color: isBwEink ? einkFgColor : hexColor,
+        color: getAnnotationOverlayColor(kind as any, hexColor, { isBwEink, isDarkMode }),
         padding,
       });
     }

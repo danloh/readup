@@ -18,6 +18,7 @@ import { estimateTTSTime } from '@/utils/ttsTime';
 import { useTTSMediaSession } from './useTTSMediaSession';
 import { TransformContext } from '../transformers/types';
 import { proofreadTransformer } from '../transformers/proofread';
+import { getAnnotationOverlayColor } from '../utils/annotatorUtil';
 
 interface UseTTSControlProps {
   bookKey: string;
@@ -487,14 +488,13 @@ export const useTTSControl = ({ bookKey, onRequestHidePanel }: UseTTSControlProp
 
   // TTS highlight options
   const getTTSHighlightOptions = useCallback(
-    (ttsHighlightColor: string, isEink: boolean) => {
-      const einkBgColor = isDarkMode ? '#000000' : '#ffffff';
-      const color = isEink ? einkBgColor : ttsHighlightColor;
-      return {
-        style: "highlight",
-        color,
-      } as TTSHighlightOptions;
-    },
+    (ttsHighlightColor: string, isBwEink: boolean) => ({
+      style: "highlight",
+      color: getAnnotationOverlayColor("highlight", ttsHighlightColor, {
+        isBwEink,
+        isDarkMode,
+      }),
+    } as TTSHighlightOptions),
     [isDarkMode],
   );
 
@@ -502,10 +502,18 @@ export const useTTSControl = ({ bookKey, onRequestHidePanel }: UseTTSControlProp
     const ttsHighlightColor = viewSettings?.ttsHighlightColor || 'green';
     if (ttsControllerRef.current) {
       ttsControllerRef.current.updateHighlightOptions(
-        getTTSHighlightOptions(ttsHighlightColor, viewSettings?.isEink || false),
+        getTTSHighlightOptions(
+          ttsHighlightColor, 
+          viewSettings!.isEink && !viewSettings!.isColorEink
+        ),
       );
     }
-  }, [viewSettings?.ttsHighlightColor, viewSettings?.isEink, getTTSHighlightOptions]);
+  }, [
+    viewSettings?.ttsHighlightColor, 
+    viewSettings?.isEink, 
+    viewSettings?.isColorEink, 
+    getTTSHighlightOptions
+  ]);
 
   // handleStop (defined before handleTTSSpeak/handleTTSStop which reference it)
   const handleStop = useCallback(
@@ -633,7 +641,10 @@ export const useTTSControl = ({ bookKey, onRequestHidePanel }: UseTTSControlProp
         await ttsController.init();
         await ttsController.initViewTTS(ttsFromIndex);
         ttsController.updateHighlightOptions(
-          getTTSHighlightOptions(viewSettings.ttsHighlightColor, viewSettings.isEink),
+          getTTSHighlightOptions(
+            viewSettings.ttsHighlightColor, 
+            viewSettings.isEink && !viewSettings.isColorEink,
+          ),
         );
         const ssml =
           oneTime && ttsSpeakRange
