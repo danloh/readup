@@ -885,6 +885,19 @@ class Loader {
         return url
     }
     ref(href, parent) {
+        // A top-level load -- a view opening a section -- has no parent
+        // document to hang the reference on, and is released by exactly one
+        // `unloadItem`, so it must always be counted. Recording it under an
+        // absent parent instead put every top-level load in the book into one
+        // shared `#children` bucket that nothing ever cleared, so the second
+        // view to open an already-loaded section (a footnote popup, which
+        // opens another view on the same book) skipped its increment yet still
+        // decremented on close. The count underflowed to zero and revoked the
+        // section along with its images while a view was still showing them.
+        if (!parent) {
+            this.#refCount.set(href, this.#refCount.get(href) + 1)
+            return this.#cache.get(href)
+        }
         const childList = this.#children.get(parent)
         if (!childList?.includes(href)) {
             this.#refCount.set(href, this.#refCount.get(href) + 1)
@@ -937,7 +950,11 @@ class Loader {
         return this.createURL(href, tryLoadBlob, mediaType, parent)
     }
     async loadItemXHTMLContent(item, parents = []) {
-        const url = await this.loadItem(item, parents)
+        // Callers read the source of a section they have just loaded (the
+        // renderer pairs `section.load()` with `section.loadContent()`), and
+        // there is no matching unload for this call, so reuse the reference
+        // they already hold rather than taking one that is never released.
+        const url = this.#cache.get(item?.href) ?? await this.loadItem(item, parents)
         if (url) return this.#cacheXHTMLContent.get(url)?.data
     }
     tryImageEntryItem(path) {
@@ -1261,7 +1278,16 @@ ${doc.querySelector('parsererror').innerText}`)
     }
     async loadDocument(item) {
         const str = await this.loadText(item.href)
-        return this.parser.parseFromString(str, item.mediaType)
+        const doc = this.parser.parseFromString(str, item.mediaType)
+        // Same fallback as the render path in `loadReplaced`: a file the
+        // manifest declares as XHTML but which isn't well-formed XML (an
+        // unclosed `<meta charset>` is the usual culprit) parses into a
+        // `parsererror` document whose `body` is null. Callers of
+        // `createDocument` walk that body, so retry as HTML instead.
+        if (item.mediaType === MIME.XHTML
+        && (doc.querySelector('parsererror') || !doc.documentElement?.namespaceURI))
+            return this.parser.parseFromString(str, MIME.HTML)
+        return doc
     }
     getMediaOverlay() {
         return new MediaOverlay(this, this.#loadXML.bind(this))
