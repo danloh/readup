@@ -18,7 +18,7 @@ import { listFormater } from '@/utils/book';
 import { getDirPath, getFilename, joinPaths } from '@/utils/path';
 import { eventDispatcher } from '@/utils/event';
 import { parseOpenWithFiles } from '@/helpers/openWith';
-import { isTauriAppPlatform } from '@/services/environment';
+import { getInitializedAppService, isTauriAppPlatform } from '@/services/environment';
 import { SUPPORTED_BOOK_EXTS } from '@/services/constants';
 import { getImportErrorMessage } from '@/services/errors';
 import { buildBookLookupIndex } from '@/services/bookService';
@@ -495,7 +495,35 @@ const LibraryPageContent = (
       setLoading(false);
     };
 
-    initLibrary();
+    // Both inits are fire-and-forget, and `checkOpenWithBooks` /
+    // `checkLastOpenBooks` are cleared only on `initLibrary`'s success path.
+    // An escaping throw therefore left this page's early return rendering a
+    // bare `full-height` div for the rest of the session — the blank App Store
+    // window, where the sandbox denied a stale `customRootDir` and the mkdir
+    // inside `loadLibraryBooks` rejected with nothing to catch it. Always
+    // release the render gates, then say what actually broke.
+    const recoverFromInitFailure = (error: unknown) => {
+      console.error('Failed to initialize library:', error);
+      setCheckOpenWithBooks(false);
+      setCheckLastOpenBooks(false);
+      setLibraryLoaded(true);
+      if (loadingTimeout) clearTimeout(loadingTimeout);
+      setLoading(false);
+      const unavailableRootDir = getInitializedAppService()?.unavailableRootDir;
+      eventDispatcher.dispatch('toast', {
+        type: 'error',
+        message: unavailableRootDir
+          ? _(
+              'Cannot open the library folder "{{path}}". Reconnect it, or choose another folder in Settings.',
+              { path: unavailableRootDir },
+            )
+          : _('Failed to load your library.'),
+        timeout: 10000,
+      });
+    };
+
+    initLibrary().catch(recoverFromInitFailure);
+
     return () => {
       setCheckOpenWithBooks(false);
       setCheckLastOpenBooks(false);

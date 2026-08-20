@@ -108,6 +108,9 @@ export interface AppService {
   supportsViewTransitionGroup: boolean;
   distChannel: DistChannel;
 
+  unavailableRootDir: string | null;
+  isRootDirUsable(): Promise<boolean>;
+
   init(): Promise<void>;
   openFile(path: string, base: BaseDir): Promise<File>;
   copyFile(srcPath: string, srcBase: BaseDir, dstPath: string, dstBase: BaseDir): Promise<void>;

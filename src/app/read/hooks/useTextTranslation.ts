@@ -48,6 +48,118 @@ export const createTranslationTargetNode = ({
   return wrapper;
 };
 
+const SOURCE_HIDDEN_CLASS = 'translation-source-hidden';
+
+export const groupTextNodesByDocument = (nodes: HTMLElement[]) => {
+  const grouped = new Map<Document, HTMLElement[]>();
+  nodes.forEach((node) => {
+    const documentNodes = grouped.get(node.ownerDocument);
+    if (documentNodes) {
+      documentNodes.push(node);
+    } else {
+      grouped.set(node.ownerDocument, [node]);
+    }
+  });
+  return grouped;
+};
+
+export const observeTextNodesByDocument = (
+  nodes: HTMLElement[],
+  createObserver: (document: Document) => IntersectionObserver,
+) =>
+  Array.from(groupTextNodesByDocument(nodes), ([document, documentNodes]) => {
+    const observer = createObserver(document);
+    documentNodes.forEach((node) => observer.observe(node));
+    return observer;
+  });
+
+/**
+ * Maps a fresh walk of the (possibly already translated) DOM back to one entry
+ * per source paragraph.
+ *
+ * Two shapes have to be normalized. Generated `.translation-target` wrappers are
+ * never source text, so they are dropped outright. A hidden original is *wrapped*
+ * rather than erased, so `walkTextNodes` stops seeing direct text on the
+ * paragraph, descends past it, and emits the `.translation-source-hidden` wrapper
+ * instead — that one is folded back to the paragraph that owns it.
+ *
+ * Folding rather than dropping matters because `allTextNodes` is addressed by
+ * index: `getTranslationContextNodes` slices a window around the visible nodes
+ * and `findNodeIndicesInRange` maps the reading position to a slot. Dropping an
+ * already translated paragraph shifts every index after it and leaves the
+ * reading position unresolvable, which silently kills the read-ahead. Keeping
+ * the paragraph is safe because `scheduleTranslation` and `translateElement`
+ * both already bail when it holds a `.translation-target`.
+ */
+export const resolveTranslationSourceNodes = (nodes: HTMLElement[]) => {
+  const sources: HTMLElement[] = [];
+  const seen = new Set<HTMLElement>();
+  for (const node of nodes) {
+    if (node.closest('.translation-target')) continue;
+    const hider = node.closest<HTMLElement>(`.${SOURCE_HIDDEN_CLASS}`);
+    const source = hider?.parentElement ?? node;
+    if (seen.has(source)) continue;
+    seen.add(source);
+    sources.push(source);
+  }
+  return sources;
+};
+
+export const getTranslationContextNodes = (
+  nodes: HTMLElement[],
+  document: Document,
+  visibleElements: Set<HTMLElement>,
+) => {
+  const documentNodes = nodes.filter((node) => node.ownerDocument === document);
+  if (documentNodes.length === 0 || visibleElements.size === 0) return [];
+
+  let firstIdx = documentNodes.length;
+  let lastIdx = -1;
+  for (const element of visibleElements) {
+    const index = documentNodes.indexOf(element);
+    if (index !== -1) {
+      if (index < firstIdx) firstIdx = index;
+      if (index > lastIdx) lastIdx = index;
+    }
+  }
+  if (lastIdx === -1) return [];
+
+  return documentNodes.slice(
+    Math.max(0, firstIdx - 1),
+    Math.min(documentNodes.length, lastIdx + 3),
+  );
+};
+
+/**
+ * Hides or restores a paragraph's original text.
+ *
+ * The original is wrapped in a `cfi-skip` element rather than having its text
+ * erased. cfi-skip hoists the wrapper's children for indexing, so every source
+ * text node keeps the exact index and offset it had unwrapped — a highlight on
+ * the original still resolves whether or not the original is on screen. Erasing
+ * the text (the previous approach) destroyed that anchor.
+ */
+export const setSourceVisibility = (el: HTMLElement, visible: boolean) => {
+  const existing = el.querySelector(`:scope > .${SOURCE_HIDDEN_CLASS}`);
+  if (visible) {
+    if (existing) existing.replaceWith(...Array.from(existing.childNodes));
+    return;
+  }
+  if (existing) return;
+
+  const sourceNodes = Array.from(el.childNodes).filter(
+    (node) =>
+      !(node.nodeType === Node.ELEMENT_NODE && (node as Element).closest('.translation-target')),
+  );
+  if (!sourceNodes.length) return;
+
+  const hider = document.createElement('font');
+  hider.className = SOURCE_HIDDEN_CLASS;
+  hider.setAttribute('cfi-skip', '');
+  el.insertBefore(hider, sourceNodes[0]!);
+  sourceNodes.forEach((node) => hider.appendChild(node));
+};
+
 export function useTextTranslation(
   bookKey: string,
   view: FoliateView | HTMLElement | null,
@@ -74,7 +186,7 @@ export function useTextTranslation(
   } as UseTranslatorOptions);
 
   const translateRef = useRef(translate);
-  const observerRef = useRef<IntersectionObserver | null>(null);
+  const observerRefs = useRef<IntersectionObserver[]>([]);
   const translatedElements = useRef<HTMLElement[]>([]);
   const allTextNodes = useRef<HTMLElement[]>([]);
   const translationQueue = useRef<HTMLElement[]>([]);
@@ -116,16 +228,15 @@ export function useTextTranslation(
   const observeTextNodes = () => {
     if (!view || !enabled.current) return;
 
-    const observer = createTranslationObserver();
-    observerRef.current = observer;
-    const nodes = walkTextNodes(view, ['pre', 'code', 'math']);
+    const nodes = resolveTranslationSourceNodes(walkTextNodes(view, ['pre', 'code', 'math']));
     console.log(
       'Observing text nodes for translation:',
       nodes.length,
       // nodes.map((n) => n.textContent),
     );
     allTextNodes.current = nodes;
-    nodes.forEach((el) => observer.observe(el));
+    observerRefs.current.forEach((observer) => observer.disconnect());
+    observerRefs.current = observeTextNodesByDocument(nodes, createTranslationObserver);
   };
 
   const updateTranslation = () => {
@@ -139,6 +250,10 @@ export function useTextTranslation(
     translatedElements.current.forEach((element) => {
       const translationTargets = element.querySelectorAll('.translation-target');
       translationTargets.forEach((target) => target.remove());
+      // The hidden source wrapper is `display: none`, so a paragraph left with
+      // neither a target nor a visible original renders blank for as long as the
+      // re-translation is in flight, and stays blank if that translation fails.
+      setSourceVisibility(element, true);
     });
 
     translatedElements.current = [];
@@ -147,9 +262,10 @@ export function useTextTranslation(
     }
   };
 
-  const createTranslationObserver = () => {
+  const createTranslationObserver = (document: Document) => {
     const visibleElements = new Set<HTMLElement>();
-    return new IntersectionObserver(
+    const Observer = document.defaultView?.IntersectionObserver ?? IntersectionObserver;
+    return new Observer(
       (entries) => {
         for (const entry of entries) {
           if (entry.isIntersecting) {
@@ -159,32 +275,8 @@ export function useTextTranslation(
           }
         }
 
-        if (visibleElements.size === 0) return;
-
-        const nodes = allTextNodes.current;
-        if (nodes.length === 0) return;
-
-        let firstIdx = nodes.length;
-        let lastIdx = -1;
-        for (const el of visibleElements) {
-          const idx = nodes.indexOf(el);
-          if (idx !== -1) {
-            if (idx < firstIdx) firstIdx = idx;
-            if (idx > lastIdx) lastIdx = idx;
-          }
-        }
-
-        if (lastIdx === -1) return;
-
-        const startIdx = Math.max(0, firstIdx - 1);
-        const endIdx = Math.min(nodes.length - 1, lastIdx + 2);
-
-        for (let i = startIdx; i <= endIdx; i++) {
-          const node = nodes[i];
-          if (node) {
-            scheduleTranslation(node);
-          }
-        }
+        const nodes = getTranslationContextNodes(allTextNodes.current, document, visibleElements);
+        nodes.forEach((node) => scheduleTranslation(node));
       },
       { threshold: 0 },
     );
@@ -231,10 +323,11 @@ export function useTextTranslation(
   };
 
   const recreateTranslationObserver = () => {
-    const observer = createTranslationObserver();
-    observerRef.current?.disconnect();
-    observerRef.current = observer;
-    allTextNodes.current.forEach((el) => observer.observe(el));
+    observerRefs.current.forEach((observer) => observer.disconnect());
+    observerRefs.current = observeTextNodesByDocument(
+      allTextNodes.current,
+      createTranslationObserver,
+    );
   };
 
   const translateElement = async (el: HTMLElement) => {
@@ -247,50 +340,8 @@ export function useTextTranslation(
     }
 
     const updateSourceNodes = (element: HTMLElement) => {
-      const hasDirectText = Array.from(element.childNodes).some(
-        (node) => node.nodeType === Node.TEXT_NODE && node.textContent?.trim() !== '',
-      );
-      if (hasDirectText) {
-        element.classList.add('translation-source');
-
-        const textNodes = Array.from(element.childNodes).filter(
-          (node) => node.nodeType === Node.TEXT_NODE && node.textContent?.trim() !== '',
-        );
-
-        if (!element.hasAttribute('original-text-stored')) {
-          element.setAttribute(
-            'original-text-nodes',
-            JSON.stringify(textNodes.map((node) => node.textContent)),
-          );
-          element.setAttribute('original-text-stored', 'true');
-        }
-      }
-      const isSource = element.classList.contains('translation-source');
-      if (isSource) {
-        const textNodes = Array.from(element.childNodes).filter(
-          (node) => node.nodeType === Node.TEXT_NODE,
-        ) as Text[];
-
-        if (showTranslateSourceRef.current) {
-          const originalTexts = JSON.parse(element.getAttribute('original-text-nodes') || '[]');
-          textNodes.forEach((textNode, index) => {
-            if (originalTexts[index] !== undefined) {
-              textNode.textContent = originalTexts[index];
-            }
-          });
-        } else {
-          textNodes.forEach((textNode) => {
-            textNode.textContent = '';
-          });
-        }
-      }
-      for (const child of Array.from(element.childNodes)) {
-        if (child.nodeType !== Node.ELEMENT_NODE) continue;
-        const node = child as HTMLElement;
-        if (!node.classList.contains('translation-target')) {
-          updateSourceNodes(node);
-        }
-      }
+      element.classList.add('translation-source');
+      setSourceVisibility(element, !!showTranslateSourceRef.current);
     };
 
     try {
@@ -427,7 +478,8 @@ export function useTextTranslation(
         view.removeEventListener('load', observeTextNodes);
         view.removeEventListener('load', hintInitialTranslating);
       }
-      observerRef.current?.disconnect();
+      observerRefs.current.forEach((observer) => observer.disconnect());
+      observerRefs.current = [];
       translatedElements.current = [];
       translationQueue.current = [];
       activeTranslations.current = 0;
