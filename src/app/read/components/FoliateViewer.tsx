@@ -23,6 +23,7 @@ import {
   transformStylesheet,
   applyScrollbarStyle,
   getThemeCode,
+  applyEinkModeAttribute,
 } from '@/styles/style';
 import { mountAdditionalFonts } from '@/styles/font';
 import { applyScrollableStyle, applyTableTouchScroll } from '@/utils/scrollable';
@@ -298,6 +299,7 @@ const FoliateViewer: React.FC<{
       applyTableTouchScroll(detail.doc);
       applyThemeModeClass(detail.doc, isDarkMode);
       applyScrollModeClass(detail.doc, viewSettings.scrolled || false);
+      applyEinkModeAttribute(detail.doc, viewSettings.isEink || false);
       applyScrollbarStyle(document, viewSettings.hideScrollbar || false);
       keepTextAlignment(detail.doc);
       handleA11yNavigation(viewRef.current, detail.doc, {
@@ -724,6 +726,7 @@ const FoliateViewer: React.FC<{
         }
         applyThemeModeClass(doc, isDarkMode);
         applyScrollModeClass(doc, viewSettings.scrolled || false);
+        applyEinkModeAttribute(doc, viewSettings.isEink || false);
         applyScrollbarStyle(document, viewSettings.hideScrollbar || false);
       });
 
@@ -745,6 +748,7 @@ const FoliateViewer: React.FC<{
     viewSettings?.invertImgColor,
     viewSettings?.applyThemeToPDF,
     viewSettings?.hideScrollbar,
+    viewSettings?.isEink,
   ]);
 
   useEffect(() => {

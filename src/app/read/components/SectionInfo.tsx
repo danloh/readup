@@ -7,6 +7,7 @@ import { useReaderStore } from '@/store/readerStore';
 import { useBookDataStore } from '@/store/bookDataStore';
 import { eventDispatcher } from '@/utils/event';
 import { getHeaderBandGeometry } from '@/utils/insets';
+import { getBookDataAttributes } from '@/utils/book';
 
 interface SectionInfoProps {
   bookTitle?: string;
@@ -77,6 +78,7 @@ const SectionInfo: React.FC<SectionInfoProps> = ({
         role='none'
         tabIndex={-1}
         onClick={handleSectionClick}
+        {...getBookDataAttributes(bookData?.book?.title, bookData?.book?.metadata)}
         className={clsx(
           'sectioninfo absolute flex items-center overflow-hidden font-sans',
           // A lifted band overlaps the notch mask (z-10) and must win as the

@@ -11,10 +11,12 @@ import { useThemeStore } from '@/store/themeStore';
 import { useReaderStore } from '@/store/readerStore';
 import { useSidebarStore } from '@/store/sidebarStore';
 import { useTrafficLightStore } from '@/store/trafficLightStore';
+import { useBookDataStore } from '@/store/bookDataStore';
 import { useTrafficLight } from '@/hooks/useTrafficLight';
 import { useResponsiveSize } from '@/hooks/useResponsiveSize';
 import { useTranslation } from '@/hooks/useTranslation';
 import { getHeaderTriggerHeight } from '@/utils/insets';
+import { getBookDataAttributes } from '@/utils/book';
 import WindowButtons from '@/components/WindowButtons';
 import Dropdown from '@/components/Dropdown';
 import Logo from '@/components/Logo';
@@ -55,8 +57,10 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
   const { trafficLightInFullscreen, setTrafficLightVisibility } = useTrafficLightStore();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [headerWidth, setHeaderWidth] = useState(0);
-  const { bookKeys, getView, getViewSettings, hoveredBookKey, setHoveredBookKey } = 
-    useReaderStore();
+  const { 
+    bookKeys, getView, getViewSettings, hoveredBookKey, setHoveredBookKey 
+  } = useReaderStore();
+  const { getBookData } = useBookDataStore();
   const { systemUIVisible, statusBarHeight } = useThemeStore();
   const { isSideBarVisible, getIsSideBarVisible } = useSidebarStore();
   const iconSize16 = useResponsiveSize(16);
@@ -65,6 +69,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
   const view = getView(bookKey);
   const docs = view?.renderer.getContents() ?? [];
   const pointerInDoc = docs.some(({ doc }) => doc?.body?.style.cursor === 'pointer');
+  const bookData = getBookData(bookKey);
 
   const enableAnnotationQuickActions = viewSettings?.enableAnnotationQuickActions;
   const annotationQuickActionButton =
@@ -237,6 +242,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
         <div
           role='contentinfo'
           aria-label={_('Title') + ' - ' + bookTitle}
+          {...getBookDataAttributes(bookTitle, bookData?.book?.metadata)}
           className={clsx(
             'header-title z-15 bg-base-100 pointer-events-none hidden flex-1 items-center justify-center sm:flex',
             !windowButtonVisible && 'absolute inset-0',
