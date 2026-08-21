@@ -268,11 +268,12 @@ const BooknoteView: React.FC<{
             item={row.item}
             isNearest={row.item.cfi === nearestCfi}
             onClick={handleBrowseBookNotes}
+            inlineNoteEditing={type === 'annotation'}
           />
         </ul>
       );
     },
-    [flatItems, bookKey, nearestCfi, handleBrowseBookNotes],
+    [flatItems, bookKey, nearestCfi, handleBrowseBookNotes, type],
   );
 
   // Always mount the containerRef host so the height-measurement effect (and

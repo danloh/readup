@@ -1,3 +1,4 @@
+import DOMPurify from 'dompurify';
 import { Marked } from 'marked';
 import markedKatex from 'marked-katex-extension';
 import markedFootnote from 'marked-footnote';
@@ -28,6 +29,17 @@ export const mdWithMath = new Marked({ gfm: true }).use(
     nonStandard: true,
   }),
 );
+
+// Notes reach dangerouslySetInnerHTML in the sidebar and the popup, and they
+// can come from annotation imports and sync, not only the local editor, so the
+// HTML is sanitized here once for both sinks. `utils/sanitize.ts#sanitizeHtml`
+// is not reused: its tag allowlist has no MathML and would strip the KaTeX
+// output, which the mathMl profile keeps.
+export const parseMarkdown = (txt: string) =>
+  DOMPurify.sanitize(mdWithMath.parse(txt, { async: false }), {
+    USE_PROFILES: { html: true, mathMl: true },
+    FORBID_TAGS: ['style', 'form', 'input', 'button', 'textarea', 'select'],
+  });
 
 // Render a standalone Markdown (.md) file into an in-memory foliate-js book at
 // runtime (no EPUB conversion). The document is split into one section per

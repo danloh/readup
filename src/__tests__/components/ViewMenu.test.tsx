@@ -93,7 +93,7 @@ vi.mock('@/services/constants', () => ({
 vi.mock('@/utils/style', () => ({ getStyles: vi.fn() }));
 vi.mock('@/utils/nav', () => ({ navigateToLogin: vi.fn() }));
 vi.mock('@/utils/webtoon', () => ({ getScrollGapAttr: vi.fn() }));
-vi.mock('@/app/reader/hooks/useCapturedTurn', () => ({ applyPageTurnAttributes: vi.fn() }));
+vi.mock('@/app/read/hooks/useCapturedTurn', () => ({ applyPageTurnAttributes: vi.fn() }));
 vi.mock('@/utils/config', () => ({ getMaxInlineSize: () => 720 }));
 vi.mock('@/utils/ambientLight', () => ({ nextThemeMode: (mode: string) => mode }));
 vi.mock('@/utils/window', () => ({ tauriHandleToggleFullScreen: vi.fn() }));
