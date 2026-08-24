@@ -152,7 +152,7 @@ const setupPanningEvents = (doc) => {
 }
 
 // iOS kills the WKWebView content process when it exceeds a per-process memory
-// high-water limit (~2 GB). A device crash log for #5118 shows the
+// high-water limit (~2 GB). A device crash log for  #5118 shows the
 // foreground WebContent process reaching 2.1 GB while paging a PDF, right before
 // the reader "closed". Both a page's canvas bitmap and its WebKit backing layer
 // are allocated at the render scale, so their memory grows with the SQUARE of the
@@ -205,7 +205,7 @@ const render = async (page, doc, zoom, pageColors) => {
     }
 
     // Rasterise the page bitmap over-sampled (clamped for the iOS content-process
-    // memory budget, see getRenderDpr #5118) but lay the whole DOM out
+    // memory budget, see getRenderDpr /  #5118) but lay the whole DOM out
     // at the true display size. The <canvas> element natively downscales its
     // bitmap to its CSS box, so the raster stays crisp WITHOUT scaling the
     // document. Scaling the document with `transform` promotes the whole page to
@@ -444,7 +444,7 @@ const parseCalibreSeriesFromXMP = raw => {
 // large PDF's cross-reference and object streams, pdf.js can request hundreds
 // of byte ranges in a single burst. A real HTTP transport is implicitly
 // throttled by the browser's per-host connection limit (~6); the custom file
-// schemes reader serves these reads through (Android's `rangefile` /
+// schemes  serves these reads through (Android's `rangefile` /
 // `shouldInterceptRequest`, iOS' native file bridge) have no such limit, so
 // firing every request at once floods the native handler and exhausts the
 // WebView's heap, crashing on 50 MB+ PDFs ( #3470). Throttle here.
@@ -468,13 +468,14 @@ export const makePDF = async file => {
         queue.push([begin, end])
         pump()
     }
-    const pdf = await pdfjsLib.getDocument({
+    const loadingTask = pdfjsLib.getDocument({
         range: transport,
         wasmUrl: pdfjsPath(''),
         cMapUrl: pdfjsPath('cmaps/'),
         standardFontDataUrl: pdfjsPath('standard_fonts/'),
         isEvalSupported: false,
-    }).promise
+    })
+    const pdf = await loadingTask.promise
 
     // Get viewport dimensions from first page for fixed-layout rendering
     const firstPage = await pdf.getPage(1)
@@ -506,10 +507,23 @@ export const makePDF = async file => {
     // catalog's ViewerPreferences; surface it as book.dir so the fixed-layout
     // renderer pairs and orders two-page spreads right-to-left.
     const viewerPreferences = await pdf.getViewerPreferences().catch(() => null)
-    if (viewerPreferences?.Direction === 'R2L') book.dir = 'rtl'
-    
+    const direction = viewerPreferences?.get?.('Direction')
+        ?? viewerPreferences?.Direction
+    if (direction === 'R2L') book.dir = 'rtl'
+
     const outline = await pdf.getOutline()
     book.toc = outline ? await Promise.all(outline.map(item => makeTOCItem(item, pdf))) : null
+
+    // Page labels (PDF 32000-1 §12.4.2) are the numbers printed on the pages
+    // -- roman-numeral front matter, a body that restarts at 1 -- and are what
+    // the book's own TOC means by "page 139", as opposed to the physical index
+    // into the file. Expose them as the page list so they reach readers through
+    // the same `pageItem` channel as an EPUB page-list nav. Like PDF.js, ignore
+    // labels that merely restate the physical page numbers or are all empty.
+    const labels = await pdf.getPageLabels().catch(() => null)
+    book.pageList = labels?.some((label, i) => label && label !== String(i + 1))
+        ? labels.map((label, i) => ({ label, href: JSON.stringify(i), index: i }))
+        : null
 
     const cache = new Map()
     const pageCache = new Map()
@@ -597,8 +611,11 @@ export const makePDF = async file => {
         size: 1000,
     }))
     book.isExternal = uri => /^\w+:/i.test(uri)
+    // TOC hrefs are JSON-encoded destinations (named or explicit); page-list
+    // hrefs are JSON-encoded page indices.
     book.resolveHref = async href => {
         const parsed = JSON.parse(href)
+        if (typeof parsed === 'number') return { index: parsed }
         const dest = typeof parsed === 'string'
             ? await pdf.getDestination(parsed) : parsed
         const index = await pdf.getPageIndex(dest[0])
@@ -607,6 +624,7 @@ export const makePDF = async file => {
     book.splitTOCHref = async href => {
         if (!href) return [null, null]
         const parsed = JSON.parse(href)
+        if (typeof parsed === 'number') return [parsed, null]
         const dest = typeof parsed === 'string'
             ? await pdf.getDestination(parsed) : parsed
         try {
@@ -629,7 +647,7 @@ export const makePDF = async file => {
             page?.cleanup()
         }
         pageCache.clear()
-        pdf.destroy()
+        loadingTask.destroy()
     }
     return book
 }

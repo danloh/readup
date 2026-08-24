@@ -449,34 +449,32 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
     // For PDF selections, enable right-click context menu to directly open translator popup.
     if (bookData.isFixedLayout) {
       detail.doc?.addEventListener('contextmenu', (e: Event) => {
-        try {
-          const sel = doc.getSelection?.();
-          if (sel && !sel.isCollapsed) {
-            const range = sel.getRangeAt(0);
-            const text = sel.toString();
-            if (text.trim()) {
-              setSelection({
-                key: bookKey,
-                text,
-                range,
-                index,
-                cfi: view?.getCFI(index, range),
-                page: index + 1,
-              });
-              // Show translation popup preferentially for PDF right-click
-              setShowAnnotPopup(false);
-              setShowTsPopup(true);
-              setShowDictPopup(false);
-              setShowWikipediaPopup(false);
-            }
-          }
-        } catch (err) {
-          console.warn('PDF context menu translation failed:', err);
-        }
         // Prevent native menu to keep experience consistent
         e.preventDefault();
         e.stopPropagation();
-        return false;
+        try {
+          const sel = doc.getSelection?.();
+          if (!sel || sel.isCollapsed) return;
+          const range = sel.getRangeAt(0);
+          // Same text as the toolbar path, with PDF line wraps joined (#5814).
+          void getAnnotationText(range).then((text) => {
+            if (!text.trim()) return;
+            setSelection({
+              key: bookKey,
+              text,
+              range,
+              index,
+              cfi: view?.getCFI(index, range),
+              page: index + 1,
+            });
+            // Show translation popup preferentially for PDF right-click
+            setShowAnnotPopup(false);
+            setShowTsPopup(true);
+            setShowDictPopup(false);
+          });
+        } catch (err) {
+          console.warn('PDF context menu translation failed:', err);
+        }
       });
     }
 
@@ -1496,6 +1494,12 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
     }
   };
 
+  // The range editors are fixed full-screen overlays rendered after the lookup
+  // popups, so their handles would float on top of the dictionary sheet /
+  // popup (#5815). They belong to the toolbar: hide them while a lookup is
+  // open, and let them come back with the toolbar (or go with the dismiss).
+  const lookupPopupOpen = showDictPopup || showTsPopup || showProofreadPopup;
+
   return (
     <div ref={containerRef} role='toolbar' tabIndex={-1}>
       {showDictPopup &&
@@ -1574,7 +1578,10 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
           }}
         />
       )}
-      {!editingAnnotation && selection?.handlesSuppressed && selection.range && (
+      {!editingAnnotation && 
+      !lookupPopupOpen && 
+      selection?.handlesSuppressed && 
+      selection.range && (
         <SelectionRangeEditor
           bookKey={bookKey}
           isVertical={viewSettings.vertical}
@@ -1587,7 +1594,7 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
           onAutoTurn={onAutoTurn}
         />
       )}
-      {editingAnnotation && editingAnnotation.color && selection && (
+      {editingAnnotation && editingAnnotation.color && selection && !lookupPopupOpen && (
         <AnnotationRangeEditor
           bookKey={bookKey}
           isVertical={viewSettings.vertical}
