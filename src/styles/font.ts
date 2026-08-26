@@ -138,6 +138,8 @@ export const mountAdditionalFonts0 = (document: Document, isCJK = false) => {
 };
 
 export const mountAdditionalFonts = async (document: Document, isCJK = false) => {
+  // An SVG spine item has no <head> to mount into.
+  if (!document.head) return;
   const mountCJKFonts = isCJK || isCJKEnv();
 
   const hints = getResourceHints(mountCJKFonts);

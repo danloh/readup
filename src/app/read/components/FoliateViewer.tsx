@@ -44,6 +44,7 @@ import { layoutWarichu, relayoutWarichu } from '@/utils/warichu';
 import Spinner from '@/components/Spinner';
 import { handleA11yNavigation } from '@/utils/a11y';
 import { getScrollGapAttr } from '@/utils/webtoon';
+import { observeDynamicResources } from '@/utils/dynamicResources';
 import { transformContent } from '../transformers/transformService';
 import { useMouseEvent, useOpenMediaEvent, useTouchEvent } from '../hooks/useIframeEvents';
 import { usePagination, viewPagination } from '../hooks/usePagination';
@@ -218,6 +219,7 @@ const FoliateViewer: React.FC<{
               content: data,
               sectionHref: detail.name,
               transformers: [
+                'epubSwitch',
                 'style',
                 'punctuation',
                 'footnote',
@@ -308,6 +310,13 @@ const FoliateViewer: React.FC<{
         skipToNextSectionCallback: skipToNextSection,
         skipToNextSectionLabel: _('End of this section. Continue to the next.'),
       });
+
+      if (viewSettings.allowScript) {
+        // Book scripts may add media, or a background image, with a path
+        // relative to the section long after foliate's load-time URL rewrite.
+        const section = bookDoc.sections?.[detail.index];
+        if (section?.loadHref) observeDynamicResources(detail.doc, section.loadHref);
+      }
 
       // Inline scripts in tauri platforms are not executed by default
       if (viewSettings.allowScript && isTauriAppPlatform()) {
