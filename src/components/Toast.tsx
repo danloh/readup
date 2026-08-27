@@ -5,10 +5,18 @@ import { FaCircleInfo } from 'react-icons/fa6';
 import { BiSolidError } from 'react-icons/bi';
 import { PiSealWarning } from 'react-icons/pi';
 import { eventDispatcher } from '@/utils/event';
+import { useThemeStore } from '@/store/themeStore';
 
 export type ToastType = 'info' | 'success' | 'warning' | 'error';
 
+// The top bar a `toast-top` toast has to clear, plus the gap daisyUI 4 drew as
+// `.toast` padding. daisyUI 5 moved that padding into the insets, which the
+// `top` below overrides, so the toast carries the gap itself.
+const TOP_BAR_HEIGHT = 44;
+const TOAST_GAP = 16;
+
 export const Toast = () => {
+  const { safeAreaInsets } = useThemeStore();
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState<ToastType>('info');
   const [toastTimeout, setToastTimeout] = useState(5000);
@@ -88,10 +96,15 @@ export const Toast = () => {
     toastMessage && (
       <div
         className={clsx(
-          'toast z-50 w-auto max-w-screen-sm transition-all duration-300',
+          'toast z-[130] max-w-(--breakpoint-sm) transition-all duration-300',
           toastClassMap[toastType],
           isVisible ? 'scale-100 opacity-100' : 'hidden',
         )}
+        style={{
+          top: toastClassMap[toastType].includes('toast-top')
+            ? `${(safeAreaInsets?.top || 0) + TOP_BAR_HEIGHT + TOAST_GAP}px`
+            : undefined,
+        }}
       >
         <div
           className={clsx(
