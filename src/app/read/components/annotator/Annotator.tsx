@@ -70,6 +70,7 @@ import ExportMarkdownDialog from './ExportMarkdownDialog';
 import ExcerptDialog from './ExcerptDialog';
 import DictionarySheet from './DictionarySheet';
 import SelectionRangeEditor from './SelectionRangeEditor';
+import PageTurnHint from './PageTurnHint';
 
 const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
   bookKey,
@@ -274,6 +275,7 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
     noteAutoTurnPoint,
     cancelAutoTurn,
     onAutoTurn,
+    turnHint,
   } = useTextSelector(
     bookKey,
     contentInsets,
@@ -1521,6 +1523,7 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
 
   return (
     <div ref={containerRef} role='toolbar' tabIndex={-1}>
+      <PageTurnHint bookKey={bookKey} contentInsets={contentInsets} hint={turnHint} />
       {showDictPopup &&
         (() => {
           // Below `sm` (or short landscape) we present the dictionary as a
