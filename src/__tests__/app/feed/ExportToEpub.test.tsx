@@ -377,6 +377,8 @@ describe('FeedEpubService.createOrUpdateEpub', () => {
         added: ['https://example.com/2'],
         removed: [],
         reordered: false,
+        changed: false,
+        appendOnly: false
       });
 
       mockAppService.readFile.mockResolvedValueOnce(

@@ -8,7 +8,6 @@
     "strict": true,
     "noFallthroughCasesInSwitch": true,
     "noUnusedLocals": true,
-
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "sourceMap": true,
@@ -16,10 +15,11 @@
     "rootDir": "./src",
     "lib": ["DOM", "ES2022"],
     "declaration": true,
+    "types": ["jest"],
     "paths": {
       "../src/*": ["./*"]
     }
   },
   "exclude": ["node_modules"],
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts"]
 }

@@ -7,7 +7,6 @@ import { useMetadataEdit } from '@/app/library/components/metadata';
 const metadata = { title: 'Book', author: 'Author' } as BookMetadata;
 // Stable reference: the hook resyncs editedMeta on the metadata identity.
 const indexedMetadata = { ...metadata, seriesIndex: 2 } as BookMetadata;
-const noTags: string[] = [];
 
 // The Series Index / Total inputs hand over e.target.value, a string. Stored
 // as-is it persists (and syncs) as "2", and every `typeof seriesIndex ===
