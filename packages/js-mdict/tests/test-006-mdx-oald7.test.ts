@@ -1,5 +1,5 @@
 import { MDX } from '../src';
-import { expect } from '@jest/globals';
+import { describe, expect, it } from '@jest/globals';
 
 describe('tests mdx file v1.2', () => {
   describe('oald7.mdx', () => {

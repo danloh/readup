@@ -1,4 +1,5 @@
 import { MDX, MDD } from '../src/index';
+import { beforeAll, describe, expect, it } from '@jest/globals';
 
 describe('js-mdict Issue 80, 85, 86 Integration Tests', () => {
   const mdxPath = './tests/data/mini/mini.mdx';

@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@jest/globals';
 import { MDX } from '../src';
 
 describe('Mdict', () => {
@@ -12,7 +13,7 @@ describe('Mdict', () => {
       expect(matched != undefined).toBeTruthy();
       expect(matched[0] != undefined).toBeTruthy();
 
-      const def = mdict.fetch_definition(matched[0]);
+      const def = mdict.fetch_definition(matched[0]!);
       if (!def.definition) {
         throw new Error('no definition');
       }

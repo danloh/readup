@@ -1,4 +1,5 @@
 import Mdict from '../src/mdict';
+import { describe, expect, it } from '@jest/globals';
 
 describe('mdx-reduce-word-key-block', () => {
   const mdict = new Mdict(

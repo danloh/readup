@@ -1,5 +1,6 @@
 import { MDX, MDD } from '../src/index';
 import path from 'path';
+import { describe, expect, it } from '@jest/globals';
 
 describe('js-mdict Internal Test Dictionaries Integration', () => {
   const dictDir = path.join(__dirname, 'data', 'freemdict');
@@ -48,8 +49,8 @@ describe('js-mdict Internal Test Dictionaries Integration', () => {
         expect(mdd.header).toBeDefined();
         expect(mdd.keywordList.length).toBeGreaterThan(0);
 
-        const firstKey = mdd.keywordList[0].keyText;
-        const result = mdd.locate(firstKey);
+        const firstKey = mdd.keywordList[0]?.keyText;
+        const result = mdd.locate(firstKey!);
         expect(result).toBeDefined();
         expect(result.definition).toBeDefined();
         if (result.definition) {
@@ -68,8 +69,8 @@ describe('js-mdict Internal Test Dictionaries Integration', () => {
 
     it('should support lookupAll() on internal_test_audio.mdx', () => {
       const mdx = new MDX(path.join(dictDir, 'internal_test_audio.mdx'));
-      const word = mdx.keywordList[10].keyText;
-      const results = mdx.lookupAll(word);
+      const word = mdx.keywordList[10]?.keyText;
+      const results = mdx.lookupAll(word!);
       expect(results.length).toBeGreaterThan(0);
     });
   });

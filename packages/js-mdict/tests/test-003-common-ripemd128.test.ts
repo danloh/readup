@@ -1,5 +1,5 @@
+import { describe, expect, it } from '@jest/globals';
 import { ripemd128 } from '../src/ripemd128.js';
-import { expect } from '@jest/globals';
 
 describe('ripemd128', () => {
   it('应该正确计算空字符串的哈希值', () => {

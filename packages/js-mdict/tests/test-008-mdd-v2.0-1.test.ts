@@ -1,5 +1,5 @@
 import {MDD} from '../src';
-import { expect } from '@jest/globals';
+import { describe, expect, it } from '@jest/globals';
 
 describe('Mdict', () => {
   describe('oale8.mdd', () => {

@@ -1,5 +1,6 @@
 import { MDD } from '../src/index';
 import fs from 'node:fs';
+import { describe, expect, it } from '@jest/globals';
 
 describe('mdd-full-003', () => {
   const mdd = new MDD('./tests/data/mini/mini.mdx');

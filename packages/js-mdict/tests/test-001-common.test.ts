@@ -1,4 +1,4 @@
-import { expect } from '@jest/globals';
+import { describe, expect, it } from '@jest/globals';
 import common, { type NumFmt } from '../src/utils.js';
 
 describe('common', () => {

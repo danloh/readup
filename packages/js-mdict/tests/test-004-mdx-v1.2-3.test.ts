@@ -1,4 +1,4 @@
-import { expect } from '@jest/globals';
+import { describe, expect, it } from '@jest/globals';
 import {MDX} from '../src/index.js';
 
 describe('Mdict', () => {
@@ -16,7 +16,7 @@ describe('Mdict', () => {
       expect(matched).toBeDefined();
       expect(matched![0]).toBeDefined();
 
-      const defination = mdict.fetch(matched![0]);
+      const defination = mdict.fetch(matched[0]!);
 
       expect(defination.definition).toMatch(
         /^<head><link rel="stylesheet" type="text\/css" href="O7\.css"\/>/

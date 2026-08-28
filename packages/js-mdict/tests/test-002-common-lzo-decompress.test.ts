@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import { describe, expect, it } from '@jest/globals';
 
 import { decompress } from '../src/lzo1x-wrapper.js';
 

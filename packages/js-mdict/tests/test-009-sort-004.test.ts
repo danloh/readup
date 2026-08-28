@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import { MDD } from '../src';
+import { it } from '@jest/globals';
 
 const mdd = new MDD('./tests/data/mini/mini.mdd');
 const output = './tests/data/output/Collins.mdd.keylist.txt';
@@ -22,10 +23,10 @@ it('mdd-full-003-mdd-foreach', () => {
   for (let i =1; i < datalist.length; i++) {
     const word1 = datalist[i];
     const word2 = datalist[i - 1];
-    const resp = mdd.comp(word1, word2);
+    const resp = mdd.comp(word1!, word2!);
     if (resp < 0){
       misscount +=1;
-      console.log(`miss-sort word: word[${i}]: ${word1}(${mdd.strip(word1)}), word[${i-1}]: ${word2}(${mdd.strip(word2)}) == ${resp}`);
+      console.log(`miss-sort word: word[${i}]: ${word1}(${mdd.strip(word1!)}), word[${i-1}]: ${word2}(${mdd.strip(word2!)}) == ${resp}`);
     }
 
   }

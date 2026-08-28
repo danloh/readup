@@ -1,5 +1,5 @@
 import Mdict from '../src/mdict';
-import { expect } from '@jest/globals';
+import { describe, expect, it } from '@jest/globals';
 import { MDD } from '../src';
 
 describe('mdx-lookup-key-block', () => {

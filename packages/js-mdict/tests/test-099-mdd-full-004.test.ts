@@ -1,5 +1,6 @@
 import { MDX } from '../src/index';
 import fs from 'node:fs';
+import { describe, expect, it } from '@jest/globals';
 
 describe('mdd-full-004', () => {
   const mdx = new MDX('./tests/data/mini/mini.mdx',{debug:true});

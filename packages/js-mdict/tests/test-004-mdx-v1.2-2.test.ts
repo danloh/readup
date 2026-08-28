@@ -1,5 +1,5 @@
 import {MDX} from '../src';
-import { expect } from '@jest/globals';
+import { describe, expect, it } from '@jest/globals';
 
 describe('Mdict', () => {
   describe('Oxford', () => {
@@ -12,7 +12,7 @@ describe('Mdict', () => {
       expect(matched != undefined).toBeTruthy();
       expect(matched[0] != undefined).toBeTruthy();
 
-      const def = mdict.fetch(matched[0]);
+      const def = mdict.fetch(matched[0]!);
       expect(def.definition).toBeDefined();
       if (!def.definition){
         throw new Error('Mdict definition not found');
