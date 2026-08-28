@@ -47,7 +47,7 @@ describe('iframeEventHandlers click gestures', () => {
     // First click of the double-click: full down/up/click cycle.
     handleMousedown('book-1', mouseEvent());
     handleMouseup('book-1', mouseEvent());
-    handleClick('book-1', doubleClickDisabled, false, mouseEvent());
+    handleClick('book-1', doubleClickDisabled, false, false, mouseEvent());
 
     // The second click begins shortly after and is HELD while the user drags
     // to extend the native word selection — so only mousedown fires, no
@@ -69,7 +69,7 @@ describe('iframeEventHandlers click gestures', () => {
 
     handleMousedown('book-1', mouseEvent());
     handleMouseup('book-1', mouseEvent());
-    handleClick('book-1', doubleClickDisabled, false, mouseEvent());
+    handleClick('book-1', doubleClickDisabled, false, false, mouseEvent());
 
     vi.advanceTimersByTime(260);
 
@@ -83,13 +83,13 @@ describe('iframeEventHandlers click gestures', () => {
     // First click.
     handleMousedown('book-1', mouseEvent());
     handleMouseup('book-1', mouseEvent());
-    handleClick('book-1', doubleClickDisabled, false, mouseEvent());
+    handleClick('book-1', doubleClickDisabled, false, false, mouseEvent());
 
     // Second click lands quickly (no drag): a complete down/up/click cycle.
     vi.advanceTimersByTime(100);
     handleMousedown('book-1', mouseEvent());
     handleMouseup('book-1', mouseEvent());
-    handleClick('book-1', doubleClickDisabled, false, mouseEvent());
+    handleClick('book-1', doubleClickDisabled, false, false, mouseEvent());
 
     vi.advanceTimersByTime(260);
 
@@ -122,12 +122,13 @@ describe('single-tap opens image gallery / table zoom in reflowable books (#4584
     handlers: Awaited<ReturnType<typeof importHandlers>>,
     isFixedLayout: boolean,
     target: EventTarget | null,
+    isComicBook = false,
   ) => {
     const { handleClick, handleMousedown, handleMouseup } = handlers;
     const doubleClickDisabled = { current: false };
     handleMousedown('book-1', mouseEvent());
     handleMouseup('book-1', mouseEvent());
-    handleClick('book-1', doubleClickDisabled, isFixedLayout, mouseEvent({ target }));
+    handleClick('book-1', doubleClickDisabled, isFixedLayout, isComicBook, mouseEvent({ target }));
     vi.advanceTimersByTime(260);
   };
 

@@ -103,7 +103,6 @@ export const Handle: React.FC<HandleProps> = ({
         width={size}
         height={size + stemHeight}
         viewBox={`0 0 ${size} ${size + stemHeight}`}
-        className={clsx(type === 'start' && 'rotate-180')}
         style={{
           transform: isVertical
             ? type === 'start'
