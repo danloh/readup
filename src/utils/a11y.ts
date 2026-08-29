@@ -66,7 +66,7 @@ export const handleA11yNavigation = (
     skipLink.setAttribute('aria-label', options?.skipToLastPosLabel ?? '');
     Object.assign(skipLink.style, {
       position: 'absolute',
-      left: '0px',
+      left: 'auto',
       top: 'auto',
       width: '1px',
       height: '1px',
