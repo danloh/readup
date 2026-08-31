@@ -16,6 +16,8 @@ interface SliderProps {
   maxClassName?: string;
   bubbleClassName?: string;
   onChange?: (value: number) => void;
+  valueToPosition?: (value: number, min: number, max: number) => number;
+  positionToValue?: (position: number, min: number, max: number) => number;
 }
 
 const Slider: React.FC<SliderProps> = ({
@@ -34,13 +36,28 @@ const Slider: React.FC<SliderProps> = ({
   maxClassName = '',
   bubbleClassName = '',
   onChange,
+  valueToPosition,
+  positionToValue,
 }) => {
   const [value, setValue] = useState(initialValue);
   const [isRtl, setIsRtl] = useState(false);
   const sliderRef = useRef<HTMLDivElement>(null);
 
+  // Default linear mapping functions
+  const defaultValueToPosition = (val: number, minVal: number, maxVal: number) => {
+    return ((val - minVal) / (maxVal - minVal)) * 100;
+  };
+
+  const defaultPositionToValue = (pos: number, minVal: number, maxVal: number) => {
+    return minVal + (pos / 100) * (maxVal - minVal);
+  };
+
+  const valueToPos = valueToPosition || defaultValueToPosition;
+  const posToValue = positionToValue || defaultPositionToValue;
+
   const handleChange = (e: React.ChangeEvent) => {
-    const newValue = parseInt((e.target as HTMLInputElement).value, 10);
+    const position = parseInt((e.target as HTMLInputElement).value, 10);
+    const newValue = Math.round(posToValue(position, min, max) / step) * step;
     setValue(newValue);
     if (onChange) {
       onChange(newValue);
@@ -62,7 +79,22 @@ const Slider: React.FC<SliderProps> = ({
     setValue(initialValue);
   }, [initialValue]);
 
-  const percentage = ((value - min) / (max - min)) * 100;
+  // const percentage = ((value - min) / (max - min)) * 100;
+  const percentage = Math.max(0, Math.min(100, valueToPos(value, min, max)));
+  const thumbRadius = heightPx / 2;
+  const thumbOffset = Math.abs((0.5 - percentage / 100) * heightPx);
+  const thumbPosition =
+    percentage <= 0
+      ? `${thumbRadius}px`
+      : percentage >= 100
+        ? `calc(100% - ${thumbRadius}px)`
+        : `calc(${percentage}% ${percentage < 50 ? '+' : '-'} ${thumbOffset}px)`;
+  const fillWidth =
+    percentage <= 0
+      ? '0px'
+      : percentage >= 100
+        ? '100%'
+        : `max(calc(${percentage}% + ${(1 - percentage / 100) * heightPx}px), ${heightPx}px)`;
 
   return (
     <div
@@ -76,12 +108,9 @@ const Slider: React.FC<SliderProps> = ({
         <div className='bg-base-300/40 absolute h-full w-full rounded-full'></div>
         {/* Filled portion */}
         <div
-          className='bg-base-300 absolute h-full rounded-full'
+          className='slider-fill bg-base-300 absolute h-full rounded-full'
           style={{
-            width:
-              percentage > 0
-                ? `max(calc(${percentage}% + ${heightPx / 2}px), ${heightPx}px)`
-                : '0px',
+            width: fillWidth,
             [isRtl ? 'right' : 'left']: 0,
           }}
         ></div>
@@ -92,9 +121,9 @@ const Slider: React.FC<SliderProps> = ({
         </div>
         {/* Thumb bubble */}
         <div
-          className='pointer-events-none absolute top-0 z-10'
+          className='slider-thumb pointer-events-none absolute top-0 z-10'
           style={{
-            [isRtl ? 'right' : 'left']: `max(${heightPx / 2}px, calc(${percentage}%))`,
+            [isRtl ? 'right' : 'left']: thumbPosition,
             transform: isRtl ? 'translateX(calc(50%))' : 'translateX(calc(-50%))',
             height: '100%',
           }}

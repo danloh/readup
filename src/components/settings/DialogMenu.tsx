@@ -29,8 +29,10 @@ const DialogMenu: React.FC<DialogMenuProps> = ({
   const viewSettings = getViewSettings(bookKey);
   const isSettingsGlobal = viewSettings?.isGlobal ?? true;
 
-  const handleToggleGlobal = () => {
-    saveViewSettings(envConfig, bookKey, 'isGlobal', !isSettingsGlobal, true, false);
+  const handleSetGlobal = (global: boolean) => {
+    if (global !== isSettingsGlobal) {
+      saveViewSettings(envConfig, bookKey, 'isGlobal', global, true, false);
+    }
     setIsDropdownOpen?.(false);
   };
 
@@ -42,12 +44,16 @@ const DialogMenu: React.FC<DialogMenuProps> = ({
   return (
     <Menu className={clsx('dialog-menu dropdown-content no-triangle z-20 mt-2 shadow-2xl')}>
       <MenuItem
-        label={_('Global Settings')}
-        tooltip={isSettingsGlobal ? _('Apply to All Books') : _('Apply to This Book')}
+        label={_('Apply to All Books')}
         disabled={!bookKey}
-        buttonClass='tooltip'
         Icon={isSettingsGlobal ? MdCheck : null}
-        onClick={handleToggleGlobal}
+        onClick={() => handleSetGlobal(true)}
+      />
+      <MenuItem
+        label={_('Apply to This Book')}
+        disabled={!bookKey}
+        Icon={!isSettingsGlobal ? MdCheck : null}
+        onClick={() => handleSetGlobal(false)}
       />
       <MenuItem label={resetLabel || _('Reset Settings')} onClick={handleResetToDefaults} />
     </Menu>
