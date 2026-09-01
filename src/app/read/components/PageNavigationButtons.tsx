@@ -35,6 +35,10 @@ const PageNavigationButtons: React.FC<PageNavigationButtonsProps> = ({
 
   const isPageNavigationButtonsVisible =
     (hoveredBookKey === bookKey || isDropdownOpen) && viewSettings?.showPaginationButtons;
+  const navigationButtonSize =
+    !isPageNavigationButtonsVisible && appService?.isAndroidApp
+      ? 'h-4 w-4 overflow-hidden'
+      : 'h-20 w-20';
 
   const handleGoLeftPage = useCallback(() => {
     viewPagination(view, viewSettings, 'left', 'page');
@@ -95,8 +99,8 @@ const PageNavigationButtons: React.FC<PageNavigationButtonsProps> = ({
         <button
           onClick={handleGoLeftSection}
           className={clsx(
-            'flex h-20 w-20 items-center justify-center focus:outline-none',
-            !isPageNavigationButtonsVisible && appService?.isAndroidApp && 'h-4 w-4',
+            'flex items-center justify-center focus:outline-hidden',
+            navigationButtonSize,
           )}
           aria-hidden={false}
           aria-label={getLeftSectionLabel()}
@@ -116,8 +120,8 @@ const PageNavigationButtons: React.FC<PageNavigationButtonsProps> = ({
         <button
           onClick={handleGoLeftPage}
           className={clsx(
-            'flex h-20 w-20 items-center justify-center focus:outline-none',
-            !isPageNavigationButtonsVisible && appService?.isAndroidApp && 'h-4 w-4',
+            'flex items-center justify-center focus:outline-hidden',
+            navigationButtonSize,
           )}
           aria-hidden={false}
           aria-label={getLeftPageLabel()}
@@ -147,8 +151,8 @@ const PageNavigationButtons: React.FC<PageNavigationButtonsProps> = ({
         <button
           onClick={handleGoRightPage}
           className={clsx(
-            'flex h-20 w-20 items-center justify-center focus:outline-none',
-            !isPageNavigationButtonsVisible && appService?.isAndroidApp && 'h-4 w-4',
+            'flex items-center justify-center focus:outline-hidden',
+            navigationButtonSize,
           )}
           aria-hidden={false}
           aria-label={getRightPageLabel()}
@@ -168,8 +172,8 @@ const PageNavigationButtons: React.FC<PageNavigationButtonsProps> = ({
         <button
           onClick={handleGoRightSection}
           className={clsx(
-            'flex h-20 w-20 items-center justify-center focus:outline-none',
-            !isPageNavigationButtonsVisible && appService?.isAndroidApp && 'h-4 w-4',
+            'flex items-center justify-center focus:outline-hidden',
+            navigationButtonSize,
           )}
           aria-hidden={false}
           aria-label={getRightSectionLabel()}
