@@ -1,6 +1,6 @@
 [package]
 name = "Readup"
-version = "0.1.0"
+version = "0.2.0"
 description = "Feed with books"
 authors = ["Readup Team"]
 license = "AGPL-3.0"
