@@ -96,7 +96,7 @@ export const Toast = () => {
     toastMessage && (
       <div
         className={clsx(
-          'toast z-[130] max-w-(--breakpoint-sm) transition-all duration-300',
+          'toast z-[130] max-w-[min(var(--breakpoint-sm),calc(100vw-2rem))] transition-all duration-300',
           toastClassMap[toastType],
           isVisible ? 'scale-100 opacity-100' : 'hidden',
         )}

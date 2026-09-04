@@ -24,6 +24,7 @@ import {
   applyScrollbarStyle,
   getThemeCode,
   applyEinkModeAttribute,
+  applyNamespacedAttributes,
 } from '@/styles/style';
 import { mountAdditionalFonts } from '@/styles/font';
 import { applyScrollableStyle, applyTableTouchScroll } from '@/utils/scrollable';
@@ -265,6 +266,9 @@ const FoliateViewer: React.FC<{
     const detail = (event as CustomEvent).detail;
     // console.log('doc index loaded:', detail.index);
     if (detail.doc) {
+      // Repair the parsed DOM before anything reads it: the renderer and the
+      // fix-ups below both resolve styles off this document.
+      applyNamespacedAttributes(detail.doc);
       const renderer = viewRef.current?.renderer;
       const writingDir = renderer?.setStyles && getDirection(detail.doc);
       const viewSettings = getViewSettings(bookKey)!;
