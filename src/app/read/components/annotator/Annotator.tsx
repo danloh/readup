@@ -39,7 +39,7 @@ import { writeTextToClipboard } from '@/utils/clipboard';
 import { getIndexFromCfi } from '@/utils/cfi';
 import { useFoliateEvents } from '../../hooks/useFoliateEvents';
 import { useTextSelector } from '../../hooks/useTextSelector';
-import { drawAnnotationOverlay, mergeRestyledAnnotation } from '../../utils/annotatorUtil';
+import { drawAnnotationOverlay, mergeRestyledAnnotation, removeBookNoteOverlays, removeEmptyAnnotationPlaceholder } from '../../utils/annotatorUtil';
 import { 
   beginGesture,
   createDeferredActionState, 
@@ -58,6 +58,7 @@ import {
 } from '../../utils/globalAnnotations';
 import { buildAnnotationIndex, selectLocationAnnotations } from '../../utils/annotationIndex';
 import { useRendererInputListeners } from '../../hooks/useRendererInputListeners';
+import { useSaveBooknoteNoteText } from '../../hooks/useSaveBooknoteNoteText';
 import { setProofreadRulesVisibility } from '../ProofreadRules';
 import { annotationToolButtons } from './AnnotationTools';
 import AnnotationPopup from './AnnotationPopup';
@@ -71,6 +72,7 @@ import ExcerptDialog from './ExcerptDialog';
 import DictionarySheet from './DictionarySheet';
 import SelectionRangeEditor from './SelectionRangeEditor';
 import PageTurnHint from './PageTurnHint';
+import NoteEditorSheet from './NoteEditorSheet';
 
 const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
   bookKey,
@@ -84,9 +86,10 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
   const { isDarkMode } = useThemeStore();
   const { getConfig, saveConfig, getBookData, updateBooknotes } = useBookDataStore();
   const { getView, getViewsById, getViewSettings } = useReaderStore();
-  const { setNotebookVisible, setNotebookNewAnnotation, setNotebookNewHighlightIds } =
-    useNotebookStore();
+  const { setNotebookVisible, setNotebookActiveTab } = useNotebookStore();
   const { listenToNativeTouchEvents } = useDeviceControlStore();
+
+  const saveBooknoteNoteText = useSaveBooknoteNoteText(bookKey);
 
   const osPlatform = getOSPlatform();
   const config = getConfig(bookKey)!;
@@ -122,6 +125,13 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [exportData, setExportData] = useState<{
     booknoteGroups: { [href: string]: BooknoteGroup };
+  } | null>(null);
+
+  // The note the Annotate action is currently collecting, plus the highlights
+  // it created on the way (#4791: those only live as long as this editor).
+  const [noteEditorTarget, setNoteEditorTarget] = useState<{
+    annotationId: string;
+    placeholderIds: string[];
   } | null>(null);
 
   const [selectedStyle, setSelectedStyle] = useState<HighlightStyle>(
@@ -251,6 +261,7 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
       setShowTsPopup(false);
       setShowProofreadPopup(false);
       setEditingAnnotation(null);
+      setNoteEditorTarget(null);
     }, 500),
     [],
   );
@@ -272,6 +283,7 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
     handleUpToPopup,
     handleContextmenu,
     dragSelectionTo,
+    suppressNativeSelectionHandles,
     noteAutoTurnPoint,
     cancelAutoTurn,
     onAutoTurn,
@@ -874,7 +886,7 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
       if (!gridFrame) return;
       const rect = gridFrame.getBoundingClientRect();
       const triangPos = getPosition(selection, rect, trianglePadding, viewSettings.vertical);
-      // console.log('>> selection position: ', triangPos);
+      // console.log('>> selection position: ', triangPos, selection, rect);
       const annotPopupPos = getPopupPosition(
         triangPos,
         rect,
@@ -1026,29 +1038,23 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
     const cfi = selection.popup ? selection.cfi : view?.getCFI(selection.index, selection.range);
     if (!cfi) return;
 
-    eventDispatcher.dispatch('toast', {
-      type: 'info',
-      message: _('Copied to notebook'),
-      className: 'whitespace-nowrap',
-      timeout: 2000,
-    });
-
     const { booknotes: annotations = [] } = config;
+    const existingIndex = annotations.findIndex(
+      (annotation) =>
+        annotation.cfi === cfi && annotation.type === 'excerpt' && !annotation.deletedAt,
+    );
+    const existing = existingIndex === -1 ? null : annotations[existingIndex]!;
+    const now = Date.now();
     const annotation: BookNote = {
-      id: uniqueId(),
+      id: existing?.id ?? uniqueId(),
       type: 'excerpt',
       cfi,
       text: selection.text,
       note: '',
       page: selection.page,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
+      createdAt: existing?.createdAt ?? now,
+      updatedAt: now,
     };
-
-    const existingIndex = annotations.findIndex(
-      (annotation) =>
-        annotation.cfi === cfi && annotation.type === 'excerpt' && !annotation.deletedAt,
-    );
     if (existingIndex !== -1) {
       annotations[existingIndex] = annotation;
     } else {
@@ -1058,7 +1064,14 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
     if (updatedConfig) {
       saveConfig(envConfig, bookKey, updatedConfig, settings);
     }
+    eventDispatcher.dispatch('toast', {
+      type: 'info',
+      message: _('Copied to Notebook'),
+      className: 'whitespace-nowrap',
+      timeout: 2000,
+    });
     if (!appService?.isMobile) {
+      setNotebookActiveTab('notes');
       setNotebookVisible(true);
     }
   };
@@ -1196,6 +1209,29 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
     }
   };
 
+  // The note editor replaces the selection with the annotation it just created,
+  // so the selection has no job left — and both the app-drawn range handles and
+  // (on iOS) the native selection highlight paint above web content, which is
+  // how they ended up sitting on top of the editor sheet. Drop it. The flag is
+  // cleared first: the selectionchange that deselect() fires would otherwise
+  // dismiss the very surface we are opening (#5585).
+  //
+  // The lookup popups are deliberately NOT here. A dictionary / translator /
+  // proofread lookup leaves the selection alive so dismissing it lands back on
+  // the selection toolbar (#5213, e2e-covered); they call
+  // `suppressNativeSelectionHandles` instead, which sheds the platform's
+  // grabbers without spending the selection, and `overlaySurfaceOpen` hides the
+  // app's own handles for the duration.
+  const dropSelectionForOverlay = () => {
+    isTextSelected.current = false;
+    view?.deselect();
+    // A popup-window selection lives in its own document (the footnote popup
+    // view's iframe or the host document), out of view.deselect()'s reach.
+    if (selection?.popup) {
+      selection.range.startContainer.ownerDocument?.getSelection()?.removeAllRanges();
+    }
+  };
+
   const handleAnnotate = () => {
     if (!selection || !selection.text) return;
     // A popup selection without a CFI has nothing to anchor a note to (the
@@ -1208,14 +1244,81 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
       selection.href = href;
     }
     const created = handleHighlight(true);
-    setNotebookVisible(true);
-    setNotebookNewAnnotation(selection);
-    // Remember the eagerly-created highlights (one per page of a cross-page
-    // selection) so the notebook can remove them if the note is never saved. A
-    // restyle of an existing highlight creates none — that record predates this
-    // flow and must survive a cancel (#4791).
-    setNotebookNewHighlightIds(created.map((annotation) => annotation.id));
-    handleDismissPopup();
+    const cfi = selection.popup ? selection.cfi : view?.getCFI(selection.index, selection.range);
+    const target =
+      created[0] ??
+      getConfig(bookKey)?.booknotes?.find(
+        (annotation) =>
+          annotation.type === 'annotation' && annotation.cfi === cfi && !annotation.deletedAt,
+      );
+    if (!target) return;
+    // Open the editor on the selection itself. Routing the note through the
+    // annotations sidebar instead used to strand it: that list is in reading
+    // order and virtualized, so a note made further down the page mounted its
+    // editor off screen (#5987, #5957).
+    dropSelectionForOverlay();
+    setNoteEditorTarget({
+      annotationId: target.id,
+      placeholderIds: created.map((annotation) => annotation.id),
+    });
+  };
+
+  // The pencil on a note bubble edits that note in the same editor the Annotate
+  // action opens, so a note reads and edits the same way wherever it is opened
+  // from. No placeholder to take back: the annotation already existed.
+  const handleEditNote = (note: BookNote) => {
+    dropSelectionForOverlay();
+    setNoteEditorTarget({ annotationId: note.id, placeholderIds: [] });
+  };
+
+  // Takes back the highlight Annotate created for the note to hang on, but
+  // never one the user had already made themselves (#4791).
+  const removeNotePlaceholders = (placeholderIds: string[]) => {
+    if (placeholderIds.length === 0) return;
+    const { booknotes = [] } = getConfig(bookKey) ?? {};
+    const removed = placeholderIds
+      .map((id) => removeEmptyAnnotationPlaceholder(booknotes, id, Date.now()))
+      .filter((placeholder): placeholder is BookNote => placeholder !== null);
+    if (removed.length === 0) return;
+    const views = getViewsById(bookKey.split('-')[0]!);
+    removed.forEach((placeholder) => {
+      views.forEach((view) => removeBookNoteOverlays(view, placeholder));
+    });
+    const updatedConfig = updateBooknotes(bookKey, booknotes);
+    if (updatedConfig) saveConfig(envConfig, bookKey, updatedConfig, settings);
+  };
+
+  // That placeholder lives only as long as its editor is presented, and Cancel
+  // is not the only way it stops being presented: opening the sidebar and a
+  // page relocate both dismiss the popup from effects, and the relocate guard
+  // no longer holds now that opening the editor clears isTextSelected. So the
+  // cleanup hangs off the target going away rather than off any one dismiss
+  // path (the pre-#5928 Notebook did the same).
+  const pendingNotePlaceholdersRef = useRef<string[]>([]);
+  useEffect(() => {
+    if (noteEditorTarget) {
+      pendingNotePlaceholdersRef.current = noteEditorTarget.placeholderIds;
+      return;
+    }
+    const placeholderIds = pendingNotePlaceholdersRef.current;
+    pendingNotePlaceholdersRef.current = [];
+    removeNotePlaceholders(placeholderIds);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [noteEditorTarget]);
+
+  const handleSaveNote = (note: string) => {
+    if (!noteEditorTarget) return;
+    saveBooknoteNoteText(noteEditorTarget.annotationId, note);
+    // The placeholder carries a note now — a real annotation, not a leftover.
+    pendingNotePlaceholdersRef.current = [];
+    setNoteEditorTarget(null);
+    handleDismissPopupAndSelection();
+  };
+
+  const handleCancelNote = () => {
+    if (!noteEditorTarget) return;
+    setNoteEditorTarget(null);
+    handleDismissPopupAndSelection();
   };
 
   const handleSearch = () => {
@@ -1249,18 +1352,21 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
       return;
     }
     setShowAnnotPopup(false);
+    void suppressNativeSelectionHandles();
     setShowDictPopup(true);
   };
 
   const handleWikipedia = () => {
     if (!selection || !selection.text) return;
     setShowAnnotPopup(false);
+    void suppressNativeSelectionHandles();
     setShowWikipediaPopup(true);
   };
 
   const handleTranslation = () => {
     if (!selection || !selection.text) return;
     setShowAnnotPopup(false);
+    void suppressNativeSelectionHandles();
     setShowTsPopup(true);
   };
 
@@ -1296,6 +1402,7 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
     // attribute footnotes) has nothing to attach to.
     if (selection.popup && !selection.cfi) return;
     setShowAnnotPopup(false);
+    void suppressNativeSelectionHandles();
     setShowProofreadPopup(true);
 
     if (getWordCount(selection.text) > 30) {
@@ -1364,7 +1471,7 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
 
     const config = getConfig(bookKey)!;
     const { booknotes: allNotes = [] } = config;
-    const booknotes = allNotes.filter((note) => !note.deletedAt);
+    const booknotes = allNotes.filter((note) => note.type !== 'notebook' && !note.deletedAt);
     if (booknotes.length === 0) {
       eventDispatcher.dispatch('toast', {
         type: 'info',
@@ -1523,11 +1630,23 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
     }
   };
 
-  // The range editors are fixed full-screen overlays rendered after the lookup
-  // popups, so their handles would float on top of the dictionary sheet /
-  // popup (#5815). They belong to the toolbar: hide them while a lookup is
-  // open, and let them come back with the toolbar (or go with the dismiss).
-  const lookupPopupOpen = showDictPopup || showTsPopup || showProofreadPopup;
+  // The range editors are fixed full-screen overlays rendered after the popups
+  // and sheets, so their handles would float on top of the dictionary, the
+  // translator, the proofreader or the note editor (#5815). They belong to the
+  // toolbar: hide them while any of those is open, and let them come back with
+  // the toolbar (or go with the dismiss).
+  const overlaySurfaceOpen =
+    showDictPopup || showTsPopup || showProofreadPopup || !!noteEditorTarget;
+
+  // Below `sm` (or short landscape) the note editor is a bottom sheet rather
+  // than a popup pinned to the selection: an anchored editor would sit under
+  // the on-screen keyboard. Same heuristic the dictionary uses.
+  const noteEditorInSheet =
+    !!noteEditorTarget && (window.innerWidth < 640 || window.innerHeight < 640);
+  const noteEditorInPopup = !!noteEditorTarget && !noteEditorInSheet;
+  const editedNoteText =
+    config.booknotes?.find((annotation) => annotation.id === noteEditorTarget?.annotationId)
+      ?.note || '';
 
   return (
     <div ref={containerRef} role='toolbar' tabIndex={-1}>
@@ -1609,7 +1728,7 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
         />
       )}
       {!editingAnnotation && 
-      !lookupPopupOpen && 
+      !overlaySurfaceOpen &&
       selection?.handlesSuppressed && 
       selection.range && (
         <SelectionRangeEditor
@@ -1624,7 +1743,7 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
           onAutoTurn={onAutoTurn}
         />
       )}
-      {editingAnnotation && editingAnnotation.color && selection && !lookupPopupOpen && (
+      {editingAnnotation && editingAnnotation.color && selection && !overlaySurfaceOpen && (
         <AnnotationRangeEditor
           bookKey={bookKey}
           isVertical={viewSettings.vertical}
@@ -1640,13 +1759,28 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
           onAutoTurn={onAutoTurn}
         />
       )}
-      {showAnnotPopup && trianglePosition && annotPopupPosition && (
+      {showAnnotPopup && !noteEditorInSheet && trianglePosition && annotPopupPosition && 
+        // With an empty toolbar, suppress the popup on a plain selection rather
+        // than showing an empty bar. Still allow it for editing an existing
+        // highlight (options), viewing its notes, or writing a new one.
+        (toolButtons.length > 0 ||
+          highlightOptionsVisible ||
+          annotationNotes.length > 0 ||
+          noteEditorInPopup
+        ) && 
+      (
         <AnnotationPopup
           bookKey={bookKey}
           dir={viewSettings.rtl ? 'rtl' : 'ltr'}
           isVertical={viewSettings.vertical}
           buttons={toolButtons}
           notes={annotationNotes}
+          onEditNote={handleEditNote}
+          noteEditor={
+            noteEditorInPopup
+              ? { value: editedNoteText, onSave: handleSaveNote, onCancel: handleCancelNote }
+              : null
+          }
           position={annotPopupPosition}
           trianglePosition={trianglePosition}
           highlightOptionsVisible={highlightOptionsVisible}
@@ -1655,10 +1789,17 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
           popupWidth={annotPopupWidth}
           popupHeight={annotPopupHeight}
           onHighlight={handleHighlight}
-          onDismiss={handleDismissPopupAndSelection}
+          onDismiss={noteEditorTarget ? handleCancelNote : handleDismissPopupAndSelection}
           globalToggleAvailable={globalToggleAvailable}
           globalToggleActive={globalToggleActive}
           onToggleGlobal={handleToggleGlobal}
+        />
+      )}
+      {noteEditorInSheet && (
+        <NoteEditorSheet
+          value={editedNoteText}
+          onSave={handleSaveNote}
+          onCancel={handleCancelNote}
         />
       )}
       {showExcerptDialog && selection && bookData.book && (

@@ -9,6 +9,7 @@ interface AnnotationNotesProps {
   bookKey: string;
   isVertical: boolean;
   notes: BookNote[];
+  onEditNote?: (note: BookNote) => void;
   toolsVisible: boolean;
   triangleDir: 'up' | 'down' | 'left' | 'right';
   popupWidth: number;
@@ -20,6 +21,7 @@ const AnnotationNotes: React.FC<AnnotationNotesProps> = ({
   bookKey,
   isVertical,
   notes,
+  onEditNote,
   toolsVisible,
   triangleDir,
   popupWidth,
@@ -74,6 +76,7 @@ const AnnotationNotes: React.FC<AnnotationNotesProps> = ({
             key={note.id || index}
             bookKey={bookKey}
             note={note}
+            onEdit={onEditNote}
             isVertical={isVertical}
             popupHeight={popupHeight}
             onDismiss={onDismiss}

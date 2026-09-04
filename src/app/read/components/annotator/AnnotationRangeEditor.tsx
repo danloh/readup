@@ -324,7 +324,7 @@ const AnnotationRangeEditor: React.FC<AnnotationRangeEditorProps> = ({
   const showLoupe = appService?.isMobile && !viewSettings?.isEink && !viewSettings?.vertical;
 
   return (
-    <div className='pointer-events-none fixed inset-0 z-50'>
+    <div className='pointer-events-none fixed inset-0 z-[44]'>
       <Handle
         hidden={activeHandle === 'end' || loupeDragPoint !== null}
         position={currentStart}

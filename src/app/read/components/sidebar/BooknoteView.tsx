@@ -284,7 +284,14 @@ const BooknoteView: React.FC<{
   const isEmpty = sortedGroups.length === 0;
 
   return (
-    <div ref={containerRef} className='booknote-list rounded pt-2' role='tree'>
+    <div 
+      ref={containerRef} 
+      className='booknote-list rounded pt-2' 
+      role='tree' 
+      data-annotations-heading={type === 'annotation' ? '' : undefined}
+      tabIndex={type === 'annotation' ? -1 : undefined}
+      aria-label={type === 'annotation' ? _('Annotations') : undefined}
+    >
       {isEmpty ? (
         <div
           className='flex items-center justify-center overflow-hidden'

@@ -11,28 +11,36 @@ import { useSettingsStore } from '@/store/settingsStore';
 import { useBookDataStore } from '@/store/bookDataStore';
 import { useReaderStore } from '@/store/readerStore';
 import { useSidebarStore } from '@/store/sidebarStore';
+import { useNotebookDocumentStore } from '@/store/notebookDocumentStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useGamepad } from '@/hooks/useGamepad';
 import { Book } from '@/types/book';
 import { SystemSettings } from '@/types/settings';
+import { isTauriAppPlatform } from '@/services/environment';
+import { BOOK_IDS_SEPARATOR } from '@/services/constants';
 import { parseOpenWithFiles } from '@/helpers/openWith';
 import { tauriHandleClose, tauriHandleOnCloseWindow } from '@/utils/window';
-import { isTauriAppPlatform } from '@/services/environment';
 import { uniqueId } from '@/utils/misc';
 import { throttle } from '@/utils/throttle';
 import { eventDispatcher } from '@/utils/event';
+import { writeTextToClipboard } from '@/utils/clipboard';
 import { 
   closeReaderWindowOrGoToLibrary, ensureMainLibraryWindow, navigateToLibrary 
 } from '@/utils/nav';
-import { BOOK_IDS_SEPARATOR } from '@/services/constants';
 import Spinner from '@/components/Spinner';
+import ModalPortal from '@/components/ModalPortal';
 import SettingsDialog from '@/components/settings/SettingsDialog';
 import BookDetailModal from '@/app/library/components/metadata/BookDetailModal';
 import useBooksManager from '../hooks/useBooksManager';
 import useBookShortcuts from '../hooks/useBookShortcuts';
+import { 
+  discardNotebookDocument, flushNotebookDocument 
+} from '../hooks/useNotebookDocumentCoordinator';
+import { canTransitionWithNotebookRecovery } from '../services/notebookDocumentCoordinator';
 import SideBar from './sidebar/SideBar';
 import Notebook from './notebook/Notebook';
 import BooksGrid from './BooksGrid';
+import NotebookTransitionAlert from './notebook/NotebookTransitionAlert';
 
 interface ReaderContentProps {
   ids?: string; 
@@ -55,6 +63,8 @@ const ReaderContent: React.FC<ReaderContentProps> = ({ ids, settings }) => {
   const isInitiating = useRef(false);
   const [loading, setLoading] = useState(false);
   const [errorLoading, setErrorLoading] = useState(false);
+  const [blockedNotebookBookKey, setBlockedNotebookBookKey] = useState<string | null>(null);
+  const pendingNotebookTransitionRef = useRef<(() => Promise<void>) | null>(null);
 
   useBookShortcuts({ sideBarBookKey, bookKeys });
   useGamepad();
@@ -125,12 +135,12 @@ const ReaderContent: React.FC<ReaderContentProps> = ({ ids, settings }) => {
     }
     window.addEventListener('beforeunload', handleCloseBooks);
     eventDispatcher.on('beforereload', handleCloseBooks);
-    eventDispatcher.on('close-reader', handleCloseBooks);
+    eventDispatcher.on('close-reader', handleCloseReaderToLibrary);
     eventDispatcher.on('quit-app', handleCloseBooks);
     return () => {
       window.removeEventListener('beforeunload', handleCloseBooks);
       eventDispatcher.off('beforereload', handleCloseBooks);
-      eventDispatcher.off('close-reader', handleCloseBooks);
+      eventDispatcher.off('close-reader', handleCloseReaderToLibrary);
       eventDispatcher.off('quit-app', handleCloseBooks);
       unlistenOnCloseWindow?.then((fn) => fn());
     };
@@ -147,14 +157,22 @@ const ReaderContent: React.FC<ReaderContentProps> = ({ ids, settings }) => {
     }
   };
 
-  const saveConfigAndCloseBook = async (bookKey: string) => {
+  const saveConfigAndCloseBook = async (bookKey: string, keepTTSAlive = false) => {
+    console.log('Closing book', bookKey);
     try {
       getView(bookKey)?.close();
       getView(bookKey)?.remove();
-    } catch(error) {
-      console.info('Error on closing book', bookKey, error);
+    } catch {
+      console.info('Error closing book', bookKey);
     }
-    eventDispatcher.dispatch('tts-stop', { bookKey });
+    // Closes that keep the webview alive (back to library, Android back, pane
+    // dismiss) let a live TTS session continue in the background;
+    // webview-destroying closes (quit, window close, reload) hard-stop so the
+    // media session and Android foreground service tear down with the page.
+    // FIXME: handle event: tts-close-book
+    eventDispatcher.dispatch(keepTTSAlive ? 'tts-close-book' : 'tts-stop', {
+      bookKey,
+    });
     await saveBookConfig(bookKey);
     clearViewState(bookKey);
   };
@@ -168,51 +186,98 @@ const ReaderContent: React.FC<ReaderContentProps> = ({ ids, settings }) => {
     navigateBackToLibrary();
   };
 
-  const handleCloseBooks = throttle(async () => {
-    const settings = useSettingsStore.getState().settings;
-    await Promise.all(bookKeys.map(async (key) => await saveConfigAndCloseBook(key)));
-    await saveSettings(envConfig, settings);
+  const runNotebookTransition = async (
+    keys: string[],
+    transition: () => Promise<void>,
+  ): Promise<boolean> => {
+    for (const key of keys) {
+      await flushNotebookDocument(key);
+      const bookHash = key.split('-')[0]!;
+      if (!canTransitionWithNotebookRecovery(bookHash)) {
+        pendingNotebookTransitionRef.current = async () => {
+          await runNotebookTransition(keys, transition);
+        };
+        setBlockedNotebookBookKey(key);
+        return false;
+      }
+    }
+    pendingNotebookTransitionRef.current = null;
+    setBlockedNotebookBookKey(null);
+    await transition();
+    return true;
+  };
+
+  const closeBooks = async (keepTTSAlive: boolean) => {
+    const currentSettings = useSettingsStore.getState().settings;
+    await Promise.all(bookKeys.map((key) => saveConfigAndCloseBook(key, keepTTSAlive)));
+    await saveSettings(envConfig, currentSettings);
+  };
+
+  const handleCloseReaderToLibrary = async (event: CustomEvent): Promise<void> => {
+    const onClose = (event.detail as { onClose?: () => void } | undefined)?.onClose;
+    await runNotebookTransition(bookKeys, async () => {
+      await closeBooks(true);
+      onClose?.();
+    });
+  };
+
+  // Also wired directly to beforeunload/quit-app/window-close, which pass an
+  // event object: only a literal `true` keeps TTS alive.
+  const handleCloseBooks = throttle(async (keepTTSAlive?: unknown) => {
+    await runNotebookTransition(bookKeys, () => closeBooks(keepTTSAlive === true));
   }, 200);
 
   const handleCloseBooksToLibrary = async () => {
-    handleCloseBooks();
-    if (isTauriAppPlatform()) {
-      const currentWindow = getCurrentWindow();
-      if (currentWindow.label === 'main') {
-        navigateBackToLibrary();
-      } else {
-        if (appService) {
-          await ensureMainLibraryWindow(appService);
+    // SPA navigation in the main window (or on web) keeps the webview alive:
+    // TTS may continue headless. Non-main Tauri windows close their webview
+    // below, but their per-window TTS dies with the window either way.
+    await runNotebookTransition(bookKeys, async () => {
+      await closeBooks(true);
+      if (isTauriAppPlatform()) {
+        const currentWindow = getCurrentWindow();
+        if (currentWindow.label === 'main') {
+          navigateBackToLibrary();
+        } else {
+          if (appService) {
+            await ensureMainLibraryWindow(appService);
+          }
+          await currentWindow.close();
         }
-        currentWindow.close();
+      } else {
+        navigateBackToLibrary();
       }
-    } else {
-      navigateBackToLibrary();
-    }
+    });
   };
 
   const handleCloseBook = async (bookKey: string) => {
-    saveConfigAndCloseBook(bookKey);
-    if (sideBarBookKey === bookKey) {
-      setSideBarBookKey(getNextBookKey(sideBarBookKey));
-    }
-    dismissBook(bookKey);
-    if (bookKeys.filter((key) => key !== bookKey).length == 0) {
-      const openWithFiles = (await parseOpenWithFiles(appService)) || [];
-      if (appService?.hasWindow) {
-        if (openWithFiles.length > 0) {
-          void tauriHandleOnCloseWindow(handleCloseBooks).catch((error) => {
-            console.info('Failed to register close-window listener:', error);
-          });
-          return await tauriHandleClose();
-        }
-        const currentWindow = getCurrentWindow();
-        if (currentWindow.label.startsWith('reader')) {
-          return await currentWindow.close();
-        }
+    // Header X / pane close: an SPA-side close on web and the main window.
+    // The Tauri reader-window branches below destroy their webview, which
+    // takes the per-window TTS with it either way.
+    await runNotebookTransition([bookKey], async () => {
+      await saveConfigAndCloseBook(bookKey, true);
+      if (sideBarBookKey === bookKey) {
+        setSideBarBookKey(getNextBookKey(sideBarBookKey));
       }
-      saveSettingsAndGoToLibrary();
-    }
+      dismissBook(bookKey);
+      if (bookKeys.filter((key) => key !== bookKey).length == 0) {
+        const openWithFiles = (await parseOpenWithFiles(appService)) || [];
+        if (appService?.hasWindow) {
+          if (openWithFiles.length > 0) {
+            void tauriHandleOnCloseWindow(handleCloseBooks).catch((error) => {
+              console.info('Failed to register close-window listener:', error);
+            });
+            await tauriHandleClose();
+            return;
+          }
+          const currentWindow = getCurrentWindow();
+          if (currentWindow.label.startsWith('reader')) {
+            await currentWindow.close();
+            return;
+          }
+        }
+        saveSettingsAndGoToLibrary();
+      }
+    });
   };
 
   if (!bookKeys || bookKeys.length === 0) return null;
@@ -246,6 +311,36 @@ const ReaderContent: React.FC<ReaderContentProps> = ({ ids, settings }) => {
           onClose={() => setShowDetailsBook(null)}
           showBtns={true}
         />
+      )}
+      {blockedNotebookBookKey && (
+        <ModalPortal>
+          <NotebookTransitionAlert
+            onKeepOpen={() => {
+              pendingNotebookTransitionRef.current = null;
+              setBlockedNotebookBookKey(null);
+            }}
+            onCopy={() => {
+              const bookHash = blockedNotebookBookKey.split('-')[0]!;
+              const content = useNotebookDocumentStore.getState().sessions[bookHash]?.content ?? '';
+              void writeTextToClipboard(content);
+              eventDispatcher.dispatch('toast', {
+                type: 'info',
+                message: _('Notebook draft copied to clipboard'),
+                timeout: 2000,
+              });
+            }}
+            onDiscard={() => {
+              const pending = pendingNotebookTransitionRef.current;
+              discardNotebookDocument(blockedNotebookBookKey);
+              setBlockedNotebookBookKey(null);
+              if (pending) void pending();
+            }}
+            onRetry={() => {
+              const pending = pendingNotebookTransitionRef.current;
+              if (pending) void pending();
+            }}
+          />
+        </ModalPortal>
       )}
     </div>
   );

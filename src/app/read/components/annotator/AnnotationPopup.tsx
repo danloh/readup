@@ -3,9 +3,11 @@ import React from 'react';
 import { Position } from '@/utils/sel';
 import { BookNote, HighlightColor, HighlightStyle } from '@/types/book';
 import Popup from '@/components/Popup';
+import { useResponsiveSize } from '@/hooks/useResponsiveSize';
 import PopupButton from './PopupButton';
 import HighlightOptions from './HighlightOptions';
 import AnnotationNotes from './AnnotationNotes';
+import AnnotationNoteEditor from './AnnotationNoteEditor';
 
 interface ToolButton {
   tooltipText: string;
@@ -16,12 +18,26 @@ interface ToolButton {
   className?: string;
 }
 
+export interface AnnotationNoteEditorTarget {
+  value: string;
+  onSave: (note: string) => void;
+  onCancel: () => void;
+}
+
 interface AnnotationPopupProps {
   bookKey: string;
   dir: 'ltr' | 'rtl';
   isVertical: boolean;
   buttons: ToolButton[];
   notes: BookNote[];
+  /**
+   * Set while the Annotate action is collecting a note for the selection. It
+   * takes over the popup body: the toolbar's job is done, and the note the
+   * user is typing is the only thing they care about (#5987).
+   */
+  noteEditor?: AnnotationNoteEditorTarget | null;
+  /** Opens `noteEditor` on an existing note (the bubble's pencil). */
+  onEditNote?: (note: BookNote) => void;
   position: Position;
   trianglePosition: Position;
   highlightOptionsVisible: boolean;
@@ -42,6 +58,8 @@ const AnnotationPopup: React.FC<AnnotationPopupProps> = ({
   isVertical,
   buttons,
   notes,
+  noteEditor,
+  onEditNote,
   position,
   trianglePosition,
   highlightOptionsVisible,
@@ -55,17 +73,25 @@ const AnnotationPopup: React.FC<AnnotationPopupProps> = ({
   globalToggleActive,
   onToggleGlobal,
 }) => {
+  // Tall enough for a few lines plus the Cancel/Save row, so the editor opens
+  // at a usable size instead of the 44px toolbar height it replaces.
+  const noteEditorSize = useResponsiveSize(180);
+  // The popup's own box, with the vertical-writing swap already applied — the
+  // same values AnnotationNotes and HighlightOptions are handed.
+  const boxWidth = isVertical ? popupHeight : popupWidth;
+  const boxHeight = isVertical ? popupWidth : popupHeight;
+  
   return (
-    <div dir={dir}>
+    <div dir={dir} className='pointer-events-none fixed inset-0 z-[43]'>
       <Popup
-        width={isVertical ? popupHeight : popupWidth}
-        height={isVertical ? popupWidth : popupHeight}
-        minHeight={isVertical ? popupWidth : popupHeight}
+        width={boxWidth}
+        height={boxHeight}
+        minHeight={boxHeight}
         position={position}
         trianglePosition={trianglePosition}
         className={clsx(
-          'selection-popup bg-gray-600 text-white',
-          notes.length > 0 && 'bg-transparent',
+          'selection-popup pointer-events-auto',
+          (notes.length > 0 || noteEditor) && 'bg-transparent',
         )}
         onDismiss={onDismiss}
       >
@@ -74,7 +100,7 @@ const AnnotationPopup: React.FC<AnnotationPopupProps> = ({
             className={clsx(
               'selection-buttons flex h-full w-full items-center justify-between p-2',
               isVertical ? 'flex-col overflow-y-auto' : 'flex-row overflow-x-auto',
-              notes.length > 0 && 'hidden',
+              (notes.length > 0 || noteEditor) && 'hidden',
             )}
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
@@ -93,15 +119,49 @@ const AnnotationPopup: React.FC<AnnotationPopupProps> = ({
               );
             })}
           </div>
-          {notes.length > 0 ? (
+          {noteEditor ? (
+            <AnnotationNoteEditor
+              value={noteEditor.value}
+              isVertical={isVertical}
+              // Same chrome recipe as Popup's own container, so the editor
+              // reads as a panel over the page rather than a shadowless block
+              // in the page's own colour.
+              className={clsx(
+                'annotation-note-editor popup-container text-base-content absolute rounded-lg border',
+                'not-eink:border-base-content/20 not-eink:shadow-2xl',
+                'bg-base-300 theme-dark:bg-base-100',
+              )}
+              // Anchored to the popup's triangle edge and grown away from it,
+              // exactly like AnnotationNotes, so the editor covers the toolbar
+              // instead of drifting off the selection.
+              style={
+                isVertical
+                  ? {
+                      right: trianglePosition.dir === 'left' ? 0 : undefined,
+                      left: trianglePosition.dir === 'right' ? 0 : undefined,
+                      height: `${boxHeight}px`,
+                      width: `${noteEditorSize}px`,
+                    }
+                  : {
+                      top: trianglePosition.dir === 'down' ? 0 : undefined,
+                      bottom: trianglePosition.dir === 'up' ? 0 : undefined,
+                      width: `${boxWidth}px`,
+                      height: `${noteEditorSize}px`,
+                    }
+              }
+              onSave={noteEditor.onSave}
+              onCancel={noteEditor.onCancel}
+            />
+          ) : notes.length > 0 ? (
             <AnnotationNotes
               bookKey={bookKey}
               isVertical={isVertical}
               notes={notes}
+              onEditNote={onEditNote}
               toolsVisible={false}
               triangleDir={trianglePosition.dir!}
-              popupWidth={isVertical ? popupHeight : popupWidth}
-              popupHeight={isVertical ? popupWidth : popupHeight}
+              popupWidth={boxWidth}
+              popupHeight={boxHeight}
               onDismiss={onDismiss}
             />
           ) : (
@@ -109,8 +169,8 @@ const AnnotationPopup: React.FC<AnnotationPopupProps> = ({
               <HighlightOptions
                 isVertical={isVertical}
                 triangleDir={trianglePosition.dir!}
-                popupWidth={isVertical ? popupHeight : popupWidth}
-                popupHeight={isVertical ? popupWidth : popupHeight}
+                popupWidth={boxWidth}
+                popupHeight={boxHeight}
                 selectedStyle={selectedStyle}
                 selectedColor={selectedColor}
                 onHandleHighlight={onHighlight}
