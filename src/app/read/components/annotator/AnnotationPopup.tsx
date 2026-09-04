@@ -82,7 +82,7 @@ const AnnotationPopup: React.FC<AnnotationPopupProps> = ({
   const boxHeight = isVertical ? popupWidth : popupHeight;
   
   return (
-    <div dir={dir} className='pointer-events-none fixed inset-0 z-[43]'>
+    <div dir={dir} className='pointer-events-none z-[43]'>
       <Popup
         width={boxWidth}
         height={boxHeight}
