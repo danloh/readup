@@ -1,4 +1,7 @@
 import { useEffect, useRef } from 'react';
+
+import { useEnv } from '@/context/EnvContext';
+import { saveViewSettings } from '@/helpers/settings';
 import { useReaderStore } from '@/store/readerStore';
 import { useNotebookStore } from '@/store/notebookStore';
 import { isTauriAppPlatform } from '@/services/environment';
@@ -10,7 +13,10 @@ import { eventDispatcher } from '@/utils/event';
 import { getScrollGapAttr } from '@/utils/webtoon';
 import { getParagraphActionForKey } from '@/utils/paragraphPresentation';
 import { extendSelectionFromContents, KeyModifiers } from '@/utils/sel';
-import { MAX_ZOOM_LEVEL, MIN_ZOOM_LEVEL, ZOOM_STEP } from '@/services/constants';
+import { 
+  DEFAULT_BOOK_FONT, FONT_SIZE_STEP, MAX_FONT_SIZE, 
+  MAX_ZOOM_LEVEL, MIN_FONT_SIZE, MIN_ZOOM_LEVEL, ZOOM_STEP 
+} from '@/services/constants';
 import { useCommandPalette } from '@/components/command-palette';
 import { setShortcutsDialogVisible } from '@/components/KeyboardShortcutsHelp';
 import useShortcuts from '@/hooks/useShortcuts';
@@ -27,7 +33,8 @@ interface UseBookShortcutsProps {
 const useBookShortcuts = ({ sideBarBookKey, bookKeys }: UseBookShortcutsProps) => {
   const { getView, getViewState, getViewSettings, setViewSettings } = useReaderStore();
   const { toggleSideBar, setSideBarBookKey } = useSidebarStore();
-  const { setFontLayoutSettingsDialogOpen, setSettingsDialogBookKey } = useSettingsStore();
+  const { settings, setFontLayoutSettingsDialogOpen, setSettingsDialogBookKey } = useSettingsStore();
+  const { envConfig } = useEnv();
   const { getBookData } = useBookDataStore();
   const { toggleNotebook } = useNotebookStore();
   const { getNextBookKey } = useBooksManager();
@@ -265,9 +272,25 @@ const useBookShortcuts = ({ sideBarBookKey, bookKeys }: UseBookShortcutsProps) =
     }
   };
 
+  // Reflowable books scale by text, not by page (issue #5694). The new size is
+  // saved with skipGlobal so zooming one book never resizes the whole library.
+  const applyFontSize = (fontSize: number) => {
+    const viewSettings = sideBarBookKey ? getViewSettings(sideBarBookKey) : null;
+    if (!sideBarBookKey || !viewSettings) return;
+    const clamped = Math.max(MIN_FONT_SIZE, Math.min(MAX_FONT_SIZE, Math.round(fontSize)));
+    if (clamped === viewSettings.defaultFontSize) return;
+    saveViewSettings(envConfig, sideBarBookKey, 'defaultFontSize', clamped, true);
+  };
+
+  const isFixedLayout = () => !!getBookData(sideBarBookKey ?? '')?.isFixedLayout;
+
   const zoomInFactor = (factor = 1.0) => {
     if (!sideBarBookKey) return;
     const viewSettings = getViewSettings(sideBarBookKey)!;
+    if (!isFixedLayout()) {
+      applyFontSize(viewSettings.defaultFontSize + FONT_SIZE_STEP * factor);
+      return;
+    }
     const zoomLevel = viewSettings!.zoomLevel + ZOOM_STEP * factor;
     applyZoomLevel(Math.min(zoomLevel, MAX_ZOOM_LEVEL));
   };
@@ -275,6 +298,10 @@ const useBookShortcuts = ({ sideBarBookKey, bookKeys }: UseBookShortcutsProps) =
   const zoomOutFactor = (factor = 1.0) => {
     if (!sideBarBookKey) return;
     const viewSettings = getViewSettings(sideBarBookKey)!;
+    if (!isFixedLayout()) {
+      applyFontSize(viewSettings.defaultFontSize - FONT_SIZE_STEP * factor);
+      return;
+    }
     const zoomLevel = viewSettings!.zoomLevel - ZOOM_STEP * factor;
     applyZoomLevel(Math.max(zoomLevel, MIN_ZOOM_LEVEL));
   };
@@ -299,6 +326,12 @@ const useBookShortcuts = ({ sideBarBookKey, bookKeys }: UseBookShortcutsProps) =
 
   const resetZoom = () => {
     if (!sideBarBookKey) return;
+    if (!isFixedLayout()) {
+      applyFontSize(
+        settings.globalViewSettings?.defaultFontSize ?? DEFAULT_BOOK_FONT.defaultFontSize,
+      );
+      return;
+    }
     applyZoomLevel(100);
   };
 

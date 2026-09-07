@@ -460,38 +460,6 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
     detail.doc?.addEventListener('pointerup', handlePointerUp.bind(null, doc, index));
     detail.doc?.addEventListener('selectionchange', handleSelectionchange.bind(null, doc, index));
 
-    // For PDF selections, enable right-click context menu to directly open translator popup.
-    if (bookData.isFixedLayout) {
-      detail.doc?.addEventListener('contextmenu', (e: Event) => {
-        // Prevent native menu to keep experience consistent
-        e.preventDefault();
-        e.stopPropagation();
-        try {
-          const sel = doc.getSelection?.();
-          if (!sel || sel.isCollapsed) return;
-          const range = sel.getRangeAt(0);
-          // Same text as the toolbar path, with PDF line wraps joined (#5814).
-          void getAnnotationText(range).then((text) => {
-            if (!text.trim()) return;
-            setSelection({
-              key: bookKey,
-              text,
-              range,
-              index,
-              cfi: view?.getCFI(index, range),
-              page: index + 1,
-            });
-            // Show translation popup preferentially for PDF right-click
-            setShowAnnotPopup(false);
-            setShowTsPopup(true);
-            setShowDictPopup(false);
-          });
-        } catch (err) {
-          console.warn('PDF context menu translation failed:', err);
-        }
-      });
-    }
-
     // Disable the default context menu on mobile devices (selection handles suffice)
     detail.doc?.addEventListener('contextmenu', handleContextmenu);
   };
@@ -1370,7 +1338,11 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
     setShowTsPopup(true);
   };
 
-  const handleSpeakText = async (oneTime = false) => {
+  // `oneTime` is required rather than defaulted: it decides whether this reads
+  // the selection and stops or starts an open-ended session from it, and every
+  // entry point here means the former. Defaulting it silently turned Ctrl/Cmd+R
+  // into "start the book from this paragraph" (#5011).
+  const handleSpeakText = async (oneTime: boolean) => {
     if (!selection || !selection.text) return;
     // TTS walks the main view's documents; a popup-window range can't seed it
     // (the toolbar button is disabled, this guards the keyboard shortcut).
@@ -1453,7 +1425,7 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
         handleWikipedia();
       },
       onReadAloudSelection: () => {
-        handleSpeakText();
+        handleSpeakText(true);
       },
       onProofreadSelection: () => {
         handleProofread();
@@ -1597,7 +1569,7 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
         return {
           tooltipText: _(label),
           Icon,
-          onClick: handleSpeakText,
+          onClick: () => handleSpeakText(true),
           visible: false, // disable TTS false
           disabled: !!selection?.popup,
         };

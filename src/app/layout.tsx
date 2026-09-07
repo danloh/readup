@@ -1,6 +1,6 @@
 import * as React from 'react';
 import type { Metadata, Viewport } from 'next';
-import { ViewTransitions } from 'next-view-transitions';
+import { ViewTransitions } from '@/components/ViewTransitions';
 import { EnvProvider } from '@/context/EnvContext';
 import Providers from '@/components/Providers';
 import '../styles/globals.css';

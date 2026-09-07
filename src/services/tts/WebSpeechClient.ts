@@ -5,6 +5,7 @@ import { TTSGranularity, TTSMark, TTSVoice, TTSVoicesGroup } from './types';
 import { WEB_SPEECH_BLACKLISTED_VOICES } from './TTSData';
 import { TTSController } from './TTSController';
 import { TTSUtils } from './TTSUtils';
+import { isSameLang } from '@/utils/lang';
 
 interface TTSBoundaryEvent {
   type: 'boundary' | 'end' | 'error';
@@ -220,7 +221,7 @@ export class WebSpeechClient implements TTSClient {
     return voices;
   }
 
-  async getVoices(lang: string) {
+  async getVoices0(lang: string) {
     const locale = lang === 'en' ? getUserLocale(lang) || lang : lang;
     const isValidVoice = (id: string) => {
       return !id.includes('com.apple') || id.includes('com.apple.voice.compact');
@@ -238,6 +239,61 @@ export class WebSpeechClient implements TTSClient {
       .filter(isNotBlacklisted);
     const seenIds = new Set<string>();
     const voices = filteredVoices
+      .map(
+        (voice) =>
+          ({
+            id: voice.voiceURI,
+            name: voice.name,
+            lang: voice.lang,
+          }) as TTSVoice,
+      )
+      .filter((voice) => {
+        if (seenIds.has(voice.id)) {
+          return false;
+        }
+        seenIds.add(voice.id);
+        return true;
+      });
+    voices.forEach((voice) => {
+      voice.disabled = !this.initialized;
+    });
+
+    const voicesGroup: TTSVoicesGroup = {
+      id: 'web-speech-api',
+      name: 'Web TTS',
+      voices: voices.sort(TTSUtils.sortVoicesFunc),
+      disabled: !this.initialized || voices.length === 0,
+    };
+    return [voicesGroup];
+  }
+
+  async getVoices(lang: string) {
+    const isNotBlacklisted = (voice: SpeechSynthesisVoice) => {
+      return (
+        !voice.voiceURI.startsWith('com.apple.eloquence.') &&
+        !voice.voiceURI.startsWith('com.apple.speech.synthesis.voice.') &&
+        !WEB_SPEECH_BLACKLISTED_VOICES.some((name) => voice.name.includes(name))
+      );
+    };
+    // Match by primary language so the voice set stays the same across a book
+    // whose sections mix region variants (e.g. en-US front matter and en-GB
+    // body text); the requested locale's voices sort first. See #4033.
+    const filteredVoices = this.#voices
+      .filter((voice) => isSameLang(voice.lang, lang))
+      .filter(isNotBlacklisted);
+    const availableVoiceIds = new Set(filteredVoices.map((voice) => voice.voiceURI));
+    const seenIds = new Set<string>();
+    const voices = filteredVoices
+      // Keep compact voices as a fallback when no higher-quality variant is installed.
+      .filter((voice) => {
+        const compactPrefix = 'com.apple.voice.compact.';
+        if (!voice.voiceURI.startsWith(compactPrefix)) return true;
+        const voiceSuffix = voice.voiceURI.slice(compactPrefix.length);
+        return (
+          !availableVoiceIds.has(`com.apple.voice.enhanced.${voiceSuffix}`) &&
+          !availableVoiceIds.has(`com.apple.voice.premium.${voiceSuffix}`)
+        );
+      })
       .map(
         (voice) =>
           ({

@@ -210,9 +210,12 @@ let annotationLayerBuilderCSS = null
 const activeRenderTasks = new WeakMap()
 // Generation counter per document to detect stale renders after async gaps
 const renderGenerations = new WeakMap()
+// What each document was last rendered for, so an identical re-render can be
+// skipped instead of rebuilding the text layer (see `render`)
+const renderedFor = new WeakMap()
 
 // Set up panning and selection event handlers once per iframe document
-const setupPanningEvents = (doc) => {
+export const setupPanningEvents = (doc) => {
     if (doc._readupEventsInitialized) return
     doc._readupEventsInitialized = true
 
@@ -287,11 +290,17 @@ const setupPanningEvents = (doc) => {
 
             const dx = e.screenX - startX
             const dy = e.screenY - startY
+            // Panning a zoomed page is a script write, not native scrolling, so
+            // `touch-action` cannot constrain it. The renderer mirrors the
+            // horizontal pan lock onto this document's root element (#5976);
+            // read it back so a drag that is only slightly diagonal can't shift
+            // the page sideways again.
+            const lockX = doc.documentElement.style.touchAction === 'pan-y'
 
             if (scrollParent === window) {
-                window.scrollTo(scrollLeft - dx, scrollTop - dy)
+                window.scrollTo(lockX ? window.scrollX : scrollLeft - dx, scrollTop - dy)
             } else {
-                scrollParent.scrollLeft = scrollLeft - dx
+                if (!lockX) scrollParent.scrollLeft = scrollLeft - dx
                 scrollParent.scrollTop = scrollTop - dy
             }
         }
@@ -328,7 +337,7 @@ const setupPanningEvents = (doc) => {
 }
 
 // iOS kills the WKWebView content process when it exceeds a per-process memory
-// high-water limit (~2 GB). A device crash log for  #5118 shows the
+// high-water limit (~2 GB). A device crash log for #5118 shows the
 // foreground WebContent process reaching 2.1 GB while paging a PDF, right before
 // the reader "closed". Both a page's canvas bitmap and its WebKit backing layer
 // are allocated at the render scale, so their memory grows with the SQUARE of the
@@ -369,9 +378,28 @@ const getRenderDpr = (page, zoom) => {
 const render = async (page, doc, zoom, pageColors) => {
     if (!doc) return
 
+    // Rendering tears the text layer down and builds it again, which detaches
+    // every Range held into it -- the sentence ranges TTS is reading from, and
+    // anything anchored for selection or highlighting. fixed-layout re-renders
+    // from a ResizeObserver on any layout change, including the one a page turn
+    // itself causes, so the same page gets rendered twice per turn and the
+    // second pass kills the ranges TTS just built ( #6071). Skip the work
+    // when nothing that affects the output has changed.
+    const signature = [zoom, pageColors?.background, pageColors?.foreground,
+        getFontScale(doc)].join('|')
+    const rendered = renderedFor.get(doc)
+    if (rendered?.page === page && rendered.signature === signature) return
+
     // Increment generation to invalidate any in-progress render for this doc
     const generation = (renderGenerations.get(doc) || 0) + 1
     renderGenerations.set(doc, generation)
+    renderedFor.set(doc, { page, signature, generation })
+    // Let a later render retry after this one bails without replacing the DOM.
+    // A newer render overwrites the entry with its own generation, so only the
+    // render that still owns it clears it.
+    const forget = () => {
+        if (renderedFor.get(doc)?.generation === generation) renderedFor.delete(doc)
+    }
 
     // Cancel any in-progress render task for this document
     const existingTask = activeRenderTasks.get(doc)
@@ -422,6 +450,7 @@ const render = async (page, doc, zoom, pageColors) => {
         // Render was cancelled or failed — release canvas bitmap memory
         canvas.width = 0
         canvas.height = 0
+        forget()
         return
     } finally {
         if (activeRenderTasks.get(doc) === renderTask) {
@@ -433,6 +462,7 @@ const render = async (page, doc, zoom, pageColors) => {
     if (renderGenerations.get(doc) !== generation || !doc.defaultView) {
         canvas.width = 0
         canvas.height = 0
+        forget()
         return
     }
 
@@ -440,6 +470,7 @@ const render = async (page, doc, zoom, pageColors) => {
     if (!canvasElement) {
         canvas.width = 0
         canvas.height = 0
+        forget()
         return
     }
 
@@ -461,7 +492,10 @@ const render = async (page, doc, zoom, pageColors) => {
     await textLayer.render()
 
     // Bail out if superseded after async text layer render
-    if (renderGenerations.get(doc) !== generation) return
+    if (renderGenerations.get(doc) !== generation) {
+        forget()
+        return
+    }
 
     // Counteract the OS font-size accessibility scaling on the text layer's glyph
     // size only (see getFontScale). `--text-scale-factor` feeds `font-size` and

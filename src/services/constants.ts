@@ -673,6 +673,11 @@ export const RELOAD_BEFORE_SAVED_TIMEOUT_MS = 300;
 export const MAX_ZOOM_LEVEL = 500;
 export const MIN_ZOOM_LEVEL = 50;
 export const ZOOM_STEP = 10;
+// Reflowable books have no scale factor, so the zoom shortcuts step the book's
+// own font size instead (issue #5694). The bounds match Settings > Font.
+export const MAX_FONT_SIZE = 120;
+export const MIN_FONT_SIZE = 8;
+export const FONT_SIZE_STEP = 1;
 export const DOUBLE_CLICK_INTERVAL_THRESHOLD_MS = 250;
 export const DISABLE_DOUBLE_CLICK_ON_MOBILE = true;
 export const LONG_HOLD_THRESHOLD = 500;

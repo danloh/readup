@@ -3,6 +3,7 @@ import { useEnv } from '@/context/EnvContext';
 import { useThemeStore } from '@/store/themeStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { themes, applyCustomTheme, Palette } from '@/styles/themes';
+import { getOverlayerBlendMode } from '@/styles/style';
 import { getStatusBarHeight, setSystemUIVisibility } from '@/utils/bridge';
 import { getOSPlatform } from '@/utils/misc';
 import { parseWebViewVersion } from '@/utils/ua';
@@ -137,7 +138,7 @@ export const useTheme = ({
     );
     document.documentElement.style.setProperty(
       '--overlayer-highlight-blend-mode',
-      isBwEink ? 'difference' : isDarkMode ? 'lighten' : 'normal',
+      getOverlayerBlendMode({ isDarkMode, isBwEink: !!isBwEink }),
     );
   }, [themeColor, isDarkMode, isBwEink]);
 };
