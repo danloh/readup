@@ -5,7 +5,7 @@ import NotebookHeader from '@/app/read/components/notebook/NotebookHeader';
 import NotebookEditor from '@/app/read/components/notebook/NotebookEditor';
 import { useNotebookDocumentStore } from '@/store/notebookDocumentStore';
 
-vi.mock('@/app/reader/hooks/useNotebookDocumentCoordinator', () => ({
+vi.mock('@/app/read/hooks/useNotebookDocumentCoordinator', () => ({
   flushNotebookDocument: vi.fn(),
 }));
 

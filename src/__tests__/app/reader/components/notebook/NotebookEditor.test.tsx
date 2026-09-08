@@ -13,7 +13,7 @@ const defaultProps = {
   excerpts: [] as BookNote[],
   onDeleteExcerpt,
 };
-vi.mock('@/app/reader/hooks/useNotebookDocumentCoordinator', () => ({
+vi.mock('@/app/read/hooks/useNotebookDocumentCoordinator', () => ({
   flushNotebookDocument: (bookKey: string) => flushNotebookDocument(bookKey),
 }));
 

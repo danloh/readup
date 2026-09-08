@@ -48,7 +48,7 @@ vi.mock('@/utils/event', () => ({
 vi.mock('@/utils/bridge', () => ({
   setSelectionSuppressed: vi.fn(async () => {}),
 }));
-vi.mock('@/app/reader/hooks/useInstantAnnotation', () => ({
+vi.mock('@/app/read/hooks/useInstantAnnotation', () => ({
   useInstantAnnotation: () => ({
     isInstantAnnotationEnabled: () => false,
     handleInstantAnnotationPointerDown: vi.fn(),

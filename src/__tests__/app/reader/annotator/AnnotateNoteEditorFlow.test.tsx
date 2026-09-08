@@ -183,17 +183,12 @@ vi.mock('@/hooks/useFileSelector', () => ({
   useFileSelector: () => ({ selectFiles: vi.fn() }),
 }));
 
-vi.mock('@/app/reader/hooks/useNotesSync', () => ({ useNotesSync: () => {} }));
-vi.mock('@/app/reader/hooks/useBookOrbitNotesSync', () => ({ useBookOrbitNotesSync: () => {} }));
-vi.mock('@/app/reader/hooks/useReadwiseSync', () => ({ useReadwiseSync: () => {} }));
-vi.mock('@/app/reader/hooks/useHardcoverSync', () => ({ useHardcoverSync: () => {} }));
-vi.mock('@/app/reader/hooks/useNotionSync', () => ({ useNotionSync: () => {} }));
-vi.mock('@/app/reader/hooks/useFoliateEvents', () => ({ useFoliateEvents: () => {} }));
-vi.mock('@/app/reader/hooks/useRendererInputListeners', () => ({
+vi.mock('@/app/read/hooks/useFoliateEvents', () => ({ useFoliateEvents: () => {} }));
+vi.mock('@/app/read/hooks/useRendererInputListeners', () => ({
   useRendererInputListeners: () => {},
 }));
 
-vi.mock('@/app/reader/hooks/useTextSelector', () => ({
+vi.mock('@/app/read/hooks/useTextSelector', () => ({
   useTextSelector: () => ({
     isTextSelected: h.isTextSelected,
     isInstantAnnotating: { current: false },
@@ -235,24 +230,24 @@ vi.mock('@/services/transformService', () => ({
   transformContent: ({ content }: { content: string }) => Promise.resolve(content),
 }));
 
-vi.mock('@/app/reader/components/annotator/AnnotationRangeEditor', () => ({ default: () => null }));
-vi.mock('@/app/reader/components/annotator/SelectionRangeEditor', () => ({ default: () => null }));
-vi.mock('@/app/reader/components/annotator/DictionaryPopup', () => ({ default: () => null }));
-vi.mock('@/app/reader/components/annotator/DictionarySheet', () => ({ default: () => null }));
-vi.mock('@/app/reader/components/annotator/TranslatorPopup', () => ({ default: () => null }));
-vi.mock('@/app/reader/components/annotator/ProofreadPopup', () => ({ default: () => null }));
-vi.mock('@/app/reader/components/annotator/ExportMarkdownDialog', () => ({ default: () => null }));
-vi.mock('@/app/reader/components/annotator/ImportAnnotationsDialog', () => ({
+vi.mock('@/app/read/components/annotator/AnnotationRangeEditor', () => ({ default: () => null }));
+vi.mock('@/app/read/components/annotator/SelectionRangeEditor', () => ({ default: () => null }));
+vi.mock('@/app/read/components/annotator/DictionaryPopup', () => ({ default: () => null }));
+vi.mock('@/app/read/components/annotator/DictionarySheet', () => ({ default: () => null }));
+vi.mock('@/app/read/components/annotator/TranslatorPopup', () => ({ default: () => null }));
+vi.mock('@/app/read/components/annotator/ProofreadPopup', () => ({ default: () => null }));
+vi.mock('@/app/read/components/annotator/ExportMarkdownDialog', () => ({ default: () => null }));
+vi.mock('@/app/read/components/annotator/ImportAnnotationsDialog', () => ({
   default: () => null,
 }));
 
-vi.mock('@/app/reader/components/annotator/AnnotationPopup', () => ({
+vi.mock('@/app/read/components/annotator/AnnotationPopup', () => ({
   default: (props: {
     noteEditor?: NoteEditorStub | null;
     onEditNote?: (note: { id: string }) => void;
   }) => stub.render('popup', props.noteEditor, props.onEditNote),
 }));
-vi.mock('@/app/reader/components/annotator/NoteEditorSheet', () => ({
+vi.mock('@/app/read/components/annotator/NoteEditorSheet', () => ({
   default: (props: NoteEditorStub) => stub.render('sheet', props),
 }));
 

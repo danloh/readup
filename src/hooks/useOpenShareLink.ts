@@ -10,6 +10,8 @@ import { eventDispatcher } from '@/utils/event';
 import { parseShareDeepLink, ShareDeepLink } from '@/utils/deeplink';
 import { useTranslation } from './useTranslation';
 import { loadSharedBook } from '@/libs/share';
+import { markLaunchUrl } from '@/utils/deeplinkConsume';
+import { isMainAppWindow } from '@/utils/window';
 
 // Module-scoped — survives hook remounts (library → reader → library on
 // book close). Tauri's getCurrent() keeps returning the launch URL for the
@@ -117,9 +119,11 @@ export function useOpenShareLink() {
   useEffect(() => {
     if (!isTauriAppPlatform() || !appService) return;
 
-    const handle = (url: string) => {
+    const handle = (url: string, coldStart = false) => {
       const parsed = parseShareDeepLink(url);
       if (!parsed) return;
+      const fresh = markLaunchUrl('launchShareUrls', url);
+      if (coldStart && !fresh) return;
       if (!useLibraryStore.getState().libraryLoaded) {
         pending.current = parsed;
         return;
@@ -127,10 +131,14 @@ export function useOpenShareLink() {
       resolveAndNavigate(parsed);
     };
 
-    if (!coldStartConsumed) {
+    // Only the launch window reads the cold-start URL: the deep-link plugin
+    // keeps it in process-global state for the whole session, so a window the
+    // app spawns later would treat it as its own cold start and navigate away
+    // from what the user just opened (#6104).
+    if (!coldStartConsumed && isMainAppWindow()) {
       coldStartConsumed = true;
       getCurrent()
-        .then((urls) => urls?.forEach(handle))
+        .then((urls) => urls?.forEach((u) => handle(u, true)))
         .catch(() => {
           // Plugin not available on this platform — live channel still works.
         });
@@ -138,7 +146,7 @@ export function useOpenShareLink() {
 
     const onIncoming = (event: CustomEvent) => {
       const { urls } = event.detail as { urls: string[] };
-      urls.forEach(handle);
+      urls.forEach((u) => handle(u));
     };
     eventDispatcher.on('app-incoming-url', onIncoming);
 

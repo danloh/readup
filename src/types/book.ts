@@ -141,6 +141,7 @@ export interface BookLayout {
   scrolled: boolean;
   scrolledDirection: 'vertical' | 'horizontal';
   webtoonMode: boolean;
+  lockHorizontalPan: boolean;
   noContinuousScroll: boolean;
   disableClick: boolean;
   fullscreenClickArea: boolean;

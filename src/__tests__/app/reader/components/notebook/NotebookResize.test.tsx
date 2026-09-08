@@ -81,17 +81,17 @@ vi.mock('@/helpers/settings', () => ({ saveSysSettings: vi.fn() }));
 vi.mock('@/utils/event', () => ({
   eventDispatcher: { on: vi.fn(), off: vi.fn() },
 }));
-vi.mock('@/app/reader/hooks/useNotebookDocumentCoordinator', () => ({
+vi.mock('@/app/read/hooks/useNotebookDocumentCoordinator', () => ({
   flushNotebookDocument: vi.fn(),
   useNotebookDocumentCoordinator: vi.fn(),
 }));
 vi.mock('@/components/Overlay', () => ({ Overlay: () => null }));
-vi.mock('@/app/reader/components/notebook/Header', () => ({ default: () => null }));
-vi.mock('@/app/reader/components/notebook/NotebookEditor', () => ({ default: () => null }));
-vi.mock('@/app/reader/components/notebook/NotebookTabNavigation', () => ({
+vi.mock('@/app/read/components/notebook/Header', () => ({ default: () => null }));
+vi.mock('@/app/read/components/notebook/NotebookEditor', () => ({ default: () => null }));
+vi.mock('@/app/read/components/notebook/NotebookTabNavigation', () => ({
   default: () => null,
 }));
-vi.mock('@/app/reader/components/notebook/AIAssistant', () => ({ default: () => null }));
+vi.mock('@/app/read/components/notebook/AIAssistant', () => ({ default: () => null }));
 
 import Notebook from '@/app/read/components/notebook/Notebook';
 import { useNotebookStore } from '@/store/notebookStore';

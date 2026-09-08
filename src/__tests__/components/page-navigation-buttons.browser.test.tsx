@@ -44,7 +44,7 @@ vi.mock('@/hooks/useTranslation', () => ({
   useTranslation: () => (key: string) => key,
 }));
 
-vi.mock('@/app/reader/hooks/usePagination', () => ({
+vi.mock('@/app/read/hooks/usePagination', () => ({
   viewPagination: vi.fn(),
 }));
 

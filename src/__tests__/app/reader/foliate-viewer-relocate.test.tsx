@@ -38,29 +38,26 @@ vi.mock('@/types/view', () => ({
 }));
 vi.mock('@/services/constants', () => ({ BOOK_IDS_SEPARATOR: ',' }));
 vi.mock('@/services/transformService', () => ({}));
-vi.mock('@/app/reader/utils/wordlensSection', () => ({}));
-vi.mock('@/app/reader/hooks/useFoliateEvents', () => ({ useFoliateEvents: vi.fn() }));
-vi.mock('@/app/reader/hooks/useBrightnessGesture', () => ({ useBrightnessGesture: () => ({}) }));
-vi.mock('@/app/reader/hooks/useAutoScroll', () => ({ useAutoScroll: () => ({}) }));
-vi.mock('@/app/reader/hooks/useAutoScrollSpeedGesture', () => ({
+vi.mock('@/app/read/hooks/useFoliateEvents', () => ({ useFoliateEvents: vi.fn() }));
+vi.mock('@/app/read/hooks/useBrightnessGesture', () => ({ useBrightnessGesture: () => ({}) }));
+vi.mock('@/app/read/hooks/useAutoScroll', () => ({ useAutoScroll: () => ({}) }));
+vi.mock('@/app/read/hooks/useAutoScrollSpeedGesture', () => ({
   useAutoScrollSpeedGesture: () => ({}),
 }));
-vi.mock('@/app/reader/hooks/useMiddleClickAutoscroll', () => ({
+vi.mock('@/app/read/hooks/useMiddleClickAutoscroll', () => ({
   useMiddleClickAutoscroll: () => null,
 }));
-vi.mock('@/app/reader/hooks/useKOSync', () => ({ useKOSync: () => ({}) }));
-vi.mock('@/app/reader/hooks/useIframeEvents', () => ({
+vi.mock('@/app/read/hooks/useKOSync', () => ({ useKOSync: () => ({}) }));
+vi.mock('@/app/read/hooks/useIframeEvents', () => ({
   useMouseEvent: () => ({}),
   useTouchEvent: () => ({}),
   useOpenMediaEvent: () => {},
 }));
-vi.mock('@/app/reader/hooks/useCapturedTurn', () => ({ useCapturedTurn: () => {} }));
-vi.mock('@/app/reader/hooks/usePagination', () => ({ usePagination: () => ({}) }));
-vi.mock('@/app/reader/hooks/useProgressSync', () => ({ useProgressSync: () => {} }));
-vi.mock('@/app/reader/hooks/useProgressAutoSave', () => ({ useProgressAutoSave: () => {} }));
-vi.mock('@/app/reader/hooks/useAutoSaveBookCover', () => ({ useBookCoverAutoSave: () => {} }));
-vi.mock('@/app/reader/hooks/useFileSync', () => ({ useFileSync: () => {} }));
-vi.mock('@/app/reader/hooks/useTextTranslation', () => ({ useTextTranslation: () => {} }));
+vi.mock('@/app/read/hooks/useCapturedTurn', () => ({ useCapturedTurn: () => {} }));
+vi.mock('@/app/read/hooks/usePagination', () => ({ usePagination: () => ({}) }));
+vi.mock('@/app/read/hooks/useProgressAutoSave', () => ({ useProgressAutoSave: () => {} }));
+vi.mock('@/app/read/hooks/useFileSync', () => ({ useFileSync: () => {} }));
+vi.mock('@/app/read/hooks/useTextTranslation', () => ({ useTextTranslation: () => {} }));
 vi.mock('@/hooks/useBackgroundTexture', () => ({
   useBackgroundTexture: () => ({ applyBackgroundTexture: vi.fn() }),
 }));
@@ -68,11 +65,10 @@ vi.mock('@/hooks/useAutoFocus', () => ({ useAutoFocus: () => {} }));
 vi.mock('@/hooks/useEinkMode', () => ({ useEinkMode: () => ({}) }));
 vi.mock('@/hooks/useUICSS', () => ({ useUICSS: () => {} }));
 vi.mock('@/hooks/useDiscordPresence', () => ({ useDiscordPresence: () => {} }));
-vi.mock('@/app/reader/hooks/bookOrbitProgressProvider', () => ({ bookOrbitProgressProvider: {} }));
-vi.mock('@/app/reader/components/paragraph', () => ({ ParagraphControl: () => null }));
-vi.mock('@/app/reader/components/BrightnessOverlay', () => ({ default: () => null }));
-vi.mock('@/app/reader/components/ImageViewer', () => ({ default: () => null }));
-vi.mock('@/app/reader/components/TableViewer', () => ({ default: () => null }));
+vi.mock('@/app/read/components/paragraph', () => ({ ParagraphControl: () => null }));
+vi.mock('@/app/read/components/BrightnessOverlay', () => ({ default: () => null }));
+vi.mock('@/app/read/components/ImageViewer', () => ({ default: () => null }));
+vi.mock('@/app/read/components/TableViewer', () => ({ default: () => null }));
 
 const props = {
   bookKey: 'test-book',

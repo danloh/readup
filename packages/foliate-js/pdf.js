@@ -337,7 +337,7 @@ export const setupPanningEvents = (doc) => {
 }
 
 // iOS kills the WKWebView content process when it exceeds a per-process memory
-// high-water limit (~2 GB). A device crash log for #5118 shows the
+// high-water limit (~2 GB). A device crash log for  #5118 shows the
 // foreground WebContent process reaching 2.1 GB while paging a PDF, right before
 // the reader "closed". Both a page's canvas bitmap and its WebKit backing layer
 // are allocated at the render scale, so their memory grows with the SQUARE of the

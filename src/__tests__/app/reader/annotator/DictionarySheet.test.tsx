@@ -86,7 +86,7 @@ vi.mock('@/libs/document', async () => {
 });
 
 // Thin stand-in for the reader's full-screen image viewer.
-vi.mock('@/app/reader/components/ImageViewer', () => ({
+vi.mock('@/app/read/components/ImageViewer', () => ({
   default: ({ src, onClose }: { src: string | null; onClose: () => void }) =>
     src ? (
       <div data-testid='dict-image-viewer' data-src={src}>
