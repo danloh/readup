@@ -223,6 +223,7 @@ const FoliateViewer: React.FC<{
               primaryLanguage: bookData.book?.primaryLanguage,
               content: data,
               sectionHref: detail.name,
+              sectionCfi: bookData.bookDoc?.sections?.find((s) => s.id === detail.name)?.cfi,
               transformers: [
                 'epubSwitch',
                 'style',

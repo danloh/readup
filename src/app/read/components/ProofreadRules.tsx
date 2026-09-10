@@ -1,7 +1,7 @@
 import clsx from 'clsx';
 import React, { useEffect, useState } from 'react';
 import { RiEditLine, RiDeleteBin7Line } from 'react-icons/ri';
-import { MdDragIndicator } from 'react-icons/md';
+import { MdDragIndicator, MdOutlineArrowOutward } from 'react-icons/md';
 import {
   DndContext,
   closestCenter,
@@ -172,6 +172,10 @@ const RuleItem: React.FC<{
     );
   }
 
+  const canNavigate = scope === 'selection' && !!rule.cfi;
+  const scopeLabel =
+    scope === 'selection' ? _('Selection') : scope === 'book' ? _('Book') : _('Library');
+
   return (
     <div className='relative flex items-start justify-between gap-3 p-3'>
       <div
@@ -180,7 +184,16 @@ const RuleItem: React.FC<{
           rule.enabled === false && 'opacity-40',
         )}
       >
-        <div className='break-words pe-28 text-base font-medium leading-snug'>{rule.pattern}</div>
+        <div
+          className={clsx(
+            'break-words font-medium leading-snug',
+            // Reserve the width of the absolutely-positioned action cluster,
+            // which is one button wider on selection rules.
+            canNavigate ? 'pe-36' : 'pe-28',
+          )}
+        >
+          {rule.pattern}
+        </div>
         <div className='text-base-content/70 break-words text-sm'>
           <span className='text-base-content/80 mr-1.5 text-xs font-medium'>
             {_('Replace with:')}
@@ -196,9 +209,8 @@ const RuleItem: React.FC<{
                 'text-base-content/70 font-medium',
                 scope === 'selection' && 'cursor-pointer text-blue-400 hover:text-blue-500',
               )}
-              onClick={scope === 'selection' ? navigateToSelection : undefined}
             >
-              {scope === 'selection' ? _('Selection') : scope === 'book' ? _('Book') : _('Library')}
+              {scopeLabel}
             </span>
           </span>
           <span className='text-base-content/30'>•</span>
@@ -225,6 +237,20 @@ const RuleItem: React.FC<{
           onChange={onToggle}
           aria-label={rule.enabled !== false ? _('Disable rule') : _('Enable rule')}
         />
+        {canNavigate && (
+          // A selection rule is anchored to one spot in the book, so it gets
+          // its own action alongside edit/delete. It used to ride on the
+          // `Selection` chip, which reads as a label like every chip beside
+          // it, so nobody found it (#6148).
+          <button
+            className='btn btn-ghost btn-sm h-8 w-8 p-0'
+            onClick={navigateToSelection}
+            aria-label={_('Jump to Location')}
+            title={_('Jump to Location')}
+          >
+            <MdOutlineArrowOutward className='h-4 w-4' />
+          </button>
+        )}
         <button
           className='btn btn-ghost btn-sm h-8 w-8 p-0'
           onClick={onEdit}

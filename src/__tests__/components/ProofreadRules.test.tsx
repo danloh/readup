@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, cleanup, within } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup, within, act } from '@testing-library/react';
 import React from 'react';
 import { vi } from 'vitest';
 
@@ -240,6 +240,66 @@ describe('ProofreadRulesManager', () => {
     // Book section should still show book-wide rule
     expect(screen.getByText('book-wide')).toBeTruthy();
     expect(screen.getByText("'book-hit'")).toBeTruthy();
+  });
+
+  it('gives a selection rule its own jump action and leaves the scope chip inert', async () => {
+    // The jump used to live on the `Selection` chip, which looks exactly like
+    // the inert Regex/Case sensitive chips beside it, so nobody found it
+    // (#6148). It is an action, so it belongs with edit/delete.
+    (useSettingsStore.setState as unknown as (state: unknown) => void)({
+      settings: { ...DEFAULT_SYSTEM_SETTINGS, globalViewSettings: { proofreadRules: [] } },
+    });
+
+    const selectionRule: ProofreadRule = {
+      id: 's1',
+      scope: 'selection',
+      pattern: 'only-once',
+      replacement: 'single-hit',
+      enabled: true,
+      isRegex: false,
+      caseSensitive: true,
+      order: 1,
+      wholeWord: true,
+      cfi: 'epubcfi(/6/14!/4/2,/1:0,/1:4)',
+      sectionHref: 'OEBPS/Text/ch1.xhtml',
+    };
+
+    (useReaderStore.setState as unknown as (state: unknown) => void)({
+      viewStates: { book1: { viewSettings: { proofreadRules: [selectionRule] } } },
+    });
+    (useBookDataStore.setState as unknown as (state: unknown) => void)({
+      booksData: {
+        book1: {
+          id: 'book1',
+          book: null,
+          file: null,
+          config: { viewSettings: { proofreadRules: [selectionRule] } },
+          bookDoc: null,
+          isFixedLayout: false,
+        },
+      },
+    });
+    useSidebarStore.setState({ sideBarBookKey: 'book1' });
+
+    const dispatch = vi.spyOn(eventDispatcher, 'dispatch');
+
+    renderWithProviders(<ProofreadRulesManager />);
+    await Promise.resolve();
+    await act(async () => setProofreadRulesVisibility(true));
+
+    const dialog = await screen.findByRole('dialog');
+    const chip = within(dialog).getByText('Selection');
+    expect(chip.tagName).toBe('SPAN');
+
+    const jump = within(dialog).getByLabelText('Jump to Location');
+    await act(async () => {
+      fireEvent.click(jump);
+    });
+
+    expect(dispatch).toHaveBeenCalledWith(
+      'navigate',
+      expect.objectContaining({ bookKey: 'book1', cfi: selectionRule.cfi }),
+    );
   });
 
   it('keeps a disabled book rule visible so it can be re-enabled', async () => {
