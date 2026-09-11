@@ -43,7 +43,7 @@ export const getAuth = (): User => {
  */
 export const getAccessToken = async (): Promise<string | null> => {
   const user = localStorage.getItem('user') ?? '{}';
-  return JSON.parse(user).access ?? null;
+  return JSON.parse(user).accessJwt ?? null;
 };
 
 
@@ -133,6 +133,8 @@ async function checkSession(host: string, accessToken: string): Promise<boolean>
   }
 }
 
+let refreshInFlight: Promise<User> | null = null;
+
 /**
  * Refresh user session - checks if current session is valid,
  * and refreshes if necessary
@@ -152,27 +154,40 @@ export async function refreshSession(): Promise<User> {
     throw new Error('Invalid user data - missing required authentication tokens');
   }
 
+  if (refreshInFlight) {
+    return refreshInFlight;
+  }
+
   try {
     const hasSession = await checkSession(usr.host, usr.accessJwt);
     
     if (!hasSession) {
       console.log('Current session expired, refreshing tokens...');
-      const res = await refreshToken(usr.host, usr.refreshJwt);
-      const newUser: User = {
-        ...usr,
-        accessJwt: res.accessJwt,
-        refreshJwt: res.refreshJwt,
-      };
-      console.log('Session refreshed successfully');
-      localStorage.setItem('user', JSON.stringify(newUser));
-      return newUser;
+      if (refreshInFlight) {
+        return refreshInFlight;
+      }
+      refreshInFlight = refreshToken(usr.host, usr.refreshJwt)
+        .then((res) => {
+          const newUser: User = {
+            ...usr,
+            accessJwt: res.accessJwt,
+            refreshJwt: res.refreshJwt || usr.refreshJwt,
+          };
+          console.log('Session refreshed successfully');
+          localStorage.setItem('user', JSON.stringify(newUser));
+          return newUser;
+        })
+        .finally(() => {
+          refreshInFlight = null;
+        });
+      return await refreshInFlight;
     }
     
     console.log('Current session is still valid');
     return usr;
   } catch (error) {
     console.error('Error on refreshing session:', error);
-    if ((error as any).message == 'ExpiredToken') {
+    if ((error as Error).message === 'ExpiredToken') {
       localStorage.removeItem('user');
     }
     throw error;
