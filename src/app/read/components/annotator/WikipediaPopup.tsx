@@ -29,7 +29,7 @@ const WikipediaPopup: React.FC<WikipediaPopupProps> = ({
   const bookLang = typeof lang === 'string' ? lang : lang?.[0];
   const langCode = bookLang ? bookLang.split(/[-_]|\s+/)[0]! : 'en';
   // FIXME: detect wrong lang sometimes
-  const realLang = detectLanguage(text, false) || langCode;
+  const realLang = detectLanguage(text) || langCode;
   // console.log('>> lang', bookLang, lang, langCode, realLang);
 
   useEffect(() => {

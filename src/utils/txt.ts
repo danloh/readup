@@ -121,6 +121,17 @@ const stripWrappingPunctuation = (text: string): string => {
   }
 };
 
+// Characters that can spell a chapter number after 第. Beyond the plain
+// 一二三…, 两/兩 is the colloquial "two" web novels use for hundreds
+// (第两百一十八章) and 壹贰叁… are the uppercase numerals of classical and formal
+// editions. A numeral style left out here does not merely lose its own
+// headings: its chapters glue into one oversized part that isGoodMatches
+// rejects, dropping the TOC for the entire book. See issue #6172.
+const CJK_NUMBER_DIGITS = '零〇一二两兩三四五六七八九十壹贰貳叁叄參肆伍陆陸柒捌玖拾0-9';
+const CJK_NUMBER_UNITS = '百千万萬佰仟';
+const CJK_NUMBER_CHARS = `${CJK_NUMBER_DIGITS}${CJK_NUMBER_UNITS}`;
+const CJK_VOLUME_HEADING = new RegExp(`第[${CJK_NUMBER_CHARS}]+(卷|本|册|部)`);
+
 // A header line like "作者：X" is meant to yield a short personal/pen name. Some
 // web-novel TXT files instead carry a metadata blob there (e.g.
 // "作者：2024/08/01发表于：是否首发：是 字数1023150字…") that the greedy capture would
@@ -616,7 +627,7 @@ export class TxtToEpubConverter {
 
       let isVolume = false;
       if (language === 'zh') {
-        isVolume = /第[零〇一二三四五六七八九十百千万0-9]+(卷|本|册|部)/.test(title);
+        isVolume = CJK_VOLUME_HEADING.test(title);
       } else {
         isVolume = /\b(Part|Volume|Book)\b/i.test(title);
       }
@@ -738,7 +749,7 @@ export class TxtToEpubConverter {
       // volume wraps chapters), and the regexps array is a fallback chain — the
       // first regex that splits "well enough" wins — so separate entries would
       // recognize one tier and silently drop the other.
-      const cjkNumber = '第[ 　零〇一二三四五六七八九十0-9][ 　零〇一二三四五六七八九十百千万0-9]*';
+      const cjkNumber = `第[ 　${CJK_NUMBER_DIGITS}][ 　${CJK_NUMBER_CHARS}]*`;
       // Tier 1 — chapter units. Real headings; a title may attach directly
       // (第一章天地初开) or after a separator.
       const chapterUnit = String.raw`[章节回讲篇话](?:[：:、 　\(\)0-9]*[^\n-]{0,36})`;
