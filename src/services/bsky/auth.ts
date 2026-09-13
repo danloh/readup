@@ -1,4 +1,5 @@
 import AtpAgent, { AtpSessionData, CredentialSession } from "@atproto/api";
+import { getOAuthClientSession } from './oauth';
 
 /**
  * Authentication token returned from session creation or refresh
@@ -23,6 +24,7 @@ export type User = {
   refreshJwt: string;
   host: string;
 	service: string;
+  oauth?: boolean;
   active?: boolean;
   email?: string;
   status?: string;
@@ -241,6 +243,22 @@ async function refreshToken(host: string, refreshToken: string): Promise<AuthTok
  * @throws {Error} If user is not logged in or session refresh fails
  */
 export async function getAtpAgent(): Promise<AtpAgent> {
+  const storedUser = getAuth();
+  if (storedUser.oauth) {
+    const session = getOAuthClientSession(storedUser.did);
+    if (!session) {
+      throw new Error('OAuth session is not available');
+    }
+
+    return new AtpAgent({
+      service: storedUser.service,
+      fetch: (input, init) => {
+        const url = new URL(input instanceof Request ? input.url : input.toString());
+        return session.fetchHandler(`${url.pathname}${url.search}`, init);
+      },
+    });
+  }
+
   const usr = await refreshSession();
   // Initialize agent
   const session = new CredentialSession(new URL(`https://${usr.host}`))

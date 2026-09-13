@@ -29,7 +29,7 @@ export default function OAuthCallbackPage() {
         }
 
         // The library automatically processes the authorization response
-        const session = await handleOAuthCallback();
+        const session = await handleOAuthCallback(clientId);
 
         if (!session) {
           throw new Error('No session created from OAuth callback');

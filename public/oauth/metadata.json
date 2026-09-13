@@ -8,5 +8,10 @@
   "logo_uri": "https://readup.cc/favicon.ico",
   "tos_uri": "https://readup.cc/terms",
   "policy_uri": "https://readup.cc/privacy",
-  "scope": "atproto transition:generic"
+  "scope": "atproto transition:generic",
+  "grant_types": ["authorization_code", "refresh_token"],
+  "response_types": ["code"],
+  "token_endpoint_auth_method": "none",
+  "application_type": "web",
+  "dpop_bound_access_tokens": true
 }

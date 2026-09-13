@@ -9,13 +9,19 @@
  * Get the OAuth client ID (metadata URL)
  * 
  * The client_id should be a URL in the format:
- * - Development: http://localhost:3000/oauth/metadata.json
+ * - Development: http://localhost:3000
  * - Production: https://readup.cc/oauth/metadata.json
  * 
  * @returns The client ID URL or null if not configured
  */
 export function getOAuthClientId(): string {
-  const clientId = `https://readup.cc/oauth/metadata.json`;
+  const configuredClientId = process.env['NEXT_PUBLIC_OAUTH_CLIENT_ID'];
+  const appBaseUrl = getAppBaseUrl();
+  const clientId = configuredClientId
+    ? normalizeLoopbackUrl(configuredClientId)
+    : appBaseUrl.startsWith('http://')
+      ? appBaseUrl
+      : `${appBaseUrl}/oauth/metadata.json`;
   
   if (!clientId) {
     console.warn(
@@ -42,12 +48,31 @@ export function getOAuthClientId(): string {
  */
 export function getAppBaseUrl(): string {
   if (typeof window !== 'undefined') {
-    // Client-side
-    return window.location.origin;
+    const { hostname, port, protocol } = window.location;
+    return protocol === 'http:' && isLoopbackHostname(hostname)
+      ? `http://localhost${port ? `:${port}` : ''}`
+      : window.location.origin;
   }
   
   // Server-side
+  const configuredUrl = process.env['NEXT_PUBLIC_APP_URL'];
+  if (configuredUrl) {
+    const url = new URL(configuredUrl);
+    return normalizeLoopbackUrl(url.origin);
+  }
+
   return 'http://localhost:3000';
+}
+
+function isLoopbackHostname(hostname: string): boolean {
+  return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]' || hostname === '::1';
+}
+
+function normalizeLoopbackUrl(value: string): string {
+  const url = new URL(value);
+  return url.protocol === 'http:' && isLoopbackHostname(url.hostname)
+    ? `http://localhost${url.port ? `:${url.port}` : ''}`
+    : value;
 }
 
 /**

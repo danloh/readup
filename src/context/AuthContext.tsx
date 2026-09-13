@@ -3,7 +3,9 @@
 import { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 // import posthog from 'posthog-js';
 import { AuthToken, createSession, refreshSession, resolveDid, User } from '@/services/bsky/auth';
-import { startOAuthFlow, logoutOAuthSession, type OAuthSession } from '@/services/bsky/oauth';
+import { 
+  restoreOAuthSession, startOAuthFlow, logoutOAuthSession, type OAuthSession 
+} from '@/services/bsky/oauth';
 import { getOAuthClientId } from '@/services/bsky/oauth-config';
 
 interface AuthContextType {
@@ -40,6 +42,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     };
     const refreshSess = async () => {
+      const storedUser = localStorage.getItem('user');
+      const parsedUser = storedUser ? JSON.parse(storedUser) as User : null;
+
+      if (parsedUser?.oauth) {
+        try {
+          const session = await restoreOAuthSession(getOAuthClientId());
+          if (!session || session.sub !== parsedUser.did) {
+            syncSession(null);
+          }
+        } catch (e) {
+          console.log('error restoring OAuth session: ', e);
+        }
+        return;
+      }
+
       try {
         // refresh session
         const usr = await refreshSession();
@@ -110,9 +127,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         did: session.sub,
         handle: session.handle,
         email: '',
-        accessJwt: session.accessToken,
+        accessJwt: '',
         refreshJwt: '',
         service,
+        oauth: true,
       };
 
       setUser(newUser);

@@ -18,8 +18,6 @@ import type { OAuthSession as OAuthClientSession } from '@atproto/oauth-client';
 export interface OAuthSession {
   sub: string; // DID of the user
   handle: string; // Handle of the user
-  accessToken: string; // Access token for API calls
-  refreshToken?: string; // Refresh token if available
 }
 
 export interface OAuthConfig {
@@ -28,6 +26,7 @@ export interface OAuthConfig {
 }
 
 let oauthClient: BrowserOAuthClient | null = null;
+let oauthSession: OAuthClientSession | null = null;
 
 /**
  * Map the library's OAuthSession to our OAuthSession
@@ -35,9 +34,7 @@ let oauthClient: BrowserOAuthClient | null = null;
 function mapSession(session: OAuthClientSession): OAuthSession {
   return {
     sub: session.sub || session.did,
-    handle: (session as any).handle || '',
-    accessToken: (session as any).accessToken || '',
-    refreshToken: (session as any).refreshToken,
+    handle: '',
   };
 }
 
@@ -67,7 +64,6 @@ async function getOAuthClient(config: OAuthConfig): Promise<BrowserOAuthClient> 
     // Load the client from the metadata URL
     oauthClient = await BrowserOAuthClient.load({
       clientId,
-      allowHttp: process.env.NODE_ENV === 'development',
     });
   }
 
@@ -100,20 +96,18 @@ export async function startOAuthFlow(config: OAuthConfig, host?: string): Promis
  * The official library automatically processes the authorization response
  * @returns Session data if OAuth flow completed successfully
  */
-export async function handleOAuthCallback(): Promise<OAuthSession | undefined> {
+export async function handleOAuthCallback(clientId: string): Promise<OAuthSession | undefined> {
   if (typeof window === 'undefined') {
     throw new Error('OAuth callback can only be handled in browser');
   }
 
   try {
-    const client = oauthClient;
-    if (!client) {
-      throw new Error('OAuth client not initialized');
-    }
+    const client = await getOAuthClient({ clientId });
 
     // The init() method automatically processes login callbacks
     const result = await client.init();
     if (result?.session) {
+      oauthSession = result.session;
       return mapSession(result.session);
     }
     return undefined;
@@ -128,12 +122,10 @@ export async function handleOAuthCallback(): Promise<OAuthSession | undefined> {
  * @returns Session info or null
  */
 export function getOAuthSession(): OAuthSession | null {
-  if (!oauthClient) return null;
+  if (!oauthSession) return null;
 
   try {
-    // In a real app, you'd need to restore from storage
-    // For now, we handle this in completeOAuthLogin
-    return null;
+    return mapSession(oauthSession);
   } catch (error) {
     console.error('Error getting OAuth session:', error);
     return null;
@@ -149,6 +141,7 @@ export async function restoreOAuthSession(clientId: string): Promise<OAuthSessio
     const client = await getOAuthClient({ clientId });
     const result = await client.initRestore();
     if (result?.session) {
+      oauthSession = result.session;
       return mapSession(result.session);
     }
     return undefined;
@@ -167,8 +160,14 @@ export async function logoutOAuthSession(sub: string): Promise<void> {
 
   try {
     await oauthClient.revoke(sub);
+    if (oauthSession?.sub === sub) oauthSession = null;
   } catch (error) {
     console.error('Error revoking OAuth session:', error);
     throw error;
   }
+}
+
+/** Return the live library session for authenticated ATProto requests. */
+export function getOAuthClientSession(sub: string): OAuthClientSession | null {
+  return oauthSession?.sub === sub ? oauthSession : null;
 }
