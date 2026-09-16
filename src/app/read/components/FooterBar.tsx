@@ -288,6 +288,7 @@ const FooterBar: React.FC<FooterBarProps> = ({
               tooltip={_('Next Section')}
             />
             <Slider
+              label={_('Reading Progress')}
               heightPx={sliderHeight}
               bubbleLabel={`${Math.round(progressFraction * 100)}%`}
               initialValue={progressValid ? progressFraction * 100 : 0}

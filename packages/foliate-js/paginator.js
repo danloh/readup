@@ -966,24 +966,41 @@ class View {
         // size one past the page box, and without the clamp it spills over the
         // column rule and paints on top of the next column's text
         // (/#6041).
-        for (const el of doc.body.querySelectorAll('img, svg, video, canvas')) {
-            // clear previous inline constraints so we read CSS-authored values,
-            // not stale pixel values from a previous resize (#3634)
+        const els = doc.body.querySelectorAll('img, svg, video, canvas')
+        // clear previous inline constraints so we read CSS-authored values,
+        // not stale pixel values from a previous resize (#3634)
+        for (const el of els) {
             el.style.removeProperty('max-width')
             el.style.removeProperty('max-height')
+        }
+        // Read every element's style before writing any of them. The margins
+        // below are resolved values, so reading one flushes layout, and writing
+        // the previous element's clamp dirtied it again — interleaving the two
+        // costs a full re-fragmentation of the section per element. A Duokan
+        // book marks each footnote with an inline <img>, so a volume kept in one
+        // XHTML file reaches thousands of them and paged mode froze for minutes
+        // (/#6155). Batched, the whole pass costs one layout.
+        const measured = []
+        for (const el of els) {
             // preserve max size if they are already set in CSS
-            let { maxHeight, maxWidth, marginLeft: elMarginLeft, marginRight: elMarginRight,
+            const { maxHeight, maxWidth, marginLeft: elMarginLeft, marginRight: elMarginRight,
                 marginTop: elMarginTop, marginBottom: elMarginBottom }
                 = doc.defaultView.getComputedStyle(el)
-            // `100%` caps the border box, and the element's own margins sit
-            // outside it, so an element the book sized at or past the column
-            // still hangs its margins over the edge — the IDPF `trees` canvas
-            // carries `margin: 1em` and spilled exactly 2em past the column
-            // rule (/#6041). Cap the margin box instead.
-            const fill = (a, b) => {
-                const margins = (parseFloat(a) || 0) + (parseFloat(b) || 0)
-                return margins > 0 ? `calc(100% - ${margins}px)` : '100%'
-            }
+            measured.push({ el, maxHeight, maxWidth,
+                elMarginLeft, elMarginRight, elMarginTop, elMarginBottom })
+        }
+        // `100%` caps the border box, and the element's own margins sit
+        // outside it, so an element the book sized at or past the column
+        // still hangs its margins over the edge — the IDPF `trees` canvas
+        // carries `margin: 1em` and spilled exactly 2em past the column
+        // rule (/#6041). Cap the margin box instead.
+        const fill = (a, b) => {
+            const margins = (parseFloat(a) || 0) + (parseFloat(b) || 0)
+            return margins > 0 ? `calc(100% - ${margins}px)` : '100%'
+        }
+        for (const m of measured) {
+            const { el, elMarginLeft, elMarginRight, elMarginTop, elMarginBottom } = m
+            let { maxHeight, maxWidth } = m
             if (parseInt(maxWidth) > availableWidth) {
                 maxWidth = `${availableWidth}px`
             }
@@ -3313,6 +3330,7 @@ export class Paginator extends HTMLElement {
             // bottom of the book).
             const center = this.#renderedStart + this.size / 2
             let fallback
+            let collapsed
             for (const [index, v] of this.#sortedViews) {
                 if (!v.document) continue
                 const off = this.#getViewOffset(index)
@@ -3322,11 +3340,24 @@ export class Paginator extends HTMLElement {
                 const range = getVisibleRange(v.document,
                     this.#renderedStart - off, this.#renderedEnd - off,
                     this.#getRectMapper(v))
-                if (!range || range.collapsed) continue
-                if (center >= off && center < off + vSize) return { range, index }
+                if (!range) continue
+                const coversCenter = center >= off && center < off + vSize
+                // A section with no accepted node in view (an image-only cover
+                // whose <svg>/<img> is clipped by the viewport, a text-less
+                // background page) collapses onto <body>. Prefer any view with
+                // real content, but keep the collapsed range as a last resort:
+                // dropping it left an image-only cover with no relocate at all
+                // on open, so the host never got a location to record or sync
+                // reading progress from. Paginated mode relocates on the same
+                // collapsed range.
+                if (range.collapsed) {
+                    if (!collapsed || coversCenter) collapsed = { range, index }
+                    continue
+                }
+                if (coversCenter) return { range, index }
                 fallback ??= { range, index }
             }
-            return fallback
+            return fallback ?? collapsed
         }
         const range = getVisibleRange(targetView.document,
             this.#renderedStart - viewOffset,
