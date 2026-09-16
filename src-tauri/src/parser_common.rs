@@ -145,5 +145,6 @@ pub fn compute_partial_md5(path: &Path) -> std::io::Result<String> {
         hasher.update(&slice[..]);
     }
 
-    Ok(format!("{:x}", hasher.finalize()))
+    let digest = hasher.finalize();
+    Ok(digest.iter().map(|b| format!("{b:02x}")).collect())
 }

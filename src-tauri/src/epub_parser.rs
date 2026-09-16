@@ -405,31 +405,29 @@ fn locate_toc_sources(opf_bytes: &[u8]) -> Result<LocatedTocSources, String> {
     loop {
         match reader.read_event_into(&mut buf) {
             Ok(Event::Start(e)) => {
-                let name = local_name(e.name().as_ref()).to_vec();
-                if name == b"manifest" {
+                if local_name_eq(e.name().as_ref(), b"manifest") {
                     in_manifest = true;
-                } else if name == b"spine" {
+                } else if local_name_eq(e.name().as_ref(), b"spine") {
                     in_spine = true;
                     let attrs: Vec<(Vec<u8>, Vec<u8>)> = e
                         .attributes()
                         .flatten()
-                        .map(|a| (a.key.as_ref().to_vec(), a.value.into_owned()))
+                        .map(|a| (a.key.as_ref().as_bytes().to_vec(), a.value.as_ref().as_bytes().to_vec()))
                         .collect();
                     process_spine(&attrs, &mut spine_toc_id);
-                } else if in_manifest && name == b"item" {
+                } else if in_manifest && local_name_eq(e.name().as_ref(), b"item") {
                     let attrs: Vec<(Vec<u8>, Vec<u8>)> = e
                         .attributes()
                         .flatten()
-                        .map(|a| (a.key.as_ref().to_vec(), a.value.into_owned()))
+                        .map(|a| (a.key.as_ref().as_bytes().to_vec(), a.value.as_ref().as_bytes().to_vec()))
                         .collect();
                     process_item(&attrs, &mut manifest, &mut nav_href);
                 }
             }
             Ok(Event::End(e)) => {
-                let name = local_name(e.name().as_ref()).to_vec();
-                if name == b"manifest" {
+                if local_name_eq(e.name().as_ref(), b"manifest") {
                     in_manifest = false;
-                } else if name == b"spine" {
+                } else if local_name_eq(e.name().as_ref(), b"spine") {
                     in_spine = false;
                 }
             }
@@ -527,8 +525,8 @@ fn read_rootfile_path<R: Read + Seek>(zip: &mut ZipArchive<R>) -> Result<String,
             Ok(Event::Empty(e)) | Ok(Event::Start(e)) => {
                 if local_name_eq(e.name().as_ref(), b"rootfile") {
                     for attr in e.attributes().flatten() {
-                        if attr.key.as_ref() == b"full-path" {
-                            return Ok(String::from_utf8_lossy(&attr.value).into_owned());
+                        if attr.key.as_ref() == "full-path" {
+                            return Ok(attr.value.as_ref().to_owned());
                         }
                     }
                 }
@@ -632,18 +630,21 @@ fn parse_opf_cover_inputs(bytes: &[u8]) -> Result<OpfCoverInputs, String> {
     loop {
         match reader.read_event_into(&mut buf) {
             Ok(Event::Start(e)) => {
-                let name = local_name(e.name().as_ref()).to_vec();
-                if name == b"metadata" {
+                let is_metadata = local_name_eq(e.name().as_ref(), b"metadata");
+                let is_manifest = local_name_eq(e.name().as_ref(), b"manifest");
+                let is_item = local_name_eq(e.name().as_ref(), b"item");
+                let is_meta = local_name_eq(e.name().as_ref(), b"meta");
+                if is_metadata {
                     in_metadata = true;
-                } else if name == b"manifest" {
+                } else if is_manifest {
                     in_manifest = true;
-                } else if (in_manifest && name == b"item") || (in_metadata && name == b"meta") {
+                } else if (in_manifest && is_item) || (in_metadata && is_meta) {
                     let attrs: Vec<(Vec<u8>, Vec<u8>)> = e
                         .attributes()
                         .flatten()
-                        .map(|a| (a.key.as_ref().to_vec(), a.value.into_owned()))
+                        .map(|a| (a.key.as_ref().as_bytes().to_vec(), a.value.as_ref().as_bytes().to_vec()))
                         .collect();
-                    if name == b"item" {
+                    if is_item {
                         process_manifest_item(&attrs, &mut out.manifest);
                     } else {
                         process_meta_cover(&attrs, &mut out.cover_id);
@@ -651,10 +652,9 @@ fn parse_opf_cover_inputs(bytes: &[u8]) -> Result<OpfCoverInputs, String> {
                 }
             }
             Ok(Event::End(e)) => {
-                let name = local_name(e.name().as_ref()).to_vec();
-                if name == b"metadata" {
+                if local_name_eq(e.name().as_ref(), b"metadata") {
                     in_metadata = false;
-                } else if name == b"manifest" {
+                } else if local_name_eq(e.name().as_ref(), b"manifest") {
                     in_manifest = false;
                 }
             }
@@ -852,14 +852,15 @@ fn strip_xml_bom(bytes: &[u8]) -> Cow<'_, [u8]> {
     Cow::Borrowed(bytes)
 }
 
-fn local_name(qname: &[u8]) -> &[u8] {
-    match qname.iter().rposition(|b| *b == b':') {
-        Some(idx) => &qname[idx + 1..],
-        None => qname,
+fn local_name<T: AsRef<[u8]> + ?Sized>(qname: &T) -> &[u8] {
+    let bytes = qname.as_ref();
+    match bytes.iter().rposition(|b| *b == b':') {
+        Some(idx) => &bytes[idx + 1..],
+        None => bytes,
     }
 }
 
-fn local_name_eq(qname: &[u8], local: &[u8]) -> bool {
+fn local_name_eq<T: AsRef<[u8]> + ?Sized>(qname: &T, local: &[u8]) -> bool {
     local_name(qname) == local
 }
 
@@ -1421,7 +1422,11 @@ mod tests {
         let mut expected = Md5::new();
         expected.update(&data[0..1024]);
         expected.update(&data[1024..2048]);
-        let expected_hash = format!("{:x}", expected.finalize());
+        let expected_hash = expected
+            .finalize()
+            .iter()
+            .map(|b| format!("{b:02x}"))
+            .collect::<String>();
         assert_eq!(hash, expected_hash);
         // Cross-validated against `node` running the JS reference algorithm
         // on the identical buffer: ranges = [[0,1024],[1024,2048]],
