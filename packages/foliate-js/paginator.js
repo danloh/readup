@@ -593,6 +593,14 @@ export const getDirection = doc => {
     return { vertical, rtl }
 }
 
+// The spine's `page-progression-direction` is a publication-wide declaration,
+// so it outranks the direction of any single content document: an LTR colophon
+// in a Japanese book still pages right-to-left. Only `ltr` and `rtl` are
+// binding — an absent attribute or the `default` keyword leaves the choice to
+// the Reading System, which falls back to the document.
+export const getPageProgressionRTL = (bookDir, documentRTL) =>
+    bookDir === 'rtl' ? true : bookDir === 'ltr' ? false : documentRTL
+
 const getBackground = doc => {
     // Same blank/detached-document guard as getDirection (-2X).
     if (!doc.defaultView || !doc.body) return ''
@@ -688,6 +696,14 @@ class View {
     #overlayer
     #vertical = false
     #rtl = false
+    // The document's own inline direction, read before any of our overrides
+    // touch it. `#rtl` is the book's page progression, which can disagree.
+    #docDirection = 'ltr'
+    // The document `load()` has taken `#docDirection` from. A re-render can
+    // reach this view earlier, while the iframe holds a section whose load
+    // event has not fired yet; see `render()`.
+    #loadedDoc = null
+    #directionStyle = null
     #column = true
     #size
     #columnCount = 1
@@ -802,6 +818,10 @@ class View {
 
                 this.#vertical = vertical
                 this.#rtl = rtl
+                this.#docDirection =
+                    doc.defaultView.getComputedStyle(doc.documentElement).direction === 'rtl'
+                        ? 'rtl' : 'ltr'
+                this.#loadedDoc = doc
 
                 this.#contentRange.selectNodeContents(doc.body)
                 const layout = beforeRender?.({ vertical, rtl })
@@ -826,8 +846,29 @@ class View {
     }
     render(layout) {
         if (!layout || !this.document?.documentElement) return
+        // A resize or an attribute change re-renders every view that already
+        // has a document, and the iframe reports the incoming section as its
+        // document as soon as it commits — well before the load event where
+        // `#docDirection` is taken. Rendering it there would stamp the
+        // progression override onto a document whose own direction has not
+        // been read yet, and that read would then come back as the override
+        // itself: the view would look like it already agrees with the book,
+        // the override would be dropped, and the section's columns would run
+        // against the scroll for good. The load handler renders it anyway.
+        if (this.document !== this.#loadedDoc) return
+        if (layout.rtl != null) this.#rtl = layout.rtl
         this.#column = layout.flow !== 'scrolled'
         this.#layout = layout
+        // Column boxes are laid out along the multi-column container's inline
+        // direction, so a section whose own direction disagrees with the book's
+        // page progression would run its columns against the scroll and open on
+        // its last page. Give the multicol box the progression instead, and hand
+        // the document's own direction back to the content. Vertical writing
+        // paginates along `scrollTop` with the host grid left alone, and there
+        // `direction` picks the line-stacking axis rather than the column order,
+        // so leave it — as scrolled flow, which has no columns to order, does.
+        this.#setProgressionDirection(
+            this.#column && !this.#vertical ? this.#rtl ? 'rtl' : 'ltr' : null)
         if (this.#column) this.columnize(layout)
         else this.scrolled(layout)
     }
@@ -867,6 +908,33 @@ class View {
         this.setImageSize(availableWidth, availableHeight)
         this.expand()
     }
+    // In an HTML document the principal writing mode — the one the root
+    // element's own box uses, and with it the order of its column boxes — is
+    // taken from `body`, not from the root (CSS Writing Modes §8.1). So the
+    // progression has to be written onto `body`, which is also where the text
+    // direction lives; a rule one level down gives the content back the
+    // direction the book authored, leaving elements that declare one alone.
+    #setProgressionDirection(direction) {
+        const doc = this.document
+        if (!doc?.head) return
+        if (!direction || direction === this.#docDirection) {
+            doc.documentElement.style.removeProperty('direction')
+            doc.body?.style.removeProperty('direction')
+            this.#directionStyle?.remove()
+            this.#directionStyle = null
+            return
+        }
+        setStylesImportant(doc.documentElement, { 'direction': direction })
+        if (doc.body) setStylesImportant(doc.body, { 'direction': direction })
+        // The view outlives its documents, so a style element kept from the
+        // previous section is detached by the time this one renders.
+        if (this.#directionStyle?.ownerDocument !== doc) {
+            this.#directionStyle = doc.createElement('style')
+            doc.head.append(this.#directionStyle)
+        }
+        this.#directionStyle.textContent =
+            `body > *:not([dir]) { direction: ${this.#docDirection}; }`
+    }
     columnize({ width, height, marginTop, marginRight, marginBottom, marginLeft, gap, columnWidth, columnCount }) {
         const vertical = this.#vertical
         this.#size = vertical ? height : width
@@ -894,11 +962,20 @@ class View {
             // fix glyph clipping in WebKit
             '-webkit-line-box-contain': 'block glyphs replaced',
         })
+        // Along the pagination axis every page is a tile of `size / columnCount`
+        // and the root's own side padding sits inside that tile, so the column's
+        // content box is the tile minus the padding. `--available-*` and the
+        // image clamp must use the content box: sized to the whole tile, a
+        // replaced element runs across the column gap and its trailing edge
+        // paints down the margin of the next page (/#6221).
+        // `--full-*` keeps the whole tile, which is what a bleed spans.
+        const pageWidth = Math.trunc(width / this.#columnCount)
+        const pageHeight = Math.trunc(height / this.#columnCount)
         const availableWidth = vertical
             ? Math.trunc(width - marginLeft / 2 - marginRight / 2 - gap)
-            : Math.trunc(width / this.#columnCount)
+            : Math.trunc(width / this.#columnCount - sidePaddingLeft - sidePaddingRight)
         const availableHeight = vertical
-            ? Math.trunc(height / this.#columnCount)
+            ? Math.trunc(height / this.#columnCount - marginTop * 1.5 - marginBottom * 1.5)
             : Math.trunc(height - marginTop - marginBottom)
         setStyles(doc.documentElement, {
             'padding': vertical
@@ -908,8 +985,8 @@ class View {
             '--page-margin-right': `${vertical ? marginRight : sidePaddingRight}px`,
             '--page-margin-bottom': `${vertical ? marginBottom * 1.5 : marginBottom}px`,
             '--page-margin-left': `${vertical ? marginLeft : sidePaddingLeft}px`,
-            '--full-width': `${Math.trunc(availableWidth)}`,
-            '--full-height': `${Math.trunc(availableHeight)}`,
+            '--full-width': `${vertical ? availableWidth : pageWidth}`,
+            '--full-height': `${vertical ? pageHeight : availableHeight}`,
             '--available-width': `${availableWidth}`,
             '--available-height': `${availableHeight}`,
         })
@@ -1965,7 +2042,7 @@ export class Paginator extends HTMLElement {
         if (!ctx) return
         this.#paintPaginatedBackground(ctx, atPosition)
     }
-    #beforeRender({ vertical, rtl }) {
+    #beforeRender({ vertical, rtl: documentRTL }) {
         // If writing-mode is about to change, destroy all non-primary
         // views BEFORE updating global state. This prevents stale views
         // with the wrong direction from remaining in the container while
@@ -1976,7 +2053,12 @@ export class Paginator extends HTMLElement {
             }
         }
         this.#vertical = vertical
-        this.#rtl = rtl
+        // One scroll container holds the views of several sections at once, so
+        // the progression cannot be per-document: a section that flipped it
+        // would reverse the sections mounted beside it. The publication-wide
+        // declaration settles it for the whole book; only a book that declares
+        // nothing still follows its documents.
+        this.#rtl = getPageProgressionRTL(this.bookDir, documentRTL)
         this.#top.classList.toggle('vertical', vertical)
         this.#container.classList.toggle('vertical', vertical)
 
@@ -2046,7 +2128,7 @@ export class Paginator extends HTMLElement {
             this.columnCount = 1
             this.#replaceBackground()
 
-            const layout = { width, height, flow, marginTop, marginRight, marginBottom, marginLeft, gap, columnWidth, columnCount: 1 }
+            const layout = { width, height, flow, marginTop, marginRight, marginBottom, marginLeft, gap, columnWidth, columnCount: 1, rtl: this.#rtl }
             this.#lastLayout = layout
             return layout
         }
@@ -2057,7 +2139,7 @@ export class Paginator extends HTMLElement {
         // `dir` mirrors the horizontal scroll coordinates (negative scrollLeft
         // for RTL). Vertical books page along scrollTop, which never flips, so
         // an RTL writing mode must not reverse the host grid there.
-        this.setAttribute('dir', rtl && !vertical ? 'rtl' : 'ltr')
+        this.setAttribute('dir', this.#rtl && !vertical ? 'rtl' : 'ltr')
 
         // set background to `doc` background
         // this is needed because the iframe does not fill the whole element
@@ -2081,7 +2163,7 @@ export class Paginator extends HTMLElement {
         this.#header.replaceChildren(...heads)
         this.#footer.replaceChildren(...feet)
 
-        const layout = { width, height, marginTop, marginRight, marginBottom, marginLeft, gap, columnWidth, columnCount: divisor }
+        const layout = { width, height, marginTop, marginRight, marginBottom, marginLeft, gap, columnWidth, columnCount: divisor, rtl: this.#rtl }
         this.#lastLayout = layout
         return layout
     }

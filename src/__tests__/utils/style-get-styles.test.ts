@@ -8,7 +8,7 @@ vi.mock('@/utils/misc', async (importOriginal) => {
   };
 });
 
-import { getStyles, ThemeCode } from '@/styles/style';
+import { getStyles, LINK_TOUCH_HOLD_CLASS, ThemeCode } from '@/styles/style';
 import { ViewSettings } from '@/types/book';
 import {
   DEFAULT_BOOK_FONT,
@@ -797,3 +797,17 @@ describe('getStyles integration', () => {
     expect(css).toContain('--theme-bg-color');
   });
 });
+
+describe('link touch hold (#6242)', () => {
+  it('takes links out of hit testing while a touch is held', () => {
+    // Chromium's touch adjustment snaps a long press onto a link within reach
+    // of the finger, and a long press on a link never starts a text selection.
+    const css = getStyles(makeViewSettings(), makeThemeCode());
+    expect(css).toMatch(
+      new RegExp(
+        `html\\.${LINK_TOUCH_HOLD_CLASS} a\\[href\\]\\s*\\{\\s*pointer-events: none !important;`,
+      ),
+    );
+  });
+});
+

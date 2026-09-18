@@ -10,6 +10,10 @@ vi.mock('@tauri-apps/api/event', () => ({
   TauriEvent: { WINDOW_FOCUS: 'tauri://focus' },
 }));
 
+vi.mock('@tauri-apps/api/core', () => ({
+  invoke: vi.fn().mockResolvedValue(undefined),
+}));
+
 vi.mock('@tauri-apps/plugin-process', () => ({
   exit: vi.fn(),
 }));
@@ -22,11 +26,14 @@ vi.mock('@/utils/event', () => ({
   eventDispatcher: { dispatch: vi.fn() },
 }));
 
+import { invoke } from '@tauri-apps/api/core';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { type as osType } from '@tauri-apps/plugin-os';
 import { 
   formatAppWindowTitle, tauriHandleOnCloseWindow, tauriHandleToggleFullScreen, tauriSetWindowTitle 
 } from '@/utils/window';
+import { useTrafficLightStore } from '@/store/trafficLightStore';
+import { AppService } from '@/types/system';
 
 type CloseHandler = (event: { preventDefault: () => void }) => Promise<void> | void;
 
@@ -217,5 +224,31 @@ describe('tauriSetWindowTitle', () => {
     await tauriSetWindowTitle();
 
     expect(win.setTitle).toHaveBeenCalledWith('Readup');
+  });
+
+  test('sets the title natively where the window has traffic lights', async () => {
+    // Setting the title makes AppKit re-lay out the title bar, which restores
+    // the standard container and drops the buttons to their default spot (or
+    // back on screen when the reader had hidden them). A correction sent from
+    // JS lands an IPC round-trip later, after that default has been painted,
+    // so the native command sets the title and re-applies the layout in one
+    // main-thread pass (#6222).
+    const win = makeTitledWindow();
+    useTrafficLightStore.setState({ appService: { hasTrafficLight: true } as AppService });
+
+    await tauriSetWindowTitle('The Hobbit');
+
+    expect(invoke).toHaveBeenCalledWith('set_window_title', { title: 'Readup - The Hobbit' });
+    expect(win.setTitle).not.toHaveBeenCalled();
+  });
+
+  test('sets the title through the window API elsewhere', async () => {
+    const win = makeTitledWindow();
+    useTrafficLightStore.setState({ appService: { hasTrafficLight: false } as AppService });
+
+    await tauriSetWindowTitle('The Hobbit');
+
+    expect(win.setTitle).toHaveBeenCalledWith('Readup - The Hobbit');
+    expect(invoke).not.toHaveBeenCalled();
   });
 });

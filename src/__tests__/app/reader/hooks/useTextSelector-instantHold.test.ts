@@ -73,6 +73,7 @@ const setup = () => {
 };
 
 const doc = {
+  documentElement: document.createElement('html'),
   getSelection: () => null,
   createRange: () => ({
     setStart: () => {},

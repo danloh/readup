@@ -23,6 +23,39 @@ const MIME = {
     JS: /\/(x-)?(javascript|ecmascript)/,
 }
 
+// a document declared XHTML that the XML parser could not parse
+const isBrokenXHTML = doc => doc.querySelector('parsererror')
+    || !doc.documentElement?.namespaceURI
+// Void elements that Adobe InDesign / Digital Editions exports leave unclosed
+// (`<meta charset="utf-8">` constantly), the usual reason such a file is not
+// well-formed XML. Lowercase only: XHTML is case-sensitive, and an uppercase
+// `<BR>` closed as `<BR/>` would parse as an unknown element instead of a
+// line break, so those files keep taking the HTML path.
+const VOID_ELEMENT_RE = /<(meta|link|br|img|hr|input|col|area|base|embed|param|source|track|wbr)(?=[\s/>])((?:[^<>"']|"[^"]*"|'[^']*')*)>/g
+const closeVoidElements = str => str.replace(VOID_ELEMENT_RE,
+    (tag, name, attrs) => attrs.trimEnd().endsWith('/') ? tag : `<${name}${attrs}/>`)
+// Parse a content document. A file the manifest declares as XHTML but which
+// is not well-formed XML first gets its unclosed void elements closed and is
+// parsed as XML again; only if that still fails is it parsed as HTML. The
+// HTML parser is not a faithful reading of such a file: it ignores `/>` on
+// non-void elements and re-opens formatting elements across blocks, so an
+// `<a id="page_25"/>` at the top of a paragraph swallows every following
+// `<p>` until the next anchor, and positions (CFIs, other readers' locators)
+// stop matching the book's real structure. Shared by the render path
+// (`loadReplaced`) and the off-screen path (`loadDocument`) so both see the
+// same DOM.
+const parseContentDocument = (parser, str, mediaType) => {
+    let doc = parser.parseFromString(str, mediaType)
+    if (mediaType !== MIME.XHTML || !isBrokenXHTML(doc)) return { doc, mediaType }
+    const repaired = closeVoidElements(str)
+    if (repaired !== str) {
+        doc = parser.parseFromString(repaired, mediaType)
+        if (!isBrokenXHTML(doc)) return { doc, mediaType }
+    }
+    console.warn(doc.querySelector('parsererror')?.innerText ?? 'Invalid XHTML')
+    return { doc: parser.parseFromString(str, MIME.HTML), mediaType: MIME.HTML }
+}
+
 // https://www.w3.org/TR/epub-33/#sec-reserved-prefixes
 const PREFIX = {
     a11y: 'http://www.idpf.org/epub/vocab/package/a11y/#',
@@ -492,6 +525,28 @@ const getFontMediaType = (path) => {
     }
     return mediaTypeMap[extension] || 'font/ttf'
 }
+
+const AUDIO_VIDEO_MEDIA_TYPES = {
+    'mp4': 'video/mp4',
+    'm4v': 'video/mp4',
+    'webm': 'video/webm',
+    'ogv': 'video/ogg',
+    'mov': 'video/quicktime',
+    'mp3': 'audio/mpeg',
+    'm4a': 'audio/mp4',
+    'm4b': 'audio/mp4',
+    'aac': 'audio/aac',
+    'oga': 'audio/ogg',
+    'ogg': 'audio/ogg',
+    'opus': 'audio/ogg',
+    'wav': 'audio/wav',
+    'flac': 'audio/flac',
+}
+
+const AUDIO_VIDEO_EXTENSIONS = Object.keys(AUDIO_VIDEO_MEDIA_TYPES)
+
+const getAudioVideoMediaType = path =>
+    AUDIO_VIDEO_MEDIA_TYPES[path.toLowerCase().split('.').pop()]
 
 // Container entry whose file name ends in `cover`/`couv` (the French
 // spelling) plus an image extension, e.g. `cover.jpg`, `Images/Cover.PNG`,
@@ -984,12 +1039,29 @@ class Loader {
             mediaType: getFontMediaType(path),
         }
     }
+    // Builders like epubBuilder (cnepub) ship audio and video in the container
+    // but never declare them in the manifest, the same way they leave out the
+    // illustrations. A relative href can't resolve against the section's
+    // `blob:` URL, so the media element would otherwise end up with no source.
+    tryAudioVideoEntryItem(path) {
+        if (!AUDIO_VIDEO_EXTENSIONS.some(ext => path.toLowerCase().endsWith(`.${ext}`))) {
+            return null
+        }
+        if (!this.entries.get(path)) {
+            return null
+        }
+        return {
+            href: path,
+            mediaType: getAudioVideoMediaType(path),
+        }
+    }
     async loadHref(href, base, parents = []) {
         if (isExternal(href)) return href
         const path = resolveURL(href, base)
         let item = this.manifest.find(item => item.href === path)
         if (!item) {
             item = this.tryImageEntryItem(path) ?? this.tryFontEntryItem(path)
+                ?? this.tryAudioVideoEntryItem(path)
             if (!item) {
                 return href
             }
@@ -1018,14 +1090,10 @@ class Loader {
 
         // parse and replace in HTML
         if ([MIME.XHTML, MIME.HTML, MIME.SVG].includes(mediaType)) {
-            let doc = new DOMParser().parseFromString(str, mediaType)
-            // change to HTML if it's not valid XHTML
-            if (mediaType === MIME.XHTML && (doc.querySelector('parsererror')
-            || !doc.documentElement?.namespaceURI)) {
-                console.warn(doc.querySelector('parsererror')?.innerText ?? 'Invalid XHTML')
-                item.mediaType = MIME.HTML
-                doc = new DOMParser().parseFromString(str, item.mediaType)
-            }
+            const parsed = parseContentDocument(new DOMParser(), str, mediaType)
+            const doc = parsed.doc
+            // it's now HTML if it wasn't valid XHTML even after repair
+            item.mediaType = parsed.mediaType
             // replace hrefs in XML processing instructions
             // this is mainly for SVGs that use xml-stylesheet
             if ([MIME.XHTML, MIME.SVG].includes(item.mediaType)) {
@@ -1283,16 +1351,7 @@ ${doc.querySelector('parsererror').innerText}`)
     }
     async loadDocument(item) {
         const str = await this.loadText(item.href)
-        const doc = this.parser.parseFromString(str, item.mediaType)
-        // Same fallback as the render path in `loadReplaced`: a file the
-        // manifest declares as XHTML but which isn't well-formed XML (an
-        // unclosed `<meta charset>` is the usual culprit) parses into a
-        // `parsererror` document whose `body` is null. Callers of
-        // `createDocument` walk that body, so retry as HTML instead.
-        if (item.mediaType === MIME.XHTML
-        && (doc.querySelector('parsererror') || !doc.documentElement?.namespaceURI))
-            return this.parser.parseFromString(str, MIME.HTML)
-        return doc
+        return parseContentDocument(this.parser, str, item.mediaType).doc
     }
     getMediaOverlay() {
         return new MediaOverlay(this, this.#loadXML.bind(this))

@@ -323,6 +323,8 @@ pub fn run() {
             #[cfg(target_os = "macos")]
             macos::traffic_light::set_traffic_lights,
             #[cfg(target_os = "macos")]
+            macos::traffic_light::set_window_title,
+            #[cfg(target_os = "macos")]
             macos::system_dictionary::show_lookup_popover,
         ])
         .plugin(tauri_plugin_fs::init())
