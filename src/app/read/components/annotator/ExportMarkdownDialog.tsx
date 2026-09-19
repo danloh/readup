@@ -26,7 +26,11 @@ interface ExportMarkdownDialogProps {
   onExport: (
     markdown: string,
     isPlainText: boolean,
-    sharePos?: { x: number; y: number; preferredEdge?: 'top' | 'bottom' | 'left' | 'right' },
+    options: {
+      // Hand the file to the OS share sheet instead of writing it to disk.
+      share: boolean;
+      sharePos?: { x: number; y: number; preferredEdge?: 'top' | 'bottom' | 'left' | 'right' };
+    },
   ) => void;
 }
 
@@ -41,7 +45,7 @@ const ExportMarkdownDialog: React.FC<ExportMarkdownDialogProps> = ({
   onExport,
 }) => {
   const _ = useTranslation();
-  const { envConfig } = useEnv();
+  const { envConfig, appService } = useEnv();
   const { settings } = useSettingsStore();
   const { user } = useAuth();
   const { getViewSettings } = useReaderStore();
@@ -286,19 +290,25 @@ const ExportMarkdownDialog: React.FC<ExportMarkdownDialogProps> = ({
     }));
   };
 
-  const handleExport = (e: React.MouseEvent<HTMLButtonElement>) => {
-    // Anchor the macOS / iPad share sheet to the Export button rect so
+  // macOS is the only platform with both a system share sheet and a native
+  // Save panel, so it gets a Share button next to a Save button that writes
+  // to disk (#6201). Elsewhere a single Export keeps the platform's one path:
+  // share sheet on iOS/Android, save dialog on Windows/Linux, download on web.
+  const canSaveAndShare = !!appService?.isMacOSApp;
+
+  const handleExport = (e: React.MouseEvent<HTMLButtonElement>, share: boolean) => {
+    // Anchor the macOS / iPad share sheet to the clicked button's rect so
     // NSSharingServicePicker doesn't fall back to the WebView's top-left.
     // `preferredEdge: 'bottom'` maps to NSMinYEdge — in the flipped WKWebView
     // coord space that's the rect's top edge, so the popover appears above
     // the button regardless of whether there is room below it.
     const rect = e.currentTarget.getBoundingClientRect();
-    const sharePosition = {
+    const sharePos = {
       x: rect.left + rect.width / 2,
       y: rect.top,
       preferredEdge: 'bottom' as const,
     };
-    onExport(markdownPreview, !!exportConfig.exportAsPlainText, sharePosition);
+    onExport(markdownPreview, !!exportConfig.exportAsPlainText, { share, sharePos });
   };
 
   return (
@@ -783,11 +793,11 @@ const ExportMarkdownDialog: React.FC<ExportMarkdownDialogProps> = ({
               {_('Cancel')}
             </button>
             <button
-              onClick={handleExport}
+              onClick={(e) => handleExport(e, !canSaveAndShare)}
               className='btn btn-primary btn-sm'
               disabled={filteredNotesCount === 0}
             >
-              {_('Export')}
+              {canSaveAndShare ? _('Save') : _('Export')}
             </button>
           </div>
         </div>

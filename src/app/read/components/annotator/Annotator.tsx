@@ -150,6 +150,10 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
   // long-press hold before the instant quick action fires, so a tap-to-deselect
   // can't re-open the dictionary off a racy lingering selectionchange (iOS).
   const pointerDownTimeRef = useRef(0);
+  // Set while an instant-quick-action dictionary lookup is up, because that
+  // path consumes the selection as it opens (see handleQuickAction). Dismissing
+  // the lookup hands the selection back (#6213).
+  const instantLookupDeselectedRef = useRef(false);
 
   const showingPopup =
     showAnnotPopup ||
@@ -254,6 +258,7 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const handleDismissPopup = useCallback(
     throttle(() => {
+      instantLookupDeselectedRef.current = false;
       setSelection(null);
       setShowAnnotPopup(false);
       setShowDictPopup(false);
@@ -285,6 +290,7 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
     handleContextmenu,
     dragSelectionTo,
     suppressNativeSelectionHandles,
+    restoreSelectionRange,
     noteAutoTurnPoint,
     cancelAutoTurn,
     onAutoTurn,
@@ -828,14 +834,16 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
           // toolbar so highlighting and copying stay reachable (#5213).
           if (selection && isSingleLookupTerm(selection.text)) {
             handleDictionary();
-            // The instant lookup consumes the gesture: the word was tapped to be
-            // looked up, not selected. Drop the selection so iOS's native
-            // handles and blue highlight — painted above web content — don't sit
-            // on top of the popup, and so dismissing it has no live selection to
-            // return a toolbar to (#5585, the other side of #5213's boundary).
+            // Drop the selection for as long as the lookup is up, so iOS's
+            // native handles and blue highlight — painted above web content —
+            // don't sit on top of the popup (#5585). It is handed back on
+            // dismiss (#6213): keeping it dropped for good left no way to
+            // highlight or copy the word, because re-selecting it with a quick
+            // action armed only opens the dictionary again.
             // Clear the flag before deselecting: the selectionchange this fires
             // would otherwise dismiss the popup we just opened.
             isTextSelected.current = false;
+            instantLookupDeselectedRef.current = true;
             view?.deselect();
           } else {
             handleShowAnnotPopup();
@@ -923,7 +931,12 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
       if (showDictPopup || showTsPopup || showProofreadPopup) return;
 
       const { enableAnnotationQuickActions, annotationQuickAction } = viewSettings;
-      if (enableAnnotationQuickActions && annotationQuickAction && isTextSelected.current) {
+      if (
+        enableAnnotationQuickActions &&
+        annotationQuickAction &&
+        isTextSelected.current &&
+        !selection.quickActionHandled
+      ) {
         handleQuickAction();
       } else {
         handleShowAnnotPopup();
@@ -1499,7 +1512,13 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
   const handleConfirmExport = async (
     content: string,
     isPlainText: boolean,
-    sharePos?: { x: number; y: number; preferredEdge?: 'top' | 'bottom' | 'left' | 'right' },
+    {
+      share,
+      sharePos,
+    }: {
+      share: boolean;
+      sharePos?: { x: number; y: number; preferredEdge?: 'top' | 'bottom' | 'left' | 'right' };
+    },
   ) => {
     const { book } = bookData;
     if (!book) return;
@@ -1514,11 +1533,12 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
     const filename = `${makeSafeFilename(book.title)}.${ext}`;
     const saved = await appService?.saveFile(filename, content, {
       mimeType,
-      share: true,
+      share,
       sharePos,
     });
 
-    if (appService?.isMacOSApp) return;
+    // The macOS share sheet gives its own feedback; the Save panel does not.
+    if (share && appService?.isMacOSApp) return;
     eventDispatcher.dispatch('toast', {
       type: 'info',
       message: saved ? _('Exported successfully') : _('Copied to clipboard'),
@@ -1607,13 +1627,27 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
   // The lookup popups never deselect (handleDictionary / handleTranslation /
   // handleProofread only flip popup flags), so a genuine selection is still
   // live when one closes — return to its toolbar instead of discarding it
-  // (#5213). Word Lens gloss taps and taps on an existing highlight
+  // (#5213). The instant dictionary is the one exception, and the block below
+  // puts its selection back so it lands on the same footing. Word Lens gloss taps and taps on an existing highlight
   // synthesize their selection with isTextSelected left false, and an empty
   // toolbar has nothing to return to: those keep the full dismiss. The
   // consuming actions are a different class by design — copy, share, search,
   // and TTS spend the selection (TTS deselects deliberately), and highlight /
   // annotate replace it with the created annotation — so they are not here.
   const handleDismissPopupShowToolbar = () => {
+    // The instant dictionary is the one lookup that deselects as it opens, so
+    // its dismiss has to put the range back before the check below — otherwise
+    // the word it just defined can never be highlighted or copied (#6213).
+    if (instantLookupDeselectedRef.current) {
+      instantLookupDeselectedRef.current = false;
+      if (selection && restoreSelectionRange(selection.range)) {
+        isTextSelected.current = true;
+        // `quickActionHandled` rides along with the selection from here on, so a
+        // later republish of it (handleHighlight stamps `annotated`) can't be
+        // read as a fresh selection and re-open the lookup we just closed.
+        setSelection({ ...selection, quickActionHandled: true });
+      }
+    }
     if (isTextSelected.current && toolButtons.length > 0) {
       handleShowAnnotPopup();
     } else {
