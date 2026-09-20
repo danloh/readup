@@ -1729,6 +1729,7 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
       )}
       {showTsPopup && trianglePosition && translatorPopupPosition && (
         <TranslatorPopup
+          bookKey={bookKey}
           text={selection?.text as string}
           position={translatorPopupPosition}
           trianglePosition={trianglePosition}

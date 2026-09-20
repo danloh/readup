@@ -27,7 +27,7 @@ export const EnvProvider = ({ children }: { children: ReactNode }) => {
         console.error('Failed to initialize app service:', err);
       });
     window.addEventListener('error', (e) => {
-      if (e.message === 'ResizeObserver loop limit exceeded') {
+      if (e.message?.startsWith('ResizeObserver loop')) {
         e.stopImmediatePropagation();
         e.preventDefault();
         return true;

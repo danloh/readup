@@ -226,6 +226,7 @@ const SettingsDialog: React.FC<{ bookKey: string }> = ({ bookKey }) => {
       bgClassName={bookKey ? 'sm:!bg-black/20' : 'sm:!bg-black/50'}
       boxClassName={clsx(
         'sm:min-w-[520px] overflow-hidden not-eink:bg-base-200',
+        'overscroll-none [&_*]:overscroll-none',
         appService?.isMobile && 'sm:max-w-[90%] sm:w-3/4',
       )}
       snapHeight={appService?.isMobile ? 0.7 : undefined}
