@@ -1,5 +1,4 @@
 import clsx from 'clsx';
-import dayjs from 'dayjs';
 import React, { useMemo } from 'react';
 import { MdContentCopy, MdDelete, MdEdit } from 'react-icons/md';
 
@@ -23,6 +22,7 @@ import TextEditor from '@/components/TextEditor';
 import { removeBookNoteOverlays } from '../../utils/annotatorUtil';
 import { useInlineTextEditor } from '../../hooks/useInlineTextEditor';
 import { useSaveBooknoteNoteText } from '../../hooks/useSaveBooknoteNoteText';
+import { BooknoteTimeLabel } from './BooknoteTime';
 
 interface BooknoteItemProps {
   bookKey: string;
@@ -88,9 +88,6 @@ const BooknoteItem: React.FC<BooknoteItemProps> = ({
   // hundreds of items. Cache by note text — note edits change item.note and
   // bust the cache automatically.
   const noteHtml = useMemo(() => (note ? parseMarkdown(note) : ''), [note]);
-
-  // dayjs().fromNow() reformats every render; cache per createdAt.
-  const createdAtLabel = useMemo(() => dayjs(item.createdAt).fromNow(), [item.createdAt]);
 
   const handleClickItem = (event: React.MouseEvent | React.KeyboardEvent) => {
     event.preventDefault();
@@ -295,7 +292,7 @@ const BooknoteItem: React.FC<BooknoteItemProps> = ({
             <span className='truncate text-sm text-gray-500 sm:text-xs'>
               {item.page ? _('p {{page}}' + ' · ', { page: item.page }) : ''}
             </span>
-            <span className='truncate text-sm text-gray-500 sm:text-xs'>{createdAtLabel}</span>
+            <BooknoteTimeLabel createdAt={item.createdAt} />
           </div>
           <div
             className={clsx('flex items-center justify-end gap-3', isEditable && 'w-full')}

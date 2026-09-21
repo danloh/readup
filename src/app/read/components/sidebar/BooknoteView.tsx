@@ -17,6 +17,7 @@ import { BookNote, BooknoteGroup, BookNoteType } from '@/types/book';
 import { useTranslation } from '@/hooks/useTranslation';
 import EmptyState from '../EmptyState';
 import BooknoteItem from './BooknoteItem';
+import { BooknoteTimeProvider } from './BooknoteTime';
 
 type FlatBooknoteRow =
   | { kind: 'group-header'; key: string; group: BooknoteGroup }
@@ -321,21 +322,23 @@ const BooknoteView: React.FC<{
           data-overlayscrollbars-initialize=''
           style={{ height: containerHeight }}
         >
-          <Virtuoso
-            ref={virtuosoRef}
-            scrollerRef={handleScrollerRef}
-            initialTopMostItemIndex={
-              initialTopIndex > 0 ? { index: initialTopIndex, align: 'center' } : 0
-            }
-            rangeChanged={({ startIndex, endIndex }) => {
-              visibleCenterRef.current = Math.floor((startIndex + endIndex) / 2);
-            }}
-            style={{ height: containerHeight }}
-            totalCount={flatItems.length}
-            computeItemKey={(index) => flatItems[index]?.key ?? index}
-            itemContent={renderItem}
-            overscan={500}
-          />
+          <BooknoteTimeProvider>
+            <Virtuoso
+              ref={virtuosoRef}
+              scrollerRef={handleScrollerRef}
+              initialTopMostItemIndex={
+                initialTopIndex > 0 ? { index: initialTopIndex, align: 'center' } : 0
+              }
+              rangeChanged={({ startIndex, endIndex }) => {
+                visibleCenterRef.current = Math.floor((startIndex + endIndex) / 2);
+              }}
+              style={{ height: containerHeight }}
+              totalCount={flatItems.length}
+              computeItemKey={(index) => flatItems[index]?.key ?? index}
+              itemContent={renderItem}
+              overscan={500}
+            />
+          </BooknoteTimeProvider>
         </div>
       )}
     </div>
