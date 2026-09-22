@@ -18,6 +18,7 @@ import ModalPortal from '@/components/ModalPortal';
 import { useLibraryStore } from '@/store/libraryStore';
 import { useEnv } from '@/context/EnvContext';
 import BookCover from '../BookCover';
+import { sanitizeHtml } from '@/utils/sanitize';
 
 interface BookDetailViewProps {
   book: Book;
@@ -197,7 +198,7 @@ const BookDetailView: React.FC<BookDetailViewProps> = ({
           <p
             className='text-neutral-content prose prose-sm max-w-full text-sm'
             dangerouslySetInnerHTML={{
-              __html: metadata?.description || _('No description available'),
+              __html: sanitizeHtml(metadata?.description || _('No description available')),
             }}
           ></p>
         </div>

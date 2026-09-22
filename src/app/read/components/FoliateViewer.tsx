@@ -74,6 +74,7 @@ import { RSVPControl } from './rsvp';
 import TableViewer from './TableViewer';
 import ImageViewer from './ImageViewer';
 import ExternalLinkConfirm from './ExternalLinkConfirm';
+import { sanitizeSvg } from '../transformers/sanitizer';
 
 declare global {
   interface Window {
@@ -215,6 +216,9 @@ const FoliateViewer: React.FC<{
               viewSettings.vertical,
               bookData?.isFixedLayout,
             );
+          if (detail.type === 'image/svg+xml' && !viewSettings?.allowScript) {
+            return sanitizeSvg(data);
+          }
           const isHtml = detail.type === 'application/xhtml+xml' || detail.type === 'text/html';
           if (viewSettings && bookData && isHtml) {
             const ctx: TransformContext = {

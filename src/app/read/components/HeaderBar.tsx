@@ -136,7 +136,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
   const isHeaderCompact = headerWidth > 0 && headerWidth < 350;
   const insets = window.innerWidth < 640 ? screenInsets : gridInsets;
   const isHeaderVisible = hoveredBookKey === bookKey || isDropdownOpen;
-  const isMobile = appService?.isMobile || window.innerWidth < 640;
+  // const isMobile = appService?.isMobile || window.innerWidth < 640;
   const triggerHeight = viewSettings ? getHeaderTriggerHeight(gridInsets.top, viewSettings) : 0;
   const trafficLightInHeader =
     appService?.hasTrafficLight && !trafficLightInFullscreen && !isSideBarVisible && isTopLeft;
@@ -274,11 +274,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
           <NotebookToggler bookKey={bookKey} />
           <Dropdown
             label={_('View Options')}
-            containerClassName={clsx(
-              'h-8',
-              isMobile &&
-                '[&>div]:static [&_details.dropdown]:static [&_.view-menu]:left-auto! [&_.view-menu]:right-4!',
-            )}
+            containerClassName='h-8'
             className='exclude-title-bar-mousedown dropdown-bottom dropdown-end'
             buttonClassName='btn btn-ghost h-8 min-h-8 w-8 p-0'
             toggleButton={<PiDotsThreeVerticalBold size={iconSize16} />}
