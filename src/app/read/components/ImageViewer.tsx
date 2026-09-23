@@ -491,9 +491,18 @@ const ImageViewer: React.FC<ImageViewerProps> = ({
           sharePos,
         });
       }
+      if (saved) {
+        eventDispatcher.dispatch('toast', { type: 'info', message: _('Image saved to gallery') });
+        return;
+      }
+      // Some Android builds (e.g. HarmonyOS) reject the MediaStore insert;
+      // fall back to saving the image as a file via the save dialog.
+      const savedFile = await appService.saveFile(filename, bytes.buffer as ArrayBuffer, {
+        mimeType,
+      });
       eventDispatcher.dispatch('toast', {
-        type: saved ? 'info' : 'error',
-        message: saved ? _('Image saved to gallery') : _('Failed to save the image'),
+        type: savedFile ? 'info' : 'error',
+        message: savedFile ? _('Image saved successfully') : _('Failed to save the image'),
       });
     } catch (error) {
       console.error('Failed to save image:', error);
