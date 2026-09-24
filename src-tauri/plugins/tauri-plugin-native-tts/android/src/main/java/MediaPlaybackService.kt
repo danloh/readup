@@ -91,6 +91,16 @@ class MediaPlaybackService : MediaBrowserServiceCompat() {
             )
             setPlaybackState(stateBuilder.build())
             setCallback(SessionCallback())
+            packageManager.getLaunchIntentForPackage(packageName)?.let { launchIntent ->
+                setSessionActivity(
+                    PendingIntent.getActivity(
+                        this@MediaPlaybackService,
+                        0,
+                        launchIntent,
+                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+                    )
+                )
+            }
             setSessionToken(sessionToken)
             isActive = true
         }

@@ -29,9 +29,14 @@ vi.mock('@/services/constants', () => ({
   BOOK_IDS_SEPARATOR: '+',
 }));
 
+vi.mock('@tauri-apps/plugin-os', () => ({
+  version: vi.fn(),
+}));
+
 import { redirect } from 'next/navigation';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow';
+import { version as osVersion } from '@tauri-apps/plugin-os';
 import { isPWA, isTauriAppPlatform, isWebAppPlatform } from '@/services/environment';
 import {
   navigateToReader,
@@ -77,6 +82,9 @@ beforeEach(() => {
     label: 'main',
     close: vi.fn(),
   } as unknown as ReturnType<typeof getCurrentWindow>);
+
+  // Reset OS version default (Windows 11 build)
+  vi.mocked(osVersion).mockReturnValue('10.0.22631');
 
   // Reset window.location
   Object.defineProperty(window, 'location', {
@@ -286,6 +294,29 @@ describe('showReaderWindow', () => {
     expect(options.decorations).toBe(false);
     expect(options.transparent).toBe(true);
     expect(options.shadow).toBe(true);
+  });
+
+  test('drops the shadow on Windows 10, whose border is asymmetric', () => {
+    const appService = makeAppService(false);
+    appService['isWindowsApp'] = true;
+    vi.mocked(osVersion).mockReturnValue('10.0.19045');
+
+    showReaderWindow(appService as never, ['book1']);
+
+    expect(vi.mocked(WebviewWindow).mock.calls[0]![1]!.shadow).toBe(false);
+  });
+
+  test('keeps the shadow on Windows 11 and an unparseable build', () => {
+    const appService = makeAppService(false);
+    appService['isWindowsApp'] = true;
+
+    vi.mocked(osVersion).mockReturnValue('10.0.22631');
+    showReaderWindow(appService as never, ['book1']);
+    expect(vi.mocked(WebviewWindow).mock.calls.at(-1)![1]!.shadow).toBe(true);
+
+    vi.mocked(osVersion).mockReturnValue('10.0');
+    showReaderWindow(appService as never, ['book1']);
+    expect(vi.mocked(WebviewWindow).mock.calls.at(-1)![1]!.shadow).toBe(true);
   });
 });
 
