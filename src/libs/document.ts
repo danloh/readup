@@ -44,6 +44,7 @@ export interface SectionItem {
   fragments?: Array<SectionFragment>;
 
   loadText?: () => Promise<string | null>;
+  resolveHref?: (href: string) => string;
   // Resolve a reference a script introduces after load (see observeDynamicResources).
   loadHref?: (href: string) => Promise<string>;
   createDocument: () => Promise<Document>;
@@ -89,6 +90,7 @@ export interface BookDoc {
   sections: Array<SectionItem>;
   transformTarget?: EventTarget;
   splitTOCHref(href: string): Array<string | number>;
+  isExternal?(href: string): boolean;
   getCover(): Promise<Blob | null>;
   // Formats backed by live parser state must be released explicitly: a PDF
   // book holds a pdf.js document whose dedicated worker survives GC, so
