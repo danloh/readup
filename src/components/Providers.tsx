@@ -19,6 +19,7 @@ import { useAppLockStore } from '@/store/appLockStore';
 import { CommandPalette, CommandPaletteProvider } from './command-palette';
 import AppLockDialog from './settings/AppLockDialog';
 import AppLockScreen from './AppLockScreen';
+import WindowOutline from './WindowOutline';
 
 const Providers = ({ children }: { children: React.ReactNode }) => {
   const { appService } = useEnv();
@@ -108,6 +109,7 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
               </div>
               <AppLockDialog />
               {showAppLockScreen && <AppLockScreen />}
+              <WindowOutline />
             </CommandPaletteProvider>
           </DropdownProvider>
         </IconContext.Provider>
