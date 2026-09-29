@@ -18,6 +18,8 @@ mod macos;
 mod dir;
 mod file;
 mod feed;
+#[cfg(any(target_os = "android", test))]
+mod eink_identity;
 mod epub_parser;
 mod mobi_parser;
 mod parser_common;

@@ -469,7 +469,8 @@ export async function restoreFromBackupZip(
   let orphanIdx = 0;
   for (const hash of orphanHashes) {
     orphanIdx++;
-    if (currentBooksMap.has(hash)) continue;
+    const existingBook = currentBooksMap.get(hash);
+    if (existingBook && !existingBook.deletedAt) continue;
     onProgress?.(backupBooks.length + orphanIdx, total, hash);
     const orphanEntries = fileEntries.filter((e) => e.filename.startsWith(`${hash}/`));
     // Find the book file by extension

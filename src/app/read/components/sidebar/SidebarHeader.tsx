@@ -58,7 +58,7 @@ const SidebarHeader: React.FC<{
         >
           <Logo />
         </button>
-        <div className='hidden sm:flex'>
+        <div className='hidden sm:ms-1.5 sm:flex'>
           <SidebarToggler bookKey={bookKey} />
         </div>
       </div>
