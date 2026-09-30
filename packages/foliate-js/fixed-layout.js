@@ -169,6 +169,21 @@ export const computeSpreadSpineOverlap = ({
     return -1 / (devicePixelRatio || 1)
 }
 
+// Page columns the reader cell is showing, for the captured page curl
+// (#6239). Two means the curl turns just the outer page as a leaf hinged
+// at the spine (#6106): the shader reflects that leaf about the cell's
+// horizontal centre, which is where the spine actually is, because
+// `computeSpreadInlineMargins` pushes both pages together and centres the pair.
+// Every other shape — a centred page, the lone page portrait shows, a
+// blank-padded slot, a spread that has not been laid out yet, scroll mode —
+// has no spine to hinge on and curls as one sheet — hence the `true` blank
+// defaults, which make a spread nobody has laid out yet report one column. This
+// is deliberately the same notion of "spread" as `computeSpreadSpineOverlap`.
+export const computeSpreadColumnCount = ({
+    center = false, portrait = false, scrolled = false,
+    leftBlank = true, rightBlank = true,
+} = {}) => center || portrait || scrolled || leftBlank || rightBlank ? 1 : 2
+
 // Inline margins for the two pages of a spread. In landscape both pages are
 // shown and pushed together at the spine: the left page hugs the right edge
 // (`margin-inline-start: auto`) and the right page hugs the left edge
@@ -230,11 +245,17 @@ export class FixedLayout extends HTMLElement {
     #scrollLocked = false
     // Horizontal offset handed over by #showSpread for the next #render().
     #pannedX = null
+    // Horizontal offset of the vertical scroll strip while the pan lock holds
+    // it (see #syncScrollPanLock); null while the host scrolls on x itself.
+    #lockedPanX = null
     #isOverflowX = false
     #isOverflowY = false
     #preloadCache = new Map()
     #prerenderedSpreads = new Map()
     #spreadAccessTime = new Map()
+    #spreadAccessTick = 0
+    // Counter for the keys stale cached spreads move to on a regroup.
+    #staleSpreads = 0
     #maxConcurrentPreloads = 1
     #numPrerenderedSpreads = 1
     #maxCachedSpreads = 2
@@ -297,7 +318,9 @@ export class FixedLayout extends HTMLElement {
         const maxTop = Math.max(0, this.scrollHeight - this.clientHeight)
         const maxLeft = Math.max(0, this.scrollWidth - this.clientWidth)
         this.scrollTop = clamp(this.scrollTop + (rect.top - anchor.top), 0, maxTop)
-        this.scrollLeft = clamp(this.scrollLeft + (rect.left - anchor.left), 0, maxLeft)
+        if (this.#lockedPanX !== null)
+            this.#setLockedPanX(this.#lockedPanX + (rect.left - anchor.left))
+        else this.scrollLeft = clamp(this.scrollLeft + (rect.left - anchor.left), 0, maxLeft)
     }
     #getScrollModePageMetrics() {
         return this.#scrollPages.map(page => ({
@@ -409,6 +432,17 @@ export class FixedLayout extends HTMLElement {
         :host([lock-pan-x]:not([flow="scrolled"][scroll-direction="horizontal"])) .scroll-page {
             touch-action: pan-y;
         }
+        /* iOS ignores touch-action for a swipe that lands while the strip is
+           still coasting from the previous fling, so vertical scroll flow drops
+           the horizontal scroll range altogether: the host stops scrolling on
+           x and the strip is shifted by the offset the reader panned to
+           (#6407). */
+        :host([lock-pan-x][flow="scrolled"]:not([scroll-direction="horizontal"])) {
+            overflow-x: hidden;
+        }
+        :host([lock-pan-x][flow="scrolled"]:not([scroll-direction="horizontal"])) .scroll-container {
+            translate: var(--locked-pan-x, 0px) 0;
+        }
         :host([flow="scrolled"]) .scroll-container {
             display: flex;
             flex-direction: column;
@@ -483,6 +517,7 @@ export class FixedLayout extends HTMLElement {
             }
             case 'lock-pan-x':
                 this.#applyPanLockToFrames()
+                this.#syncScrollPanLock()
                 break
             case 'scroll-direction': {
                 const horizontal = value === 'horizontal'
@@ -513,6 +548,31 @@ export class FixedLayout extends HTMLElement {
     #applyPanLockToFrames() {
         for (const iframe of this.#root.querySelectorAll('iframe'))
             this.#applyPanLock(iframe.contentDocument)
+    }
+    // Hand the horizontal offset between the host's scrollLeft and the strip's
+    // translate as the lock's overflow-x rule turns on or off, so the page
+    // stays where the reader panned it.
+    #syncScrollPanLock() {
+        const locked = !!this.#scrollContainer && !this.#scrollHorizontal
+            && this.hasAttribute('lock-pan-x')
+        if (locked === (this.#lockedPanX !== null)) return
+        if (locked) {
+            this.#setLockedPanX(this.scrollLeft)
+            this.scrollLeft = 0
+        } else {
+            const x = this.#lockedPanX
+            this.#clearLockedPanX()
+            this.scrollLeft = x
+        }
+    }
+    #setLockedPanX(x) {
+        const max = Math.max(0, this.#scrollContainer.offsetWidth - this.clientWidth)
+        this.#lockedPanX = clamp(x, 0, max)
+        this.style.setProperty('--locked-pan-x', `${-this.#lockedPanX}px`)
+    }
+    #clearLockedPanX() {
+        this.#lockedPanX = null
+        this.style.removeProperty('--locked-pan-x')
     }
     async #createFrame({ index, src: srcOption, detached = false }) {
         const srcOptionIsString = typeof srcOption === 'string'
@@ -757,7 +817,7 @@ export class FixedLayout extends HTMLElement {
         const prerendered = cacheKey ? this.#prerenderedSpreads.get(cacheKey) : null
 
         if (prerendered) {
-            this.#spreadAccessTime.set(cacheKey, Date.now())
+            this.#touchSpread(cacheKey)
             if (prerendered.center) {
                 this.#center = prerendered.center
             } else {
@@ -769,14 +829,14 @@ export class FixedLayout extends HTMLElement {
                 this.#center = await this.#createFrame(center)
                 if (cacheKey) {
                     this.#prerenderedSpreads.set(cacheKey, { center: this.#center })
-                    this.#spreadAccessTime.set(cacheKey, Date.now())
+                    this.#touchSpread(cacheKey)
                 }
             } else {
                 this.#left = await this.#createFrame(left)
                 this.#right = await this.#createFrame(right)
                 if (cacheKey) {
                     this.#prerenderedSpreads.set(cacheKey, { left: this.#left, right: this.#right })
-                    this.#spreadAccessTime.set(cacheKey, Date.now())
+                    this.#touchSpread(cacheKey)
                 }
             }
         }
@@ -875,6 +935,7 @@ export class FixedLayout extends HTMLElement {
                 this.#scrollHorizontal ? { inline: 'start', block: 'nearest' } : undefined)
             this.#scrollCurrentIndex = currentIndex
         }
+        this.#syncScrollPanLock()
 
         this.addEventListener('scroll', this.#handleScrollEvent)
         if (this.#scrollHorizontal) {
@@ -987,6 +1048,7 @@ export class FixedLayout extends HTMLElement {
         }
 
         // Reset scroll position left over from scroll mode
+        this.#clearLockedPanX()
         this.scrollTop = 0
         this.scrollLeft = 0
         // Must run even when navigate is false (axis rebuild): otherwise a
@@ -1193,6 +1255,9 @@ export class FixedLayout extends HTMLElement {
                 this.#renderScrollPage(page)
             }
         }
+        // Clamp the locked offset to the resized strip, as the browser would
+        // clamp scrollLeft.
+        if (this.#lockedPanX !== null) this.#setLockedPanX(this.#lockedPanX)
         if (pinchAnchor) {
             this.#restorePinchAnchor(pinchAnchor)
             this.#pinchAnchor = null
@@ -1369,6 +1434,56 @@ export class FixedLayout extends HTMLElement {
         this.#overlayers.clear()
         this.goToSpread(index, this.rtl ? 'right' : 'left', 'page')
     }
+    // A section can find out as it loads that it is a spread of its own: a
+    // streamed comic measures a page when its image arrives, and a wide one
+    // marks itself `pageSpread: 'center'`. Regroup from the first spread that
+    // changed; the spreads before it keep their objects and cached frames, so
+    // a spread object still at its index is still current.
+    #regroup() {
+        const old = this.#spreads
+        this.#spread(this.spread)
+        const same = (a, b) => a && b
+            && a.left === b.left && a.right === b.right && a.center === b.center
+        let from = 0
+        while (from < old.length && same(old[from], this.#spreads[from])) from++
+        if (from === old.length && from === this.#spreads.length) {
+            this.#spreads = old
+            return
+        }
+        this.#spreads = [...old.slice(0, from), ...this.#spreads.slice(from)]
+        const isRegrouped = key => Number(/^spread-(\d+)$/.exec(key)?.[1] ?? -1) >= from
+        for (const key of [...this.#preloadCache.keys()])
+            if (isRegrouped(key)) this.#preloadCache.delete(key)
+        // The spread on screen can be among the stale ones, and it has to
+        // outlive the turn that leaves it (#6239). So nothing is removed
+        // here: the frames move out of reach of the new indices, and the trim
+        // evicts them by age.
+        for (const key of [...this.#prerenderedSpreads.keys()]) {
+            if (!isRegrouped(key)) continue
+            const staleKey = `stale-${++this.#staleSpreads}`
+            this.#prerenderedSpreads.set(staleKey, this.#prerenderedSpreads.get(key))
+            this.#spreadAccessTime.set(staleKey, this.#spreadAccessTime.get(key) ?? 0)
+            this.#prerenderedSpreads.delete(key)
+            this.#spreadAccessTime.delete(key)
+        }
+    }
+    // After a regroup, go where the page a turn aimed at now sits: the page on
+    // `side` of the spread it was headed for.
+    #goToPageOf(spread, side, reason) {
+        const section = spread.center ?? spread[side] ?? spread.left ?? spread.right
+        const target = this.getSpreadOf(section)
+        this.#index = -1
+        return this.goToSpread(target.index, target.side, reason)
+    }
+    get columnCount() {
+        return computeSpreadColumnCount({
+            center: !!this.#center,
+            portrait: this.#portrait,
+            scrolled: this.#scrollMode,
+            leftBlank: !this.#left || !!this.#left.blank,
+            rightBlank: !this.#right || !!this.#right.blank,
+        })
+    }
     get index() {
         if (this.#scrollMode) return this.#scrollCurrentIndex >= 0
             ? this.#scrollCurrentIndex : this.#getScrollIndex()
@@ -1430,6 +1545,14 @@ export class FixedLayout extends HTMLElement {
             this.#render(side)
             return
         }
+        // The spread being left is the one the reader may still be touching: a
+        // captured page turn navigates under its overlay with the finger down on
+        // the outgoing frame, and detaching that iframe ends the touch sequence
+        // with no touchend, freezing the turn (#6239). Its stamp dates
+        // from when it was shown — older than every preload made since, so the
+        // trim in #preloadNextSpreads evicted it on each backward turn. Bump it
+        // now; the trim then drops a stale preload instead.
+        if (this.#index >= 0) this.#touchSpread(`spread-${this.#index}`)
         this.#index = index
         const spread = this.#spreads[index]
         const cacheKey = `spread-${index}`
@@ -1449,12 +1572,16 @@ export class FixedLayout extends HTMLElement {
             if (spread.center) {
                 const sectionIndex = this.book.sections.indexOf(spread.center)
                 const src = await spread.center?.load?.()
+                this.#regroup()
+                if (this.#spreads[index] !== spread) return this.#goToPageOf(spread, side, reason)
                 await this.#showSpread({ center: { index: sectionIndex, src }, spreadIndex: index, side })
             } else {
                 const indexL = this.book.sections.indexOf(spread.left)
                 const indexR = this.book.sections.indexOf(spread.right)
                 const srcL = await spread.left?.load?.()
                 const srcR = await spread.right?.load?.()
+                this.#regroup()
+                if (this.#spreads[index] !== spread) return this.#goToPageOf(spread, side, reason)
                 const left = { index: indexL, src: srcL }
                 const right = { index: indexR, src: srcR }
                 await this.#showSpread({ left, right, side, spreadIndex: index })
@@ -1500,20 +1627,26 @@ export class FixedLayout extends HTMLElement {
             const task = this.#preloadQueue.shift()
             if (!task) break
 
-            const { spread, cacheKey } = task
+            const { spread, cacheKey, targetIndex } = task
+            // A page that loads wide regroups the spreads, which can leave
+            // this task holding a spread that is no longer at its index.
+            const isStale = () => this.#spreads[targetIndex] !== spread
             this.#preloadCache.set(cacheKey, 'loading')
             this.#activePreloads++
             Promise.resolve().then(async () => {
                 try {
                     if (spread.center) {
                         const src = await spread.center?.load?.()
+                        this.#regroup()
+                        if (isStale()) return this.#preloadNextSpreads()
                         this.#preloadCache.set(cacheKey, { center: src })
 
                         const sectionIndex = this.book.sections.indexOf(spread.center)
                         const frame = await this.#createFrame({ index: sectionIndex, src, detached: true })
+                        if (isStale()) return frame.element.remove()
 
                         this.#prerenderedSpreads.set(cacheKey, { center: frame })
-                        this.#spreadAccessTime.set(cacheKey, Date.now())
+                        this.#touchSpread(cacheKey)
                         if (frame.onZoom) {
                             const doc = frame.iframe.contentDocument
                             frame.onZoom({ doc, scale: this.#totalScaleFactor, pageColors: this.#pageColors })
@@ -1521,15 +1654,22 @@ export class FixedLayout extends HTMLElement {
                     } else {
                         const srcL = await spread.left?.load?.()
                         const srcR = await spread.right?.load?.()
+                        this.#regroup()
+                        if (isStale()) return this.#preloadNextSpreads()
                         this.#preloadCache.set(cacheKey, { left: srcL, right: srcR })
 
                         const indexL = this.book.sections.indexOf(spread.left)
                         const indexR = this.book.sections.indexOf(spread.right)
                         const leftFrame = await this.#createFrame({ index: indexL, src: srcL, detached: true })
                         const rightFrame = await this.#createFrame({ index: indexR, src: srcR, detached: true })
+                        if (isStale()) {
+                            leftFrame.element.remove()
+                            rightFrame.element.remove()
+                            return
+                        }
 
                         this.#prerenderedSpreads.set(cacheKey, { left: leftFrame, right: rightFrame })
-                        this.#spreadAccessTime.set(cacheKey, Date.now())
+                        this.#touchSpread(cacheKey)
 
                         if (leftFrame.onZoom) {
                             const docL = leftFrame.iframe.contentDocument
@@ -1549,6 +1689,12 @@ export class FixedLayout extends HTMLElement {
                 }
             })
         }
+    }
+    // Most-recently-used ordering for the spread cache. A counter, not a clock:
+    // the trim sorts by this value, and two stamps in the same millisecond fell
+    // back to Map insertion order, which ranked the current spread oldest.
+    #touchSpread(cacheKey) {
+        this.#spreadAccessTime.set(cacheKey, ++this.#spreadAccessTick)
     }
     #cleanupPreloadCache() {
         const maxSpreads = this.#maxCachedSpreads
@@ -1745,7 +1891,7 @@ export class FixedLayout extends HTMLElement {
                     ratio,
                     scrollLeft: this.#scrollHorizontal && this.rtl
                         ? this.scrollWidth - this.clientWidth + this.scrollLeft
-                        : this.scrollLeft,
+                        : this.scrollLeft + (this.#lockedPanX ?? 0),
                     scrollTop: this.scrollTop,
                     viewportWidth: this.clientWidth,
                     viewportHeight: this.clientHeight,

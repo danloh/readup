@@ -155,6 +155,16 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
   // the lookup hands the selection back (#6213).
   const instantLookupDeselectedRef = useRef(false);
 
+  // The lookup surfaces read the selection they were opened on, but it can be
+  // cleared without the dismiss that closes them: the instant highlight quick
+  // action clears it on a tap (#6419). Close them in the same render, before
+  // they can render without text.
+  if (!selection && (showDictPopup || showTsPopup || showProofreadPopup)) {
+    setShowDictPopup(false);
+    setShowTsPopup(false);
+    setShowProofreadPopup(false);
+  }
+
   const showingPopup =
     showAnnotPopup ||
     showDictPopup ||
@@ -318,10 +328,12 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
 
   // Whether the currently shown selection came from the footnote popup, for
   // event handlers that only know the incoming event, not the selection state.
+  // The note editor spends that selection (dropSelectionForOverlay), so the
+  // cleared report it echoes back must not dismiss the editor (#6395).
   const selectionIsPopupRef = useRef(false);
   useEffect(() => {
-    selectionIsPopupRef.current = !!selection?.popup;
-  }, [selection]);
+    selectionIsPopupRef.current = !!selection?.popup && !noteEditorTarget;
+  }, [selection, noteEditorTarget]);
 
   // Selections made outside the book's section documents arrive via this
   // event: the footnote popup renders its own foliate view (or a host-document

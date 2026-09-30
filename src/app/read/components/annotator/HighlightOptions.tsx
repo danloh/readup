@@ -32,6 +32,7 @@ interface HighlightOptionsProps {
   globalToggleAvailable?: boolean;
   globalToggleActive?: boolean;
   onToggleGlobal?: () => void;
+  onDismiss?: () => void;
 }
 
 const OPTIONS_HEIGHT_PIX = 28;
@@ -48,6 +49,7 @@ const HighlightOptions: React.FC<HighlightOptionsProps> = ({
   globalToggleAvailable = false,
   globalToggleActive = false,
   onToggleGlobal,
+  onDismiss,
 }) => {
   const _ = useTranslation();
   const { envConfig } = useEnv();
@@ -124,6 +126,7 @@ const HighlightOptions: React.FC<HighlightOptionsProps> = ({
     await saveSysSettings(envConfig, 'globalReadSettings', newGlobalReadSettings);
     setSelectedColor(color);
     onHandleHighlight(true);
+    onDismiss?.();
   };
 
   return (

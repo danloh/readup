@@ -177,6 +177,7 @@ const AnnotationPopup: React.FC<AnnotationPopupProps> = ({
                 globalToggleAvailable={globalToggleAvailable}
                 globalToggleActive={globalToggleActive}
                 onToggleGlobal={onToggleGlobal}
+                onDismiss={onDismiss}
               />
             )
           )}
