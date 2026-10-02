@@ -40,9 +40,17 @@ class MainActivity : TauriActivity(), KeyDownInterceptor {
     private var hasWindowFocus = false
     private var didInitialInvalidate = false
 
+    // After a cold launch (e.g. a widget tap) nothing holds focus, so the first
+    // hardware page-turn key only moves focus into the page and is lost (and
+    // focus lands on the a11y skip link, resetting the page to the chapter start).
+    private fun focusWebView() {
+        if (hasWindowFocus) wv?.requestFocus()
+    }
+
     override fun onWebViewCreate(webView: WebView) {
         wv = webView
         ensureInitialPaint()
+        focusWebView()
     }
 
     private fun ensureInitialPaint() {
@@ -57,6 +65,7 @@ class MainActivity : TauriActivity(), KeyDownInterceptor {
         if (hasFocus) {
             hasWindowFocus = true
             ensureInitialPaint()
+            focusWebView()
         }
     }
 

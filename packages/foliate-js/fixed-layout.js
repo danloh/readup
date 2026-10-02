@@ -5,7 +5,23 @@ const parseViewport = str => str
     ?.filter(x => x)
     ?.map(x => x.split('=').map(x => x.trim()))
 
-export const getViewport = (doc, viewport) => {
+// A bitmap spine item is loaded as the browser's own image document, whose
+// synthetic meta (`width=device-width, minimum-scale=0.1`) has no page size,
+// and some comic converters write `width=(None, None), height=(None, None)`;
+// only a numeric width and height describe a fixed page
+const getPageSize = str => {
+    const props = Object.fromEntries(parseViewport(str) ?? [])
+    if (parseFloat(props.width) > 0 && parseFloat(props.height) > 0) return props
+}
+
+const getImageSize = async src => {
+    const img = new Image()
+    img.src = src
+    await img.decode().catch(() => {})
+    return { width: img.naturalWidth, height: img.naturalHeight }
+}
+
+export const getViewport = async (doc, viewport) => {
     // use `viewBox` for SVG
     if (doc.documentElement.localName === 'svg') {
         const [, , width, height] = doc.documentElement
@@ -14,23 +30,28 @@ export const getViewport = (doc, viewport) => {
     }
 
     // get `viewport` `meta` element
-    const meta = parseViewport(doc.querySelector('meta[name="viewport"]')
+    const meta = getPageSize(doc.querySelector('meta[name="viewport"]')
         ?.getAttribute('content'))
-    if (meta) {
-        const props = Object.fromEntries(meta)
-        // A bitmap spine item is loaded as the browser's own image document,
-        // whose synthetic meta (`width=device-width, minimum-scale=0.1`) has no
-        // page size; only a numeric width and height describe a fixed page
-        if (parseFloat(props.width) > 0 && parseFloat(props.height) > 0) return props
-    }
+    if (meta) return meta
 
     // fallback to book's viewport
-    if (typeof viewport === 'string') return parseViewport(viewport)
-    if (viewport?.width && viewport.height) return viewport
+    if (typeof viewport === 'string') {
+        const size = getPageSize(viewport)
+        if (size) return size
+    } else if (viewport?.width && viewport.height) return viewport
 
     // if no viewport (possibly with image directly in spine), get image size
     const img = doc.querySelector('img')
     if (img) return { width: img.naturalWidth, height: img.naturalHeight }
+
+    // an SVG <image> without width and height is laid out at the image's own
+    // size, which is not known yet when the document's load event fires
+    const image = doc.querySelector('svg image')
+    const src = image?.getAttribute('href') ?? image?.getAttribute('xlink:href')
+    if (src) {
+        const { width, height } = await getImageSize(src)
+        if (width > 0 && height > 0) return { width, height }
+    }
 
     // just show *something*, i guess...
     console.warn(new Error('Missing viewport properties'))
@@ -168,6 +189,18 @@ export const computeSpreadSpineOverlap = ({
     if (center || portrait || leftBlank || rightBlank) return 0
     return -1 / (devicePixelRatio || 1)
 }
+
+// Overlap (CSS px) between neighbouring scroll-mode pages, the scroll-flow
+// counterpart of `computeSpreadSpineOverlap` (#6484). With a zero gap
+// (Webtoon Mode) each zoomed page is a scaled compositor layer whose edge lands
+// on a fractional device pixel and is anti-aliased against transparency, so the
+// scroll background shows through as a thin line between the images. Pulling
+// every page onto the previous one puts each soft edge over the neighbour's
+// opaque content. It takes two device pixels: at a fractional
+// devicePixelRatio the resampled edge can be soft across two rows. Pages with
+// a gap between them never touch.
+export const computeScrollPageOverlap = ({ gap = 4, devicePixelRatio = 1 } = {}) =>
+    gap === 0 ? 2 / (devicePixelRatio || 1) : 0
 
 // Page columns the reader cell is showing, for the captured page curl
 // (#6239). Two means the curl turns just the outer page as a leaf hinged
@@ -460,12 +493,18 @@ export class FixedLayout extends HTMLElement {
         :host([flow="scrolled"]) .scroll-page {
             position: relative;
             flex-shrink: 0;
-            overflow: hidden;
             /* Scale the gap with the zoom so the committed layout matches the
                pinch preview, whose transform scales the whole container (gaps
                included). Without this the gap snaps back to a fixed px on
                release and the pages shift. */
             margin: calc(var(--scroll-page-gap, 4px) * var(--scroll-zoom, 1)) 0;
+        }
+        /* Webtoon Mode: overlap each page onto the previous one to hide the
+           anti-aliased seam (#6484). The pages are not clipped
+           (no overflow: hidden) because the clip of a box on a fractional
+           device pixel is itself anti-aliased and reopens the seam. */
+        :host([flow="scrolled"]) .scroll-page + .scroll-page {
+            margin-top: calc(var(--scroll-page-gap, 4px) * var(--scroll-zoom, 1) - var(--scroll-page-overlap, 0px));
         }
         :host([flow="scrolled"]) .scroll-page iframe {
             pointer-events: none;
@@ -477,6 +516,9 @@ export class FixedLayout extends HTMLElement {
         }
         :host([flow="scrolled"][scroll-direction="horizontal"]) .scroll-page {
             margin: 0 calc(var(--scroll-page-gap, 4px) * var(--scroll-zoom, 1));
+        }
+        :host([flow="scrolled"][scroll-direction="horizontal"]) .scroll-page + .scroll-page {
+            margin-inline-start: calc(var(--scroll-page-gap, 4px) * var(--scroll-zoom, 1) - var(--scroll-page-overlap, 0px));
         }`)
 
         this.#observer.observe(this)
@@ -512,6 +554,7 @@ export class FixedLayout extends HTMLElement {
                 const anchor = this.#scrollMode ? this.#captureScrollModeAnchor() : null
                 if (css === null) this.style.removeProperty('--scroll-page-gap')
                 else this.style.setProperty('--scroll-page-gap', css)
+                this.#updateScrollPageOverlap()
                 if (anchor) this.#restoreScrollModeAnchor(anchor)
                 break
             }
@@ -606,12 +649,12 @@ export class FixedLayout extends HTMLElement {
 
         if (!src) return { blank: true, element, iframe }
         return new Promise(resolve => {
-            iframe.addEventListener('load', () => {
+            iframe.addEventListener('load', async () => {
                 const doc = iframe.contentDocument
                 this.#applyPanLock(doc)
                 iframe.dataset.sectionIndex = index
                 this.dispatchEvent(new CustomEvent('load', { detail: { doc, index } }))
-                const { width, height } = getViewport(doc, this.defaultViewport)
+                const { width, height } = await getViewport(doc, this.defaultViewport)
                 resolve({
                     element, iframe,
                     width: parseFloat(width),
@@ -1100,12 +1143,12 @@ export class FixedLayout extends HTMLElement {
 
         if (!src) return { blank: true, element, iframe }
         return new Promise(resolve => {
-            iframe.addEventListener('load', () => {
+            iframe.addEventListener('load', async () => {
                 const doc = iframe.contentDocument
                 this.#applyPanLock(doc)
                 iframe.dataset.sectionIndex = pageData.index
                 this.dispatchEvent(new CustomEvent('load', { detail: { doc, index: pageData.index } }))
-                const { width, height } = getViewport(doc, this.defaultViewport)
+                const { width, height } = await getViewport(doc, this.defaultViewport)
                 resolve({
                     element, iframe,
                     width: parseFloat(width),
@@ -1240,6 +1283,7 @@ export class FixedLayout extends HTMLElement {
         // Scale the inter-page gap with the zoom so the committed layout matches
         // the pinch preview (which scales the whole container, gaps included).
         this.style.setProperty('--scroll-zoom', String(this.#scaleFactor))
+        this.#updateScrollPageOverlap()
         // A pinch commit restores the viewport-centre anchor (both axes) so the
         // zoom lands exactly where the live preview showed it; every other
         // re-render keeps the reader's vertical position via the top anchor.
@@ -1264,6 +1308,13 @@ export class FixedLayout extends HTMLElement {
         } else {
             this.#restoreScrollModeAnchor(scrollAnchor)
         }
+    }
+    #updateScrollPageOverlap() {
+        const overlap = computeScrollPageOverlap({
+            gap: parseFloat(this.getAttribute('scroll-gap')),
+            devicePixelRatio: window.devicePixelRatio || 1,
+        })
+        this.style.setProperty('--scroll-page-overlap', `${overlap}px`)
     }
     #renderScrollPage(pageData) {
         const { width: hostWidth, height: hostHeight } = this.getBoundingClientRect()
