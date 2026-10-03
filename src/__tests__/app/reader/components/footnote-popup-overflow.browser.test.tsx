@@ -61,7 +61,7 @@ vi.mock('@/app/read/utils/footnoteHeuristics', () => ({
   isLinkTargetVisible: () => true,
 }));
 vi.mock('@/app/read/utils/annotatorUtil', () => ({ drawAnnotationOverlay: () => {} }));
-vi.mock('@/utils/style', () => ({
+vi.mock('@/styles/style', () => ({
   getStyles: () => '',
   getFootnoteStyles: () => '',
   getThemeCode: () => ({ bg: '#fff', fg: '#000' }),

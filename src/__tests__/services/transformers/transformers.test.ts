@@ -5,7 +5,7 @@ import { availableTransformers } from '@/app/read/transformers/transformService'
 
 // --- Mocks ---
 
-vi.mock('@/utils/style', () => ({
+vi.mock('@/styles/style', () => ({
   transformStylesheet: vi.fn(
     (_css: string, _vw: number, _vh: number, _vertical: boolean) => 'transformed-css',
   ),

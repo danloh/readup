@@ -90,7 +90,7 @@ vi.mock('@/services/constants', () => ({
   MIN_CONTRAST: 50,
   CONTRAST_STEP: 10,
 }));
-vi.mock('@/utils/style', () => ({ getStyles: vi.fn() }));
+vi.mock('@/styles/style', () => ({ getStyles: vi.fn() }));
 vi.mock('@/utils/nav', () => ({ navigateToLogin: vi.fn() }));
 vi.mock('@/utils/webtoon', () => ({ getScrollGapAttr: vi.fn() }));
 vi.mock('@/app/read/hooks/useCapturedTurn', () => ({ applyPageTurnAttributes: vi.fn() }));

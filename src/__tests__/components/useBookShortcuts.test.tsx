@@ -122,7 +122,7 @@ vi.mock('@/utils/window', () => ({
   tauriQuitApp: vi.fn(),
 }));
 
-vi.mock('@/utils/style', () => ({
+vi.mock('@/styles/style', () => ({
   getStyles: vi.fn(),
 }));
 

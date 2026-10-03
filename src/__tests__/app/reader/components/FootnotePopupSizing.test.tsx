@@ -47,7 +47,7 @@ vi.mock('@/store/customFontStore', () => ({
 vi.mock('../hooks/useFoliateEvents', () => ({ useFoliateEvents: () => {} }));
 vi.mock('@/app/read/hooks/useFoliateEvents', () => ({ useFoliateEvents: () => {} }));
 // The popup's stylesheet is beside the point here; these tests are about the box.
-vi.mock('@/utils/style', () => ({
+vi.mock('@/styles/style', () => ({
   getStyles: () => '',
   getFootnoteStyles: () => '',
   getThemeCode: () => ({ bg: '#fff', fg: '#000' }),

@@ -8,7 +8,7 @@ vi.mock('@/utils/misc', async (importOriginal) => {
   };
 });
 
-import { getStyles, LINK_TOUCH_HOLD_CLASS, ThemeCode } from '@/styles/style';
+import { getStyles, LINK_TOUCH_HOLD_CLASS, TEXT_SELECTED_CLASS, ThemeCode } from '@/styles/style';
 import { ViewSettings } from '@/types/book';
 import {
   DEFAULT_BOOK_FONT,
@@ -822,3 +822,13 @@ describe('link touch hold (#6242)', () => {
   });
 });
 
+describe('link hit area during a text selection (#6566)', () => {
+  it('takes the enlarged link hit area out of hit testing while text is selected', () => {
+    // The empty a::before box spreads 10px around each link and swallows the
+    // text there, so dragging a selection onto a footnote's neighbor snapped it.
+    const css = getStyles(makeViewSettings(), makeThemeCode());
+    expect(css).toMatch(
+      new RegExp(`html\\.${TEXT_SELECTED_CLASS} a::before\\s*\\{\\s*pointer-events: none;`),
+    );
+  });
+});

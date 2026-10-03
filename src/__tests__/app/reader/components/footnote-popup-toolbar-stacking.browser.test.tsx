@@ -56,7 +56,7 @@ vi.mock('@/app/read/utils/annotatorUtil', () => ({
   drawAnnotationOverlay: () => {},
   getHighlightColorLabel: (color: string) => color,
 }));
-vi.mock('@/utils/style', () => ({
+vi.mock('@/styles/style', () => ({
   getStyles: () => '',
   getFootnoteStyles: () => '',
   getThemeCode: () => ({ bg: '#fff', fg: '#000' }),

@@ -232,6 +232,7 @@ export const setupPanningEvents = (doc) => {
     let scrollLeft = 0
     let scrollTop = 0
     let scrollParent = null
+    let isPointerSelecting = false
 
     const findScrollableParent = (element) => {
         let current = element
@@ -284,6 +285,7 @@ export const setupPanningEvents = (doc) => {
                 container.style.cursor = 'grabbing'
             }
         } else {
+            isPointerSelecting = true
             container.classList.add('selecting')
         }
     }
@@ -310,13 +312,59 @@ export const setupPanningEvents = (doc) => {
         }
     }
 
+    // A selection point in a gap between text spans hit-tests the bare text
+    // layer and snaps to the end of the page. `selecting` spreads
+    // `.endOfContent` over the gaps, and it is moved right next to the end of
+    // the selection that is moving, so a point on it holds the selection where
+    // it is (pdf.js's text_layer_builder does the same). Keep this for as long
+    // as there is a selection, not just while a pointer is down on the layer:
+    // Android drags its native selection handles without sending any pointer
+    // event to the page, and Chromium 148+ only spares mouse drags the jump.
+    let prevRange = null
+    const syncSelecting = () => {
+        const selection = doc.getSelection()
+        const active = isPointerSelecting || (!!selection && !selection.isCollapsed)
+        container.classList.toggle('selecting', active)
+        const end = container.querySelector('.endOfContent')
+        if (!end) return
+        if (!active || !selection?.rangeCount) {
+            prevRange = null
+            end.style.userSelect = ''
+            if (container.lastChild !== end) container.append(end)
+            return
+        }
+        const range = selection.getRangeAt(0)
+        const modifyStart = prevRange
+            && (range.compareBoundaryPoints(Range.END_TO_END, prevRange) === 0
+                || range.compareBoundaryPoints(Range.START_TO_END, prevRange) === 0)
+        let anchor = modifyStart ? range.startContainer : range.endContainer
+        if (anchor.nodeType === Node.TEXT_NODE) anchor = anchor.parentNode
+        // An end at the very start of a node belongs to the text before it.
+        if (!modifyStart && range.endOffset === 0) {
+            do {
+                while (anchor && anchor !== container && !anchor.previousSibling)
+                    anchor = anchor.parentNode
+                anchor = anchor === container ? null : anchor?.previousSibling
+            } while (anchor && !anchor.childNodes.length)
+        }
+        if (!anchor || anchor === end || anchor === container || !container.contains(anchor)) return
+        prevRange = range.cloneRange()
+        end.setAttribute('cfi-inert', '')
+        end.style.userSelect = 'text'
+        // Moving it is a DOM mutation of its own; skip one that changes nothing.
+        if (modifyStart ? end.nextSibling === anchor : end.previousSibling === anchor) return
+        anchor.parentNode.insertBefore(end, modifyStart ? anchor : anchor.nextSibling)
+    }
+    doc.addEventListener('selectionchange', syncSelecting)
+
     container.onpointerup = () => {
         if (isPanning) {
             isPanning = false
             scrollParent = null
             container.style.cursor = 'grab'
         } else {
-            container.classList.remove('selecting')
+            isPointerSelecting = false
+            syncSelecting()
         }
     }
 
@@ -386,6 +434,159 @@ const getRenderDpr = (page, zoom) => {
     return Math.max(1, dpr)
 }
 
+// Rec. 709 luma weights
+const LUMA = [0.2126, 0.7152, 0.0722]
+
+const parseHexColor = color => {
+    const hex = /^#([\da-f]{3}|[\da-f]{6})$/i.exec(color ?? '')?.[1]
+    if (!hex) return null
+    const full = hex.length === 3 ? [...hex].map(c => c + c).join('') : hex
+    return [0, 2, 4].map(i => parseInt(full.slice(i, i + 2), 16) / 255)
+}
+
+// pdf.js's own `pageColors` filter decodes the page to linear light and then
+// posterizes it into six flat tones, which crushes photos and shading
+// ( #6548). Instead, map each pixel's luma linearly onto the
+// foreground -> background ramp and keep its chroma (its offset from gray):
+// text and paper take the theme, shading stays smooth, and a blue link stays
+// blue. Both steps are linear in RGB, so the mapping is one feColorMatrix.
+export const getPageColorMatrix = ({ foreground, background } = {}) => {
+    const fg = parseHexColor(foreground)
+    const bg = parseHexColor(background)
+    if (!fg || !bg) return null
+    if (fg.every(v => v === 0) && bg.every(v => v === 1)) return null
+    return [0, 1, 2].flatMap(i => [
+        ...LUMA.map((w, j) => (i === j ? 1 : 0) + (bg[i] - fg[i] - 1) * w), 0, fg[i],
+    ]).concat([0, 0, 0, 1, 0])
+}
+
+const pageColorFilters = new Map()
+const getPageColorFilter = matrix => {
+    const values = matrix.join(' ')
+    let id = pageColorFilters.get(values)
+    if (!id) {
+        // The filter has to live in the document the canvas is created in.
+        id = `foliate-pdf-page-colors-${pageColorFilters.size}`
+        const div = document.createElement('div')
+        div.style.cssText = 'position:absolute;width:0;height:0;visibility:hidden;contain:strict'
+        div.innerHTML = `<svg width="0" height="0"><filter id="${id}"
+            color-interpolation-filters="sRGB"><feColorMatrix type="matrix"
+            values="${values}"/></filter></svg>`
+        document.body.append(div)
+        pageColorFilters.set(values, id)
+    }
+    return `url(#${id})`
+}
+
+const multiply = ([a, b, c, d, e, f], [a2, b2, c2, d2, e2, f2]) => [
+    a * a2 + c * b2, b * a2 + d * b2,
+    a * c2 + c * d2, b * c2 + d * d2,
+    a * e2 + c * f2 + e, b * e2 + d * f2 + f,
+]
+
+// The device-space boxes of the raster images a page paints, found by replaying
+// the transforms of its operator list the way pdf.js's CanvasGraphics applies
+// them. Image masks are left out: they are filled with the current color, like
+// text, and get themed with it.
+const getImageRects = ({ fnArray, argsArray }, baseTransform) => {
+    const { OPS } = pdfjsLib
+    const rects = []
+    const stack = []
+    let ctm = baseTransform
+    for (let i = 0; i < fnArray.length; i++) {
+        const args = argsArray[i]
+        switch (fnArray[i]) {
+            case OPS.save:
+            case OPS.beginGroup:
+                stack.push(ctm)
+                break
+            case OPS.restore:
+            case OPS.endGroup:
+            case OPS.paintFormXObjectEnd:
+            case OPS.endAnnotation:
+                ctm = stack.pop() ?? ctm
+                break
+            case OPS.transform:
+                ctm = multiply(ctm, args)
+                break
+            case OPS.paintFormXObjectBegin:
+                stack.push(ctm)
+                if (args[0]) ctm = multiply(ctm, args[0])
+                break
+            case OPS.beginAnnotation:
+                stack.push(ctm)
+                ctm = multiply(multiply(baseTransform, args[2]), args[3])
+                break
+            case OPS.paintImageXObject:
+            case OPS.paintInlineImageXObject: {
+                // images are painted into the unit square
+                const [a, b, c, d, e, f] = ctm
+                const xs = [e, a + e, c + e, a + c + e]
+                const ys = [f, b + f, d + f, b + d + f]
+                rects.push([Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)])
+            }
+        }
+    }
+    return rects
+}
+
+// An image covering this much of the page is a scan of it: theme it like a
+// page, or a scanned book would stay white in a dark theme.
+const MAX_KEPT_IMAGE_COVERAGE = 0.5
+
+const applyPageColors = (canvas, matrix, imageRects) => {
+    const { width, height } = canvas
+    // Round inward: an edge pixel the image only partly covers is blended with
+    // the paper, and keeping it would outline the image in the paper color.
+    const kept = imageRects.map(([x0, y0, x1, y1]) => {
+        const x = Math.max(0, Math.ceil(x0))
+        const y = Math.max(0, Math.ceil(y0))
+        return [x, y, Math.min(width, Math.floor(x1)) - x, Math.min(height, Math.floor(y1)) - y]
+    }).filter(([, , w, h]) => w > 0 && h > 0 && w * h < width * height * MAX_KEPT_IMAGE_COVERAGE)
+        .map(([x, y, w, h]) => {
+            const copy = document.createElement('canvas')
+            copy.width = w
+            copy.height = h
+            copy.getContext('2d').drawImage(canvas, x, y, w, h, 0, 0, w, h)
+            return { copy, x, y }
+        })
+    const ctx = canvas.getContext('2d')
+    ctx.save()
+    ctx.setTransform(1, 0, 0, 1, 0, 0)
+    ctx.filter = getPageColorFilter(matrix)
+    ctx.drawImage(canvas, 0, 0)
+    ctx.filter = 'none'
+    for (const { copy, x, y } of kept) {
+        ctx.drawImage(copy, x, y)
+        copy.width = copy.height = 0
+    }
+    ctx.restore()
+}
+
+// Render one region of a page on its own, without page colors.
+const renderRegion = async (page, scale, [x0, y0, x1, y1]) => {
+    const x = Math.floor(x0)
+    const y = Math.floor(y0)
+    const canvas = document.createElement('canvas')
+    canvas.width = Math.ceil(x1) - x
+    canvas.height = Math.ceil(y1) - y
+    const viewport = page.getViewport({ scale, offsetX: -x, offsetY: -y })
+    try {
+        await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise
+        return await new Promise(resolve => canvas.toBlob(resolve))
+    } finally {
+        canvas.width = canvas.height = 0
+    }
+}
+
+// The operator list pdf.js is rendering for `renderTask`. PDFPageProxy keeps no
+// public handle on it, but it stays reachable through the page's intent states.
+const getRenderOperatorList = (page, renderTask) => {
+    for (const { renderTasks, operatorList } of page._intentStates?.values() ?? [])
+        for (const task of renderTasks ?? [])
+            if (task.task === renderTask) return operatorList
+}
+
 const render = async (page, doc, zoom, pageColors) => {
     if (!doc) return
 
@@ -397,7 +598,7 @@ const render = async (page, doc, zoom, pageColors) => {
     // second pass kills the ranges TTS just built ( #6071). Skip the work
     // when nothing that affects the output has changed.
     const signature = [zoom, pageColors?.background, pageColors?.foreground,
-        getFontScale(doc)].join('|')
+        pageColors?.keepImages, getFontScale(doc)].join('|')
     const rendered = renderedFor.get(doc)
     if (rendered?.page === page && rendered.signature === signature) return
 
@@ -452,8 +653,10 @@ const render = async (page, doc, zoom, pageColors) => {
     canvas.style.width = `${displayViewport.width}px`
     canvas.style.height = `${displayViewport.height}px`
     const canvasContext = canvas.getContext('2d')
-    const renderTask = page.render({ canvasContext, viewport: renderViewport, pageColors })
+    const renderTask = page.render({ canvasContext, viewport: renderViewport })
     activeRenderTasks.set(doc, renderTask)
+    const colorMatrix = pageColors && getPageColorMatrix(pageColors)
+    const operatorList = getRenderOperatorList(page, renderTask)
 
     try {
         await renderTask.promise
@@ -468,6 +671,9 @@ const render = async (page, doc, zoom, pageColors) => {
             activeRenderTasks.delete(doc)
         }
     }
+
+    const imageRects = operatorList ? getImageRects(operatorList, renderViewport.transform) : []
+    if (colorMatrix) applyPageColors(canvas, colorMatrix, pageColors.keepImages ? imageRects : [])
 
     // Bail out if a newer render has started or iframe was removed
     if (renderGenerations.get(doc) !== generation || !doc.defaultView) {
@@ -492,6 +698,16 @@ const render = async (page, doc, zoom, pageColors) => {
         oldCanvas.height = 0
     }
     canvasElement.replaceChildren(doc.adoptNode(canvas))
+
+    // The page is one canvas under a text layer that covers all of it, so
+    // nothing marks where its images are. Let the reader find the one under a
+    // point and render it on its own to copy or save ( #6558).
+    doc.getImageAt = (x, y) => {
+        const [dx, dy] = [x * renderDpr, y * renderDpr]
+        const rect = [...imageRects].reverse()
+            .find(([x0, y0, x1, y1]) => dx >= x0 && dx < x1 && dy >= y0 && dy < y1)
+        return rect ? () => renderRegion(page, renderScale, rect) : null
+    }
 
     // Clear text layer before re-rendering to prevent DOM accumulation
     const container = doc.querySelector('.textLayer')
@@ -821,6 +1037,31 @@ export const makePDF = async file => {
     }
     book.getTOCFragment = doc => doc.documentElement
     book.getCover = async () => renderPage(await pdf.getPage(1), true)
+    // Render a page to a small JPEG for thumbnail previews, with its longer
+    // edge scaled to `maxSize` pixels.
+    book.getPageThumbnail = async (index, maxSize) => {
+        const page = await pdf.getPage(index + 1)
+        const { width, height } = page.getViewport({ scale: 1 })
+        const viewport = page.getViewport({ scale: maxSize / Math.max(width, height) })
+        const canvas = document.createElement('canvas')
+        canvas.width = Math.ceil(viewport.width)
+        canvas.height = Math.ceil(viewport.height)
+        try {
+            await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise
+        } catch (e) {
+            canvas.width = 0
+            canvas.height = 0
+            throw e
+        } finally {
+            // pdf.js shares page objects, so leave pages the reader holds alone
+            if (!pageCache.has(index)) page.cleanup()
+        }
+        return new Promise(resolve => canvas.toBlob(blob => {
+            canvas.width = 0
+            canvas.height = 0
+            resolve(blob)
+        }, 'image/jpeg', 0.8))
+    }
     book.destroy = () => {
         // Clean up all cached canvases and revoke blob URLs
         for (const [, entry] of cache) {

@@ -1,6 +1,6 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 
-vi.mock('@/utils/style', () => ({
+vi.mock('@/styles/style', () => ({
   getThemeCode: vi.fn(() => ({
     bg: '#ffffff',
     fg: '#000000',

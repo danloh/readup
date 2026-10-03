@@ -3,7 +3,7 @@ import type { FoliateView } from '@/types/view';
 import { handleA11yNavigation } from '@/utils/a11y';
 
 // The exact paragraph-layout selector emitted by getParagraphLayoutStyles() in
-// src/utils/style.ts. Its <div> clause only matches paragraph-like divs whose
+// src/styles/style.ts. Its <div> clause only matches paragraph-like divs whose
 // descendants are all inline formatting tags — so nesting any other element
 // (e.g. the next-section skip link) inside such a paragraph drops the match.
 // This needs the real :has() engine, so it runs as a browser test.

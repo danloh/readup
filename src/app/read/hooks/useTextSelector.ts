@@ -10,7 +10,7 @@ import {
   isHyphenHandleBugProneRange, isPointerInsideSelection, Point, 
   rangeFromAnchorToPoint, repairJumpedSelectionRange, TextSelection 
 } from '@/utils/sel';
-import { LINK_TOUCH_HOLD_CLASS } from '@/styles/style';
+import { LINK_TOUCH_HOLD_CLASS, TEXT_SELECTED_CLASS } from '@/styles/style';
 import { BookNote } from '@/types/book';
 import { useInstantAnnotation } from './useInstantAnnotation';
 import { Corner, useAutoPageTurn } from './useAutoPageTurn';
@@ -941,6 +941,8 @@ export const useTextSelector = (
     (pointerDragActive.current && pointerCornerNow() === c) || caretCornerNow(doc) === c;
 
   const handleSelectionchange = (doc: Document, index: number) => {
+    const sel = doc.getSelection() as Selection;
+    doc.documentElement.classList.toggle(TEXT_SELECTED_CLASS, sel?.isCollapsed === false);
     // Echo of our own programmatic selection writes (handle suppression or a
     // custom-handle drag) — not user input.
     if (programmaticSelectionRef.current) return;
@@ -953,7 +955,6 @@ export const useTextSelector = (
     const isAndroid = osPlatform === 'android' && appService?.isAndroidApp;
     const isTouchInput = lastPointerType.current === 'touch' || lastPointerType.current === 'pen';
 
-    const sel = doc.getSelection() as Selection;
     const viewSettings = getViewSettings(bookKey);
 
     // Only a selection that moves while a pointer is dragging arms the turn: the
