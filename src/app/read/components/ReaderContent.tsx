@@ -8,7 +8,7 @@ import { UnlistenFn } from '@tauri-apps/api/event';
 
 import { useEnv } from '@/context/EnvContext';
 import { useSettingsStore } from '@/store/settingsStore';
-import { useBookDataStore } from '@/store/bookDataStore';
+import { flushPendingLibrarySave, useBookDataStore } from '@/store/bookDataStore';
 import { useReaderStore } from '@/store/readerStore';
 import { useSidebarStore } from '@/store/sidebarStore';
 import { useNotebookDocumentStore } from '@/store/notebookDocumentStore';
@@ -21,7 +21,6 @@ import { BOOK_IDS_SEPARATOR } from '@/services/constants';
 import { parseOpenWithFiles } from '@/helpers/openWith';
 import { tauriHandleClose, tauriHandleOnCloseWindow } from '@/utils/window';
 import { uniqueId } from '@/utils/misc';
-import { throttle } from '@/utils/throttle';
 import { eventDispatcher } from '@/utils/event';
 import { writeTextToClipboard } from '@/utils/clipboard';
 import { 
@@ -154,6 +153,10 @@ const ReaderContent: React.FC<ReaderContentProps> = ({ ids, settings }) => {
     if (isPrimary && book && config) {
       const settings = useSettingsStore.getState().settings;
       await saveConfig(envConfig, bookKey, config, settings);
+      // saveConfig defers the library.json write by up to 30s, and closing the
+      // last window quits the app on Windows/Linux before it lands: the shelf
+      // then shows the old progress on the next launch (#6623).
+      await flushPendingLibrarySave();
     }
   };
 
@@ -222,10 +225,20 @@ const ReaderContent: React.FC<ReaderContentProps> = ({ ids, settings }) => {
   };
 
   // Also wired directly to beforeunload/quit-app/window-close, which pass an
-  // event object: only a literal `true` keeps TTS alive.
-  const handleCloseBooks = throttle(async (keepTTSAlive?: unknown) => {
-    await runNotebookTransition(bookKeys, () => closeBooks(keepTTSAlive === true));
-  }, 200);
+   // event object: only a literal `true` keeps TTS alive. Returns the close so
+  // the window-close and quit paths can await it before the app exits; a
+  // trigger that arrives mid-close joins the one already running.
+  const closingBooksRef = useRef<Promise<void> | null>(null);
+  const handleCloseBooks = (keepTTSAlive?: unknown) => {
+    closingBooksRef.current ??= runNotebookTransition(bookKeys, () =>
+      closeBooks(keepTTSAlive === true),
+    )
+      .then(() => {})
+      .finally(() => {
+        closingBooksRef.current = null;
+      });
+    return closingBooksRef.current;
+  };
 
   const handleCloseBooksToLibrary = async () => {
     // SPA navigation in the main window (or on web) keeps the webview alive:
