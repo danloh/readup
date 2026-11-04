@@ -31,7 +31,7 @@ describe('mountAdditionalFonts', () => {
   it('should mount basic Google Fonts link tags', async () => {
     await mountAdditionalFonts(document);
 
-    const links = document.head.querySelectorAll('link[rel="stylesheet"]');
+    const links = document.head.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"]');
     expect(links.length).toBeGreaterThanOrEqual(1);
 
     // Verify at least one link points to Google Fonts
@@ -39,10 +39,13 @@ describe('mountAdditionalFonts', () => {
     expect(hrefs.some((h) => h.includes('fonts.googleapis.com'))).toBe(true);
   });
 
-  it('should set crossOrigin on link tags', async () => {
+  it('should set crossOrigin on stylesheet link tags', async () => {
     await mountAdditionalFonts(document);
 
-    const links = document.head.querySelectorAll('link');
+    // Resource hints (preconnect/dns-prefetch) are mounted too; only the
+    // font stylesheets need CORS.
+    const links = document.head.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"]');
+    expect(links.length).toBeGreaterThan(0);
     for (const link of Array.from(links)) {
       expect(link.crossOrigin).toBe('anonymous');
     }

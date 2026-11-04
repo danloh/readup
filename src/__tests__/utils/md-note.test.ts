@@ -4,7 +4,7 @@ import { resolve } from 'path';
 import { Marked } from 'marked';
 import markedKatex from 'marked-katex-extension';
 
-// A copy of the annotation note parser in units/md below.
+// A copy of the annotation note parser in src/utils/md.ts (mdWithMath).
 // the options are mirrored here instead. Every behaviour case below
 // pins one of them, and the first test fails if the two ever diverge — without
 // it these would describe a parser the app does not use.
@@ -12,7 +12,7 @@ const KATEX_OPTIONS = { throwOnError: false, output: 'mathml', nonStandard: true
 
 const noteMarkdown = new Marked({ gfm: true }).use(markedKatex({ ...KATEX_OPTIONS }));
 
-const BOOKNOTE_ITEM = 'src/app/read/components/sidebar/BooknoteItem.tsx';
+const BOOKNOTE_ITEM = 'src/utils/md.ts';
 
 const parse = (src: string) => noteMarkdown.parse(src) as string;
 
@@ -22,7 +22,7 @@ describe('annotation note markdown', () => {
   // The component builds its own parser, so without this guard an option
   // changed there would leave every behaviour case below green while the app
   // rendered something else entirely.
-  it('mirrors the markedKatex options BooknoteItem configures', () => {
+  it('mirrors the markedKatex options utils/md configures', () => {
     const source = readFileSync(resolve(process.cwd(), BOOKNOTE_ITEM), 'utf-8');
     expect(source).toContain('new Marked({ gfm: true })');
 

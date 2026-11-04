@@ -1001,8 +1001,21 @@ const RSVPControl = forwardRef<RSVPControlHandle, RSVPControlProps>(function RSV
       controller.loadNextPageContent();
     };
 
+    // Navigate from RSVP's own section index rather than `nextSection()`:
+    // the paginator's #primaryIndex can revert to the previous section after
+    // a scroll, which would make `nextSection()` reload the same section.
+    const sections = view.book?.sections ?? [];
+    let targetIndex = indexBefore + 1;
+    while (targetIndex < sections.length && sections[targetIndex]?.linear === 'no') {
+      targetIndex++;
+    }
+    if (sections.length > 0 && targetIndex >= sections.length) {
+      controllerRef.current?.pause();
+      return;
+    }
+
     view.addEventListener('relocate', onRelocate);
-    await view.renderer.nextSection?.();
+    await view.renderer.goTo({ index: targetIndex });
   }, [bookKey, getProgress, getView, removeRsvpHighlight]);
 
   // Get current chapter info — reactive subscription so the RSVP overlay's

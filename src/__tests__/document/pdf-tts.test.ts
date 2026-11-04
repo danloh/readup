@@ -333,7 +333,7 @@ describe('PDF TTS', () => {
       // can import it inside jsdom (the module-level code in pdf.js sets it
       // to a URL path that only works in a real browser).
       // Import pdf.js first to trigger the @pdfjs side-effect that sets globalThis.pdfjsLib.
-      await import('foliate-js/pdf.js');
+      await import('@pdfjs/pdf.min.mjs');
       const pdfjsLib = (globalThis as Record<string, unknown>)['pdfjsLib'] as {
         GlobalWorkerOptions: { workerSrc: string };
       };

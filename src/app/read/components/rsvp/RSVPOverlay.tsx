@@ -843,19 +843,19 @@ const RSVPOverlay: React.FC<RSVPOverlayProps> = ({
                   ) : (
                     <>
                       <span 
-                        className={clsx('absolute right-[calc(50%+0.3em)] text-right opacity-60')}
+                        className={clsx('rsvp-word-before absolute right-[calc(50%+0.3em)] text-right opacity-60')}
                         style={{ right: `calc(50% + ${wordSideOffset})` }}
                       >
                         {wordBefore}
                       </span>
                       <span 
-                        className={clsx('relative z-10 font-bold')}
+                        className={clsx('rsvp-word-orp relative z-10 font-bold')}
                         style={{ color: orpColor || accentColor }}
                       >
                         {orpChar}
                       </span>
                       <span 
-                        className={clsx('absolute left-[calc(50%+0.3em)] text-left opacity-60')}
+                        className={clsx('rsvp-word-after absolute left-[calc(50%+0.3em)] text-left opacity-60')}
                         style={{ left: `calc(50% + ${wordSideOffset})` }}
                       >
                         {wordAfter}

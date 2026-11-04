@@ -1,15 +1,18 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 // Mock the access module before importing fetch utilities
-vi.mock('@/utils/access', () => ({
-  getAccessToken: vi.fn(),
+vi.mock('@/services/bsky/auth', () => ({
+  getAuth: vi.fn(),
 }));
 
 const mockFetch = vi.fn();
 vi.stubGlobal('fetch', mockFetch);
 
 import { fetchWithTimeout, fetchWithAuth } from '@/utils/fetch';
-import { getAccessToken } from '@/services/bsky/auth';
+import { getAuth } from '@/services/bsky/auth';
+
+const mockToken = (token: string | null) =>
+  vi.mocked(getAuth).mockResolvedValueOnce({ accessJwt: token } as Awaited<ReturnType<typeof getAuth>>);
 
 describe('fetchWithTimeout', () => {
   beforeEach(() => {
@@ -118,7 +121,7 @@ describe('fetchWithTimeout', () => {
 describe('fetchWithAuth', () => {
   beforeEach(() => {
     mockFetch.mockReset();
-    vi.mocked(getAccessToken).mockReset();
+    vi.mocked(getAuth).mockReset();
     vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
@@ -127,7 +130,7 @@ describe('fetchWithAuth', () => {
   });
 
   it('throws when not authenticated (no token)', async () => {
-    vi.mocked(getAccessToken).mockResolvedValueOnce(null);
+    mockToken(null);
 
     await expect(fetchWithAuth('https://api.example.com/data', { method: 'GET' })).rejects.toThrow(
       'Not authenticated',
@@ -137,7 +140,7 @@ describe('fetchWithAuth', () => {
   });
 
   it('adds Authorization header with Bearer token', async () => {
-    vi.mocked(getAccessToken).mockResolvedValueOnce('my-token-123');
+    mockToken('my-token-123');
     mockFetch.mockResolvedValueOnce(new Response('OK', { status: 200 }));
 
     await fetchWithAuth('https://api.example.com/data', { method: 'GET' });
@@ -147,7 +150,7 @@ describe('fetchWithAuth', () => {
   });
 
   it('merges existing headers with Authorization', async () => {
-    vi.mocked(getAccessToken).mockResolvedValueOnce('token');
+    mockToken('token');
     mockFetch.mockResolvedValueOnce(new Response('OK', { status: 200 }));
 
     await fetchWithAuth('https://api.example.com', {
@@ -161,7 +164,7 @@ describe('fetchWithAuth', () => {
   });
 
   it('returns the response on success', async () => {
-    vi.mocked(getAccessToken).mockResolvedValueOnce('token');
+    mockToken('token');
     const mockResponse = new Response('data', { status: 200 });
     mockFetch.mockResolvedValueOnce(mockResponse);
 
@@ -170,7 +173,7 @@ describe('fetchWithAuth', () => {
   });
 
   it('throws when response is not ok', async () => {
-    vi.mocked(getAccessToken).mockResolvedValueOnce('token');
+    mockToken('token');
     mockFetch.mockResolvedValueOnce({
       ok: false,
       statusText: 'Forbidden',
@@ -183,7 +186,7 @@ describe('fetchWithAuth', () => {
   });
 
   it('uses statusText when error field is missing from response', async () => {
-    vi.mocked(getAccessToken).mockResolvedValueOnce('token');
+    mockToken('token');
     mockFetch.mockResolvedValueOnce({
       ok: false,
       statusText: 'Internal Server Error',

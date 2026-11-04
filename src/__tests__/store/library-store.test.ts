@@ -27,6 +27,8 @@ describe('libraryStore', () => {
   beforeEach(() => {
     useLibraryStore.setState({
       library: [],
+      visibleLibrary: [],
+      hashIndex: new Map(),
       libraryLoaded: false,
       currentBookshelf: [],
       groups: {},
@@ -60,7 +62,7 @@ describe('libraryStore', () => {
         makeBook({ hash: 'b', deletedAt: 12345 }),
         makeBook({ hash: 'c' }),
       ];
-      useLibraryStore.setState({ library: books });
+      useLibraryStore.getState().setLibrary(books);
 
       const visible = useLibraryStore.getState().getVisibleLibrary();
       expect(visible).toHaveLength(2);
@@ -69,7 +71,7 @@ describe('libraryStore', () => {
 
     test('returns all books when none are deleted', () => {
       const books = [makeBook({ hash: 'a' }), makeBook({ hash: 'b' })];
-      useLibraryStore.setState({ library: books });
+      useLibraryStore.getState().setLibrary(books);
 
       const visible = useLibraryStore.getState().getVisibleLibrary();
       expect(visible).toHaveLength(2);

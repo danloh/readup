@@ -331,6 +331,17 @@ export const useCustomDictionaryStore = create<DictionaryStoreState>((set, get) 
       for (const id of DEFAULT_DICTIONARY_SETTINGS.providerOrder) {
         if (!orderSet.has(id)) merged.push(id);
       }
+      // Imported dicts that have a providerEnabled entry but fell out of
+      // providerOrder would vanish from the list; put them back above the
+      // first builtin so they stay visible at the top.
+      const mergedSet = new Set(merged);
+      const orphans = Object.keys(persistedSettings.providerEnabled ?? {}).filter(
+        (id) => !mergedSet.has(id),
+      );
+      if (orphans.length) {
+        const firstBuiltin = merged.findIndex((id) => id.startsWith('builtin:'));
+        merged.splice(firstBuiltin >= 0 ? firstBuiltin : merged.length, 0, ...orphans);
+      }
       const settingsMerged: DictionarySettings = {
         providerOrder: merged,
         providerEnabled: {

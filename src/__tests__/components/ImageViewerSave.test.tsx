@@ -46,7 +46,7 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe('ImageViewer save/share button', () => {
-  it('exports the image and toasts when sharing is unavailable', async () => {
+  it('exports the image via saveFile and toasts on desktop', async () => {
     const saveFile = vi.fn().mockResolvedValue(true);
     h.appService = { isMobileApp: false, isMacOSApp: false, saveFile };
 
@@ -54,7 +54,6 @@ describe('ImageViewer save/share button', () => {
       <ImageViewer src={PNG_DATA_URL} onClose={vi.fn()} gridInsets={gridInsets} />,
     );
 
-    // No native/web share → the affordance is the "Save Image" (export) button.
     fireEvent.click(getByLabelText('Save Image'));
 
     await waitFor(() => expect(saveFile).toHaveBeenCalledTimes(1));
@@ -62,8 +61,8 @@ describe('ImageViewer save/share button', () => {
     expect(filename).toBe('image.png');
     expect(content).toBeInstanceOf(ArrayBuffer);
     expect(new Uint8Array(content as ArrayBuffer)).toEqual(new Uint8Array([0, 1, 2]));
-    expect(options).toMatchObject({ share: true, mimeType: 'image/png' });
-    expect(options.sharePosition).toMatchObject({ preferredEdge: 'bottom' });
+    expect(options).toMatchObject({ share: false, mimeType: 'image/png' });
+    expect(options.sharePos).toMatchObject({ preferredEdge: 'bottom' });
 
     // Export path confirms with a toast.
     await waitFor(() =>
@@ -71,21 +70,22 @@ describe('ImageViewer save/share button', () => {
     );
   });
 
-  it('shares via saveFile without a toast on a share-capable platform', async () => {
+  it('saves via saveFile (not the share sheet) on non-Android mobile', async () => {
     const saveFile = vi.fn().mockResolvedValue(true);
     h.appService = { isMobileApp: true, isMacOSApp: false, saveFile };
 
-    const { getByLabelText } = render(
+    const { getByLabelText, queryByLabelText } = render(
       <ImageViewer src={PNG_DATA_URL} onClose={vi.fn()} gridInsets={gridInsets} />,
     );
 
-    // Share-capable → the affordance is the "Share Image" button.
-    fireEvent.click(getByLabelText('Share Image'));
+    expect(queryByLabelText('Share Image')).toBeNull();
+    fireEvent.click(getByLabelText('Save Image'));
 
     await waitFor(() => expect(saveFile).toHaveBeenCalledTimes(1));
-    expect(saveFile.mock.calls[0]![2]).toMatchObject({ share: true });
-    // The OS share sheet is its own feedback; no toast on the share path.
-    expect(h.dispatch).not.toHaveBeenCalled();
+    expect(saveFile.mock.calls[0]![2]).toMatchObject({ share: false });
+    await waitFor(() =>
+      expect(h.dispatch).toHaveBeenCalledWith('toast', expect.objectContaining({ type: 'info' })),
+    );
   });
 
   it('saves to the photo gallery on Android instead of sharing', async () => {

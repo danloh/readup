@@ -165,7 +165,14 @@ export const loadDataTheme = () => {
   const themeMode = localStorage.getItem('themeMode');
   const themeColor = localStorage.getItem('themeColor');
   if (themeMode && themeColor) {
-    document.documentElement.setAttribute('data-theme', `${themeColor}-${themeMode}`);
+    // `auto` is not a theme of its own: resolve it against the system scheme.
+    const resolvedMode =
+      themeMode === 'auto'
+        ? typeof window !== 'undefined' && window.matchMedia?.('(prefers-color-scheme: dark)').matches
+          ? 'dark'
+          : 'light'
+        : themeMode;
+    document.documentElement.setAttribute('data-theme', `${themeColor}-${resolvedMode}`);
   }
 };
 

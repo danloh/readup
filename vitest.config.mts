@@ -27,8 +27,10 @@ export default defineConfig({
       '**/node_modules/**',
       '**/dist/**',
       '**/.claude/**',
-      // Playwright web e2e specs — run via `pnpm test:e2e:web`, not vitest.
+      // WebdriverIO e2e specs — run via `pnpm test:e2e`, not vitest.
       '**/e2e/**',
+      // js-mdict ships its own Jest suite (`pnpm --filter js-mdict test`).
+      'packages/js-mdict/**',
       '**/*.browser.test.ts',
       '**/*.browser.test.tsx',
       '**/*.tauri.test.ts',

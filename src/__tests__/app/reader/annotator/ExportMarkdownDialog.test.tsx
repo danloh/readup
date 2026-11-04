@@ -10,6 +10,9 @@ vi.mock('@/hooks/useTranslation', () => ({
   useTranslation: () => (key: string) => key,
 }));
 
+vi.mock('@/context/AuthContext', () => ({
+  useAuth: () => ({ user: null }),
+}));
 vi.mock('@/context/EnvContext', () => ({
   useEnv: () => ({ envConfig: {}, appService: h.appService }),
 }));
@@ -101,14 +104,14 @@ describe('ExportMarkdownDialog export actions', () => {
     expect(onExport).toHaveBeenCalledTimes(1);
     expect(onExport.mock.calls[0]?.[2]).toMatchObject({
       share: false,
-      sharePosition: { preferredEdge: 'bottom' },
+      sharePos: { preferredEdge: 'bottom' },
     });
 
     fireEvent.click(screen.getByRole('button', { name: 'Share' }));
     expect(onExport).toHaveBeenCalledTimes(2);
     expect(onExport.mock.calls[1]?.[2]).toMatchObject({
       share: true,
-      sharePosition: { preferredEdge: 'bottom' },
+      sharePos: { preferredEdge: 'bottom' },
     });
   });
 

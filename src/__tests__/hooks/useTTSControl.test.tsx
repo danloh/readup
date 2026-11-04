@@ -173,7 +173,8 @@ vi.mock('@/utils/cfi', () => ({
   isCfiInLocation: () => false,
 }));
 
-vi.mock('@/utils/misc', () => ({
+vi.mock('@/utils/misc', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/utils/misc')>()),
   getLocale: () => 'en',
 }));
 

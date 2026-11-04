@@ -11,6 +11,8 @@ vi.mock('@/hooks/useTranslation', () => ({
 const appSvc = {
   getBookFileSize: vi.fn(async () => 1024),
   fetchBookDetails: vi.fn(async () => null),
+  saveLibraryBooks: vi.fn(async () => {}),
+  updateCoverImage: vi.fn(async () => {}),
 };
 
 vi.mock('@/context/EnvContext', () => ({
@@ -42,7 +44,10 @@ vi.mock('@/hooks/useResponsiveSize', () => ({
 
 vi.mock('@/helpers/settings', () => ({ saveSysSettings: vi.fn() }));
 
-vi.mock('@/services/environment', () => ({ isWebAppPlatform: () => false }));
+vi.mock('@/services/environment', () => ({
+  isWebAppPlatform: () => false,
+  isTauriAppPlatform: () => false,
+}));
 
 vi.mock('@/app/library/hooks/useFeedBookImport', () => ({ useFeedBookImport: () => vi.fn() }));
 vi.mock('@/services/feedBook', () => ({ getBookFeedUrl: () => undefined }));
@@ -51,7 +56,7 @@ vi.mock('@/libs/metadata', () => ({ searchMetadata: vi.fn(async () => []) }));
 
 // Render the cover with the same src-resolution as the real <BookCover> so we
 // can assert which cover the view actually shows.
-vi.mock('@/components/BookCover', () => ({
+vi.mock('@/app/library/components/BookCover', () => ({
   __esModule: true,
   default: ({ book }: { book: Book }) => (
     // biome-ignore lint/a11y/useAltText: test mock
@@ -72,7 +77,7 @@ vi.mock('@/components/Dialog', () => ({
     isOpen ? <div>{children}</div> : null,
 }));
 vi.mock('@/components/Alert', () => ({ __esModule: true, default: () => null }));
-vi.mock('@/components/metadata/SourceSelector', () => ({ __esModule: true, default: () => null }));
+vi.mock('@/app/library/components/metadata/SourceSelector', () => ({ __esModule: true, default: () => null }));
 vi.mock('@/components/Spinner', () => ({ __esModule: true, default: () => null }));
 
 afterEach(() => cleanup());

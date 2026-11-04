@@ -159,10 +159,8 @@ export const webDownload = async (
   const contentLength =
     response.headers.get('Content-Length') || response.headers.get('X-Content-Length');
 
-  if (!contentLength && onProgress) {
-    throw new Error('Cannot track progress: Content-Length missing');
-  }
-    
+  // Content-Length is often not CORS-exposed; report indeterminate progress
+  // (total = 0) rather than failing the download.
   const totalSize = parseInt(contentLength || '0', 10);
   let receivedSize = 0;
   const reader = response.body!.getReader();

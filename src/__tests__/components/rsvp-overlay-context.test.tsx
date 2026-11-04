@@ -293,10 +293,6 @@ describe('RSVPOverlay — CJK reading options', () => {
     localStorage.clear();
   });
 
-  const openSettings = (container: HTMLElement) => {
-    fireEvent.click(container.querySelector('[aria-label="Settings"]') as HTMLElement);
-  };
-
   test('shows Character Mode and Highlight Word toggles for CJK sections', () => {
     const state = buildState({
       words: [{ text: '喜欢', orpIndex: 1, pauseMultiplier: 1 }],
@@ -304,7 +300,6 @@ describe('RSVPOverlay — CJK reading options', () => {
       hasCJK: true,
     });
     const { container } = renderOverlay(state);
-    openSettings(container);
 
     expect(container.querySelector('[data-testid="rsvp-char-mode-toggle"]')).not.toBeNull();
     expect(container.querySelector('[data-testid="rsvp-highlight-word-toggle"]')).not.toBeNull();
@@ -317,7 +312,6 @@ describe('RSVPOverlay — CJK reading options', () => {
       hasCJK: false,
     });
     const { container } = renderOverlay(state);
-    openSettings(container);
 
     expect(container.querySelector('[data-testid="rsvp-char-mode-toggle"]')).toBeNull();
     expect(container.querySelector('[data-testid="rsvp-highlight-word-toggle"]')).toBeNull();
@@ -330,7 +324,6 @@ describe('RSVPOverlay — CJK reading options', () => {
       hasCJK: true,
     });
     const { container, controller } = renderOverlay(state);
-    openSettings(container);
 
     fireEvent.click(
       container.querySelector('[data-testid="rsvp-char-mode-toggle"]') as HTMLElement,
@@ -338,7 +331,7 @@ describe('RSVPOverlay — CJK reading options', () => {
     expect(controller.setCjkCharMode).toHaveBeenCalledWith(true);
   });
 
-  test('renders the focus-letter layout for a CJK word by default', () => {
+  test('renders a CJK word whole by default', () => {
     const state = buildState({
       words: [{ text: '喜欢', orpIndex: 1, pauseMultiplier: 1 }],
       currentIndex: 0,
@@ -346,8 +339,8 @@ describe('RSVPOverlay — CJK reading options', () => {
     });
     const { container } = renderOverlay(state);
 
-    expect(container.querySelector('.rsvp-word-orp')).not.toBeNull();
-    expect(container.querySelector('.rsvp-word-whole')).toBeNull();
+    expect(container.querySelector('.rsvp-word-whole')?.textContent).toBe('喜欢');
+    expect(container.querySelector('.rsvp-word-orp')).toBeNull();
   });
 
   test('renders a single centered span when Highlight Word is enabled', () => {

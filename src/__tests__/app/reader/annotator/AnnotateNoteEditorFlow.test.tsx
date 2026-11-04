@@ -68,6 +68,7 @@ const h = vi.hoisted(() => ({
   suppressNativeSelectionHandles: vi.fn(),
   views: [] as { addAnnotation: ReturnType<typeof vi.fn> }[],
   isSideBarVisible: false,
+  dismissPopup: null as null | (() => void),
   isTextSelected: { current: true },
 }));
 
@@ -190,7 +191,11 @@ vi.mock('@/app/read/hooks/useRendererInputListeners', () => ({
 }));
 
 vi.mock('@/app/read/hooks/useTextSelector', () => ({
-  useTextSelector: () => ({
+  useTextSelector: (...args: unknown[]) => {
+    // The 7th argument is Annotator's handleDismissPopup — the path the
+    // selector (and relocates) use to dismiss the popup outside of Cancel.
+    h.dismissPopup = args[6] as () => void;
+    return {
     isTextSelected: h.isTextSelected,
     isInstantAnnotating: { current: false },
     handleScroll: vi.fn(),
@@ -213,7 +218,8 @@ vi.mock('@/app/read/hooks/useTextSelector', () => ({
     noteAutoTurnPoint: { current: null },
     cancelAutoTurn: vi.fn(),
     onAutoTurn: vi.fn(),
-  }),
+  };
+  },
 }));
 
 // jsdom lays nothing out, so the real popup positioning bails on a zero rect
@@ -348,7 +354,7 @@ describe('Annotate opens the note editor at the selection', () => {
   test('saving writes the typed note onto the new annotation and closes the editor', async () => {
     await annotate();
 
-    act(() => {
+    await act(async () => {
       screen.getByText('stub-save').click();
     });
 
@@ -479,7 +485,7 @@ describe('Annotate opens the note editor at the selection', () => {
     await editExistingNote();
     expect(screen.getByTestId('note-editor-popup-value').textContent).toBe('an older thought');
 
-    act(() => {
+    await act(async () => {
       screen.getByText('stub-save').click();
     });
     expect(liveAnnotations()).toEqual([
@@ -500,24 +506,19 @@ describe('Annotate opens the note editor at the selection', () => {
   });
 
   // #4791: the placeholder only lives as long as its editor is presented, and
-  // Cancel is not the only way it stops being presented. Opening the sidebar
-  // dismisses the popup from an effect, which used to clear the target and
-  // leave the empty highlight behind.
+  // Cancel is not the only way it stops being presented. A page relocate or a
+  // selection change dismisses the popup through handleDismissPopup, which
+  // used to clear the target and leave the empty highlight behind.
   test('drops the placeholder when the editor is dismissed, not just cancelled', async () => {
-    const view = render(
-      <Annotator bookKey='book-1' contentInsets={{ top: 0, right: 0, bottom: 0, left: 0 }} />,
-    );
+    render(<Annotator bookKey='book-1' contentInsets={{ top: 0, right: 0, bottom: 0, left: 0 }} />);
     await selectText();
     act(() => {
       h.actions?.['onAnnotateSelection']?.();
     });
     expect(liveAnnotations()).toHaveLength(1);
 
-    h.isSideBarVisible = true;
-    act(() => {
-      view.rerender(
-        <Annotator bookKey='book-1' contentInsets={{ top: 0, right: 0, bottom: 0, left: 0 }} />,
-      );
+    await act(async () => {
+      h.dismissPopup?.();
     });
 
     expect(screen.queryByTestId('note-editor-popup')).toBeNull();

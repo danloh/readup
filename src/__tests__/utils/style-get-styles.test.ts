@@ -522,11 +522,11 @@ describe('getColorStyles branches (via getStyles)', () => {
     expect(css).toContain('filter: invert(100%)');
   });
 
-  it('does not apply invert filter when isDarkMode is false', () => {
+  it('applies invert filter regardless of dark mode when invertImgColor is set', () => {
     const vs = makeViewSettings({ invertImgColor: true });
     const theme = makeThemeCode({ isDarkMode: false });
     const css = getStyles(vs, theme);
-    expect(css).not.toContain('filter: invert(100%)');
+    expect(css).toContain('filter: invert(100%)');
   });
 
   it('does not apply invert filter when invertImgColorInDark is false', () => {

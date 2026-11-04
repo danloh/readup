@@ -33,24 +33,9 @@ function makeSettings(overrides: Partial<SystemSettings> = {}): SystemSettings {
     libraryViewMode: 'grid',
     librarySortBy: 'title',
     libraryColumns: 4,
-    replicaDeviceId: 'device-uuid-aaa',
     lastSyncedAtBooks: 1234,
     lastSyncedAtConfigs: 1235,
     lastSyncedAtNotes: 1236,
-    lastSyncedAtReplicas: { book: 'hlc-1' },
-    kosync: {
-      enabled: true,
-      serverUrl: 'https://kosync.example',
-      username: 'kuser',
-      userkey: 'kkey',
-      password: 'kpass',
-      deviceId: 'kosync-device-id',
-      deviceName: 'My Phone',
-      checksumMethod: 'binary',
-      strategy: 'prompt',
-    },
-    readwise: { enabled: true, accessToken: 'rw-token', lastSyncedAt: 999 },
-    hardcover: { enabled: false, accessToken: 'hc-token', lastSyncedAt: 888 },
     aiSettings: {
       enabled: true,
       provider: 'ollama',
@@ -77,20 +62,11 @@ describe('sanitizeSettingsForBackup - blacklist', () => {
     expect(out['savedBookCoverForLockScreenPath']).toBeUndefined();
   });
 
-  it('strips per-device identity fields', () => {
-    const out = rec(sanitizeSettingsForBackup(makeSettings()));
-    expect(out['replicaDeviceId']).toBeUndefined();
-    expect(rec(out['kosync'])['deviceId']).toBeUndefined();
-  });
-
   it('strips sync cursors', () => {
     const out = rec(sanitizeSettingsForBackup(makeSettings()));
     expect(out['lastSyncedAtBooks']).toBeUndefined();
     expect(out['lastSyncedAtConfigs']).toBeUndefined();
     expect(out['lastSyncedAtNotes']).toBeUndefined();
-    expect(out['lastSyncedAtReplicas']).toBeUndefined();
-    expect(rec(out['readwise'])['lastSyncedAt']).toBeUndefined();
-    expect(rec(out['hardcover'])['lastSyncedAt']).toBeUndefined();
   });
 
   it('strips transient runtime state', () => {
@@ -139,7 +115,6 @@ describe('sanitizeSettingsForBackup - credentials', () => {
   it('still strips blacklist fields even when credentials are included', () => {
     const out = rec(sanitizeSettingsForBackup(makeSettings(), { includeCredentials: true }));
     expect(out['localBooksDir']).toBeUndefined();
-    expect(out['replicaDeviceId']).toBeUndefined();
   });
 
   it('every credential path is a string', () => {

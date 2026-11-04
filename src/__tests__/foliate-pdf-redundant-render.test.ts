@@ -135,11 +135,18 @@ const openFirstPage = async () => {
 
 beforeEach(() => {
   textLayerBuilds = 0;
-  // jsdom has no 2d context; `render` only hands it to page.render(), which the
-  // fake pdf.js ignores. Stub it so the run stays free of jsdom "Not implemented".
-  vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(
-    {} as unknown as CanvasRenderingContext2D,
-  );
+  // jsdom has no 2d context; `render` hands it to page.render() (ignored by
+  // the fake pdf.js) and applyPageColors() draws a colour filter with it. Stub
+  // the drawing calls so the run stays free of jsdom "Not implemented".
+  const noop = () => {};
+  vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({
+    save: noop,
+    restore: noop,
+    setTransform: noop,
+    drawImage: noop,
+    getImageData: () => ({ data: new Uint8ClampedArray(4), width: 1, height: 1 }),
+    filter: 'none',
+  } as unknown as CanvasRenderingContext2D);
   // renderPage fetches the pdf.js viewer stylesheets before building the blob.
   vi.stubGlobal(
     'fetch',

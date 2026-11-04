@@ -60,6 +60,8 @@ const TranslatorPopup: React.FC<TranslatorPopupProps> = ({
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // The provider's own failure reason, shown under the generic message (#5823).
+  const [errorDetail, setErrorDetail] = useState<string | null>(null);
   const { translate, translators } = useTranslator({
     provider,
     sourceLang,
@@ -101,6 +103,7 @@ const TranslatorPopup: React.FC<TranslatorPopupProps> = ({
     setLoading(true);
     const fetchTranslation = async () => {
       setError(null);
+      setErrorDetail(null);
       setTranslation(null);
 
       try {
@@ -124,6 +127,7 @@ const TranslatorPopup: React.FC<TranslatorPopupProps> = ({
       } catch (err) {
         console.error(err);
         setError(_('Unable to fetch the translation. Try again later.'));
+        setErrorDetail(err instanceof Error && err.message ? err.message : null);
       } finally {
         setLoading(false);
       }
@@ -191,7 +195,12 @@ const TranslatorPopup: React.FC<TranslatorPopupProps> = ({
           ) : (
             <div>
               {error ? (
-                <p className='text-base text-red-600'>{error}</p>
+                <>
+                  <p className='text-base text-red-600'>{error}</p>
+                  {errorDetail && (
+                    <p className='mt-1 break-words text-xs opacity-60'>{errorDetail}</p>
+                  )}
+                </>
               ) : (
                 <p className='not-eink:text-white/90 text-base'>
                   {translation || _('No translation available.')}

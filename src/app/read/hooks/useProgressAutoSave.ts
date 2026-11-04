@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useEnv } from '@/context/EnvContext';
 import { flushPendingLibrarySave, useBookDataStore } from '@/store/bookDataStore';
 import { useReaderStore } from '@/store/readerStore';
@@ -14,6 +14,10 @@ export const useProgressAutoSave = (bookKey: string) => {
   // Reactive subscription so the effect below fires the debounced save
   // whenever this book's progress changes. Reads from readerProgressStore.
   const progress = useBookProgress(bookKey);
+  // Location last persisted (or loaded from disk). Saving an unchanged
+  // location would only bump config.updatedAt and let a stale local push
+  // overwrite newer progress read on another device.
+  const lastSavedLocationRef = useRef<string | undefined>(getConfig(bookKey)?.location);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const saveBookConfig = useCallback(
@@ -24,8 +28,10 @@ export const useProgressAutoSave = (bookKey: string) => {
         if (useReaderStore.getState().getViewState(bookKey)?.previewMode) return;
         const config = getConfig(bookKey);
         if (!config) return;
+        if (config.location && config.location === lastSavedLocationRef.current) return;
         const settings = useSettingsStore.getState().settings;
         await saveConfig(envConfig, bookKey, config, settings);
+        lastSavedLocationRef.current = config.location;
       }, 500);
     }, 1000),
     [],

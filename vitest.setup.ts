@@ -53,3 +53,19 @@ if (typeof window !== 'undefined' && !window.matchMedia) {
       dispatchEvent: () => false,
     }) as MediaQueryList;
 }
+
+// Under jsdom, `Blob`/`File` are jsdom's classes but `Response` is Node's, so
+// `Response#blob()` returns a native Blob. jsdom's `new File([nativeBlob])`
+// does not recognise it and stringifies it to "[object Blob]" — which corrupts
+// zip.js output (its BlobWriter goes through `Response#blob()`). Return a
+// blob from the active realm instead.
+if (
+  typeof window !== 'undefined' &&
+  typeof Response !== 'undefined' &&
+  !Blob.toString().includes('[native code]')
+) {
+  Response.prototype.blob = async function blob(this: Response) {
+    const type = this.headers.get('content-type') ?? '';
+    return new Blob([await this.arrayBuffer()], { type });
+  };
+}

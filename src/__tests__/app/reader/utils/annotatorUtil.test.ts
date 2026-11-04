@@ -253,7 +253,7 @@ describe('filterExportGroups', () => {
       ]),
     ];
     const result = filterExportGroups(groups, { excludedColors: [], excludedStyles: [] });
-    expect(result.distinctColors).toEqual(['red', 'blue', 'yellow']);
+    expect(result.distinctColors).toEqual(['red', 'yellow', 'blue']);
     expect(result.distinctStyles).toEqual(['highlight', 'underline', 'squiggly']);
   });
 });

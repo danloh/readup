@@ -200,14 +200,16 @@ describe('BooknoteItem', () => {
     expect(mocks.addAnnotation).not.toHaveBeenCalled();
   });
 
-  it('clearing a note inline keeps the highlight and removes the bubble', () => {
+  it('clearing a note inline keeps the highlight and removes the bubble', async () => {
     const item = makeItem({ note: 'old note' });
     mocks.state.booknotes = [item];
     renderItem(item, true);
 
     fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
     fireEvent.change(screen.getByRole('textbox'), { target: { value: '' } });
-    fireEvent.click(screen.getByText('Save'));
+    await act(async () => {
+      fireEvent.click(screen.getByText('Save'));
+    });
 
     const saved = mocks.state.booknotes[0] as BookNote;
     expect(saved.note).toBe('');

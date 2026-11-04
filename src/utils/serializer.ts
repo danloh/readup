@@ -15,8 +15,8 @@ export const serializeConfig = (
   defaultSearchConfig: BookSearchConfig,
 ): string => {
   config = JSON.parse(JSON.stringify(config));
-  const viewSettings = config.viewSettings as Partial<ViewSettings>;
-  const searchConfig = config.searchConfig as Partial<BookSearchConfig>;
+  const viewSettings = (config.viewSettings ?? {}) as Partial<ViewSettings>;
+  const searchConfig = (config.searchConfig ?? {}) as Partial<BookSearchConfig>;
   config.viewSettings = Object.entries(viewSettings).reduce(
     (acc: Partial<Record<keyof ViewSettings, unknown>>, [key, value]) => {
       if (!isSameViewSettingValue(globalViewSettings[key as keyof ViewSettings], value)) {

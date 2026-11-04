@@ -799,6 +799,15 @@ const ExportMarkdownDialog: React.FC<ExportMarkdownDialogProps> = ({
             >
               {canSaveAndShare ? _('Save') : _('Export')}
             </button>
+            {canSaveAndShare && (
+              <button
+                onClick={(e) => handleExport(e, true)}
+                className='btn btn-primary btn-sm'
+                disabled={filteredNotesCount === 0}
+              >
+                {_('Share')}
+              </button>
+            )}
           </div>
         </div>
       </div>

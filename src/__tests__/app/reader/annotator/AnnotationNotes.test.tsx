@@ -62,11 +62,12 @@ const makeBooknote = (overrides: Partial<BookNote> = {}): BookNote => ({
   ...overrides,
 });
 
-const renderNotes = (notes: BookNote[]) => {
+const renderNotes = (notes: BookNote[], onEditNote?: (note: BookNote) => void) => {
   h.booknotes = notes;
   return render(
     <AnnotationNotes
       bookKey='test'
+      onEditNote={onEditNote}
       isVertical={false}
       notes={notes}
       toolsVisible={false}
@@ -100,19 +101,20 @@ describe('AnnotationNotes', () => {
     expect(cardTexts[1]).toContain('older note');
   });
 
-  it('entering edit mode on one note does not affect a sibling note in the same popup', () => {
+  it('editing one note hands only that note to onEditNote', () => {
     const first = makeBooknote({ id: 'first', note: 'first note', updatedAt: 2000 });
     const second = makeBooknote({ id: 'second', note: 'second note', updatedAt: 1000 });
+    const onEditNote = vi.fn();
 
-    renderNotes([first, second]);
+    renderNotes([first, second], onEditNote);
 
     const editButtons = screen.getAllByRole('button', { name: 'Edit' });
     expect(editButtons).toHaveLength(2);
     fireEvent.click(editButtons[0]!);
 
-    const textbox = screen.getByRole('textbox') as HTMLTextAreaElement;
-    expect(textbox.value).toBe('first note');
+    expect(onEditNote).toHaveBeenCalledTimes(1);
+    expect(onEditNote.mock.calls[0]![0].id).toBe('first');
+    screen.getByText('first note');
     screen.getByText('second note');
-    expect(screen.getAllByRole('button', { name: 'Edit' })).toHaveLength(1);
   });
 });

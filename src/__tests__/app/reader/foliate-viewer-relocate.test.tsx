@@ -17,11 +17,12 @@ const { setProgress, readerState } = vi.hoisted(() => {
 });
 
 vi.mock('@/store/readerStore', () => ({
-  useReaderStore: (select: (s: typeof readerState) => unknown) => select(readerState),
+  useReaderStore: (select?: (s: typeof readerState) => unknown) =>
+    select ? select(readerState) : readerState,
 }));
 vi.mock('@/store/bookDataStore', () => ({
-  useBookDataStore: (select: (s: { getBookData: () => null }) => unknown) =>
-    select({ getBookData: () => null }),
+  useBookDataStore: (select?: (s: { getBookData: () => null }) => unknown) =>
+    select ? select({ getBookData: () => null }) : { getBookData: () => null },
 }));
 vi.mock('@/store/parallelViewStore', () => ({ useParallelViewStore: () => () => [] }));
 vi.mock('@/store/settingsStore', () => ({ useSettingsStore: () => ({ settings: {} }) }));
@@ -66,6 +67,8 @@ vi.mock('@/hooks/useEinkMode', () => ({ useEinkMode: () => ({}) }));
 vi.mock('@/hooks/useUICSS', () => ({ useUICSS: () => {} }));
 vi.mock('@/hooks/useDiscordPresence', () => ({ useDiscordPresence: () => {} }));
 vi.mock('@/app/read/components/paragraph', () => ({ ParagraphControl: () => null }));
+vi.mock('@/app/read/components/rsvp', () => ({ RSVPControl: () => null }));
+vi.mock('@/app/read/components/ExternalLinkConfirm', () => ({ default: () => null }));
 vi.mock('@/app/read/components/BrightnessOverlay', () => ({ default: () => null }));
 vi.mock('@/app/read/components/ImageViewer', () => ({ default: () => null }));
 vi.mock('@/app/read/components/TableViewer', () => ({ default: () => null }));
@@ -109,7 +112,7 @@ describe('reader relocation progress', () => {
     act(() => vi.advanceTimersByTime(20));
     expect(setProgress).toHaveBeenCalledOnce();
     expect(setProgress.mock.lastCall?.[1]).toBe('epubcfi(/6/2)');
-    expect(setProgress.mock.lastCall?.[5]).toEqual({ current: 3, next: 4, total: 10 });
+    expect(setProgress.mock.lastCall?.[4]).toEqual({ current: 3, next: 4, total: 10 });
   });
 
   it('still coalesces valid relocations to the latest page', () => {
@@ -118,7 +121,7 @@ describe('reader relocation progress', () => {
     relocate({ location: { current: 4, next: 5, total: 10 } });
     act(() => vi.advanceTimersByTime(20));
     expect(setProgress).toHaveBeenCalledOnce();
-    expect(setProgress.mock.lastCall?.[5]).toEqual({ current: 4, next: 5, total: 10 });
+    expect(setProgress.mock.lastCall?.[4]).toEqual({ current: 4, next: 5, total: 10 });
   });
 
   it('flushes the last valid position on unmount after a late incomplete relocation', () => {
@@ -127,7 +130,7 @@ describe('reader relocation progress', () => {
     relocate({});
     unmount();
     expect(setProgress).toHaveBeenCalledOnce();
-    expect(setProgress.mock.lastCall?.[5]).toEqual({ current: 3, next: 4, total: 10 });
+    expect(setProgress.mock.lastCall?.[4]).toEqual({ current: 3, next: 4, total: 10 });
     act(() => vi.advanceTimersByTime(20));
     expect(setProgress).toHaveBeenCalledOnce();
   });
@@ -139,6 +142,6 @@ describe('reader relocation progress', () => {
     expect(setProgress).not.toHaveBeenCalled();
     relocate({ location: { current: 3, next: 4, total: 10 } });
     expect(setProgress).toHaveBeenCalledOnce();
-    expect(setProgress.mock.lastCall?.[5]).toEqual({ current: 3, next: 4, total: 10 });
+    expect(setProgress.mock.lastCall?.[4]).toEqual({ current: 3, next: 4, total: 10 });
   });
 });

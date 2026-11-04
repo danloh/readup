@@ -177,6 +177,13 @@ const FoliateViewer: React.FC<{
     // Always stash the latest detail; if another rAF is already pending
     // it'll pick this up and the intermediate states are skipped.
     pendingRelocateRef.current = event as CustomEvent;
+    // rAF never fires while the page is hidden (backgrounded app / tab), so
+    // commit right away there or the position could be lost if we're killed.
+    if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+      cancelRelocateScheduled();
+      commitRelocate();
+      return;
+    }
     if (relocateRafRef.current != null) return;
     relocateRafRef.current = requestAnimationFrame(commitRelocate);
   };

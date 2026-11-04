@@ -158,6 +158,9 @@ const Popup = ({
       <div
         id='popup-container'
         ref={containerRef}
+        // A closed popup stays mounted, parked off-screen; keep it out of the
+        // accessibility tree until it is shown.
+        aria-hidden={!isOpen}
         className={clsx(
           'popup-container bg-base-300 absolute z-50 rounded-lg font-sans',
           'eink:border eink:border-base-content',

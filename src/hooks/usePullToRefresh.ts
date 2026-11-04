@@ -57,7 +57,8 @@ export const usePullToRefresh = (
 
       el.addEventListener('touchmove', handleTouchMove, { passive: true });
       el.addEventListener('touchend', handleTouchEnd);
-            
+      el.addEventListener('touchcancel', handleTouchCancel);
+
       function detachGesture() {
         el!.removeEventListener('touchmove', handleTouchMove);
         el!.removeEventListener('touchend', handleTouchEnd);

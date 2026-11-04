@@ -68,7 +68,7 @@ const globalViewSettings = { defaultFontSize: 16 };
 vi.mock('@/store/settingsStore', () => ({
   useSettingsStore: () => ({
     settings: { globalViewSettings },
-    setSettingsDialogOpen: mockSetSettingsDialogOpen,
+    setFontLayoutSettingsDialogOpen: mockSetSettingsDialogOpen,
     setSettingsDialogBookKey: mockSetSettingsDialogBookKey,
   }),
 }));

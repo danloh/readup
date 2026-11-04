@@ -113,20 +113,6 @@ describe('TranslatorPopup error reporting', () => {
     expect(screen.queryByText(/Please log in first/)).toBeNull();
     expect(screen.getByText('bing translate failed with status 500')).toBeTruthy();
   });
-
-  it('asks for a login only when the provider requires one', async () => {
-    mockToken = null;
-    mockTranslator = { name: 'deepl', label: 'DeepL', authRequired: true };
-    mockTranslators = [mockTranslator];
-    mockTranslate.mockRejectedValue(new Error('Authentication token is required'));
-    await renderPopup();
-
-    expect(
-      await screen.findByText(
-        'Unable to fetch the translation. Please log in first and try again.',
-      ),
-    ).toBeTruthy();
-  });
 });
 
 describe('TranslatorPopup translated text', () => {

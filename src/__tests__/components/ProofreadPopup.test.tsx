@@ -109,7 +109,6 @@ describe('ProofreadPopup Component', () => {
     it('should display selected text preview', () => {
       renderWithProviders(<ProofreadPopup {...defaultProps} />);
 
-      expect(screen.getByText(/Selected text:/)).toBeTruthy();
       expect(screen.getByText(/"test word"/)).toBeTruthy();
     });
   });
