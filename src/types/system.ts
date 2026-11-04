@@ -1,11 +1,9 @@
 import { BookMetadata } from '@/libs/document';
 import { ProgressHandler } from '@/utils/transfer';
 import type { BookNav } from '@/services/nav';
-import { ArticleType, FeedType } from '@/app/feed/components/dataAgent';
-import { UsageRecord } from '@/services/usageService';
 import { DownloadDataResult } from '@/services/bsky/atfile';
 import { SystemSettings } from './settings';
-import { Book, BookConfig, BookContent, ImportBookOpts, Review, ViewSettings } from './book';
+import { Book, BookConfig, BookContent, ImportBookOpts, ViewSettings } from './book';
 import { SelectedFile } from '@/hooks/useFileSelector';
 import { ImportedDictionary } from '@/services/dictionaries/types';
 import { ImportDictionariesResult } from '@/services/dictionaries/dictionaryService';
@@ -219,16 +217,6 @@ export interface AppService {
   ): Promise<DownloadDataResult | undefined>;
   // for ai assistant
   ask(message: string): Promise<boolean>;
-  // for feeds
-  loadFeeds(): Promise<FeedType[]>;
-  saveFeeds(feeds: FeedType[]): Promise<void>;
-  loadArticles(): Promise<ArticleType[]>;
-  saveArticles(articles: ArticleType[]): Promise<void>;
-  saveReviews(data: Review[]): Promise<void>;
-  loadReviews(): Promise<Review[]>;
   saveVocabulary(data: VocabularyBook): Promise<void>;
   loadVocabulary(): Promise<VocabularyBook>;
-  // for reading tracker 
-  loadUsageData(): Promise<UsageRecord>;
-  saveUsageData(data: UsageRecord): Promise<void>;
 }

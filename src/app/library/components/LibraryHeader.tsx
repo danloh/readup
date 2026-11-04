@@ -8,22 +8,25 @@ import { IoMdCloseCircle } from 'react-icons/io';
 import { IoFileTray } from 'react-icons/io5';
 import { AiOutlineCloudSync } from 'react-icons/ai';
 import { TbVocabulary } from 'react-icons/tb';
+import { MdRssFeed } from 'react-icons/md';
 
 import { useTranslation } from '@/hooks/useTranslation';
 import { useTransferQueue } from '@/hooks/useTransferQueue';
 import { useLibraryStore } from '@/store/libraryStore';
 import { debounce } from '@/utils/debounce';
 import Dropdown from '@/components/Dropdown';
+import { LogoMenu } from '../../NavBar';
 import ViewMenu from './ViewMenu';
 import { setBackupDialogVisible } from './BackupWindow';
 
 interface LibraryHeaderProps {
   onImportBooksFromFiles: () => void;
   onImportBooksFromDirectory?: () => void;
+  onImportFeed: () => void;
 }
 
 const LibraryHeader: React.FC<LibraryHeaderProps> = (
-  {onImportBooksFromFiles, onImportBooksFromDirectory,}
+  {onImportBooksFromFiles, onImportBooksFromDirectory, onImportFeed}
 ) => {
   const _ = useTranslation();
   const router = useRouter();
@@ -61,7 +64,8 @@ const LibraryHeader: React.FC<LibraryHeaderProps> = (
   return (
     <div className='library-head bg-base-200 z-10 flex h-[48px] w-full items-center p-2'>
       <div className='flex w-full items-center justify-between space-x-4'>
-        <div className='exclude-title-bar-mousedown relative flex w-full items-center'>
+        <div className='exclude-title-bar-mousedown relative flex w-full items-center gap-3'>
+          <LogoMenu />
           <div className='relative flex h-9 w-full items-center'>
             <span className='text-base-content/50 absolute ps-2'>
               <FaSearch className='h-4 w-4' />
@@ -126,6 +130,16 @@ const LibraryHeader: React.FC<LibraryHeaderProps> = (
               </button>
             </div>
           )}
+          <div className='tooltip tooltip-bottom' data-tip={_('Import from Feed')}>
+            <button
+              type='button'
+              className='btn btn-ghost h-8 min-h-8 w-8 p-0'
+              onClick={onImportFeed}
+              aria-label={_('Import from Feed')}
+            >
+              <MdRssFeed className='h-5 w-5' />
+            </button>
+          </div>
           <div 
             className='tooltip tooltip-bottom' 
             title={_('Sync')}

@@ -38,7 +38,6 @@ import { normalizeMetadataIsbn } from '@/utils/isbn';
 import { BookFileNotFoundError } from './errors';
 import { DEFAULT_BOOK_SEARCH_CONFIG, DEFAULT_FIXED_LAYOUT_VIEW_SETTINGS } from './constants';
 import { deleteRecord } from './bsky/atfile';
-import { isPseStreamFileName, openPseStreamBook, parsePseStreamFileName } from './opds/pseStream';
 import { resolveBookContentSource } from './bookContent';
 
 export function buildBookLookupIndex(books: Book[], osPlatform?: OsPlatform): BookLookupIndex {
@@ -274,7 +273,6 @@ export async function importBook(
     transient = false,
     lookupIndex,
   } = options;
-  const isPseStream = typeof file === 'string' && isPseStreamFileName(file);
 
   let loadedBook: BookDoc | undefined;
   let fileobj: File | undefined;
@@ -296,82 +294,76 @@ export async function importBook(
     }
 
     try {
-      if (isPseStream) {
-        const data = parsePseStreamFileName(file as string);
-        ({ book: loadedBook, format } = await openPseStreamBook(data));
-        filename = file as string;
+      if (typeof file === 'string') {
+        fileobj = await fs.openFile(file, 'None');
+        filename = fileobj.name || getFilename(file);
       } else {
-        if (typeof file === 'string') {
-          fileobj = await fs.openFile(file, 'None');
-          filename = fileobj.name || getFilename(file);
+        fileobj = file;
+        filename = file.name;
+      }
+      const maybeClosable = fileobj as ClosableFile;
+      if (typeof maybeClosable.close === 'function') {
+        openedSource = maybeClosable;
+      }
+      if (/\.txt$/i.test(filename)) {
+        const txt2epub = new TxtToEpubConverter();
+        try {
+          ({ file: fileobj } = await txt2epub.convert({ file: fileobj }));
+        } finally {
+          // Convert consumes the source; release RemoteFile/NativeFile
+          // immediately so DocumentLoader / cover / write do not keep the
+          // path handle pinned. Outer `finally` stays an idempotent net.
+          if (openedSource?.close) {
+            try {
+              await openedSource.close();
+            } catch {}
+          }
+          openedSource = undefined;
+        }
+      }
+      if (!fileobj || fileobj.size === 0) {
+        throw new Error('Invalid or empty book file');
+      }
+      // Q1 fast path: when running under Tauri with a real file
+      // path, let Rust contribute the mechanical parts of the
+      // import work — partialMD5 over the file, the downscaled
+      // cover, and (for EPUB) the raw OPF bytes. Metadata
+      // extraction itself runs through foliate-js so the import
+      // path produces the same `Book.metadata` shape the reader
+      // path does (`refines` chains / ONIX5 / language maps / EPUB
+      // `belongs-to-collection` for EPUB; PalmDB UID identifier
+      // for MOBI), without any `DocumentLoader.open()` overhead —
+      // the importer never reads sections / toc / fixed-layout
+      // detection, so spending CPU on a zip central-directory
+      // scan, nav/ncx inflate, or PDB record-table walk would be
+      // pure waste here.
+      //
+      // Both bridges are no-ops on web / non-eligible paths, so
+      // the cost when neither matches is just two cheap regex
+      // tests.
+      let nativeBookDoc: BookDoc | undefined;
+      let nativeFormat: BookFormat | undefined;
+      if (typeof file === 'string' && !/\.txt$/i.test(filename)) {
+        const nativeEpub = await tryNativeParseEpub(file);
+        if (nativeEpub) {
+          nativeBookDoc = nativeEpub.bookDoc;
+          nativeFormat = 'EPUB' as BookFormat;
+          nativeHash = nativeEpub.partialMd5;
         } else {
-          fileobj = file;
-          filename = file.name;
-        }
-        const maybeClosable = fileobj as ClosableFile;
-        if (typeof maybeClosable.close === 'function') {
-          openedSource = maybeClosable;
-        }
-        if (/\.txt$/i.test(filename)) {
-          const txt2epub = new TxtToEpubConverter();
-          try {
-            ({ file: fileobj } = await txt2epub.convert({ file: fileobj }));
-          } finally {
-            // Convert consumes the source; release RemoteFile/NativeFile
-            // immediately so DocumentLoader / cover / write do not keep the
-            // path handle pinned. Outer `finally` stays an idempotent net.
-            if (openedSource?.close) {
-              try {
-                await openedSource.close();
-              } catch {}
-            }
-            openedSource = undefined;
+          const nativeMobi = await tryNativeParseMobi(file, fileobj);
+          if (nativeMobi) {
+            nativeBookDoc = nativeMobi.bookDoc;
+            nativeFormat = nativeMobi.format;
+            nativeHash = nativeMobi.partialMd5;
           }
         }
-        if (!fileobj || fileobj.size === 0) {
-          throw new Error('Invalid or empty book file');
-        }
-        // Q1 fast path: when running under Tauri with a real file
-        // path, let Rust contribute the mechanical parts of the
-        // import work — partialMD5 over the file, the downscaled
-        // cover, and (for EPUB) the raw OPF bytes. Metadata
-        // extraction itself runs through foliate-js so the import
-        // path produces the same `Book.metadata` shape the reader
-        // path does (`refines` chains / ONIX5 / language maps / EPUB
-        // `belongs-to-collection` for EPUB; PalmDB UID identifier
-        // for MOBI), without any `DocumentLoader.open()` overhead —
-        // the importer never reads sections / toc / fixed-layout
-        // detection, so spending CPU on a zip central-directory
-        // scan, nav/ncx inflate, or PDB record-table walk would be
-        // pure waste here.
-        //
-        // Both bridges are no-ops on web / non-eligible paths, so
-        // the cost when neither matches is just two cheap regex
-        // tests.
-        let nativeBookDoc: BookDoc | undefined;
-        let nativeFormat: BookFormat | undefined;
-        if (typeof file === 'string' && !/\.txt$/i.test(filename)) {
-          const nativeEpub = await tryNativeParseEpub(file);
-          if (nativeEpub) {
-            nativeBookDoc = nativeEpub.bookDoc;
-            nativeFormat = 'EPUB' as BookFormat;
-            nativeHash = nativeEpub.partialMd5;
-          } else {
-            const nativeMobi = await tryNativeParseMobi(file, fileobj);
-            if (nativeMobi) {
-              nativeBookDoc = nativeMobi.bookDoc;
-              nativeFormat = nativeMobi.format;
-              nativeHash = nativeMobi.partialMd5;
-            }
-          }
-        }
-        if (nativeBookDoc && nativeFormat) {
-          loadedBook = nativeBookDoc;
-          format = nativeFormat;
-          usedNativeParser = true;
-        } else {
-          ({ book: loadedBook, format } = await new DocumentLoader(fileobj).open());
-        }
+      }
+      if (nativeBookDoc && nativeFormat) {
+        loadedBook = nativeBookDoc;
+        format = nativeFormat;
+        usedNativeParser = true;
+      } else {
+        ({ book: loadedBook, format } = await new DocumentLoader(fileobj).open());
       }
       if (!loadedBook) {
         throw new Error('Unsupported or corrupted book file');
@@ -385,11 +377,7 @@ export async function importBook(
       throw new Error(`Failed to open the book file: ${(error as Error).message || error}`);
     }
 
-    const hash = isPseStream
-      ? md5(file as string)
-      : usedNativeParser
-        ? nativeHash!
-        : await partialMD5(fileobj!);
+    const hash = usedNativeParser ? nativeHash! : await partialMD5(fileobj!);
     // PDF metadata is often generic boilerplate (e.g. every PowerPoint export
     // is titled "PowerPoint Presentation" by the same author), so metadata
     // alone wrongly collapses distinct files into one book (issue #5411).
@@ -591,10 +579,7 @@ export async function importBook(
     }
 
     // update file links with url or path or content uri
-    if (isPseStream) {
-      book.url = file as string;
-      if (existingBook) existingBook.url = file as string;
-    } else if (typeof file === 'string') {
+    if (typeof file === 'string') {
       if (isValidURL(file)) {
         book.url = file;
         if (existingBook) existingBook.url = file;

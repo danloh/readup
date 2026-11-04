@@ -60,7 +60,6 @@ import {
   READUP_WEB_BASE_URL,
   READUP_UPDATER_FILE,
   READUP_CHANGELOG_FILE,
-  READUP_OPDS_USER_AGENT,
   MAX_ZOOM_LEVEL,
   MIN_ZOOM_LEVEL,
   ZOOM_STEP,
@@ -720,11 +719,6 @@ describe('services/constants', () => {
     it('READUP_CHANGELOG_FILE is a URL ending with .json', () => {
       expect(READUP_CHANGELOG_FILE).toMatch(/^https:\/\//);
       expect(READUP_CHANGELOG_FILE).toMatch(/\.json$/);
-    });
-
-    it('READUP_OPDS_USER_AGENT is a non-empty string', () => {
-      expect(typeof READUP_OPDS_USER_AGENT).toBe('string');
-      expect(READUP_OPDS_USER_AGENT.length).toBeGreaterThan(0);
     });
   });
 

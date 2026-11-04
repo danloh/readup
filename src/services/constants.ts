@@ -667,7 +667,6 @@ const LATEST_DOWNLOAD_BASE_URL = 'https://readup.cc/releases';
 
 export const READUP_UPDATER_FILE = `${LATEST_DOWNLOAD_BASE_URL}/latest.json`;
 export const READUP_CHANGELOG_FILE = `${LATEST_DOWNLOAD_BASE_URL}/release-notes.json`;
-export const READUP_OPDS_USER_AGENT = 'Readup/1.0 (OPDS Browser)';
 
 export const CHECK_UPDATE_INTERVAL_SEC = 24 * 60 * 60;
 export const RELOAD_BEFORE_SAVED_TIMEOUT_MS = 300;

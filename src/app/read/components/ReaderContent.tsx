@@ -323,6 +323,7 @@ const ReaderContent: React.FC<ReaderContentProps> = ({ ids, settings }) => {
           book={showDetailsBook}
           onClose={() => setShowDetailsBook(null)}
           showBtns={true}
+          canFetchFeed={false}
         />
       )}
       {blockedNotebookBookKey && (

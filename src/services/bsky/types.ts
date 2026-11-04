@@ -56,7 +56,7 @@ export namespace AtBook {
 export namespace AtData {
   export type RData = {
     $type: "cc.readup.rdata";
-    name: string; // library.json | usage.json ... 
+    name: string; // library.json | vocabulary.json ...
     updatedAt: string;
     docblob?: BlobRef;
   };

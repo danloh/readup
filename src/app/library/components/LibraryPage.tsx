@@ -23,6 +23,8 @@ import { SUPPORTED_BOOK_EXTS } from '@/services/constants';
 import { getImportErrorMessage } from '@/services/errors';
 import { buildBookLookupIndex } from '@/services/bookService';
 import { ingestFile } from '@/services/ingestService';
+import { enqueueImportRun } from '@/services/importQueue';
+import { useFeedBookImport } from '../hooks/useFeedBookImport';
 import { useEnv } from '@/context/EnvContext';
 import { useAuth } from '@/context/AuthContext';
 import { useLibraryStore } from '@/store/libraryStore';
@@ -43,7 +45,7 @@ import { useKeyDownActions } from '@/hooks/useKeyDownActions';
 import { selectDirectory } from '@/utils/bridge';
 import { requestStoragePermission } from '@/utils/permission';
 import { tauriSetWindowTitle } from '@/utils/window';
-import { createSerialRunner, runWithConcurrency } from '@/utils/concurrency';
+import { runWithConcurrency } from '@/utils/concurrency';
 import { createThrottledCheckpoint } from '@/utils/checkpoint';
 import DropIndicator from '@/components/DropIndicator';
 import ModalPortal from '@/components/ModalPortal';
@@ -64,6 +66,7 @@ import TransferQueuePanel from './TransferQueuePanel';
 import GroupHeader from './GroupHeader';
 import { BackupWindow } from './BackupWindow';
 import ImportFromFolderDialog, { ImportFromFolderResult } from './ImportFromFolderDialog';
+import ImportFeedDialog from './ImportFeedDialog';
 
 const IMPORT_CONCURRENCY = 4;
 // How often the library index is persisted during a long import (#5601). A
@@ -71,11 +74,6 @@ const IMPORT_CONCURRENCY = 4;
 // keep it long enough that the full-library serialization stays a rounding
 // error next to the per-file parse/copy work.
 const IMPORT_CHECKPOINT_INTERVAL_MS = 15 * 1000;
-// One import run at a time, app-wide: the manual Import-from-Folder flow and
-// the watched-folder auto-scan must not interleave — each builds a lookup
-// index over the same live library array, so overlapping runs re-import the
-// same files as duplicate rows (#5601).
-const enqueueImportRun = createSerialRunner();
 
 /**
  * Key used to persist the last directory the user imported books from.
@@ -155,6 +153,7 @@ const LibraryPageContent = (
     initialSelectedGroupIds?: string[];
     initialMinSizeKB?: number;
   } | null>(null);
+  const [isImportFeedOpen, setIsImportFeedOpen] = useState(false);
 
   const [currentSeriesAuthorGroup, setCurrentSeriesAuthorGroup] = useState<{
     groupBy: EnhanceGroupByType;
@@ -661,6 +660,13 @@ const LibraryPageContent = (
     return { failedPaths };
   };
 
+  const importFeed = useFeedBookImport();
+  /** Throws so the feed dialog can show the error and stay open. */
+  const handleImportFeed = async (url: string) => {
+    await importFeed(url, { groupId: searchParams?.get('group') || '' });
+    setIsImportFeedOpen(false);
+  };
+
   const handleImportBooksFromFiles = async () => {
     console.log('Importing books from files...');
     selectFiles({ type: 'books', multiple: true }).then((result) => {
@@ -956,6 +962,7 @@ const LibraryPageContent = (
       >
         <LibraryHeader 
           onImportBooksFromFiles={handleImportBooksFromFiles}
+          onImportFeed={() => setIsImportFeedOpen(true)}
           onImportBooksFromDirectory={
             appService?.canReadExternalDir 
               ? handleImportBooksFromDirectory 
@@ -1144,6 +1151,12 @@ const LibraryPageContent = (
         </ModalPortal>
       )}
       <BackupWindow />
+      {isImportFeedOpen && (
+        <ImportFeedDialog
+          onCancel={() => setIsImportFeedOpen(false)}
+          onSubmit={handleImportFeed}
+        />
+      )}
       {importFromFolderState && (
         <ImportFromFolderDialog
           initialDirectory={importFromFolderState.initialDirectory}

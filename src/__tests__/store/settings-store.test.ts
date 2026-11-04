@@ -43,7 +43,6 @@ function makeSettings(overrides: Partial<SystemSettings> = {}): SystemSettings {
     libraryColumns: 4,
     customFonts: [],
     customTextures: [],
-    opdsCatalogs: [],
     metadataSeriesCollapsed: false,
     metadataOthersCollapsed: false,
     metadataDescriptionCollapsed: false,

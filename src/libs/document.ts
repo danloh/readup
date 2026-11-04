@@ -78,6 +78,11 @@ export type BookMetadata = {
   coverImageFile?: string;
   coverImageUrl?: string;
   coverImageBlobUrl?: string;
+
+  /** Feed the book was generated from (see services/feedBook); enables "fetch new articles". */
+  feedUrl?: string;
+  /** `dc:source` as parsed by foliate-js. */
+  source?: string | string[];
 };
 
 export interface BookDoc {

@@ -18,9 +18,6 @@ import { uniqueId } from '@/utils/misc';
 import { getBaseFilename } from '@/utils/path';
 import { formatTitle, getMetadataHash, getPrimaryLanguage } from '@/utils/book';
 import { SUPPORTED_LANGNAMES } from '@/services/constants';
-import { 
-  isPseStreamFileName, openPseStreamBook, parsePseStreamFileName 
-} from '@/services/opds/pseStream';
 import { useSettingsStore } from './settingsStore';
 import { BookData, useBookDataStore } from './bookDataStore';
 import { useLibraryStore } from './libraryStore';
@@ -166,30 +163,22 @@ export const useReaderStore = create<ReaderStore>((set, get) => ({
         );
         throw new Error('Book not found');
       }
-      const isPseStream = !!book.url && isPseStreamFileName(book.url);
       let bookDoc = bookData?.bookDoc;
       let file: File | null = bookData?.file ?? null;
-      if (!bookDoc || (!isPseStream && !file) || reload) {
+      if (!bookDoc || !file || reload) {
         console.log('Loading book', key);
-        if (isPseStream) {
-          const data = parsePseStreamFileName(book.url!);
-          const doc = await openPseStreamBook(data);
-          bookDoc = doc.book;
-          file = null;
-        } else {
-          const content = (await appService.loadBookContent(book)) as BookContent;
-          file = content.file;
-          let nativeFilePath: string | null = null;
-          try {
-            nativeFilePath = await appService.resolveNativeBookFilePath(book);
-          } catch (err) {
-            console.warn('resolveNativeBookFilePath failed', err);
-          }
-          const doc = await new DocumentLoader(file, {
-            nativeFilePath: nativeFilePath ?? undefined,
-          }).open();
-          bookDoc = doc.book;
+        const content = (await appService.loadBookContent(book)) as BookContent;
+        file = content.file;
+        let nativeFilePath: string | null = null;
+        try {
+          nativeFilePath = await appService.resolveNativeBookFilePath(book);
+        } catch (err) {
+          console.warn('resolveNativeBookFilePath failed', err);
         }
+        const doc = await new DocumentLoader(file, {
+          nativeFilePath: nativeFilePath ?? undefined,
+        }).open();
+        bookDoc = doc.book;
       }
       const config = await appService.loadBookConfig(book, settings);
       // Filter out invalid booknotes

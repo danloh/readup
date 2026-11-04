@@ -14,6 +14,8 @@ import { useTranslation } from '@/hooks/useTranslation';
 import Alert from '@/components/Alert';
 import Dialog from '@/components/Dialog';
 import Spinner from '@/components/Spinner';
+import { getBookFeedUrl } from '@/services/feedBook';
+import { useFeedBookImport } from '../../hooks/useFeedBookImport';
 import { useMetadataEdit } from './useMetadataEdit';
 import BookDetailView from './BookDetailView';
 import BookDetailEdit from './BookDetailEdit';
@@ -24,6 +26,11 @@ interface BookDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   showBtns?: boolean;
+  /**
+   * Offer "fetch new articles" for feed books. Off in the reader: updating
+   * replaces the book file, which must not happen under an open book.
+   */
+  canFetchFeed?: boolean;
 }
 
 const BookDetailModal: React.FC<BookDetailModalProps> = ({
@@ -31,6 +38,7 @@ const BookDetailModal: React.FC<BookDetailModalProps> = ({
   isOpen,
   onClose,
   showBtns,
+  canFetchFeed = true,
 }) => {
   const _ = useTranslation();
   const { envConfig, appService } = useEnv();
@@ -42,6 +50,7 @@ const BookDetailModal: React.FC<BookDetailModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const { updateBook } = useLibraryStore();
   const { clearBookData } = useBookDataStore();
+  const importFeed = useFeedBookImport();
 
   // The parent owns the `book` prop and does not re-pass it after a metadata
   // save, so the details view tracks the saved book locally to refresh its
@@ -160,6 +169,30 @@ const BookDetailModal: React.FC<BookDetailModalProps> = ({
     }, 0);
   };
 
+  const feedUrl = canFetchFeed ? getBookFeedUrl(displayBook) : undefined;
+
+  /** Fetch the book's feed again and append any new articles to it. */
+  const handleFetchFeed = async () => {
+    if (!feedUrl) return;
+    setIsLoading(true);
+    try {
+      const updated = await importFeed(feedUrl, { book: displayBook });
+      if (updated) {
+        setDisplayBook({ ...updated });
+        setFileSize(updated.fileSize);
+        if (updated.metadata) setBookMeta(updated.metadata);
+      }
+    } catch (error) {
+      eventDispatcher.dispatch('toast', {
+        type: 'error',
+        timeout: 5000,
+        message: error instanceof Error ? error.message : _('Failed to import the feed'),
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleDelete = () => {
     setShowDeleteAlert(true);
   };
@@ -234,6 +267,7 @@ const BookDetailModal: React.FC<BookDetailModalProps> = ({
                 onEdit={handleEditMetadata}
                 onDelete={handleDelete}
                 onExport={handleBookExport}
+                onFetchFeed={feedUrl ? handleFetchFeed : undefined}
                 showBtns={showBtns}
               />
             )}

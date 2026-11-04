@@ -14,11 +14,9 @@ A fork of [Readest](https://github.com/readest/readest), we add an atproto layer
 - [X] **Wikipedia Lookup** Instantly look up words and terms.
 - [X] **Translate** From a single sentence to the entire book translate instantly.
 - [X] **Customize Font and Layout** Adjust font, layout, theme mode, and theme colors.
-- [X] **OPDS Integration** Integrate OPDS to access online libraries and catalogs.
 - [X] **atproto layer** Synchronize book files, reading progress, notes with your PDS.
 - [X] **Share excerpt to ATmosphere** Share and start discussion the book with friends. 
-- [X] **Read RSS feed like a book** Convert your favorite feeds into a book and read it.
-- [X] **Reading Stats** Track daily reading time and use heatmap to visualize your activities.
+- [X] **Read feeds like a book** Turn an RSS, Atom or JSON feed into a book; import the same URL again to append new articles.
 - [ ] **AI Reading Assistant** Summarize, recommend and chat with AI.
 - [ ] **Text-to-Speech (TTS) Support** 
 

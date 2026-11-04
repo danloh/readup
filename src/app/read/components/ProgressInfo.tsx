@@ -1,6 +1,5 @@
 import clsx from 'clsx';
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 
 import type { Insets } from '@/types/misc';
 import { useEnv } from '@/context/EnvContext';
@@ -70,7 +69,6 @@ const ProgressInfoView: React.FC<PageInfoProps> = ({
   const progressInfo = formatProgress(pageInfo?.current, pageInfo?.total, formatTemplate);
 
   const [showModal, setShowModal] = useState(false);
-  const router = useRouter();
 
   useEffect(() => {
     const checkComplete = () => {
@@ -150,7 +148,7 @@ const ProgressInfoView: React.FC<PageInfoProps> = ({
         <ModalPortal>
           <div className='modal-box max-w-lg p-4 bg-base-200 rounded'>
             <h3 className='font-bold text-lg'>{_('You have finished the book')}</h3>
-            <p className='py-2'>{_('Would you like to mark this book or write a review?')}</p>
+            <p className='py-2'>{_('Would you like to mark this book as read?')}</p>
             <div className='flex items-center justify-center flex-wrap gap-2 mt-4'>
               <button
                 className='btn btn-sm btn-primary'
@@ -168,17 +166,6 @@ const ProgressInfoView: React.FC<PageInfoProps> = ({
                 }}
               >
                 {_('Mark as Read')}
-              </button>
-              <button
-                className='btn btn-sm'
-                onClick={() => {
-                  localStorage.setItem('toReviewBook', JSON.stringify(bookData?.book));
-                  const id = bookKey.split('-')[0];
-                  router.push(`/write?book=${id}`);
-                  setShowModal(false);
-                }}
-              >
-                {_('Review')}
               </button>
               <button className='btn btn-sm btn-ghost' onClick={() => setShowModal(false)}>
                 {_('Dismiss')}

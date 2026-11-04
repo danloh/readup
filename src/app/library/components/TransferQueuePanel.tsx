@@ -291,13 +291,9 @@ const TransferQueuePanel: React.FC = () => {
   const [pdsLoaded, setPdsLoaded] = useState(false);
   const [pdsCanTransfer, setPdsCanTransfer] = useState<TransferItem[]>([]);
 
-  // TODO: stared articles
   const dataFiles: DataFileItem[] = [
     {name: 'library.json', col: 'cc.readup.rdata', base: 'Books'}, 
     {name: 'vocabulary.json', col: 'cc.readup.rdata', base: 'Books'}, 
-    {name: 'feeds.json',  col: 'cc.readup.rdata', base: 'Books'},
-    {name: 'usage.json',  col: 'cc.readup.rdata', base: 'Books'},
-    {name: 'reviews.json', col: 'cc.readup.rdata', base: 'Books'},
     {name: 'settings.json', col: 'cc.readup.rdata', base: 'Settings'},
   ];
 

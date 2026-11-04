@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 import AuthPage from '@/app/auth/page';
+import { useAuth } from '@/context/AuthContext';
+import UserInfo from './UserInfo';
 import Dialog from './Dialog';
 
 export const setAuthDialogVisible = (visible: boolean) => {
@@ -15,6 +17,7 @@ export const setAuthDialogVisible = (visible: boolean) => {
 
 export const AuthWindow = () => {
   const _ = useTranslation();
+  const { user } = useAuth();
 
   const [isOpen, setIsOpen] = useState(false);
   const handleClose = () => {
@@ -43,11 +46,17 @@ export const AuthWindow = () => {
     <Dialog
       id='auth_window'
       isOpen={isOpen}
-      title={_('Welcome to Readup')}
+      title={user ? _('Account') : _('Welcome to Readup')}
       onClose={handleClose}
       boxClassName='sm:!w-96 sm:h-auto'
     >
-      <AuthPage handleClose={handleClose} />
+      {user ? (
+        <div className='py-4'>
+          <UserInfo />
+        </div>
+      ) : (
+        <AuthPage handleClose={handleClose} />
+      )}
     </Dialog>
   );
 };

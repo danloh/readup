@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 import { PiUserCircle } from 'react-icons/pi';
 import UserAvatar from '@/components/UserAvatar';
 import { setAuthDialogVisible } from '@/components/AuthWindow';
@@ -6,6 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import { getProfile, UserProfile } from '@/services/bsky/auth';
 
 const UserInfo: React.FC = () => {
+  const _ = useTranslation();
   const { user, logout } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(false);
@@ -36,7 +38,7 @@ const UserInfo: React.FC = () => {
   }, [user?.did, user?.service]);
 
   if (error && !loading) {
-    return (<p className='mt-2 text-sm text-error'>Failed to load profile</p>)
+    return (<p className='mt-2 text-sm text-error'>{_('Failed to load profile')}</p>)
   }
 
   return (
@@ -68,10 +70,10 @@ const UserInfo: React.FC = () => {
           </p>
         )}
         {user ? (
-          <button className='link text-sm' onClick={logout}>Log Out</button>
+          <button className='link text-sm' onClick={logout}>{_('Log Out')}</button>
         ) : (
           <button className='link text-sm' onClick={() => setAuthDialogVisible(true)}>
-            Log In
+            {_('Log In')}
           </button>
         )}
       </div>

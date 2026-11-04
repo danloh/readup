@@ -41,7 +41,6 @@ import { isPWA, isTauriAppPlatform, isWebAppPlatform } from '@/services/environm
 import {
   navigateToReader,
   navigateToLogin,
-  navigateToProfile,
   navigateToLibrary,
   redirectToLibrary,
   showReaderWindow,
@@ -193,15 +192,6 @@ describe('navigateToLogin', () => {
 
     const url = router.push.mock.calls[0]![0] as string;
     expect(url).toBe('/auth?redirect=%2F');
-  });
-});
-
-describe('navigateToProfile', () => {
-  test('navigates to /user', () => {
-    const router = mockRouter();
-    navigateToProfile(router);
-
-    expect(router.push).toHaveBeenCalledWith('/user');
   });
 });
 

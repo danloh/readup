@@ -16,9 +16,9 @@ interface SettingsState {
   /**
    * Optional sub-page hint paired with `requestedPanel`. When the requested
    * panel renders nested sub-pages (e.g. Integrations → KOSync / Readwise /
-   * Hardcover / OPDS), this string tells the panel which one to drill into.
+   * Hardcover), this string tells the panel which one to drill into.
    * Cleared by the panel after consumption. Format is panel-specific —
-   * Integrations recognises 'kosync' | 'readwise' | 'hardcover' | 'opds'.
+   * Integrations recognises 'kosync' | 'readwise' | 'hardcover'.
    */
   requestedSubPage: string | null;
   setSettings: (settings: SystemSettings) => void;

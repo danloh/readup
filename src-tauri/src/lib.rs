@@ -17,7 +17,6 @@ mod macos;
 
 mod dir;
 mod file;
-mod feed;
 #[cfg(any(target_os = "android", test))]
 mod eink_identity;
 mod epub_parser;
@@ -330,7 +329,6 @@ pub fn run() {
             dir::read_dir,
             file::download_file,
             file::upload_file,
-            feed::fetch_feed,
             get_environment_variable,
             get_executable_dir,
             epub_parser::parse_epub_metadata,

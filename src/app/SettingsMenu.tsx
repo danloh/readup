@@ -24,7 +24,7 @@ import { useThemeStore } from '@/store/themeStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { type AppLockDialogMode, useAppLockStore } from '@/store/appLockStore';
 import { useTranslation } from '@/hooks/useTranslation';
-import { navigateToLogin, navigateToProfile } from '@/utils/nav';
+import { navigateToLogin } from '@/utils/nav';
 import { tauriHandleSetAlwaysOnTop, tauriHandleToggleFullScreen } from '@/utils/window';
 import { optInTelemetry, optOutTelemetry } from '@/utils/telemetry';
 import { saveSysSettings } from '@/helpers/settings';
@@ -77,11 +77,6 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
 
   const downloadReadup = () => {
     window.open(DOWNLOAD_READUP_URL, '_blank');
-    setIsDropdownOpen?.(false);
-  };
-
-  const handleUserProfile = () => {
-    navigateToProfile(router);
     setIsDropdownOpen?.(false);
   };
 
@@ -201,7 +196,7 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ setIsDropdownOpen }) => {
       onCancel={() => setIsDropdownOpen?.(false)}
     >
       {user ? (
-        <MenuItem label={_('Account')} Icon={PiUserCircle} onClick={handleUserProfile} />
+        <MenuItem label={_('Account')} Icon={PiUserCircle} onClick={showAuthWindow} />
       ) : (
         <MenuItem label={_('Sign In')} Icon={PiUserCircle} onClick={showAuthWindow}></MenuItem>
       )}

@@ -35,9 +35,6 @@ tokio-util = { version = "0.7", features = ["codec"] }
 futures-util = "0.3"
 read-progress-stream = "1.0.0"
 reqwest = { version = "0.12.28", default-features = false, features = ["json", "stream"] }
-rss = { version = "2.0", features = ["serde"] }
-atom_syndication = "0.12"
-bytes = "1"
 chrono = "0.4.45"
 walkdir = "2"
 # FIXME: remove the devtools feature in production

@@ -1,6 +1,4 @@
 import { invoke, Channel } from '@tauri-apps/api/core';
-import { isWebAppPlatform } from '@/services/environment';
-import { AppService } from '@/types/system';
 
 export type UploadMethod = 'POST' | 'PUT';
 
@@ -245,55 +243,4 @@ export const tauriDownload = async (
     skipSslVerification,
   });
   return responseHeaders;
-};
-
-type DownloadFileParams = {
-  appService: AppService;
-  dst: string;
-  url?: string;
-  headers?: Record<string, string>;
-  singleThreaded?: boolean;
-  skipSslVerification?: boolean;
-  onProgress?: ProgressHandler;
-};
-
-// for download opds
-export const downloadFile = async ({
-  appService,
-  dst,
-  url,
-  headers,
-  singleThreaded,
-  skipSslVerification,
-  onProgress,
-}: DownloadFileParams) => {
-  try {
-    let downloadUrl = url;
-    if (!downloadUrl) {
-      throw new Error('No download URL available');
-    }
-
-    if (isWebAppPlatform()) {
-      const { headers: responseHeaders, blob } = await webDownload(
-        downloadUrl,
-        onProgress,
-        headers,
-      );
-      await appService.writeFile(dst, 'None', await blob.arrayBuffer());
-      return responseHeaders;
-    } else {
-      return await tauriDownload(
-        downloadUrl,
-        dst,
-        onProgress,
-        headers,
-        undefined,
-        singleThreaded,
-        skipSslVerification,
-      );
-    }
-  } catch (error) {
-    console.error(`File '${dst}' download failed:`, error);
-    throw error;
-  }
 };

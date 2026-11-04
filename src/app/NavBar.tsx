@@ -1,12 +1,7 @@
 'use client';
 
 import clsx from 'clsx';
-import { useCallback, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import { MdRssFeed } from "react-icons/md";
-import { BiLibrary } from 'react-icons/bi';
-import { SiProgress } from "react-icons/si";
-import { GrCatalog } from 'react-icons/gr';
+import { useEffect, useRef } from 'react';
 
 import { useTranslation } from '@/hooks/useTranslation';
 import { useTrafficLight } from '@/hooks/useTrafficLight';
@@ -33,16 +28,24 @@ import { lockScreenOrientation } from '@/utils/bridge';
 import SettingsMenu from './SettingsMenu';
 import { MigrateDataWindow } from './MigrateDataWindow';
 
-function titleCase(str: string) {
-  return str.replace(
-    /\w\S*/g,
-    txt => txt.charAt(0).toUpperCase() + txt.substring(1).toLowerCase()
-  );
-}
-
-export const NavTab: React.FC<{activeTab: string}> = ({ activeTab }) => {
+/** App logo that opens the main settings menu. */
+export const LogoMenu: React.FC = () => {
   const _ = useTranslation();
-  const router = useRouter();
+  return (
+    <div className='logo-menu z-50 flex shrink-0 items-center font-bold'>
+      <Dropdown
+        label={_('Menu')}
+        className='exclude-title-bar-mousedown dropdown-bottom'
+        buttonClassName='btn btn-ghost btn-xs'
+        toggleButton={<Logo />}
+      >
+        <SettingsMenu />
+      </Dropdown>
+    </div>
+  );
+};
+
+export const NavTab: React.FC = () => {
   const { appService } = useEnv();
   const { safeAreaInsets: insets } = useThemeStore();
   const { systemUIVisible, statusBarHeight } = useThemeStore();
@@ -52,21 +55,17 @@ export const NavTab: React.FC<{activeTab: string}> = ({ activeTab }) => {
   const { isTrafficLightVisible } = useTrafficLight(headerRef);
   const windowButtonVisible = appService?.hasWindowBar && !isTrafficLightVisible;
 
-  const tabs = ['library', 'feed', 'catalog', 'streak'];
-
   if (!insets) return null;
-
-  const onTabNav = useCallback((tab: string) => {
-    router.push(`/${tab}`)
-  }, [router]);
 
   return (
     <div
       ref={headerRef}
       className={clsx(
-        'nav-tab bg-base-200 z-50 flex w-full items-center justify-between py-1 px-2',
+        'nav-tab bg-base-200 z-50 flex w-full items-center justify-end px-2',
+        // Desktop keeps a slim bar for the window buttons / macOS traffic
+        // lights; mobile and web have neither, so the bar collapses.
+        appService?.hasWindowBar ? 'min-h-8 py-1' : 'h-0',
         windowButtonVisible ? 'sm:pr-4' : 'sm:pr-6',
-        isTrafficLightVisible ? 'pl-16' : 'pl-0 sm:pl-2',
       )}
       style={{
         marginTop: appService?.hasSafeAreaInset
@@ -74,61 +73,14 @@ export const NavTab: React.FC<{activeTab: string}> = ({ activeTab }) => {
           : '0px',
       }}
     >
-      <div className='flex font-bold items-center z-50 justify-start mx-1 logo-menu'>
-        <Dropdown
-          label={_('Menu')}
-          className='exclude-title-bar-mousedown dropdown-bottom'
-          buttonClassName='btn btn-ghost btn-xs'
-          toggleButton={<Logo />}
-        >
-          <SettingsMenu />
-        </Dropdown>
-      </div>
-      <div className='flex flex-wrap w-full items-center justify-end gap-1'>
-        {tabs.map((tab) => (
-          <div
-            key={tab}
-            className='tooltip tooltip-bottom m-1 rounded-md z-50'
-            data-tip={_(titleCase(tab))}
-          >
-            <button 
-              type='button'
-              className='btn btn-ghost btn-xs' 
-              onClick={() => onTabNav(tab)}
-            >
-              {tab === 'library' ? (
-                <BiLibrary 
-                  size={18} 
-                  className={clsx('mx-auto', tab === activeTab && 'text-success')} 
-                />
-              ) : tab === 'feed' ? (
-                <MdRssFeed 
-                  size={18} 
-                  className={clsx('mx-auto', tab === activeTab && 'text-success')} 
-                />
-              ) : tab === 'catalog' ? (
-                <GrCatalog 
-                  size={18} 
-                  className={clsx('mx-auto', tab === activeTab && 'text-success')} 
-                />  
-              ) : (
-                <SiProgress 
-                  size={18} 
-                  className={clsx('mx-auto', tab === activeTab && 'text-success')} 
-                />
-              )}
-            </button>
-          </div>
-        ))}
-        {appService?.hasWindowBar && (
-          <WindowButtons
-            headerRef={headerRef}
-            showMinimize={windowButtonVisible}
-            showMaximize={windowButtonVisible}
-            showClose={windowButtonVisible}
-          />
-        )}
-      </div>
+      {appService?.hasWindowBar && (
+        <WindowButtons
+          headerRef={headerRef}
+          showMinimize={windowButtonVisible}
+          showMaximize={windowButtonVisible}
+          showClose={windowButtonVisible}
+        />
+      )}
       <AboutWindow />
       <AuthWindow />
       <UpdaterWindow />
@@ -140,7 +92,7 @@ export const NavTab: React.FC<{activeTab: string}> = ({ activeTab }) => {
   );
 };
 
-export default function NavBar({ tab, children }: { tab: string; children: React.ReactNode }) {
+export default function NavBar({ children }: { children: React.ReactNode }) {
   const _ = useTranslation();
   const { appService } = useEnv();
   const { isRoundedWindow } = useThemeStore();
@@ -196,7 +148,7 @@ export default function NavBar({ tab, children }: { tab: string; children: React
         appService?.hasRoundedWindow && isRoundedWindow && 'window-border rounded-window',
       )}
     >
-      <div className='nav-bar'><NavTab activeTab={tab} /></div>
+      <div className='nav-bar'><NavTab /></div>
       {children}
     </div>
   );

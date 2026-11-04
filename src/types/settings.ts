@@ -3,7 +3,6 @@ import type { AISettings } from '@/services/ai/types';
 import type { NotebookTab } from '@/store/notebookStore';
 import type { DictionarySettings, ImportedDictionary } from '@/services/dictionaries/types';
 import { HighlightColor, HighlightStyle, ViewSettings } from './book';
-import { OPDSCatalog } from './opds';
 
 export type ThemeType = 'light' | 'dark' | 'auto';
 export type LibraryViewModeType = 'grid' | 'list';
@@ -73,8 +72,6 @@ export interface SystemSettings {
   librarySortAscending: boolean;
   customDictionaries: ImportedDictionary[];
   dictionarySettings: DictionarySettings;
-  opdsCatalogs: OPDSCatalog[];
-  opdsProxy: Record<string, string>;
 
   /**
    * App-lock PIN. When `pinCodeEnabled` is true, the user must enter

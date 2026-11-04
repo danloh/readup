@@ -6,7 +6,7 @@ export const sanitizeString = (str?: string) => {
 };
 
 /**
- * Strip untrusted HTML (OPDS feed descriptions, etc.) 
+ * Strip untrusted HTML (feed article content, etc.)
  * down to safe, EPUB-appropriate structural markup. Removes
  * scripts, event handlers, styles, iframes, and form controls; keeps headings,
  * text, lists, tables, links and images.

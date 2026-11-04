@@ -55,7 +55,6 @@ import { usePagination, viewPagination } from '../hooks/usePagination';
 import { useFoliateEvents } from '../hooks/useFoliateEvents';
 import { useProgressAutoSave } from '../hooks/useProgressAutoSave';
 import { useTextTranslation } from '../hooks/useTextTranslation';
-import useReadingTracker from '../hooks/useReadingTracker';
 import {
   handleKeydown,
   handleKeyup,
@@ -123,7 +122,6 @@ const FoliateViewer: React.FC<{
   useProgressAutoSave(bookKey);
   useTextTranslation(bookKey, viewRef.current);
   // Track continuous reading sessions for usage stats
-  useReadingTracker(!!bookKey, bookKey);
 
   // Coalesce setProgress writes within a single animation frame.
   //

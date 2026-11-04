@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MdCollectionsBookmark, MdOutlineDelete, MdOutlineEdit } from 'react-icons/md';
+import { MdCollectionsBookmark, MdOutlineDelete, MdOutlineEdit, MdRssFeed } from 'react-icons/md';
 import { LiaFileExportSolid } from 'react-icons/lia';
 
 import { Book } from '@/types/book';
@@ -27,6 +27,8 @@ interface BookDetailViewProps {
   onEdit?: () => void;
   onDelete?: () => void;
   onExport?: () => void;
+  /** Present for books generated from a feed: fetch and append new articles. */
+  onFetchFeed?: () => void;
   showBtns?: boolean;
 }
 
@@ -37,6 +39,7 @@ const BookDetailView: React.FC<BookDetailViewProps> = ({
   onEdit,
   onDelete,
   onExport,
+  onFetchFeed,
   showBtns = true,
 }) => {
   const _ = useTranslation();
@@ -126,6 +129,11 @@ const BookDetailView: React.FC<BookDetailViewProps> = ({
                 <MdCollectionsBookmark className='hover:fill-green-500' />
               </button>
             )}
+            {book.downloadedAt && showBtns && onFetchFeed && (
+              <button onClick={onFetchFeed} title={_('Fetch New Articles')}>
+                <MdRssFeed className='hover:fill-orange-500' />
+              </button>
+            )}
             {book.downloadedAt && showBtns && onExport && (
               <button onClick={onExport} title={_('Export Book')}>
                 <LiaFileExportSolid className='hover:fill-purple-500' />
@@ -193,6 +201,12 @@ const BookDetailView: React.FC<BookDetailViewProps> = ({
             </p>
           </div>
         </div>
+        {metadata?.feedUrl && (
+          <div className='mb-4 overflow-hidden'>
+            <span className='font-bold'>{_('Feed')}</span>
+            <p className='text-neutral-content break-all text-sm'>{metadata.feedUrl}</p>
+          </div>
+        )}
         <div>
           <span className='font-bold'>{_('Description')}</span>
           <p

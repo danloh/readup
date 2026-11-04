@@ -44,6 +44,9 @@ vi.mock('@/helpers/settings', () => ({ saveSysSettings: vi.fn() }));
 
 vi.mock('@/services/environment', () => ({ isWebAppPlatform: () => false }));
 
+vi.mock('@/app/library/hooks/useFeedBookImport', () => ({ useFeedBookImport: () => vi.fn() }));
+vi.mock('@/services/feedBook', () => ({ getBookFeedUrl: () => undefined }));
+
 vi.mock('@/libs/metadata', () => ({ searchMetadata: vi.fn(async () => []) }));
 
 // Render the cover with the same src-resolution as the real <BookCover> so we

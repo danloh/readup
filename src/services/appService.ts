@@ -12,8 +12,7 @@ import {
   SaveLibraryBooksOptions,
   SelectDirectoryMode,
 } from '@/types/system';
-import { Book, BookConfig, BookContent, ImportBookOpts, Review, ViewSettings } from '@/types/book';
-import { ArticleType, FeedType } from '@/app/feed/components/dataAgent';
+import { Book, BookConfig, BookContent, ImportBookOpts, ViewSettings } from '@/types/book';
 import { getOSPlatform } from '@/utils/misc';
 import { ProgressHandler } from '@/utils/transfer';
 import { isStoragePermissionError, requestStoragePermission } from '@/utils/permission';
@@ -21,7 +20,6 @@ import type { BookNav } from '@/services/nav';
 import type { SelectedFile } from '@/hooks/useFileSelector';
 import { DEFAULT_VOCABULARY_BOOK, VocabularyBook } from '@/store/vocabularyBookStore';
 import type { ImportedDictionary } from './dictionaries/types';
-import { UsageRecord } from './usageService';
 import { loadJSONFile, safeSaveJSON } from './persistence';
 import { DownloadDataResult } from './bsky/atfile';
 
@@ -66,7 +64,6 @@ export abstract class BaseAppService implements AppService {
   supportsViewTransitionGroup = false;
   distChannel = 'readup' as DistChannel;
   storefrontRegionCode: string | null = null; // TODO
-  isOnlineCatalogsAccessible = false; // TODO
 
   protected abstract fs: FileSystem;
   protected abstract resolvePath(fp: string, base: BaseDir): ResolvedPath;
@@ -390,82 +387,6 @@ export abstract class BaseAppService implements AppService {
     onProgress?: ProgressHandler,
   ): Promise<DownloadDataResult | undefined> {
     return CloudSvc.downloadData(this, this.fs, rkey, base, override, collection, onProgress);
-  }
-
-  async loadFeeds(): Promise<FeedType[]> {
-    console.log('Loading Feeds...');
-    let feeds: FeedType[] = [];
-
-    const mainResult = await loadJSONFile(this.fs, 'feeds.json', 'Books');
-    if (mainResult.success) {
-      feeds = mainResult.data as FeedType[];
-    } else {
-      console.error('Failed to Loaded feeds.json');
-    }
-
-    return feeds;
-  }
-
-  async saveFeeds(feeds: FeedType[]): Promise<void> {  
-    const jsonData = JSON.stringify(feeds, null, 2);
-    const saveResults = await Promise.allSettled([
-      this.fs.writeFile('feeds.json', 'Books', jsonData),
-    ]);
-    const mainSuccess = saveResults[0].status === 'fulfilled';
-    if (!mainSuccess) {
-      throw new Error('Failed to save feeds');
-    }
-  }
-
-  async loadArticles(): Promise<ArticleType[]> {
-    console.log('Loading articles...');
-    let articles: ArticleType[] = [];
-
-    const mainResult = await loadJSONFile(this.fs, 'articles.json', 'Books');
-    if (mainResult.success) {
-      articles = mainResult.data as ArticleType[];
-    } else {
-      console.error('Failed to Loaded articles.json');
-    }
-
-    return articles;
-  }
-
-  async saveArticles(articles: ArticleType[]): Promise<void> {  
-    const jsonData = JSON.stringify(articles, null, 2);
-    const saveResults = await Promise.allSettled([
-      this.fs.writeFile('articles.json', 'Books', jsonData),
-    ]);
-    const mainSuccess = saveResults[0].status === 'fulfilled';
-    if (!mainSuccess) {
-      throw new Error('Failed to save articles');
-    }
-  }
-
-  // Usage data management --------------------------------------------------
-  async loadUsageData(): Promise<UsageRecord> {
-    const mainResult = await loadJSONFile(this.fs, 'usage.json', 'Books');
-    if (mainResult.success) {
-      return mainResult.data as UsageRecord;
-    }
-    return {};
-  }
-
-  async saveUsageData(data: UsageRecord): Promise<void> {
-    await safeSaveJSON(this.fs, 'usage.json', 'Books', data);
-  }
-
-  // Reviews data management --------------------------------------------------
-  async loadReviews(): Promise<Review[]> {
-    const mainResult = await loadJSONFile(this.fs, 'reviews.json', 'Books');
-    if (mainResult.success) {
-      return mainResult.data as any[];
-    }
-    return [];
-  }
-
-  async saveReviews(data: Review[]): Promise<void> {
-    await safeSaveJSON(this.fs, 'reviews.json', 'Books', data);
   }
 
   // Vocabulary data management --------------------------------------------------
