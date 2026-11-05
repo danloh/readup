@@ -1,23 +1,15 @@
 const SVG_NS = 'http://www.w3.org/2000/svg'
 
-// bisect
-const fit = (el, a = 1, b = 50) => {
-    const c = Math.floor(a + (b - a) / 2)
-    el.style.fontSize = `${c}px`
-    if (b - a === 1) return
-    if (el.scrollHeight > el.clientHeight
-    || el.scrollWidth > el.clientWidth) fit(el, a, c)
-    else fit(el, c, b)
-}
-
 const DEFAULT_WIDTH = 540
 const DEFAULT_HEIGHT = 540
 const DEFAULT_PIXEL_RATIO = 2
 
+const WRITING_MODES = ['horizontal-tb', 'vertical-rl', 'vertical-lr']
+
+const isVertical = writingMode => writingMode.startsWith('vertical')
+
 export const resolveQuoteImageOptions = (options = {}) => {
-    const writingMode = options.writingMode === 'horizontal-tb'
-        || options.writingMode === 'vertical-rl'
-        || options.writingMode === 'vertical-lr'
+    const writingMode = WRITING_MODES.includes(options.writingMode)
         ? options.writingMode
         : options.vertical
             ? 'vertical-rl'
@@ -37,15 +29,37 @@ export const resolveQuoteImageOptions = (options = {}) => {
         borderWidth: options.borderWidth ?? 4,
         borderStyle: options.borderStyle ?? 'double',
         titleColor: options.titleColor ?? options.color ?? '#000000',
-        authorColor: options.authorColor ?? options.color ?? '#4b5563',
-        titleFontSize: options.titleFontSize ?? 24,
-        authorFontSize: options.authorFontSize ?? 14,
+        authorColor: options.authorColor ?? options.titleColor ?? options.color ?? '#4b5563',
+        titleFontSize: options.titleFontSize ?? options.fontSize ?? 20,
+        authorFontSize: options.authorFontSize ?? (options.fontSize ?? 20) * 0.8,
         textAlign: options.textAlign ?? 'center',
         writingMode,
-        direction: options.direction ?? (writingMode.startsWith('vertical') ? 'rtl' : 'ltr'),
+        // In vertical modes the column progression (right-to-left for
+        // vertical-rl) comes from `writing-mode` itself; `direction: rtl`
+        // would make each column run bottom-to-top, so it defaults to ltr.
+        direction: options.direction ?? 'ltr',
     }
 }
 
+const px = n => typeof n === 'number' ? `${n}px` : n
+
+// Largest integer font size in [min, max] at which `el` doesn't overflow.
+const fit = (el, min, max) => {
+    const overflows = () => el.scrollHeight > el.clientHeight
+        || el.scrollWidth > el.clientWidth
+    let lo = min, hi = max
+    while (lo < hi) {
+        const mid = Math.ceil((lo + hi) / 2)
+        el.style.fontSize = `${mid}px`
+        if (overflows()) hi = mid - 1
+        else lo = mid
+    }
+    el.style.fontSize = `${lo}px`
+    return lo
+}
+
+// All styles on <main> and below are inline: <main> is cloned into an SVG
+// <foreignObject>, where the shadow root's stylesheet doesn't apply.
 const html = `<style>
 :host {
     position: absolute;
@@ -55,21 +69,23 @@ const html = `<style>
     visibility: hidden;
 }
 </style>
-<main style="">
-    <div style="font-size: min(2em, 3rem); line-height: 1; margin-bottom: -1em">“</div>
-    <div id="text" style="margin: 1em; text-wrap: pretty"></div>
-    <div id="meta" style="margin: 0 1em">
-        <div style="display: block; font-size: .4em;">
-            <span id="author" style="-webkit-line-clamp: 1;"></span>
-        </div>
-        <div style="display: block; font-size: .4em;">
-            <span id="progress" style="-webkit-line-clamp: 1;"></span>
-        </div>
-        <div style="font-size: .8em; display: block;">
-            <cite id="title" style="-webkit-line-clamp: 1;"></cite>
-        </div>
+<main>
+    <div id="mark" aria-hidden="true">“</div>
+    <div id="text"><div id="content"></div></div>
+    <div id="meta">
+        <div id="author"></div>
+        <div id="progress"></div>
+        <cite id="title"></cite>
     </div>
 </main>`
+
+const oneLine = {
+    display: 'block',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    fontStyle: 'normal',
+}
 
 customElements.define('foliate-quoteimage', class extends HTMLElement {
     #root = this.attachShadow({ mode: 'closed' })
@@ -77,75 +93,120 @@ customElements.define('foliate-quoteimage', class extends HTMLElement {
         super()
         this.#root.innerHTML = html
     }
-    async getBlob({ title, author, text, progress, options={} }) {
-        this.#root.querySelector('#title').textContent = title
-        this.#root.querySelector('#author').textContent = `© ${author}`
-        this.#root.querySelector('#text').innerText = text
-        if (progress) {
-            this.#root.querySelector('#progress').textContent = `§ ${progress}` 
-        }
-
+    #$(selector) {
+        return this.#root.querySelector(selector)
+    }
+    async getBlob({ title, author, text, progress, options = {} }) {
         const opts = resolveQuoteImageOptions(options)
-        const pixelRatio = opts.pixelRatio
-        const width = opts.width
-        const height = opts.height
+        const { width, height, pixelRatio, writingMode } = opts
+        const vertical = isVertical(writingMode)
+        // `direction` only matters for horizontal text (Arabic, Hebrew, …)
+        const direction = vertical ? 'ltr' : opts.direction
 
-        const mainEl = this.#root.querySelector('main')
-        mainEl.style.color = opts.color;
-        mainEl.style.width = `${width}px`
-        mainEl.style.height = `${height}px`
-        mainEl.style.backgroundColor = opts.backgroundColor
-        // mainEl.style.fontSize = `${opts.fontSize}px`
-        mainEl.style.fontFamily = opts.fontFamily
-        mainEl.style.textAlign = opts.textAlign
-        mainEl.style.lineHeight = opts.lineHeight
-        mainEl.style.borderColor = opts.borderColor
-        mainEl.style.borderStyle = opts.borderStyle
-        mainEl.style.borderWidth = opts.borderWidth
-        
-        // FIXME: vertical/rtl writing
-        // mainEl.dir = opts.direction
-        // const textEl = this.#root.querySelector('#text')
-        // textEl.style.writingMode = opts.writingMode
-        // textEl.style.direction = opts.direction
-
-        const metaEl = this.#root.querySelector('#meta')
-        metaEl.style.fontColor = opts.titleColor
-        const titleEl = this.#root.querySelector('#title')
-        titleEl.style.fontSize = `${opts.fontSize}px`
-        titleEl.style.fontColor = opts.titleColor
-        const authorEl = this.#root.querySelector('#author')
-        authorEl.style.fontSize = `${opts.fontSize * 0.8}px`
-        authorEl.style.fontColor = opts.titleColor
-        const progressEl = this.#root.querySelector('#progress')
-        progressEl.style.fontSize = `${opts.fontSize * 0.8}px`
-        progressEl.style.fontColor = opts.titleColor
-
-        console.log('main html-0', mainEl)
-
-        fit(mainEl)
-
-        console.log('main html-1', mainEl)
-
-        const img = document.createElement('img')
-        return new Promise(resolve => {
-            img.onload = () => {
-                const canvas = document.createElement('canvas')
-                canvas.width = pixelRatio * width
-                canvas.height = pixelRatio * height
-                const ctx = canvas.getContext('2d')
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
-                canvas.toBlob(resolve)
-            }
-            const doc = document.implementation.createDocument(SVG_NS, 'svg')
-            doc.documentElement.setAttribute('viewBox', `0 0 ${width} ${height}`)
-            const obj = doc.createElementNS(SVG_NS, 'foreignObject')
-            obj.setAttribute('width', width)
-            obj.setAttribute('height', height)
-            obj.append(doc.importNode(mainEl, true))
-            doc.documentElement.append(obj)
-            img.src = 'data:image/svg+xml;charset=utf-8,'
-                + new XMLSerializer().serializeToString(doc)
+        const mainEl = this.#$('main')
+        mainEl.dir = direction
+        Object.assign(mainEl.style, {
+            boxSizing: 'border-box',
+            width: `${width}px`,
+            height: `${height}px`,
+            margin: '0',
+            padding: px(opts.padding),
+            display: 'flex',
+            // `column` follows the block axis, so in vertical modes the
+            // mark, text and meta are laid out as successive columns
+            flexDirection: 'column',
+            overflow: 'hidden',
+            writingMode,
+            direction,
+            color: opts.color,
+            backgroundColor: opts.backgroundColor,
+            fontFamily: opts.fontFamily,
+            fontSize: px(opts.fontSize),
+            lineHeight: String(opts.lineHeight),
+            textAlign: opts.textAlign,
+            borderColor: opts.borderColor,
+            borderStyle: opts.borderStyle,
+            borderWidth: px(opts.borderWidth),
         })
+
+        Object.assign(this.#$('#mark').style, {
+            flex: 'none',
+            fontSize: '3em',
+            lineHeight: '1',
+            marginBlockEnd: '-0.35em',
+            textAlign: 'start',
+            opacity: '0.6',
+        })
+
+        const textEl = this.#$('#text')
+        Object.assign(textEl.style, {
+            flex: '1 1 auto',
+            minWidth: '0',
+            minHeight: '0',
+            display: 'flex',
+            flexDirection: 'column',
+            // `safe` keeps overflow at the end edge so it is measurable
+            justifyContent: 'safe center',
+            overflow: 'hidden',
+            marginBlock: '0.5em',
+        })
+        const contentEl = this.#$('#content')
+        Object.assign(contentEl.style, {
+            textWrap: 'pretty',
+            overflowWrap: 'anywhere',
+            textOrientation: 'mixed',
+        })
+        contentEl.innerText = text ?? ''
+
+        Object.assign(this.#$('#meta').style, {
+            flex: 'none',
+            minWidth: '0',
+            minHeight: '0',
+        })
+        const setLine = (selector, value, color, fontSize) => {
+            const el = this.#$(selector)
+            el.textContent = value ?? ''
+            Object.assign(el.style, oneLine, {
+                display: value ? 'block' : 'none',
+                color,
+                fontSize: px(fontSize),
+            })
+        }
+        setLine('#author', author ? `© ${author}` : '', opts.authorColor, opts.authorFontSize)
+        setLine('#progress', progress ? `§ ${progress}` : '', opts.authorColor, opts.authorFontSize)
+        setLine('#title', title, opts.titleColor, opts.titleFontSize)
+
+        // Text is laid out as large as fits in the remaining space
+        const maxFontSize = Math.max(opts.fontSize, Math.round(Math.min(width, height) / 10))
+        fit(textEl, 8, maxFontSize)
+
+        const doc = document.implementation.createDocument(SVG_NS, 'svg')
+        const svg = doc.documentElement
+        // Give the SVG its output size so it is rasterized sharply
+        svg.setAttribute('width', width * pixelRatio)
+        svg.setAttribute('height', height * pixelRatio)
+        svg.setAttribute('viewBox', `0 0 ${width} ${height}`)
+        const obj = doc.createElementNS(SVG_NS, 'foreignObject')
+        obj.setAttribute('width', width)
+        obj.setAttribute('height', height)
+        obj.append(doc.importNode(mainEl, true))
+        svg.append(obj)
+
+        const img = new Image()
+        await new Promise((resolve, reject) => {
+            img.onload = resolve
+            img.onerror = () => reject(new Error('Failed to render quote image'))
+            // Encode: text may contain `#`, which would end a data URL
+            img.src = 'data:image/svg+xml;charset=utf-8,'
+                + encodeURIComponent(new XMLSerializer().serializeToString(doc))
+        })
+
+        const canvas = document.createElement('canvas')
+        canvas.width = width * pixelRatio
+        canvas.height = height * pixelRatio
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height)
+        return new Promise((resolve, reject) => canvas.toBlob(blob => blob
+            ? resolve(blob)
+            : reject(new Error('Failed to encode quote image')), 'image/png'))
     }
 })

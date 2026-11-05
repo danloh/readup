@@ -101,13 +101,15 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ onSave, onEdit, book }) => {
               // console.log('quote image', quoteImage);
               document.body.appendChild(quoteImage);
               
-              thumbBlob = await (quoteImage as any).getBlob({
-                text: annotationText,
-                title: book.title,
-                author: book.author,
-              });
-              
-              document.body.removeChild(quoteImage);
+              try {
+                thumbBlob = await (quoteImage as any).getBlob({
+                  text: annotationText,
+                  title: book.title,
+                  author: book.author,
+                });
+              } finally {
+                document.body.removeChild(quoteImage);
+              }
             } catch (error) {
               console.warn('⚠ Failed to generate quote image:', error);
             }

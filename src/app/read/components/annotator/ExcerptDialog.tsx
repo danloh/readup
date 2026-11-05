@@ -89,13 +89,12 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
       return null;
     }
 
-    const writingMode =
-      viewSettings?.writingMode === 'horizontal-tb' ||
-      viewSettings?.writingMode === 'vertical-rl'
-        ? viewSettings.writingMode
-        : viewSettings?.vertical
-          ? 'vertical-rl'
-          : 'horizontal-tb';
+    const vertical =
+      !!viewSettings?.vertical || !!viewSettings?.writingMode?.startsWith('vertical');
+    const writingMode = vertical ? 'vertical-rl' : 'horizontal-tb';
+    // viewSettings.rtl is page progression, which is also true for vertical-rl;
+    // as a text direction it only applies to horizontal (Arabic, Hebrew, …).
+    const direction = !vertical && viewSettings?.rtl ? 'rtl' : 'ltr';
 
     await import('foliate-js/quote-image.js');
     const quoteImage = document.createElement('foliate-quoteimage') as HTMLElement & {
@@ -123,18 +122,16 @@ const ExcerptDialog: React.FC<ExcerptDialogProps> = ({
           lineHeight: styles.lineHeight,
           padding: 56,
           writingMode,
-          direction: viewSettings?.rtl ? 'rtl' : 'ltr',
-          textAlign: styles.textAlign === 'default' 
-            ? viewSettings?.rtl ? 'right' : 'left' 
-            : styles.textAlign,
-          titleColor: hexToRgba(getContrastHex(styles.fontColor), 0.8),
+          direction,
+          textAlign: styles.textAlign === 'default' ? 'start' : styles.textAlign,
+          titleColor: hexToRgba(styles.fontColor, 0.8),
           borderColor: hexToRgba(getContrastHex(styles.backgroundColor), 0.3),
         },
       }) ?? null;
     } finally {
       document.body.removeChild(quoteImage);
     }
-  }, [book, selection.text, styles, viewSettings]);
+  }, [book, selection.text, styles, viewSettings, progress?.sectionLabel]);
 
   const attachQrCodeToImage = useCallback(async (imageBlob: Blob, shareUrl: string) => {
     const objectUrl = URL.createObjectURL(imageBlob);

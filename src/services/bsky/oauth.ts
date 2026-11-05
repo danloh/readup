@@ -47,6 +47,9 @@ export function getOAuthClient(): Promise<BrowserOAuthClient> {
       new BrowserOAuthClient({
         clientMetadata,
         responseMode,
+        // Resolves handles -> DIDs through bsky.social's XRPC endpoint, which
+        // works for any handle (a browser can't do DNS TXT lookups itself).
+        handleResolver: 'https://bsky.social',
         onDelete: (sub) => {
           sessions.delete(sub);
         },

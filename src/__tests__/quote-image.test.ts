@@ -30,4 +30,16 @@ describe('resolveQuoteImageOptions', () => {
     expect(options.direction).toBe('rtl');
     expect(options.textAlign).toBe('center');
   });
+
+  it('defaults vertical writing to ltr so columns read top-to-bottom', () => {
+    const options = resolveQuoteImageOptions({ vertical: true });
+
+    expect(options.writingMode).toBe('vertical-rl');
+    expect(options.direction).toBe('ltr');
+  });
+
+  it('accepts vertical-lr and falls back on unknown modes', () => {
+    expect(resolveQuoteImageOptions({ writingMode: 'vertical-lr' }).writingMode).toBe('vertical-lr');
+    expect(resolveQuoteImageOptions({ writingMode: 'auto' }).writingMode).toBe('horizontal-tb');
+  });
 });
