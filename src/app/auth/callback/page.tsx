@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { eventDispatcher } from '@/utils/event';
@@ -21,8 +21,12 @@ export default function OAuthCallbackPage() {
   const { completeOAuthLogin } = useAuth();
   const [isProcessing, setIsProcessing] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // `_` and completeOAuthLogin are new on re-renders; the exchange must run once
+  const started = useRef(false);
 
   useEffect(() => {
+    if (started.current) return;
+    started.current = true;
     const processCallback = async () => {
       try {
         callbackOnce ??= handleOAuthCallback();
@@ -63,7 +67,8 @@ export default function OAuthCallbackPage() {
     };
 
     processCallback();
-  }, [completeOAuthLogin, router, _]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (error) {
     return (
