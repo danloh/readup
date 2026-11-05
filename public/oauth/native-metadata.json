@@ -1,0 +1,18 @@
+{
+  "client_id": "https://readup.cc/oauth/native-metadata.json",
+  "client_name": "Readup",
+  "client_uri": "https://readup.cc",
+  "redirect_uris": [
+    "cc.readup:/oauth/callback",
+    "http://127.0.0.1:52741/oauth/callback",
+    "http://127.0.0.1:52742/oauth/callback",
+    "http://127.0.0.1:52743/oauth/callback"
+  ],
+  "logo_uri": "https://readup.cc/icon.png",
+  "scope": "atproto transition:generic",
+  "grant_types": ["authorization_code", "refresh_token"],
+  "response_types": ["code"],
+  "token_endpoint_auth_method": "none",
+  "application_type": "native",
+  "dpop_bound_access_tokens": true
+}

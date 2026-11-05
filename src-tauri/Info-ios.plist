@@ -53,6 +53,7 @@
         <key>CFBundleURLSchemes</key>
         <array>
           <string>readup</string>
+          <string>cc.readup</string>
         </array>
       </dict>
     </array>

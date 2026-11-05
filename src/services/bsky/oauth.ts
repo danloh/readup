@@ -1,173 +1,234 @@
 /**
- * OAuth wrapper using @atproto/oauth-client-browser
- * Provides simplified OAuth 2.0 with PKCE for ATProto/Bluesky
- * 
- * Client Metadata:
- * The client_id must be a URL pointing to client metadata JSON.
- * This identifies your application to the OAuth server.
- * See /oauth/metadata endpoint for details.
+ * Serverless ATProto OAuth (public client, PKCE + PAR + DPoP) built on
+ * @atproto/oauth-client-browser. Sessions, DPoP keys and pending
+ * authorization state live in IndexedDB; nothing passes through a Readup
+ * server.
+ *
+ * - web / loopback: full-page redirect, finished on /auth/callback.
+ * - native (Tauri): the authorization URL opens in the system browser and the
+ *   redirect is caught by a loopback listener (desktop) or the `cc.readup:`
+ *   deep link (mobile), then exchanged in the webview.
  */
 
-import { BrowserOAuthClient } from '@atproto/oauth-client-browser';
-import type { OAuthSession as OAuthClientSession } from '@atproto/oauth-client';
+import {
+  BrowserOAuthClient,
+  TokenInvalidError,
+  TokenRefreshError,
+  TokenRevokedError,
+  type OAuthSession,
+} from '@atproto/oauth-client-browser';
+import {
+  getLoopbackRedirectUri,
+  getOAuthClientConfig,
+  isNativeOAuthCallbackUrl,
+  NATIVE_LOOPBACK_PORTS,
+  NATIVE_SCHEME_REDIRECT_URI,
+  normalizeOAuthIdentifier,
+  OAUTH_SCOPE,
+} from './oauth-config';
+import { eventDispatcher } from '@/utils/event';
+import { openExternalUrl } from '@/utils/open';
 
-/**
- * OAuthSession represents a user's OAuth session
- * Mapped from @atproto/oauth-client OAuthSession
- */
-export interface OAuthSession {
-  sub: string; // DID of the user
-  handle: string; // Handle of the user
+export type { OAuthSession };
+
+/** Native sign-in gives up if the browser never redirects back. */
+const NATIVE_CALLBACK_TIMEOUT_MS = 10 * 60 * 1000;
+
+let clientPromise: Promise<BrowserOAuthClient> | null = null;
+const sessions = new Map<string, OAuthSession>();
+
+export function getOAuthClient(): Promise<BrowserOAuthClient> {
+  if (typeof window === 'undefined') {
+    return Promise.reject(new Error('OAuth is only available in the browser'));
+  }
+  if (!clientPromise) {
+    const { clientMetadata, responseMode } = getOAuthClientConfig();
+    clientPromise = Promise.resolve(
+      new BrowserOAuthClient({
+        clientMetadata,
+        responseMode,
+        onDelete: (sub) => {
+          sessions.delete(sub);
+        },
+      }),
+    ).catch((e) => {
+      clientPromise = null;
+      throw e;
+    });
+  }
+  return clientPromise;
 }
 
-export interface OAuthConfig {
-  clientId: string;
-  host?: string; // Defaults to bsky.social
+/** True when the error means the stored session is gone for good. */
+export function isOAuthSessionDeadError(error: unknown): boolean {
+  return (
+    error instanceof TokenRefreshError ||
+    error instanceof TokenRevokedError ||
+    error instanceof TokenInvalidError
+  );
 }
 
-let oauthClient: BrowserOAuthClient | null = null;
-let oauthSession: OAuthClientSession | null = null;
+function remember(session: OAuthSession): OAuthSession {
+  sessions.set(session.sub, session);
+  return session;
+}
 
-/**
- * Map the library's OAuthSession to our OAuthSession
- */
-function mapSession(session: OAuthClientSession): OAuthSession {
+// ---------------------------------------------------------------------------
+// Web (redirect) flow
+
+/** Redirect to the user's authorization server. Never resolves on success. */
+export async function signInWithRedirect(identifier: string): Promise<never> {
+  const client = await getOAuthClient();
+  return client.signInRedirect(normalizeOAuthIdentifier(identifier), { scope: OAUTH_SCOPE });
+}
+
+/** Finish the web redirect flow on /auth/callback. */
+export async function handleOAuthCallback(): Promise<OAuthSession | undefined> {
+  const client = await getOAuthClient();
+  const params = client.readCallbackParams();
+  if (!params) return undefined;
+  const { session } = await client.initCallback(params);
+  return remember(session);
+}
+
+// ---------------------------------------------------------------------------
+// Native (Tauri) flow
+
+interface CallbackWaiter {
+  redirectUri: string;
+  wait: Promise<string>;
+  dispose: () => Promise<void>;
+}
+
+async function waitForLoopbackCallback(signal: AbortSignal): Promise<CallbackWaiter> {
+  const { start, cancel, onUrl } = await import('@fabianlars/tauri-plugin-oauth');
+  const port = await start({
+    ports: NATIVE_LOOPBACK_PORTS,
+    response:
+      '<!doctype html><meta charset="utf-8"><title>Readup</title>' +
+      '<body style="font-family:system-ui;text-align:center;padding:3em">' +
+      '<h2>Signed in</h2><p>You can close this tab and return to Readup.</p></body>',
+  });
+  const redirectUri = getLoopbackRedirectUri(port);
+  let unlisten: (() => void) | undefined;
+  const wait = new Promise<string>((resolve, reject) => {
+    signal.addEventListener('abort', () => reject(signal.reason), { once: true });
+    onUrl((url) => {
+      if (new URL(url).pathname === new URL(redirectUri).pathname) resolve(url);
+    }).then((fn) => (unlisten = fn), reject);
+  });
   return {
-    sub: session.sub || session.did,
-    handle: '',
+    redirectUri,
+    wait,
+    dispose: async () => {
+      unlisten?.();
+      await cancel(port).catch(() => {});
+    },
   };
 }
 
+async function waitForDeepLinkCallback(signal: AbortSignal): Promise<CallbackWaiter> {
+  let handler: ((event: CustomEvent) => void) | undefined;
+  const wait = new Promise<string>((resolve, reject) => {
+    signal.addEventListener('abort', () => reject(signal.reason), { once: true });
+    handler = (event: CustomEvent) => {
+      const urls = (event.detail?.urls ?? []) as string[];
+      const url = urls.find(isNativeOAuthCallbackUrl);
+      if (url) resolve(url);
+    };
+    eventDispatcher.on('app-incoming-url', handler);
+  });
+  return {
+    redirectUri: NATIVE_SCHEME_REDIRECT_URI,
+    wait,
+    dispose: async () => {
+      if (handler) eventDispatcher.off('app-incoming-url', handler);
+    },
+  };
+}
+
+let nativeSignInAbort: AbortController | null = null;
+
+export function hasPendingNativeSignIn(): boolean {
+  return nativeSignInAbort !== null;
+}
+
 /**
- * Initialize the OAuth client by loading metadata from clientId URL
- * The official library fetches and validates client metadata automatically
- * @param config OAuth configuration
- * @returns Initialized OAuth client
+ * Finish a native sign-in whose waiter is gone (the OS restarted the app while
+ * the user was in the browser). The pending PKCE state is still in IndexedDB.
  */
-async function getOAuthClient(config: OAuthConfig): Promise<BrowserOAuthClient> {
-  const clientId = config.clientId;
-  
-  if (!clientId) {
-    throw new Error('OAuth clientId is required');
-  }
+export async function completeOrphanedNativeCallback(url: string): Promise<OAuthSession> {
+  const client = await getOAuthClient();
+  const { session } = await client.callback(new URL(url).searchParams, {
+    redirect_uri: NATIVE_SCHEME_REDIRECT_URI as `https://${string}`,
+  });
+  return remember(session);
+}
 
-  // Validate that client_id is a URL (required by ATProto OAuth spec)
-  if (!clientId.startsWith('http://') && !clientId.startsWith('https://')) {
-    throw new Error(
-      'Invalid client_id: must be a URL pointing to client metadata. ' +
-      'Example: https://readup.cc/oauth/metadata.json'
-    );
-  }
+/** Abort a pending native sign-in (e.g. the user closed the dialog). */
+export function cancelNativeSignIn() {
+  nativeSignInAbort?.abort(new Error('Sign-in cancelled'));
+  nativeSignInAbort = null;
+}
 
-  // Create or return cached client
-  if (!oauthClient) {
-    // Load the client from the metadata URL
-    oauthClient = await BrowserOAuthClient.load({
-      clientId,
+/**
+ * Run the full native flow and resolve with the new session.
+ * @param isMobile use the custom-scheme deep link instead of a loopback port
+ */
+export async function signInNative(identifier: string, isMobile: boolean): Promise<OAuthSession> {
+  cancelNativeSignIn();
+  const abort = new AbortController();
+  nativeSignInAbort = abort;
+  const timer = setTimeout(
+    () => abort.abort(new Error('Sign-in timed out')),
+    NATIVE_CALLBACK_TIMEOUT_MS,
+  );
+
+  let waiter: CallbackWaiter | undefined;
+  try {
+    const client = await getOAuthClient();
+    waiter = isMobile
+      ? await waitForDeepLinkCallback(abort.signal)
+      : await waitForLoopbackCallback(abort.signal);
+    waiter.wait.catch(() => {}); // rejection is surfaced by the await below
+    const redirectUri = waiter.redirectUri as `https://${string}`;
+
+    const authUrl = await client.authorize(normalizeOAuthIdentifier(identifier), {
+      scope: OAUTH_SCOPE,
+      redirect_uri: redirectUri,
+      signal: abort.signal,
     });
-  }
+    openExternalUrl(authUrl.toString());
 
-  return oauthClient;
+    const callbackUrl = new URL(await waiter.wait);
+    const { session } = await client.callback(callbackUrl.searchParams, {
+      redirect_uri: redirectUri,
+    });
+    return remember(session);
+  } finally {
+    clearTimeout(timer);
+    if (nativeSignInAbort === abort) nativeSignInAbort = null;
+    await waiter?.dispose();
+  }
 }
+
+// ---------------------------------------------------------------------------
+// Session access
 
 /**
- * Start the OAuth authorization flow
- * Redirects user to the Bluesky authorization endpoint
- * @param config OAuth configuration
- * @param host Optional ATProto host (defaults to bsky.social)
+ * Load the stored session for `did`, refreshing tokens if they are about to
+ * expire. Throws a token error (see {@link isOAuthSessionDeadError}) when the
+ * session can no longer be used, or a network error when offline.
  */
-export async function startOAuthFlow(config: OAuthConfig, host?: string): Promise<void> {
-  const client = await getOAuthClient(config);
-  
-  try {
-    // Use redirect flow to send user to Bluesky
-    // This will throw Promise<never> to redirect
-    await client.signInRedirect(host || 'bsky.social');
-  } catch (error) {
-    // signInRedirect throws Promise<never> on redirect
-    // If we get here, it's an actual error
-    console.error('OAuth authorization error:', error);
-    throw error;
-  }
+export async function restoreOAuthSession(did: string): Promise<OAuthSession> {
+  const cached = sessions.get(did);
+  if (cached) return cached;
+  const client = await getOAuthClient();
+  return remember(await client.restore(did));
 }
 
-/**
- * Handle OAuth callback and restore session
- * The official library automatically processes the authorization response
- * @returns Session data if OAuth flow completed successfully
- */
-export async function handleOAuthCallback(clientId: string): Promise<OAuthSession | undefined> {
-  if (typeof window === 'undefined') {
-    throw new Error('OAuth callback can only be handled in browser');
-  }
-
-  try {
-    const client = await getOAuthClient({ clientId });
-
-    // The init() method automatically processes login callbacks
-    const result = await client.init();
-    if (result?.session) {
-      oauthSession = result.session;
-      return mapSession(result.session);
-    }
-    return undefined;
-  } catch (error) {
-    console.error('OAuth callback error:', error);
-    throw error;
-  }
-}
-
-/**
- * Get current OAuth session if one exists
- * @returns Session info or null
- */
-export function getOAuthSession(): OAuthSession | null {
-  if (!oauthSession) return null;
-
-  try {
-    return mapSession(oauthSession);
-  } catch (error) {
-    console.error('Error getting OAuth session:', error);
-    return null;
-  }
-}
-
-/**
- * Initialize OAuth and restore existing session
- * Call this on app startup to check for existing OAuth sessions
- */
-export async function restoreOAuthSession(clientId: string): Promise<OAuthSession | undefined> {
-  try {
-    const client = await getOAuthClient({ clientId });
-    const result = await client.initRestore();
-    if (result?.session) {
-      oauthSession = result.session;
-      return mapSession(result.session);
-    }
-    return undefined;
-  } catch (error) {
-    console.error('Error restoring OAuth session:', error);
-    return undefined;
-  }
-}
-
-/**
- * Revoke an OAuth session
- * @param sub The DID of the session to revoke
- */
-export async function logoutOAuthSession(sub: string): Promise<void> {
-  if (!oauthClient) return;
-
-  try {
-    await oauthClient.revoke(sub);
-    if (oauthSession?.sub === sub) oauthSession = null;
-  } catch (error) {
-    console.error('Error revoking OAuth session:', error);
-    throw error;
-  }
-}
-
-/** Return the live library session for authenticated ATProto requests. */
-export function getOAuthClientSession(sub: string): OAuthClientSession | null {
-  return oauthSession?.sub === sub ? oauthSession : null;
+export async function logoutOAuthSession(did: string): Promise<void> {
+  sessions.delete(did);
+  const client = await getOAuthClient();
+  await client.revoke(did);
 }

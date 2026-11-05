@@ -1,5 +1,5 @@
-import AtpAgent, { AtpSessionData, CredentialSession } from "@atproto/api";
-import { getOAuthClientSession } from './oauth';
+import { Agent, AtpAgent, AtpSessionData, AtpSessionEvent } from "@atproto/api";
+import { restoreOAuthSession } from './oauth';
 
 /**
  * Authentication token returned from session creation or refresh
@@ -177,6 +177,8 @@ export async function refreshSession(): Promise<User> {
           };
           console.log('Session refreshed successfully');
           localStorage.setItem('user', JSON.stringify(newUser));
+          // refresh tokens are single-use: the cached agent now holds a dead one
+          resetAgent();
           return newUser;
         })
         .finally(() => {
@@ -237,111 +239,159 @@ async function refreshToken(host: string, refreshToken: string): Promise<AuthTok
   }
 }
 
-/**
- * Get or create an AtpAgent with current user session
- * @returns Initialized AtpAgent with active session
- * @throws {Error} If user is not logged in or session refresh fails
- */
-export async function getAtpAgent(): Promise<AtpAgent> {
-  const storedUser = getAuth();
-  if (storedUser.oauth) {
-    const session = getOAuthClientSession(storedUser.did);
-    if (!session) {
-      throw new Error('OAuth session is not available');
-    }
+// ==========================================================================
+// Agent: one entry point for app-password and OAuth sessions
 
-    return new AtpAgent({
-      service: storedUser.service,
-      fetch: (input, init) => {
-        const url = new URL(input instanceof Request ? input.url : input.toString());
-        return session.fetchHandler(`${url.pathname}${url.search}`, init);
-      },
-    });
+let cachedAgent: { key: string; agent: Agent } | null = null;
+
+/** Drop the cached agent (call on login / logout). */
+export function resetAgent() {
+  cachedAgent = null;
+}
+
+function persistCredentialSession(evt: AtpSessionEvent, sess: AtpSessionData | undefined) {
+  const stored = getAuth();
+  if (!stored.did || stored.oauth) return;
+  if ((evt === 'create' || evt === 'update') && sess && sess.did === stored.did) {
+    localStorage.setItem(
+      'user',
+      JSON.stringify({ ...stored, accessJwt: sess.accessJwt, refreshJwt: sess.refreshJwt }),
+    );
+  } else if (evt === 'expired') {
+    // refresh token rejected: the user has to sign in again
+    resetAgent();
+  }
+}
+
+/**
+ * Get an authenticated agent for the signed-in user.
+ *
+ * - OAuth users get an `Agent` backed by the DPoP-bound OAuth session (tokens
+ *   refresh transparently inside the OAuth client).
+ * - App-password users get a cached `AtpAgent` whose CredentialSession
+ *   refreshes on `ExpiredToken` and writes rotated tokens back to storage, so
+ *   no extra `getSession` round trip is needed per call.
+ *
+ * Use `agent.assertDid` for the repo DID: `agent.session` only exists on
+ * AtpAgent.
+ */
+export async function getAgent(): Promise<Agent> {
+  const usr = getAuth();
+  if (!usr.did) {
+    throw new Error('Not logged in');
+  }
+  const key = `${usr.oauth ? 'oauth' : 'pwd'}:${usr.did}`;
+  if (cachedAgent?.key === key) {
+    return cachedAgent.agent;
   }
 
-  const usr = await refreshSession();
-  // Initialize agent
-  const session = new CredentialSession(new URL(`https://${usr.host}`))
-  const agent = new AtpAgent(session);
-  await agent.resumeSession(usr as AtpSessionData);
-
+  let agent: Agent;
+  if (usr.oauth) {
+    const session = await restoreOAuthSession(usr.did);
+    agent = new Agent(session);
+  } else {
+    if (!usr.host || !usr.accessJwt || !usr.refreshJwt) {
+      throw new Error('Invalid user data - missing required authentication tokens');
+    }
+    const atpAgent = new AtpAgent({
+      service: `https://${usr.host}`,
+      persistSession: persistCredentialSession,
+    });
+    // resumeSession validates the access token and refreshes it when expired
+    await atpAgent.resumeSession(usr as AtpSessionData);
+    agent = atpAgent;
+  }
+  cachedAgent = { key, agent };
   return agent;
 }
 
-// ==========================================================
-// resolve Did manually 
+/** @deprecated use {@link getAgent} */
+export const getAtpAgent = getAgent;
 
-/**
- * Service information from DID resolution
- */
-interface ResolveService {
+// ==========================================================
+// Identity resolution (DID -> PDS endpoint + handle)
+
+interface DidService {
   id: string;
   type: string;
   serviceEndpoint: string;
 }
 
-/**
- * Response from DID resolution containing service endpoints
- */
-interface ResolveResp {
+interface DidDocument {
   id: string;
-  alsoKnownAs: string[];
-  service: ResolveService[];
+  alsoKnownAs?: string[];
+  service?: DidService[];
 }
 
-// Cache for resolved DIDs to avoid repeated requests
-const didCache = new Map<string, string>();
+export interface ResolvedIdentity {
+  did: string;
+  /** PDS endpoint, e.g. https://morel.us-east.host.bsky.network */
+  pds: string;
+  /** Handle claimed in the DID document (not bi-directionally verified) */
+  handle?: string;
+}
+
+const identityCache = new Map<string, Promise<ResolvedIdentity>>();
+
+function didDocumentUrl(did: string): string {
+  if (did.startsWith('did:plc:')) {
+    return `https://plc.directory/${did}`;
+  }
+  if (did.startsWith('did:web:')) {
+    const host = decodeURIComponent(did.slice('did:web:'.length));
+    if (host.includes(':')) {
+      throw new Error(`Unsupported did:web with path or port: ${did}`);
+    }
+    return `https://${host}/.well-known/did.json`;
+  }
+  throw new Error(`Unsupported DID method: ${did}`);
+}
+
+async function fetchIdentity(did: string): Promise<ResolvedIdentity> {
+  const response = await fetch(didDocumentUrl(did), { signal: AbortSignal.timeout(10000) });
+  if (!response.ok) {
+    throw new Error(`Failed to resolve DID: ${response.status} ${response.statusText}`);
+  }
+  const doc = (await response.json()) as DidDocument;
+  const pds = doc.service?.find(
+    (s) =>
+      (s.id === '#atproto_pds' || s.id === `${did}#atproto_pds`) &&
+      s.type === 'AtprotoPersonalDataServer',
+  ) ?? doc.service?.find((s) => s.type === 'AtprotoPersonalDataServer');
+  if (!pds?.serviceEndpoint) {
+    throw new Error(`No PDS service endpoint found for DID: ${did}`);
+  }
+  const handle = doc.alsoKnownAs
+    ?.find((aka) => aka.startsWith('at://'))
+    ?.slice('at://'.length);
+  return { did, pds: pds.serviceEndpoint.replace(/\/+$/, ''), handle };
+}
+
+/**
+ * Resolve a DID (did:plc or did:web) to its PDS endpoint and handle.
+ * Results are cached for the app lifetime; failures are not.
+ */
+export function resolveIdentity(did: string): Promise<ResolvedIdentity> {
+  if (!did || !did.startsWith('did:')) {
+    return Promise.reject(new Error(`Invalid DID format: ${did}`));
+  }
+  let pending = identityCache.get(did);
+  if (!pending) {
+    pending = fetchIdentity(did).catch((error) => {
+      identityCache.delete(did);
+      throw error;
+    });
+    identityCache.set(did, pending);
+  }
+  return pending;
+}
 
 /**
  * Resolve a DID to its PDS service endpoint
- * 
- * @param did - The DID to resolve (must start with 'did:')
- * @returns The PDS service endpoint URL
  * @throws {Error} If the DID is invalid or resolution fails
  */
 export async function resolveDid(did: string): Promise<string> {
-  // Validate DID format
-  if (!did || !did.startsWith('did:')) {
-    throw new Error(`Invalid DID format: ${did}`);
-  }
-
-  // Check cache first
-  if (didCache.has(did)) {
-    return didCache.get(did)!;
-  }
-
-  const url = `https://plc.directory/${did}`;
-  try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`Failed to resolve DID: ${response.status} ${response.statusText}`);
-    }
-
-    const result: ResolveResp = await response.json();
-    
-    // Find the AtprotoPersonalDataServer service
-    const pdsService = result.service?.find(
-      (service) => service.type === 'AtprotoPersonalDataServer'
-    );
-
-    if (!pdsService?.serviceEndpoint) {
-      throw new Error(`No PDS service endpoint found for DID: ${did}`);
-    }
-
-    const endpoint = pdsService.serviceEndpoint;
-    
-    // Cache the result
-    didCache.set(did, endpoint);
-    
-    // console.log(`✓ DID resolved: ${did} -> ${endpoint}`);
-    return endpoint;
-  } catch (error) {
-    if (error instanceof Error) {
-      console.error(`Error resolving DID ${did}:`, error.message);
-      throw error;
-    }
-    throw new Error(`Unknown error resolving DID: ${did}`);
-  }
+  return (await resolveIdentity(did)).pds;
 }
 
 
@@ -370,7 +420,7 @@ export async function getProfile(
   }
 
   // public fetch from host's XRPC endpoint
-  const url = `https://api.bsky.app/xrpc/app.bsky.actor.getProfile?actor=${identifier}`;
+  const url = `https://public.api.bsky.app/xrpc/app.bsky.actor.getProfile?actor=${encodeURIComponent(identifier)}`;
   try {
     const resp = await fetch(url, { method: 'GET', signal: AbortSignal.timeout(10000) });
     if (!resp.ok) {

@@ -5,13 +5,15 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { eventDispatcher } from '@/utils/event';
 import { useTranslation } from '@/hooks/useTranslation';
-import { handleOAuthCallback } from '@/services/bsky/oauth';
-import { getOAuthClientId } from '@/services/bsky/oauth-config';
+import { handleOAuthCallback, type OAuthSession } from '@/services/bsky/oauth';
+
+// Callback params are single-use; share one exchange across strict-mode re-runs.
+let callbackOnce: Promise<OAuthSession | undefined> | null = null;
 
 /**
  * OAuth callback page
- * The @atproto/oauth-client-browser library automatically processes the OAuth flow
- * when the page loads with authorization code in the URL.
+ * Finishes the web redirect flow: exchanges the code in the URL fragment for a
+ * DPoP-bound session (entirely in the browser) and stores the user.
  */
 export default function OAuthCallbackPage() {
   const _ = useTranslation();
@@ -23,24 +25,14 @@ export default function OAuthCallbackPage() {
   useEffect(() => {
     const processCallback = async () => {
       try {
-        const clientId = getOAuthClientId();
-        if (!clientId) {
-          throw new Error('OAuth client ID not configured');
-        }
-
-        // The library automatically processes the authorization response
-        const session = await handleOAuthCallback(clientId);
+        callbackOnce ??= handleOAuthCallback();
+        const session = await callbackOnce;
 
         if (!session) {
           throw new Error('No session created from OAuth callback');
         }
 
-        // Get the host from sessionStorage
-        const host = sessionStorage.getItem('oauth_host') || 'bsky.social';
-        sessionStorage.removeItem('oauth_host');
-
-        // Complete the login process
-        const success = await completeOAuthLogin(session, host);
+        const success = await completeOAuthLogin(session);
 
         if (!success) {
           throw new Error('Failed to complete OAuth login');
@@ -54,9 +46,7 @@ export default function OAuthCallbackPage() {
         });
 
         // Redirect to home page
-        setTimeout(() => {
-          router.push('/');
-        }, 500);
+        router.replace('/');
       } catch (err) {
         const errorMsg =
           err instanceof Error ? err.message : 'Unknown error occurred';
@@ -84,7 +74,10 @@ export default function OAuthCallbackPage() {
           </h1>
           <p className="text-error mb-4">{error}</p>
           <button
-            onClick={() => router.push('/auth')}
+            onClick={() => {
+              callbackOnce = null;
+              router.replace('/');
+            }}
             className="btn btn-primary w-full"
           >
             {_('Try Again')}

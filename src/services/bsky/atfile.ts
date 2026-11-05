@@ -1,15 +1,16 @@
 //  Upload, list, and manage files on AT Protocol PDS
 
-import { AtpAgent, AtpSessionData, BlobRef } from "@atproto/api";
+import { Agent, AtpAgent, BlobRef, XRPCError } from "@atproto/api";
 import { Book, BookConfig } from "@/types/book";
 import { ProgressHandler, webDownload } from "@/utils/transfer";
 import { mergeBookConfig } from "@/utils/merge";
 import type { AtBook, AtData } from "./types";
-import { refreshSession, resolveDid, User } from "./auth";
+import { getAgent, resolveDid } from "./auth";
 
 // Create record according to lexicon
 const RBOOK_COLLECTION = "cc.readup.rbook";
 const RDATA_COLLECTION = "cc.readup.rdata";
+const LIST_PAGE_SIZE = 100;
 
 export interface BlobResp {
   blob: BlobRef;
@@ -23,7 +24,7 @@ export interface UploadBookResult {
   /** The uploaded blob reference */
   coverblob: unknown; // book's cover image
   bookblob: unknown;  // book document
-  config: unknown;    // book config including setting, reading process, notes... 
+  config: unknown;    // book config including setting, reading process, notes...
   /** The created record information */
   record: {
     /** The AT URI of the created record */
@@ -33,102 +34,168 @@ export interface UploadBookResult {
   };
 }
 
+// ==========================================================================
+// Helpers
+
+/**
+ * Extract the CID of a blob reference. Handles `BlobRef` instances (CID
+ * object in `ref`), their JSON form (`{ ref: { $link } }`) and the legacy
+ * `{ cid }` shape.
+ */
+export function getBlobCid(blob: unknown): string | undefined {
+  if (!blob || typeof blob !== "object") return undefined;
+  const b = blob as { ref?: unknown; cid?: unknown };
+  const ref = b.ref;
+  if (ref && typeof ref === "object") {
+    if ("$link" in ref && typeof (ref as { $link: unknown }).$link === "string") {
+      return (ref as { $link: string }).$link;
+    }
+    const str = String(ref);
+    return str && str !== "[object Object]" ? str : undefined;
+  }
+  if (typeof ref === "string") return ref;
+  if (typeof b.cid === "string") return b.cid;
+  return undefined;
+}
+
+/** Public, unauthenticated blob URL on the owner's PDS. */
+export function getBlobUrl(pds: string, did: string, cid: string): string {
+  return `${pds}/xrpc/com.atproto.sync.getBlob?did=${encodeURIComponent(did)}&cid=${encodeURIComponent(cid)}`;
+}
+
+async function downloadBlob(
+  pds: string,
+  did: string,
+  blob: unknown,
+  onProgress?: ProgressHandler,
+): Promise<Blob | undefined> {
+  const cid = getBlobCid(blob);
+  if (!cid) return undefined;
+  return (await webDownload(getBlobUrl(pds, did, cid), onProgress)).blob;
+}
+
+function isRecordNotFound(error: unknown): boolean {
+  if (error instanceof XRPCError) {
+    return error.error === "RecordNotFound" || error.status === 404 ||
+      /could not locate record/i.test(error.message);
+  }
+  return error instanceof Error && /not found|could not locate record/i.test(error.message);
+}
+
+/** Get a record from the user's repo, or `undefined` if it doesn't exist. */
+async function getOwnRecord<T>(
+  agent: Agent,
+  collection: string,
+  rkey: string,
+): Promise<{ value: T; cid?: string } | undefined> {
+  try {
+    const res = await agent.com.atproto.repo.getRecord({
+      repo: agent.assertDid,
+      collection,
+      rkey,
+    });
+    return { value: res.data.value as T, cid: res.data.cid };
+  } catch (error) {
+    if (isRecordNotFound(error)) return undefined;
+    throw error;
+  }
+}
+
 /**
  * Upload a file to AT Protocol PDS
- *
- * @returns A promise that resolves to the upload result containing blob and record info or null
- *
  */
-export async function uploadFile(file: File, agent: AtpAgent): Promise<BlobRef| undefined> {
-  // const data = await file.bytes(); // limited availability
-  const arrayBuffer = await file.arrayBuffer();
-  const data = new Uint8Array(arrayBuffer);
+export async function uploadFile(file: Blob, agent: Agent): Promise<BlobRef> {
+  const data = new Uint8Array(await file.arrayBuffer());
   const mimeType = file.type || "application/octet-stream";
-
-  // Upload blob
-  console.log(`⬆ Uploading ${file.name} (${data.length} bytes, ${mimeType})...`);
-  const uploadRes = await agent.uploadBlob(data, { encoding: mimeType });
+  const uploadRes = await agent.com.atproto.repo.uploadBlob(data, { encoding: mimeType });
   const blob = uploadRes.data?.blob;
-
-  const blobCid = blob.ref?.["$link"] ?? blob.ref;
-  console.log(`✓ Blob uploaded: ${blobCid}`);
-  // console.log("Blob structure:", JSON.stringify(blob, null, 2));
-
   if (!blob) {
-    console.error("Upload failed: no blob returned");
-    return undefined;
+    throw new Error("Upload failed: no blob returned");
   }
-
   return blob;
 }
 
-export async function xhrUploadFile(
-  file: File, 
-  usr: User,
+function xhrUpload(
+  url: string,
+  body: Blob,
+  accessJwt: string,
   onProgress?: ProgressHandler,
-): Promise<BlobRef | undefined> {
+): Promise<{ status: number; text: string }> {
   const startTime = Date.now();
-  const mimeType = file.type || "application/octet-stream";
-  // Upload url
-  const pdsUrl = `${usr.service}/xrpc/com.atproto.repo.uploadBlob`;
-
-  return new Promise(async (resolve, reject) => {
-    try {
-      // Convert file to ArrayBuffer to ensure compatibility with Tauri and web platforms
-      // This is necessary because Tauri's NativeFile/RemoteFile implementations
-      // don't work properly with xhr.send() directly
-      const arrayBuffer = await file.arrayBuffer();
-      const fileblob = new Blob([arrayBuffer], { type: mimeType });
-
-      const xhr = new XMLHttpRequest();
-      xhr.open('POST', pdsUrl, true);
-
-      // Set necessary headers
-      xhr.setRequestHeader('Authorization', 'Bearer ' + usr.accessJwt);
-      xhr.setRequestHeader('Content-Type', mimeType); 
-
-      xhr.upload.onprogress = (event) => {
-        if (onProgress && event.lengthComputable) {
-          onProgress({
-            progress: event.loaded,
-            total: event.total,
-            transferSpeed: event.loaded / ((Date.now() - startTime) / 1000),
-          });
-        }
-      };
-
-      xhr.onload = () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          // console.log("xhr upload resp: ", JSON.stringify(xhr.response, null, 2));
-          const resp: BlobResp = JSON.parse(xhr.responseText); 
-          const blob = resp.blob;
-          const blobCid = blob.ref?.["$link"] ?? blob.ref;
-          console.log(`✓ Blob uploaded: ${blobCid}`);
-          // console.log("Blob structure:", JSON.stringify(blob, null, 2));
-
-          if (!blob) {
-            console.error("Upload failed: no blob returned");
-            reject(new Error(`Upload failed: no blob returned. ${xhr.status}`));
-          }
-
-          resolve(blob);
-        } else {
-          reject(new Error(`Upload failed with status ${xhr.status}`));
-        }
-      };
-
-      xhr.onerror = () => reject(new Error('Upload failed'));
-
-      xhr.send(fileblob);
-    } catch (error) {
-      reject(error);
-    }
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", url, true);
+    xhr.setRequestHeader("Authorization", `Bearer ${accessJwt}`);
+    xhr.setRequestHeader("Content-Type", body.type);
+    xhr.upload.onprogress = (event) => {
+      if (onProgress && event.lengthComputable) {
+        onProgress({
+          progress: event.loaded,
+          total: event.total,
+          transferSpeed: event.loaded / Math.max((Date.now() - startTime) / 1000, 0.001),
+        });
+      }
+    };
+    xhr.onload = () => resolve({ status: xhr.status, text: xhr.responseText });
+    xhr.onerror = () => reject(new Error("Upload failed: network error"));
+    xhr.send(body);
   });
 }
 
 /**
- * Upload book and cover file to PDS and create a book record
- * @returns A promise that resolves to result containing blobs, record and if success
+ * Upload a blob, reporting progress.
+ *
+ * App-password sessions upload through XHR straight to the PDS so progress
+ * can be reported, refreshing the token once on `ExpiredToken`. OAuth
+ * sessions need a DPoP proof per request, so they go through the agent and
+ * report completion only.
+ */
+export async function uploadBlobWithProgress(
+  file: Blob,
+  agent: Agent,
+  onProgress?: ProgressHandler,
+): Promise<BlobRef> {
+  // Tauri's NativeFile/RemoteFile don't work with xhr.send() directly
+  const mimeType = file.type || "application/octet-stream";
+  const body = new Blob([await file.arrayBuffer()], { type: mimeType });
+
+  if (!(agent instanceof AtpAgent) || !agent.session) {
+    const blob = await uploadFile(body, agent);
+    onProgress?.({ progress: body.size, total: body.size, transferSpeed: 0 });
+    return blob;
+  }
+
+  const pds = (agent.pdsUrl ?? agent.serviceUrl).toString().replace(/\/+$/, "");
+  const url = `${pds}/xrpc/com.atproto.repo.uploadBlob`;
+  let res = await xhrUpload(url, body, agent.session.accessJwt, onProgress);
+  if (res.status === 400 || res.status === 401) {
+    const err = (() => { try { return JSON.parse(res.text).error; } catch { return undefined; } })();
+    if (err === "ExpiredToken" || res.status === 401) {
+      await agent.sessionManager.refreshSession();
+      if (!agent.session) throw new Error("Session expired, please sign in again");
+      res = await xhrUpload(url, body, agent.session.accessJwt, onProgress);
+    }
+  }
+  if (res.status < 200 || res.status >= 300) {
+    let detail = "";
+    try { const j = JSON.parse(res.text); detail = j.message || j.error || ""; } catch { /* empty */ }
+    throw new Error(`Upload failed with status ${res.status}${detail ? `: ${detail}` : ""}`);
+  }
+  const blob = (JSON.parse(res.text) as BlobResp).blob;
+  if (!blob) {
+    throw new Error(`Upload failed: no blob returned. ${res.status}`);
+  }
+  return blob;
+}
+
+// ==========================================================================
+// Books
+
+/**
+ * Upload book and cover file to PDS and create (or update) a book record.
+ *
+ * Blobs that are not re-uploaded this time (cover, document, config) are
+ * carried over from the existing record so a partial sync never drops them.
  */
 export async function uploadBookFile(
   book: Book,
@@ -138,75 +205,42 @@ export async function uploadBookFile(
   onProgress?: ProgressHandler,
   onlyConfig?: boolean,
 ): Promise<UploadBookResult> {
-  const usr = await refreshSession();
-  // Initialize agent
-  const agent = new AtpAgent({ service: `https://${usr.host}` });
-  await agent.resumeSession(usr as AtpSessionData);
+  const agent = await getAgent();
+  const did = agent.assertDid;
 
-  // Get DID
-  const did = agent.session?.did;
-  if (!did) {
-    throw new Error("Could not determine DID from session");
-  }
-  
-  // console.log("Agent: ", agent);
-  // upload cover
-  // const coverBlob = coverFile && !onlyConfig ? await uploadFile(coverFile, agent) : undefined;
-  const coverBlob = coverFile && !onlyConfig 
-    ? await xhrUploadFile(coverFile, usr, onProgress) 
+  const existing = await getOwnRecord<AtBook.RBook>(agent, RBOOK_COLLECTION, book.hash);
+  const pdsRecord = existing?.value;
+
+  const coverBlob = coverFile && !onlyConfig
+    ? await uploadBlobWithProgress(coverFile, agent, onProgress)
     : undefined;
 
-  // upload book doc
-  // const bookBlob = bookFile && !onlyConfig ? await uploadFile(bookFile, agent) : undefined;
-  const bookBlob = bookFile && !onlyConfig 
-    ? await xhrUploadFile(bookFile, usr, onProgress) 
+  const bookBlob = bookFile && !onlyConfig
+    ? await uploadBlobWithProgress(bookFile, agent, onProgress)
     : undefined;
 
-  // upload book config
-  let configBlob = undefined;
-  let pdsBookRecord = undefined;
+  // merge config in PDS and local: 1- get from pds; 2- merge; 3- re-upload
+  let configBlob: BlobRef | undefined = undefined;
   if (configFile) {
-    let cfgFile =  configFile;
-    const newCfg = await configFile.text();
-    const newCfgJson = JSON.parse(newCfg) as BookConfig;
-    const pdsRecord = await getBookRecord(book.hash, did);
-    console.log('pds book record: ', pdsRecord);
-    pdsBookRecord = pdsRecord;
-    const pdsCfgBlob = pdsRecord?.config;
-
-    // merge config file in PDS and local
-    // 1- get from pds; 2- merge; 3- re-upload
-    let pdsConfigCid = undefined;
-    if (!pdsCfgBlob || typeof pdsCfgBlob !== "object" || !("ref" in pdsCfgBlob)) {
-      console.error("No config blob found in record");
-    } else {
-      const configRef = pdsCfgBlob.ref;
-      pdsConfigCid = typeof configRef === "object" && configRef && "$link" in configRef
-        ? configRef.$link as string
-        : configRef as string;
-    }
-
-    const configUrl = pdsConfigCid
-      ? `${agent.serviceUrl}/xrpc/com.atproto.sync.getBlob?did=${did}&cid=${pdsConfigCid}`
+    let cfgFile: Blob = configFile;
+    const pdsCfgData = pdsRecord?.config
+      ? await downloadBlob(await resolveDid(did), did, pdsRecord.config, onProgress)
       : undefined;
-    const pdsCfgData = configUrl 
-      ? (await webDownload(configUrl, onProgress)).blob 
-      : undefined;
-
-    let mergedCfg = newCfgJson;
     if (pdsCfgData) {
-      const pdsCfgTxt = await pdsCfgData.text();
-      const pdsCfgJson = JSON.parse(pdsCfgTxt) as BookConfig;
-      mergedCfg = mergeBookConfig(newCfgJson, pdsCfgJson).config;
-      const cfgString = JSON.stringify(mergedCfg, null, 2);
-      cfgFile = new File([cfgString], 'config.json', { type: "application/json" });
+      const newCfgJson = JSON.parse(await configFile.text()) as BookConfig;
+      const pdsCfgJson = JSON.parse(await pdsCfgData.text()) as BookConfig;
+      const mergedCfg = mergeBookConfig(newCfgJson, pdsCfgJson).config;
+      cfgFile = new File([JSON.stringify(mergedCfg, null, 2)], "config.json", {
+        type: "application/json",
+      });
     }
-    
-    configBlob = await xhrUploadFile(cfgFile, usr, onProgress) || pdsCfgBlob;
+    configBlob = await uploadBlobWithProgress(
+      new Blob([await cfgFile.arrayBuffer()], { type: "application/json" }),
+      agent,
+      onProgress,
+    );
   }
 
-  // Build the record with proper typing
-  // The blob from uploadBlob already has the correct structure
   const bookmeta: AtBook.MetaData = {
     $type: "cc.readup.rbook#metadata",
     hash: book.hash,
@@ -216,42 +250,37 @@ export async function uploadBookFile(
     author: book.author,
     createdAt: book.createdAt,
     updatedAt: book.updatedAt,
-    fileSize: book.fileSize, // file size in bytes
+    fileSize: book.fileSize ?? pdsRecord?.bookmeta?.fileSize, // file size in bytes
     primaryLanguage: book.primaryLanguage,
     metadata: book.metadata,
     metaHash: book.metaHash,
-    progress: book.progress, 
-  }; 
+    progress: book.progress,
+  };
 
   const recordData: AtBook.RBook = {
     $type: RBOOK_COLLECTION,
     name: book.title,
     bookmeta,
-    coverblob: coverBlob || pdsBookRecord?.coverblob,
-    docblob: bookBlob || pdsBookRecord?.docblob,
-    config: configBlob, 
+    coverblob: coverBlob ?? pdsRecord?.coverblob,
+    docblob: bookBlob ?? pdsRecord?.docblob,
+    config: configBlob ?? pdsRecord?.config,
     checksum: book.hash,
-    createdAt: new Date().toISOString(),
+    createdAt: pdsRecord?.createdAt ?? new Date().toISOString(),
   };
 
-  // console.log("Record data:", JSON.stringify(recordData, null, 2));
-  // console.log(`Creating record in ${RBOOK_COLLECTION}...`);
-  const createRes = await agent.com.atproto.repo.putRecord({
+  const putRes = await agent.com.atproto.repo.putRecord({
     repo: did,
     collection: RBOOK_COLLECTION,
     rkey: book.hash,
     record: recordData,
   });
 
-  // console.log("put record resp: ", createRes);
-  // console.log(`✓ Record created: URI: ${createRes.data.uri} | CID: ${createRes.data.cid}`);
-
   return {
-    success: createRes.success,
+    success: putRes.success,
     coverblob: coverBlob,
     bookblob: bookBlob,
     config: configBlob,
-    record: createRes.data,
+    record: putRes.data,
   };
 }
 
@@ -268,14 +297,10 @@ export interface DownloadBookResult {
 }
 
 /**
- * Retrieve book file content from a record
- *
- * Downloads the blob contents(cover, doc, ) associated with a book record
+ * Download the blobs (cover, doc, config) of one of the user's book records
  *
  * @param rkey - usually, it is book hash
- * @returns A promise that resolves when the content is retrieved
  * @throws {Error} If authentication fails, record is not found, or download fails
- *
  */
 export async function downloadBookFile(
   rkey: string,
@@ -284,103 +309,32 @@ export async function downloadBookFile(
   needConfig: boolean,
   onProgress?: ProgressHandler,
 ): Promise<DownloadBookResult> {
-  const usr = await refreshSession();
-  const serv = usr.service;
-  // Initialize agent
-  const agent = new AtpAgent({ service: `https://${usr.host}` });
-  await agent.resumeSession(usr as AtpSessionData);
+  const agent = await getAgent();
+  const did = agent.assertDid;
+  const pds = await resolveDid(did);
 
-  // Get DID
-  const did = agent.session?.did;
-  if (!did) {
-    throw new Error("Could not determine DID from session");
+  const found = await getOwnRecord<AtBook.RBook>(agent, RBOOK_COLLECTION, rkey);
+  if (!found) {
+    throw new Error(`Record not found: ${rkey}`);
   }
+  const record = found.value;
 
-  // Get the record
-  let coverCid: string = '';
-  let docCid: string = '';
-  let configCid: string = '';
-
-  const recordResponse = await agent.com.atproto.repo.getRecord({
-    repo: did,
-    collection: RBOOK_COLLECTION,
-    rkey,
-  });
-
-  const record = recordResponse.data.value as AtBook.RBook;
-
-  // Extract cover blob CID
-  const coverblob = record.coverblob;
-  if (!needCover) {
-    console.log("No cover blob needed");
-  } else if (!coverblob || typeof coverblob !== "object" || !("ref" in coverblob)) {
-    console.error("No Cover blob found in record");
-  } else {
-    const coverRef = coverblob.ref;
-    coverCid = typeof coverRef === "object" && coverRef && "$link" in coverRef
-      ? coverRef.$link as string
-      : coverRef as string;
-  }
-
-  // Download the cover blob
-  const coverUrl = coverCid
-    ? `${serv}/xrpc/com.atproto.sync.getBlob?did=${did}&cid=${coverCid}`
+  const coverData = needCover
+    ? await downloadBlob(pds, did, record.coverblob, onProgress)
     : undefined;
-  const coverData = coverUrl 
-    ? (await webDownload(coverUrl, onProgress)).blob 
+  const docData = needDoc
+    ? await downloadBlob(pds, did, record.docblob, onProgress)
+    : undefined;
+  const configData = needConfig
+    ? await downloadBlob(pds, did, record.config, onProgress)
     : undefined;
 
-  // Extract book doc blob CID
-  const docblob = record.docblob;
-  if (!needDoc) {
-    console.log("No Doc blob needed");
-  } else if (!docblob || typeof docblob !== "object" || !("ref" in docblob)) {
-    console.error("No Doc blob found in record");
-  } else {
-    const docRef = docblob.ref;
-    docCid = typeof docRef === "object" && docRef && "$link" in docRef
-      ? docRef.$link as string
-      : docRef as string;
-  }
-
-  // Download the book doc blob
-  const docUrl = docCid
-    ? `${serv}/xrpc/com.atproto.sync.getBlob?did=${did}&cid=${docCid}`
-    : undefined;
-  const docData = docUrl 
-    ? (await webDownload(docUrl, onProgress)).blob 
-    : undefined;
-
-  // Extract book config blob CID
-  const configblob = record.config;
-  if (!needConfig) {
-    console.log("No config blob needed");
-  } else if (!configblob || typeof configblob !== "object" || !("ref" in configblob)) {
-    console.error("No config blob found in record");
-  } else {
-    const configRef = configblob.ref;
-    configCid = typeof configRef === "object" && configRef && "$link" in configRef
-      ? configRef.$link as string
-      : configRef as string;
-  }
-
-  // Download the book config blob
-  const configUrl = configCid
-    ? `${serv}/xrpc/com.atproto.sync.getBlob?did=${did}&cid=${configCid}`
-    : undefined;
-  const configData = configUrl 
-    ? (await webDownload(configUrl, onProgress)).blob 
-    : undefined;
-
-  return {
-    rkey,
-    coverData,
-    docData,
-    configData,
-    record,
-  };
+  return { rkey, coverData, docData, configData, record };
 }
 
+/**
+ * Download a (shared) book from anyone's repo. No authentication needed.
+ */
 export async function downloadPdsBook(
   rkey: string,
   did: string,
@@ -390,65 +344,13 @@ export async function downloadPdsBook(
     throw new Error("No DID or rkey provided");
   }
 
-  const serv = await resolveDid(did);
+  const pds = await resolveDid(did);
+  const record = await getBookRecord(rkey, did);
 
-  // Get the record
-  let coverCid: string = '';
-  let docCid: string = '';
+  const coverData = await downloadBlob(pds, did, record.coverblob, onProgress);
+  const docData = await downloadBlob(pds, did, record.docblob, onProgress);
 
-  const agent = new AtpAgent({ service: serv });
-  const recordResponse = await agent.com.atproto.repo.getRecord({
-    repo: did,
-    collection: RBOOK_COLLECTION,
-    rkey,
-  });
-
-  const record = recordResponse.data.value as AtBook.RBook;
-
-  // Extract cover blob CID
-  const coverblob = record.coverblob;
-  if (!coverblob || typeof coverblob !== "object" || !("ref" in coverblob)) {
-    console.error("No Cover blob found in record");
-  } else {
-    const coverRef = coverblob.ref;
-    coverCid = typeof coverRef === "object" && coverRef && "$link" in coverRef
-      ? coverRef.$link as string
-      : coverRef as string;
-  }
-
-  // Download the cover blob
-  const coverUrl = coverCid
-    ? `${serv}/xrpc/com.atproto.sync.getBlob?did=${did}&cid=${coverCid}`
-    : undefined;
-  const coverData = coverUrl 
-    ? (await webDownload(coverUrl, onProgress)).blob 
-    : undefined;
-
-  // Extract book doc blob CID
-  const docblob = record.docblob;
-  if (!docblob || typeof docblob !== "object" || !("ref" in docblob)) {
-    console.error("No Doc blob found in record");
-  } else {
-    const docRef = docblob.ref;
-    docCid = typeof docRef === "object" && docRef && "$link" in docRef
-      ? docRef.$link as string
-      : docRef as string;
-  }
-
-  // Download the book doc blob
-  const docUrl = docCid
-    ? `${serv}/xrpc/com.atproto.sync.getBlob?did=${did}&cid=${docCid}`
-    : undefined;
-  const docData = docUrl 
-    ? (await webDownload(docUrl, onProgress)).blob 
-    : undefined;
-
-  return {
-    rkey,
-    coverData,
-    docData,
-    record,
-  };
+  return { rkey, coverData, docData, record };
 }
 
 /**
@@ -461,39 +363,28 @@ export interface RbookRecordItem {
 }
 
 /**
- * List all rbook records for the authenticated user
+ * List all rbook records for the authenticated user (follows the cursor).
  *
- * Retrieves and displays all file records stored under the cc.readup.rbook
- *
- * @param limit - Maximum number of records to retrieve. Defaults to 100
- * @returns A promise that resolves when the list is displayed
+ * @param limit - Maximum number of records to retrieve. Defaults to all
  * @throws {Error} If authentication fails or the PDS is unreachable
  */
-export async function listBookRecords(limit = 100): Promise<RbookRecordItem[]> {
-  const usr = await refreshSession();
-  // Initialize agent
-  const agent = new AtpAgent({ service: `https://${usr.host}` });
-  await agent.resumeSession(usr as AtpSessionData);
+export async function listBookRecords(limit = Infinity): Promise<RbookRecordItem[]> {
+  const agent = await getAgent();
+  const repo = agent.assertDid;
 
-  // Get DID
-  const did = agent.session?.did;
-  if (!did) {
-    throw new Error("Could not determine DID from session");
-  }
-
-  // List records
-  const response = await agent.com.atproto.repo.listRecords({
-    repo: did,
-    collection: RBOOK_COLLECTION,
-    limit,
-  });
-
-  const records = response.data.records as RbookRecordItem[];
-
-  if (records.length === 0) {
-    console.log("No rbook records found.");
-    return [];
-  }
+  const records: RbookRecordItem[] = [];
+  let cursor: string | undefined = undefined;
+  do {
+    const response = await agent.com.atproto.repo.listRecords({
+      repo,
+      collection: RBOOK_COLLECTION,
+      limit: Math.min(LIST_PAGE_SIZE, limit - records.length),
+      cursor,
+    });
+    records.push(...(response.data.records as RbookRecordItem[]));
+    // stop on an empty page too, in case a PDS keeps returning a cursor
+    cursor = response.data.records.length > 0 ? response.data.cursor : undefined;
+  } while (cursor && records.length < limit);
 
   return records;
 }
@@ -501,31 +392,21 @@ export async function listBookRecords(limit = 100): Promise<RbookRecordItem[]> {
 /**
  * Get an atproto record without authentication
  *
- * Retrieves a record from any user's repository using their DID and the record key.
- * No authentication is required as this uses the public read API.
- *
  * @param rkey - The record key
- * @param did - The DID (Decentralized Identifier) of the record owner
- * @returns A promise that resolves to the record data
+ * @param did - The DID of the record owner
  * @throws {Error} If the record is not found or retrieval fails
  */
 export async function getBookRecord(rkey: string, did: string): Promise<AtBook.RBook> {
-  // Create an unauthenticated agent
-  const serv = await resolveDid(did);
-  const agent = new AtpAgent({ service: serv });
-
+  const agent = new Agent({ service: await resolveDid(did) });
   try {
     const recordResponse = await agent.com.atproto.repo.getRecord({
       repo: did,
       collection: RBOOK_COLLECTION,
       rkey,
     });
-
-    const record = recordResponse.data.value as AtBook.RBook;
-    console.log(`✓ Record retrieved: ${rkey} from ${did}`);
-    return record;
+    return recordResponse.data.value as AtBook.RBook;
   } catch (error) {
-    if (error instanceof Error && error.message.includes("not found")) {
+    if (isRecordNotFound(error)) {
       throw new Error(`Record not found: ${rkey} in repository ${did}`);
     }
     throw error;
@@ -533,77 +414,18 @@ export async function getBookRecord(rkey: string, did: string): Promise<AtBook.R
 }
 
 /**
- * Delete an rbook record and its associated blob
+ * Delete a record. Blobs it referenced are garbage-collected by the PDS once
+ * no record points at them. Deleting a missing record is a no-op.
  *
- * Removes a rbook record from the PDS by its record key (rkey). The associated
- * blob will be marked for garbage collection by the PDS. Note that the actual
- * blob deletion is handled by the PDS garbage collector and occurs when no other
- * records reference the blob.
- *
- * @param rkey
- * @returns A promise that resolves when the record is deleted
- * @throws {Error} If authentication fails, record is not found, or deletion fails
+ * @throws {Error} If authentication or deletion fails
  */
 export async function deleteRecord(rkey: string, col = RBOOK_COLLECTION): Promise<void> {
-  const usr = await refreshSession();
-  // Initialize agent
-  const agent = new AtpAgent({ service: `https://${usr.host}` });
-  await agent.resumeSession(usr as AtpSessionData);
-
-  // Get DID
-  const did = agent.session?.did;
-  if (!did) {
-    throw new Error("Could not determine DID from session");
-  }
-
-  // Get the record first to extract blob reference
-  try {
-    const recordResponse = await agent.com.atproto.repo.getRecord({
-      repo: did,
-      collection: col,
-      rkey,
-    });
-
-    const record = recordResponse.data.value as AtBook.RBook;
-    const docblob = record.docblob;
-    const coverblob = record.coverblob;
-
-    // Delete the record
-    console.log(`🗑  Deleting record ${rkey}...`);
-    await agent.com.atproto.repo.deleteRecord({
-      repo: did,
-      collection: col,
-      rkey,
-    });
-
-    console.log(`✓ Record deleted`);
-
-    // Note: Blob deletion is handled automatically by PDS when no records reference it
-    // Individual blob deletion API is not available in @atproto/api
-    if (coverblob && typeof coverblob === "object" && "ref" in coverblob) {
-      const cblobRef = coverblob.ref;
-      const coverCid = typeof cblobRef === "object" && cblobRef && "$link" in cblobRef
-        ? cblobRef.$link
-        : cblobRef;
-      console.log(
-        `ℹ  Cover Blob ${coverCid} will be cleaned up by PDS garbage collection`,
-      );
-    }
-    if (docblob && typeof docblob === "object" && "ref" in docblob) {
-      const dblobRef = docblob.ref;
-      const docCid = typeof dblobRef === "object" && dblobRef && "$link" in dblobRef
-        ? dblobRef.$link
-        : dblobRef;
-      console.log(
-        `ℹ  Doc Blob ${docCid} will be cleaned up by PDS garbage collection`,
-      );
-    }
-  } catch (error) {
-    if (error instanceof Error && error.message.includes("not found")) {
-      throw new Error(`Record not found: ${rkey}`);
-    }
-    throw error;
-  }
+  const agent = await getAgent();
+  await agent.com.atproto.repo.deleteRecord({
+    repo: agent.assertDid,
+    collection: col,
+    rkey,
+  });
 }
 
 // ==========================================================================================
@@ -619,42 +441,26 @@ export async function uploadDataFile(
   file: File | undefined,
   collection = RDATA_COLLECTION,
   onProgress?: ProgressHandler,
-): Promise<{ 
-  success: boolean; 
-  blob?: BlobRef; 
-  record?: { uri: string; cid: string } 
+): Promise<{
+  success: boolean;
+  blob?: BlobRef;
+  record?: { uri: string; cid: string }
 }> {
-  const usr = await refreshSession();
-  const agent = new AtpAgent({ service: `https://${usr.host}` });
-  await agent.resumeSession(usr as AtpSessionData);
-
-  let blob: BlobRef | undefined;
-  if (file) {
-    blob = await xhrUploadFile(file, usr, onProgress);
-  } else {
-    throw new Error(`no file`);
+  if (!file) {
+    throw new Error("no file");
   }
+  const agent = await getAgent();
+  const blob = await uploadBlobWithProgress(file, agent, onProgress);
 
-  const now = new Date().toISOString();
-  const recordData: any = {
-    $type: collection,
+  const recordData: AtData.RData = {
+    $type: collection as AtData.RData["$type"],
     name,
-    updatedAt: now,
+    updatedAt: new Date().toISOString(),
+    docblob: blob,
   };
 
-  if (blob) {
-    recordData.docblob = blob;
-  } else {
-    throw new Error("no blob"); 
-  }
-
-  const did = agent.session?.did;
-  if (!did) { 
-    throw new Error("Could not determine DID from session"); 
-  }
-
   const putRes = await agent.com.atproto.repo.putRecord({
-    repo: did,
+    repo: agent.assertDid,
     collection,
     rkey: name,
     record: recordData,
@@ -671,9 +477,9 @@ export async function uploadDataFile(
  * Result returned after successfully download a book
  */
 export interface DownloadDataResult {
-  rkey: string; 
-  docData?: Blob; 
-  record: AtData.RData; 
+  rkey: string;
+  docData?: Blob;
+  record: AtData.RData;
 }
 
 /**
@@ -684,38 +490,15 @@ export async function downloadDataFile(
   collection = RDATA_COLLECTION,
   onProgress?: ProgressHandler,
 ): Promise<DownloadDataResult> {
-  const usr = await refreshSession();
-  const serv = usr.service;
-  const agent = new AtpAgent({ service: `https://${usr.host}` });
-  await agent.resumeSession(usr as AtpSessionData);
+  const agent = await getAgent();
+  const did = agent.assertDid;
 
-  const did = agent.session?.did;
-  if (!did) throw new Error("Could not determine DID from session");
-
-  const recordResponse = await agent.com.atproto.repo.getRecord({
-    repo: did,
-    collection,
-    rkey,
-  });
-
-  const record = recordResponse.data.value as any;
-
-  let docCid = "";
-  const docblob = record.docblob;
-
-  if (!docblob || typeof docblob !== "object" || !("ref" in docblob)) {
-    console.error("No Doc blob found in record");
-  } else {
-    const docRef = docblob.ref;
-    docCid = typeof docRef === "object" && docRef && "$link" in docRef
-      ? docRef.$link as string
-      : docRef as string;
+  const found = await getOwnRecord<AtData.RData>(agent, collection, rkey);
+  if (!found) {
+    throw new Error(`Record not found: ${rkey}`);
   }
-
-  const docUrl = docCid 
-    ? `${serv}/xrpc/com.atproto.sync.getBlob?did=${did}&cid=${docCid}` 
-    : undefined;
-  const docData = docUrl ? (await webDownload(docUrl, onProgress)).blob : undefined;
+  const record = found.value;
+  const docData = await downloadBlob(await resolveDid(did), did, record.docblob, onProgress);
 
   return { rkey, docData, record };
 }

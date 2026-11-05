@@ -5,9 +5,7 @@
   "redirect_uris": [
     "https://readup.cc/auth/callback"
   ],
-  "logo_uri": "https://readup.cc/favicon.ico",
-  "tos_uri": "https://readup.cc/terms",
-  "policy_uri": "https://readup.cc/privacy",
+  "logo_uri": "https://readup.cc/icon.png",
   "scope": "atproto transition:generic",
   "grant_types": ["authorization_code", "refresh_token"],
   "response_types": ["code"],
