@@ -32,7 +32,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     title: 'Readup',
-    statusBarStyle: 'default',
+    statusBarStyle: 'black-translucent',
   },
   openGraph: {
     type: 'website',
