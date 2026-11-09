@@ -2,7 +2,9 @@ import { useCallback, useEffect, useRef } from 'react';
 import { useEnv } from '@/context/EnvContext';
 import { useThemeStore } from '@/store/themeStore';
 import { useSettingsStore } from '@/store/settingsStore';
+import tinycolor from 'tinycolor2';
 import { themes, applyCustomTheme, Palette } from '@/styles/themes';
+import { isPWA, isWebAppPlatform } from '@/services/environment';
 import { getOverlayerBlendMode } from '@/styles/style';
 import { getStatusBarHeight, setSystemUIVisibility } from '@/utils/bridge';
 import { getOSPlatform } from '@/utils/misc';
@@ -25,6 +27,7 @@ export const useTheme = ({
   const isBwEink = isEink && !isColorEink;
   const {
     themeColor,
+    themeCode,
     isDarkMode,
     showSystemUI,
     dismissSystemUI,
@@ -126,6 +129,20 @@ export const useTheme = ({
     });
     localStorage.setItem('customThemes', JSON.stringify(customThemes));
   }, [settings.globalReadSettings?.customThemes]);
+
+  // iOS PWA uses `black-translucent`: the page draws under the status bar and
+  // iOS always renders its icons white. Paint the top safe-area strip with the
+  // theme background when it's dark enough for white icons, otherwise black,
+  // so the time/signal/battery stay readable (see `.ios-pwa` in globals.css).
+  useEffect(() => {
+    const isIOS =
+      getOSPlatform() === 'ios' || (getOSPlatform() === 'macos' && navigator.maxTouchPoints > 1);
+    if (!isWebAppPlatform() || !isPWA() || !isIOS) return;
+    const root = document.documentElement;
+    root.classList.add('ios-pwa');
+    const bg = themeCode.bg;
+    root.style.setProperty('--ios-status-bar-bg', tinycolor(bg).isDark() ? bg : '#000000');
+  }, [themeCode]);
 
   useEffect(() => {
     const colorScheme = isDarkMode ? 'dark' : 'light';

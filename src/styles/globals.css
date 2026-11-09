@@ -31,6 +31,21 @@
   --safe-area-inset-left: env(safe-area-inset-left);
 }
 
+/* iOS PWA status bar strip (class + color set in hooks/useTheme.ts). With
+   `black-translucent` the page extends under the status bar and :root is
+   transparent, so without this the strip shows white behind white icons. */
+:root.ios-pwa body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: env(safe-area-inset-top);
+  background-color: var(--ios-status-bar-bg, #000000);
+  z-index: 2147483647;
+  pointer-events: none;
+}
+
 /* Native rubber-band belongs to the library page and the bookshelf only. The
    reader's scrolled-mode container is a nested scroller too, and iOS WKWebView
    would bounce it; the foliate view must never overscroll. (#5148) */
