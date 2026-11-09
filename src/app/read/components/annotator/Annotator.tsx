@@ -83,7 +83,7 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
   const { 
     settings, setSettingsDialogBookKey, setFontLayoutSettingsDialogOpen, setActiveSettingsItemId 
   } = useSettingsStore();
-  const { isDarkMode } = useThemeStore();
+  const { isDarkMode, safeAreaInsets } = useThemeStore();
   const { getConfig, saveConfig, getBookData, updateBooknotes } = useBookDataStore();
   const { getView, getViewsById, getViewSettings } = useReaderStore();
   const { setNotebookVisible, setNotebookActiveTab } = useNotebookStore();
@@ -1687,6 +1687,32 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
     config.booknotes?.find((annotation) => annotation.id === noteEditorTarget?.annotationId)
       ?.note || '';
 
+  // On mobile the selection toolbar docks at the bottom of the reader instead
+  // of floating beside the selection: the platform's own selection menu
+  // (copy / select all / share…) pops up next to the selection and would
+  // otherwise sit right on top of our toolbar.
+  const dockAnnotToolbar = !!appService?.isMobile;
+  const getDockedAnnotPositions = (): { position: Position; triangle: Position; width: number } | null => {
+    const gridFrame = document.querySelector(`#gridcell-${bookKey}`);
+    if (!gridFrame) return null;
+    const rect = gridFrame.getBoundingClientRect();
+    // Only clear the home indicator when the cell actually reaches the
+    // screen's bottom edge (a lower cell in a multi-book grid does).
+    const bottomInset =
+      rect.bottom >= window.innerHeight - 1 ? (safeAreaInsets?.bottom ?? 0) : 0;
+    const width = Math.min(annotPopupWidth, rect.width - 2 * popupPadding);
+    const bottom = rect.height - popupPadding - bottomInset;
+    return {
+      // 'up' anchors the popup by its bottom edge, so notes / highlight
+      // options / the note editor grow upward from the dock.
+      position: { point: { x: (rect.width - width) / 2, y: bottom - annotPopupHeight }, dir: 'up' },
+      triangle: { point: { x: rect.width / 2, y: bottom }, dir: 'up' },
+      width,
+    };
+  };
+  const dockedAnnotPositions =
+    dockAnnotToolbar && showAnnotPopup ? getDockedAnnotPositions() : null;
+
   return (
     <div ref={containerRef} role='toolbar' tabIndex={-1}>
       <PageTurnHint bookKey={bookKey} contentInsets={contentInsets} hint={turnHint} />
@@ -1821,12 +1847,13 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets }> = ({
               ? { value: editedNoteText, onSave: handleSaveNote, onCancel: handleCancelNote }
               : null
           }
-          position={annotPopupPosition}
-          trianglePosition={trianglePosition}
+          position={dockedAnnotPositions?.position ?? annotPopupPosition}
+          trianglePosition={dockedAnnotPositions?.triangle ?? trianglePosition}
+          docked={!!dockedAnnotPositions}
           highlightOptionsVisible={highlightOptionsVisible}
           selectedStyle={selectedStyle}
           selectedColor={selectedColor}
-          popupWidth={annotPopupWidth}
+          popupWidth={dockedAnnotPositions?.width ?? annotPopupWidth}
           popupHeight={annotPopupHeight}
           onHighlight={handleHighlight}
           onDismiss={noteEditorTarget ? handleCancelNote : handleDismissPopupAndSelection}

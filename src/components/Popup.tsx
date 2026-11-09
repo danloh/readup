@@ -58,9 +58,12 @@ const Popup = ({
   className = '',
   additionalStyle = {},
   isOpen = true,
+  hideTriangle = false,
   onDismiss,
 }: {
   isOpen?: boolean;
+  /** Keep trianglePosition for layout (anchoring) but don't draw the pointer. */
+  hideTriangle?: boolean;
   width: number;
   height?: number;
   minHeight?: number;
@@ -146,7 +149,7 @@ const Popup = ({
 
   return (
     <div>
-      {trianglePosition && (
+      {trianglePosition && !hideTriangle && (
         <div
           className={clsx(
             'popup-triangle-outer text-base-content/20 absolute z-50',
@@ -179,7 +182,7 @@ const Popup = ({
       >
         {children}
       </div>
-      {trianglePosition && (
+      {trianglePosition && !hideTriangle && (
         <div
           className={clsx(
             'popup-triangle-inner text-base-300 theme-dark:text-base-100 absolute z-50',

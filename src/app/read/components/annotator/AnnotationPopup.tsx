@@ -40,6 +40,11 @@ interface AnnotationPopupProps {
   onEditNote?: (note: BookNote) => void;
   position: Position;
   trianglePosition: Position;
+  /**
+   * Docked at the bottom of the reader (mobile) rather than anchored to the
+   * selection: always laid out horizontally, and no pointer triangle.
+   */
+  docked?: boolean;
   highlightOptionsVisible: boolean;
   selectedStyle: HighlightStyle;
   selectedColor: HighlightColor;
@@ -55,13 +60,14 @@ interface AnnotationPopupProps {
 const AnnotationPopup: React.FC<AnnotationPopupProps> = ({
   bookKey,
   dir,
-  isVertical,
+  isVertical: isVerticalText,
   buttons,
   notes,
   noteEditor,
   onEditNote,
   position,
   trianglePosition,
+  docked = false,
   highlightOptionsVisible,
   selectedStyle,
   selectedColor,
@@ -76,11 +82,13 @@ const AnnotationPopup: React.FC<AnnotationPopupProps> = ({
   // Tall enough for a few lines plus the Cancel/Save row, so the editor opens
   // at a usable size instead of the 44px toolbar height it replaces.
   const noteEditorSize = useResponsiveSize(180);
+  // A docked toolbar is a horizontal bar even for vertical-writing books.
+  const isVertical = isVerticalText && !docked;
   // The popup's own box, with the vertical-writing swap already applied — the
   // same values AnnotationNotes and HighlightOptions are handed.
   const boxWidth = isVertical ? popupHeight : popupWidth;
   const boxHeight = isVertical ? popupWidth : popupHeight;
-  
+
   return (
     <div dir={dir} className='pointer-events-none absolute inset-0 z-[43]'>
       <Popup
@@ -89,8 +97,10 @@ const AnnotationPopup: React.FC<AnnotationPopupProps> = ({
         minHeight={boxHeight}
         position={position}
         trianglePosition={trianglePosition}
+        hideTriangle={docked}
         className={clsx(
           'selection-popup pointer-events-auto',
+          docked && 'not-eink:shadow-xl',
           (notes.length > 0 || noteEditor) && 'bg-transparent',
         )}
         onDismiss={onDismiss}
